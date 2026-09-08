@@ -1,6 +1,7 @@
 //! 🧬️ GIS terrain diff schema — sparse field delta over the artifact.
 
 use schema::ArtifactSchema;
+#[cfg(test)]
 use serde::{Deserialize, Serialize};
 use semio_framework_value_derive::{FromValue, ToValue};
 

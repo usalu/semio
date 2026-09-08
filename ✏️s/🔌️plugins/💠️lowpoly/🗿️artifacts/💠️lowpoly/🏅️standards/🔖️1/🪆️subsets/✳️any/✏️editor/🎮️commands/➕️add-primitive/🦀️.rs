@@ -8,6 +8,7 @@ use crate::editor::lowpoly::config::{LowpolyConfig, LowpolyConfigMutation};
 use crate::editor::lowpoly::session::LowpolyScratch;
 use crate::editor::lowpoly::view::{build_doc, primitive_kind};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+#[cfg(test)]
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️AddPrimitive

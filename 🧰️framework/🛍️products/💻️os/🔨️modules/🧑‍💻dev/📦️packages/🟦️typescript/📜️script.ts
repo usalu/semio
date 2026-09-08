@@ -1883,7 +1883,7 @@ class TestScript extends BundleScript {
 }
 
 //#region 🔖️SpaceE2eVerify
-/** 🎭️ Playwright end-to-end workflow verification for the `s` studio shell (folded in from the former `.🦑️repo/🎫️tickets/26/07/04/RUST-PLUGIN-FRAMEWORK-MIGRATION/s-studio-e2e-verify.mjs`). */
+/** 🎭️ Playwright end-to-end workflow verification for the `s` studio shell (folded in from the former `.🧬semio/🦑️repo/🎫️tickets/26/07/04/RUST-PLUGIN-FRAMEWORK-MIGRATION/s-studio-e2e-verify.mjs`). */
 const STUDIO_E2E_HEADLESS_GPU_ERROR_FRAGMENTS = ["NoCompatibleDevice"];
 
 function spaceE2eAssert(condition: boolean, message: string): void {
@@ -2689,7 +2689,7 @@ async function collabRunScenario(
       const editorOpened = (await user1.locator('textarea, [contenteditable="true"]').count()) > 0;
       spaceE2eAssert(
         editorOpened,
-        "no editable text surface appeared for user1 after createArtifact — Effect::ReplayShellCommand{os.open-artifact} is sent WITHOUT documentId (🧰️framework/…/🔌️plugin/🦀️.rs relay_open_artifact), so ShellHost's applyHostEffects never calls openDocument for the real hub-bound document (lane 3-B, not landed this wave)",
+        "no editable text surface appeared for user1 after createArtifact — inspect the direct Space opening effect, exact Shell session and scope, Hub open-plan/catalog verification, socket Session and retained document UI; the Space relay already includes documentId, spaceId and schema",
       );
       record(3, true, `artifact ${artifactId} created, row replicated to user2, editor surface present for user1`);
     } catch (error) {
@@ -3062,7 +3062,7 @@ class VerifyScript extends BundleScript {
 //#region 🔬️ParityScript
 /** 🔬️wgpu↔React UI-parity verification harness — structural DOM/retained-tree comparison, per-region
  * pixel diffing, and a boot-triage ladder, driven per catalog playground. Ticket:
- * `.🦑️repo/🎫️tickets/26/07/11/WGPU-RENDERER-FULL-PARITY/`. */
+ * `.🧬semio/🦑️repo/🎫️tickets/26/07/11/WGPU-RENDERER-FULL-PARITY/`. */
 
 //#region 🔖️ParityTypes
 type ParityRenderer = "react" | "wgpu";

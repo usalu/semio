@@ -1,0 +1,48 @@
+{
+  "schema": "semio.hub.retained-gis-browser/v1",
+  "bootstrapFixture": "🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🧪️fixtures/🧬️stdio-gis-bootstrap/🔣️.json",
+  "contract": {
+    "generation": "published-current-exact",
+    "actorPath": "packages/gis/browser/closed-actor.mjs",
+    "descriptorPath": "packages/gis/descriptor.semio",
+    "componentPath": "packages/gis/component.wasm",
+    "actor": "retained-not-rebuilt",
+    "browser": "chromium-dedicated-child",
+    "result": "normalized-describe-equals-retained-descriptor",
+    "terminalActors": 0,
+    "terminalBytes": 0
+  },
+  "cases": [
+    {
+      "name": "exact",
+      "accepted": true
+    },
+    {
+      "name": "replaced-component",
+      "accepted": false
+    },
+    {
+      "name": "replaced-descriptor",
+      "accepted": false
+    },
+    {
+      "name": "replaced-actor",
+      "accepted": false
+    },
+    {
+      "name": "changed-generation",
+      "accepted": false
+    },
+    {
+      "name": "changed-parent-digest",
+      "accepted": false
+    }
+  ],
+  "nonclaims": [
+    "authenticated-worker",
+    "cold-pair-applied",
+    "shell-renderer",
+    "map-mutation",
+    "two-peer-collaboration"
+  ]
+}

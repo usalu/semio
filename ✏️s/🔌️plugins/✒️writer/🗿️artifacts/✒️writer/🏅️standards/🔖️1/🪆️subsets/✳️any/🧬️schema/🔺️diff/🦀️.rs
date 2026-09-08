@@ -2,7 +2,6 @@
 
 use crate::artifacts::writer::{WriterDocumentChild, WriterEditorSelection, WriterEditorSettings};
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Diff
 /// 🔺️ Sparse field delta; `document` carries a whole-handle replacement (content-addressed, so a
@@ -10,8 +9,8 @@ use serde::{Deserialize, Serialize};
 /// `mesh: Option<Option<ArtifactChild<…>>>` precedent; writer's `document` slot is never absent,
 /// only ever replaced, so a single `Option<WriterDocumentChild>` — not the double-`Option` an
 /// optional slot needs — is the sparse-vs-unchanged signal here).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase", default)]
+#[derive(Clone, Debug, Default, PartialEq, ArtifactSchema, dsl::ToValue, dsl::FromValue)]
+#[value(rename_all = "camelCase", default)]
 #[artifact_schema(id = "s.writer.writer")]
 pub struct WriterDiff {
     #[state(artifact)]

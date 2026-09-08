@@ -6,9 +6,12 @@ use semio_framework_plugin::plugin_app_close_prelude::*;
 use semio_framework_plugin::{ExecutionMode, Plugin, PluginApp};
 
 //#region 🗃️Apps
-/// 🗃️ Closed runtime app fleet for the declaration-owned writer surfaces.
 semio_framework_dispatch_macros::dyn_enum_close! {
-    pub enum WriterApps: PluginApp {}
+    /// 🗃️ Closed runtime app fleet for the declaration-owned writer surfaces.
+    pub enum WriterApps: PluginApp {
+        Editor(VcsArtifactApp<EditorApp<crate::editor::writer::WriterPlayApp>>),
+        Viewer(VcsArtifactApp<ViewerApp<crate::viewer::writer::WriterViewer>>),
+    }
 }
 //#endregion 🗃️Apps
 
@@ -17,7 +20,7 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 /// `📓️design-abi.md` §3/§6) are this crate's migration proof, mirroring `🗒️note`'s shape. No
 /// `.handler(…)` and no `🧩️extensions/` dir anywhere in this crate, so `Isolated` (the SDK default)
 /// is honest.
-pub fn plugin() -> Result<Plugin<WriterApps>, semio_framework_plugin::PluginAssemblyError> {
+pub fn plugin() -> Result<Plugin<WriterApps>, PluginAssemblyError> {
     Plugin::<WriterApps>::builder("writer")
         .label("Writer")
         .version("0.1.0")
@@ -40,12 +43,12 @@ mod surface_tests {
 
     #[semio_framework_async_macros::async_test]
     async fn writer_viewer_never_mutates() {
-        semio_framework_plugin::testkit::assert_viewer_never_mutates::<crate::viewer::writer::WriterViewer>();
+        semio_framework_plugin::testkit::assert_viewer_never_mutates::<crate::viewer::writer::WriterViewer>().await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn writer_editor_and_viewer_share_dialect() {
-        semio_framework_plugin::testkit::assert_editor_and_viewer_share_dialect::<crate::editor::writer::WriterPlayApp, crate::viewer::writer::WriterViewer>();
+        semio_framework_plugin::testkit::assert_editor_and_viewer_share_dialect::<crate::editor::writer::WriterPlayApp, crate::viewer::writer::WriterViewer>().await;
     }
 }
 //#endregion 🧪️SurfaceTests

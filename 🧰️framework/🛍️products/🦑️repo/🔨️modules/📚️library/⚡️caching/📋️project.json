@@ -1,0 +1,76 @@
+{
+  "name": "repo",
+  "projectType": "application",
+  "targets": {
+    "test": {
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts test"
+      }
+    },
+    "policy-check": {
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts policy-check"
+      }
+    },
+    "graph-check": {
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts graph-check"
+      }
+    },
+    "artifact-check": {
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts artifact-check"
+      }
+    },
+    "audit": {
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts audit"
+      }
+    },
+    "doctor": {
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts doctor"
+      }
+    },
+    "disk-report": {
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts disk-report"
+      }
+    },
+    "disk-prune": {
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts disk-prune"
+      }
+    },
+    "cache-verify": {
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts cache-verify"
+      }
+    },
+    "generator-inputs": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "options": {
+        "command": "bun ./📜️script.ts generator-inputs registry-catalog"
+      }
+    },
+    "toolchain": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "options": {
+        "command": "bun ./📜️script.ts toolchain wasm"
+      }
+    }
+  }
+}

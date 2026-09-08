@@ -1,0 +1,80 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "vectors", "messages"],
+  "properties": {
+    "schema": {
+      "const": "semio.hub.directory-message-authority/v1"
+    },
+    "vectors": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "revocation", "first", "a", "b", "close"],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80
+          },
+          "revocation": {
+            "enum": ["membership", "session"]
+          },
+          "first": {
+            "enum": ["send", "revoke"]
+          },
+          "a": {
+            "type": "boolean"
+          },
+          "b": {
+            "type": "boolean"
+          },
+          "close": {
+            "enum": [0, 4401]
+          }
+        }
+      }
+    },
+    "messages": {
+      "type": "array",
+      "minItems": 6,
+      "maxItems": 6,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "messageJson", "spaceId", "keys"],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80
+          },
+          "messageJson": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 8192
+          },
+          "spaceId": {
+            "anyOf": [
+              {
+                "type": "null"
+              },
+              {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 80
+              }
+            ]
+          },
+          "keys": {
+            "enum": [2, 4]
+          }
+        }
+      }
+    }
+  }
+}

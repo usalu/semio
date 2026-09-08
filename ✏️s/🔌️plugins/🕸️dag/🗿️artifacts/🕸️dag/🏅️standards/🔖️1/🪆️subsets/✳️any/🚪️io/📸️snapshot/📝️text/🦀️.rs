@@ -23,27 +23,6 @@ pub fn print_dsl(document: &DagSnapshot) -> String {
     store::ArtifactDsl::print_dsl(document)
 }
 
-//#region 🔖️CodecPrimitives
-/// 🧪️ Real hex/bracket-encoded value primitives backing the hand-rolled `ArtifactDsl` below — same
-/// style stdio's own `✳️graph`/`✳️text` facets already establish, duplicated locally (not imported
-/// across crates) to keep this facet independently compilable.
-fn hex_encode(bytes: &[u8]) -> String {
-    bytes.iter().map(|b| format!("{b:02x}")).collect()
-}
-fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
-    if s.len() % 2 != 0 {
-        return Err(format!("odd hex length: {s:?}"));
-    }
-    (0..s.len()).step_by(2).map(|i| u8::from_str_radix(&s[i..i + 2], 16).map_err(|e| e.to_string())).collect()
-}
-pub(crate) fn enc_str(s: &str) -> String {
-    hex_encode(s.as_bytes())
-}
-pub(crate) fn dec_str(s: &str) -> Result<String, String> {
-    String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
-}
-
-//#endregion 🔖️CodecPrimitives
 
 //#region 🔖️HandcraftedArtifactDsl
 impl store::ArtifactDsl for DagSnapshot {

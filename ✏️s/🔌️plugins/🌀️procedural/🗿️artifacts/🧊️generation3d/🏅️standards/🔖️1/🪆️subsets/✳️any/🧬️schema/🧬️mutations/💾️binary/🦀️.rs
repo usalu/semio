@@ -277,7 +277,6 @@ const GENERATION3D_OWNER_BYTES: usize = store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYT
 const GENERATION3D_RETAINED_STACK_CAPACITY: usize = 64;
 const GENERATION3D_MAXIMUM_DOMAIN_ITEMS: usize = 8_192;
 const GENERATION3D_MAXIMUM_DOMAIN_BYTES: usize = store::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_BYTES;
-const GENERATION3D_MAXIMUM_OUTPUT_PAGES: usize = store::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_PAGES;
 const GENERATION3D_MUTATION_VARIANT_COUNT: usize = 14;
 pub const GENERATION3D_MOUNTED_OUTPUT_CHANNELS: usize = 4;
 pub const GENERATION3D_MOUNTED_CONTROL_CREDITS: usize = 1;
@@ -441,7 +440,7 @@ fn generation3d_validate_atomic_lease(lease: Generation3dPublicationLease, opera
 /// 🔐️ Fail-closed Generation3d authority used by the shared atomic replacement branch.
 pub fn generation3d_validate_atomic_publication_authority(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, live_generation: semio_framework_job::Generation) -> Result<(), &'static str> {
     let leases = generation3d_publication_leases().try_lock().map_err(|_| "generation3d-publication.contended")?;
-    let mut lease = leases.get_operation(operation).map(|(_, lease)| *lease).ok_or("generation3d-publication.authority-missing")?;
+    let lease = leases.get_operation(operation).map(|(_, lease)| *lease).ok_or("generation3d-publication.authority-missing")?;
     #[cfg(test)]
     {
         let mut hostiles = generation3d_publication_hostiles().try_lock().map_err(|_| "generation3d-publication.hostile-contended")?;
@@ -728,7 +727,6 @@ fn generation3d_apply_initialization_mutation(snapshot: &mut Generation3dSnapsho
 //#endregion 🔖️RetainedMountedIngress
 
 //#region 🔖️TypedOwnedEnvelopeCatalog
-const GENERATION3D_ENVELOPE_SNAPSHOT_PACK_BYTES: usize = store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES;
 
 struct Generation3dRetainedSnapshotRetirement {
     value: std::mem::ManuallyDrop<Option<Generation3dSnapshot>>,
@@ -1660,7 +1658,7 @@ impl Generation3dRetainedMutationOwner {
                 *self.value = Some(mutation);
                 self.complete = true;
             }
-            Token::Tag { .. } | Token::Unsigned { .. } | Token::Signed(_) | Token::Byte(_) | Token::WireLabelPresence(_) | Token::TablePresence { .. } | Token::TableBitmap { .. } => {}
+            Token::Tag { .. } | Token::Unsigned { .. } | Token::Byte(_) | Token::WireLabelPresence(_) => {}
         }
         Ok(())
     }

@@ -2,7 +2,7 @@
 
 use super::adapters::{bounded_message, AUTHORITY_MAX_CODEC_TEXT_BYTES, TRUSTED_CATALOG_MAX_CODECS, TRUSTED_CATALOG_MAX_PACKAGES};
 use super::{AcceptedArtifactOperation, ArtifactPair, ArtifactValidationStage, AuthorityError, AuthorityProgress, AuthorityProgressStage, OperationContext, TrustedArtifactCatalog, TrustedArtifactCodec, TrustedArtifactIdentity};
-use directory::os_directory::{hex_lower, DocumentDescriptor, DocumentOpenArtifactV1, DocumentOpenGrantV1, DocumentOpenPackageV1, DocumentOpenRendererTargetV1, DocumentOpenSurfaceRoleV1, DocumentOpenSurfaceV1};
+use directory::os_directory::{hex_lower, DocumentDescriptor, DocumentExecutionProtocolV1, DocumentOpenArtifactV1, DocumentOpenGrantV1, DocumentOpenPackageV1, DocumentOpenRendererTargetV1, DocumentOpenSurfaceRoleV1, DocumentOpenSurfaceV1};
 use directory::os_store::{self, ArtifactCodec};
 use semio_framework::{from_dsl_value, to_dsl_value, DslValue, PackageDescriptor, PackageRole, Version};
 use semio_framework_hash::{Hasher, Sha256};
@@ -136,6 +136,7 @@ struct BundlePackage {
     package_id: String,
     version: String,
     role: BundleRole,
+    execution_protocol: semio_framework::ExecutionProtocol,
     dependencies: Vec<BundleIdentity>,
     component: BundleComponent,
     descriptor: BundleFile,
@@ -175,6 +176,119 @@ struct TrustedCatalogCurrentPointer {
     profile_id: String,
     generation_id: String,
     bundle_sha256: String,
+    publication_revision: String,
+}
+
+impl TrustedCatalogCurrentPointer {
+    fn decode(bytes: &[u8]) -> Result<Self, AuthorityError> {
+        let pointer: Self = serde_json::from_slice(bytes).map_err(catalog_error)?;
+        if pointer.encode()? != bytes || pointer.profile_id.is_empty() || pointer.profile_id.len() > TRUSTED_IDENTITY_MAX_BYTES || pointer.profile_id.chars().any(char::is_control) {
+            return Err(catalog("trusted catalog current pointer is not exact canonical metadata"));
+        }
+        decode_digest(&pointer.generation_id, "trusted generation id")?;
+        decode_digest(&pointer.bundle_sha256, "trusted bundle sha256")?;
+        publication_revision(&pointer.publication_revision)?;
+        Ok(pointer)
+    }
+
+    fn encode(&self) -> Result<Vec<u8>, AuthorityError> {
+        let mut bytes = serde_json::to_vec(self).map_err(catalog_error)?;
+        bytes.push(b'\n');
+        Ok(bytes)
+    }
+}
+
+fn publication_revision(value: &str) -> Result<u64, AuthorityError> {
+    let revision = value.parse::<u64>().map_err(catalog_error)?;
+    if revision == 0 || revision.to_string() != value { return Err(catalog("trusted publication revision is not canonical nonzero u64")); }
+    Ok(revision)
+}
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+struct TrustedCatalogPublicationCommand {
+    schema: String,
+    request_id: String,
+    profile_id: String,
+    generation_id: String,
+    bundle_sha256: String,
+    expected_current_sha256: Option<String>,
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+struct TrustedCatalogPublicationReceipt {
+    schema: &'static str,
+    request_id: String,
+    profile_id: String,
+    generation_id: String,
+    bundle_sha256: String,
+    publication_revision: String,
+    current_sha256: String,
+    outcome: &'static str,
+}
+
+/// 🔐️ Publishes only a fully verified selection while holding the cooperating-writer OS fence.
+pub struct TrustedCatalogPublisher;
+
+/// 🚦️ Requires callers to distinguish durable selection from reconciliation-only visibility.
+pub enum TrustedCatalogPublicationOutcome {
+    Durable(Vec<u8>),
+    Unconfirmed(Vec<u8>),
+}
+
+impl TrustedCatalogPublisher {
+    /// 📤️ Consumes the closed command schema under a private server-owned catalog namespace.
+    pub async fn publish_current(data_path: &Path, command_bytes: &[u8], providers: &dyn NativeCodecProviderSourceV1, context: &OperationContext<'_>) -> Result<TrustedCatalogPublicationOutcome, AuthorityError> {
+        context.checkpoint()?;
+        if command_bytes.is_empty() || command_bytes.len() > 4_096 { return Err(catalog("trusted publication command exceeds its bound")); }
+        let fields: serde_json::Value = serde_json::from_slice(command_bytes).map_err(catalog_error)?;
+        if !fields.as_object().is_some_and(|object| object.contains_key("expectedCurrentSha256")) { return Err(catalog("trusted publication expected current token is required")); }
+        let command: TrustedCatalogPublicationCommand = serde_json::from_slice(command_bytes).map_err(catalog_error)?;
+        if command.schema != "semio.hub.trusted-catalog-publication/v1" || command.request_id.len() != 32 || !command.request_id.bytes().all(|byte| byte.is_ascii_digit() || (b'a'..=b'f').contains(&byte)) || command.profile_id.is_empty() || command.profile_id.len() > TRUSTED_IDENTITY_MAX_BYTES || command.profile_id.chars().any(char::is_control) {
+            return Err(catalog("trusted publication command has invalid identity"));
+        }
+        decode_digest(&command.generation_id, "trusted generation id")?;
+        let bundle_digest = decode_digest(&command.bundle_sha256, "trusted bundle sha256")?;
+        if let Some(expected) = &command.expected_current_sha256 { decode_digest(expected, "trusted expected current sha256")?; }
+        let data = TrustedCatalogDataRoot::open_server_owned(data_path)?;
+        let owner = data.acquire_publication(context).await?;
+        let (observed, revision) = match owner.open_current()? {
+            Some(file) => {
+                let bytes = file.read_bounded(65_536, context).await?;
+                let current = TrustedCatalogCurrentPointer::decode(&bytes)?;
+                (Some(hex_lower(&sha256(&bytes, context).await?)), publication_revision(&current.publication_revision)?)
+            }
+            None => (None, 0),
+        };
+        if observed != command.expected_current_sha256 { return Err(catalog("trusted publication current token is stale")); }
+        let revision = revision.checked_add(1).ok_or_else(|| catalog("trusted publication revision exhausted"))?;
+        let generation = owner.open_generation(&command.generation_id)?;
+        let relative = TrustedCatalogRelativePath::parse("trusted-catalog.json")?;
+        let bundle_bytes = generation.read_regular(&relative, TRUSTED_BUNDLE_MAX_BYTES, context).await?;
+        if sha256(&bundle_bytes, context).await? != bundle_digest { return Err(catalog("trusted publication candidate bundle differs from its digest")); }
+        let bundle: Bundle = serde_json::from_slice(&bundle_bytes).map_err(catalog_error)?;
+        let (verified, _) = TrustedCatalogLoader::verify_selected(&generation, relative, bundle_bytes, &command.profile_id, providers, context).await?;
+        if verified.generation_id() != command.generation_id { return Err(catalog("trusted publication candidate generation differs from the verified profile")); }
+        for package in &verified.packages {
+            let record = bundle.packages.iter().find(|record| record.plugin_id == package.plugin_id && record.package_id == package.package.package.0 && record.version == package.version).ok_or_else(|| catalog("verified publication package lost its bundle record"))?;
+            let mut files = vec![BundleFile { path: record.component.path.clone(), byte_length: record.component.byte_length, sha256: record.component.sha256.clone() }, record.descriptor.clone()];
+            if let Some(actor) = record.browser_actor.file() { files.push(actor); }
+            for file in files {
+                let bytes = generation.read_regular(&TrustedCatalogRelativePath::parse(&file.path)?, file.byte_length, context).await?;
+                if bytes.len() as u64 != file.byte_length || sha256(&bytes, context).await? != decode_digest(&file.sha256, "trusted publication leaf sha256")? { return Err(catalog("trusted publication leaf changed after candidate verification")); }
+            }
+        }
+        let final_bundle = generation.read_regular(&TrustedCatalogRelativePath::parse("trusted-catalog.json")?, TRUSTED_BUNDLE_MAX_BYTES, context).await?;
+        if sha256(&final_bundle, context).await? != bundle_digest { return Err(catalog("trusted publication bundle changed after candidate verification")); }
+        let pointer = TrustedCatalogCurrentPointer { profile_id: command.profile_id, generation_id: command.generation_id, bundle_sha256: command.bundle_sha256, publication_revision: revision.to_string() };
+        let current_bytes = pointer.encode()?;
+        let current_sha256 = hex_lower(&sha256(&current_bytes, context).await?);
+        let sync = owner.replace_current(&command.request_id, &current_bytes, context)?;
+        let receipt = TrustedCatalogPublicationReceipt { schema: "semio.hub.trusted-catalog-publication-receipt/v1", request_id: command.request_id, profile_id: pointer.profile_id, generation_id: pointer.generation_id, bundle_sha256: pointer.bundle_sha256, publication_revision: pointer.publication_revision, current_sha256, outcome: match sync { opened_root::TrustedPublicationSync::Durable => "durable", opened_root::TrustedPublicationSync::Unconfirmed => "replaced-unconfirmed" } };
+        let bytes = serde_json::to_vec(&receipt).map_err(catalog_error)?;
+        Ok(match sync { opened_root::TrustedPublicationSync::Durable => TrustedCatalogPublicationOutcome::Durable(bytes), opened_root::TrustedPublicationSync::Unconfirmed => TrustedCatalogPublicationOutcome::Unconfirmed(bytes) })
+    }
 }
 
 #[derive(Debug)]
@@ -464,13 +578,7 @@ impl TrustedCatalogLoader {
             return Ok(None);
         };
         let current_bytes = current_file.read_bounded(64 * 1024, context).await?;
-        let current: TrustedCatalogCurrentPointer = serde_json::from_slice(&current_bytes).map_err(catalog_error)?;
-        let mut canonical = serde_json::to_vec(&current).map_err(catalog_error)?;
-        canonical.push(b'\n');
-        if canonical != current_bytes || current.profile_id.is_empty() || current.profile_id.len() > TRUSTED_IDENTITY_MAX_BYTES {
-            return Err(catalog("trusted catalog current pointer is not exact canonical metadata"));
-        }
-        decode_digest(&current.generation_id, "trusted generation id")?;
+        let current = TrustedCatalogCurrentPointer::decode(&current_bytes)?;
         let expected_bundle_sha256 = decode_digest(&current.bundle_sha256, "trusted bundle sha256")?;
         let generation_root = data_root.open_generation(&current.generation_id)?;
         let bundle_path = TrustedCatalogRelativePath::parse("trusted-catalog.json")?;
@@ -496,6 +604,15 @@ impl TrustedCatalogLoader {
     }
 
     async fn load_selected(root: &TrustedCatalogGenerationRoot, bundle_path: TrustedCatalogRelativePath, bundle_bytes: Vec<u8>, profile_id: &str, providers: &dyn NativeCodecProviderSourceV1, context: &OperationContext<'_>) -> Result<VerifiedTrustedCatalog, AuthorityError> {
+        let (catalog, registration_codecs) = Self::verify_selected(root, bundle_path, bundle_bytes, profile_id, providers, context).await?;
+        let assembly = os_store::begin_artifact_assembly().map_err(catalog_error)?;
+        os_store::preflight_document_codecs_in_assembly(&assembly, &registration_codecs).map_err(catalog_error)?;
+        context.checkpoint()?;
+        os_store::register_document_codecs_in_assembly(&assembly, registration_codecs).map_err(catalog_error)?;
+        Ok(catalog)
+    }
+
+    async fn verify_selected(root: &TrustedCatalogGenerationRoot, bundle_path: TrustedCatalogRelativePath, bundle_bytes: Vec<u8>, profile_id: &str, providers: &dyn NativeCodecProviderSourceV1, context: &OperationContext<'_>) -> Result<(VerifiedTrustedCatalog, Vec<ArtifactCodec>), AuthorityError> {
         context.report(AuthorityProgress { stage: AuthorityProgressStage::Preflight, completed_units: 0, total_units: 1 })?;
         let bundle: Bundle = serde_json::from_slice(&bundle_bytes).map_err(catalog_error)?;
         let SelectedTrustedBundleV1 { package_indices: order, profile } = validate_bundle(&bundle, profile_id)?;
@@ -640,6 +757,7 @@ impl TrustedCatalogLoader {
                         component_sha256: hex_lower(&component_sha256),
                         component_blake3: hex_lower(&component_blake3),
                         descriptor_byte_sha256: hex_lower(&descriptor_sha256),
+                        execution_protocol: DocumentExecutionProtocolV1 { app_channel_version: descriptor.execution_protocol.app_channel_version },
                     },
                     artifact: DocumentOpenArtifactV1 { kind: target.artifact_kind.clone(), schema: target.artifact_schema.clone(), pack_schema_hash: target.pack_schema_hash.clone() },
                     surface: DocumentOpenSurfaceV1 { surface_id: target.surface_id.clone(), app_id: target.app_id.clone(), window_kind_id: target.window_kind_id.clone(), role, renderer_target },
@@ -678,11 +796,7 @@ impl TrustedCatalogLoader {
         }
         let catalog = VerifiedTrustedCatalog { packages: packages.into_boxed_slice(), codecs: codecs.into_boxed_slice(), open_targets: open_targets.into_boxed_slice(), generation_id };
         context.report(AuthorityProgress { stage: AuthorityProgressStage::CatalogResolved, completed_units: total_units, total_units })?;
-        let assembly = os_store::begin_artifact_assembly().map_err(catalog_error)?;
-        os_store::preflight_document_codecs_in_assembly(&assembly, &registration_codecs).map_err(catalog_error)?;
-        context.checkpoint()?;
-        os_store::register_document_codecs_in_assembly(&assembly, registration_codecs).map_err(catalog_error)?;
-        Ok(catalog)
+        Ok((catalog, registration_codecs))
     }
 }
 
@@ -823,6 +937,7 @@ fn trusted_profile_generation(bundle: &Bundle, profile: &BundleProfile) -> Resul
             decode_digest(&package.component.sha256, "profile component sha256")?.as_slice(),
             decode_digest(&package.component.blake3, "profile component blake3")?.as_slice(),
             decode_digest(&package.descriptor.sha256, "profile descriptor sha256")?.as_slice(),
+            package.execution_protocol.app_channel_version.to_be_bytes().as_slice(),
         ] {
             append_document_open_catalog_field(&mut encoded, value)?;
         }
@@ -868,6 +983,7 @@ fn trusted_profile_generation(bundle: &Bundle, profile: &BundleProfile) -> Resul
         decode_digest(&package.component.sha256, "open target component sha256")?.as_slice(),
         decode_digest(&package.component.blake3, "open target component blake3")?.as_slice(),
         decode_digest(&package.descriptor.sha256, "open target descriptor sha256")?.as_slice(),
+        package.execution_protocol.app_channel_version.to_be_bytes().as_slice(),
         target.artifact_kind.as_bytes(),
         target.artifact_schema.as_bytes(),
         decode_digest(&target.pack_schema_hash, "open target pack schema hash")?.as_slice(),
@@ -1117,6 +1233,8 @@ fn validate_descriptor(record: &BundlePackage, descriptor: &PackageDescriptor, p
         || descriptor.manifest.plugin_id != record.plugin_id
         || descriptor.manifest.version != record.version
         || descriptor.hashes.wasm_sha256 != record.component.sha256
+        || descriptor.execution_protocol != record.execution_protocol
+        || descriptor.execution_protocol.app_channel_version != directory::os_spr::CHANNEL_VERSION
     {
         return Err(catalog("decoded package descriptor identity does not exactly match its trust record"));
     }
@@ -1258,6 +1376,8 @@ mod tests {
     use std::sync::Mutex;
 
     static FIXTURE_SEQUENCE: AtomicUsize = AtomicUsize::new(0);
+
+    include!("🧪️tests/📤️publication/🦀️.rs");
 
     struct TestControl {
         cancelled: AtomicBool,
@@ -1442,6 +1562,7 @@ mod tests {
                 package_id: "semio:gis".into(),
                 version: version.clone(),
                 role: BundleRole::Plugin,
+                execution_protocol: semio_framework::ExecutionProtocol { app_channel_version: directory::os_spr::CHANNEL_VERSION },
                 dependencies: vec![],
                 component: BundleComponent { path: "packages/gis/component.wasm".into(), byte_length: 1, sha256: "11".repeat(32), blake3: "12".repeat(32) },
                 descriptor: BundleFile { path: "packages/gis/descriptor.semio".into(), byte_length: 1, sha256: "13".repeat(32) },
@@ -1457,6 +1578,7 @@ mod tests {
                 package_id: "semio:stdio".into(),
                 version: version.clone(),
                 role: BundleRole::Plugin,
+                execution_protocol: semio_framework::ExecutionProtocol { app_channel_version: directory::os_spr::CHANNEL_VERSION },
                 dependencies: vec![],
                 component: BundleComponent { path: "packages/stdio/component.wasm".into(), byte_length: 1, sha256: "21".repeat(32), blake3: "22".repeat(32) },
                 descriptor: BundleFile { path: "packages/stdio/descriptor.semio".into(), byte_length: 1, sha256: "23".repeat(32) },
@@ -1524,7 +1646,7 @@ mod tests {
                                 "reuse": { "de": "Fixture", "en": "Fixture" }
                             },
                             "bodyKey": "fixture.main",
-                            "surfaceKind": "canvas2d",
+                            "surfaceKind": "canvas-2d",
                             "iconId": "app-window",
                             "actions": [],
                             "utilities": [],
@@ -1575,6 +1697,7 @@ mod tests {
                 "dependencies": dependencies
             },
             "execution": "isolated",
+            "executionProtocol": { "appChannelVersion": directory::os_spr::CHANNEL_VERSION },
             "hashes": {
                 "wasmSha256": component_sha256,
                 "coreWasmSha256": "22".repeat(32),

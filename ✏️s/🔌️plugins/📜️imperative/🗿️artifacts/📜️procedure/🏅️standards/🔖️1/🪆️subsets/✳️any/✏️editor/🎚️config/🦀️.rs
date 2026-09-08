@@ -81,123 +81,9 @@ impl Default for ImperativeConfig {
 store::impl_whole_record_config!(ImperativeConfig);
 //#endregion 🔖️Config
 
-//#region 🔖️ConfigMutations
-/// @emoji 🧮️ `ImperativeConfig`'s operation enum — one variant per settled interaction, plus a generic
-/// `Snapshot` every variant's `backwards()` returns — mirrors `shooting_op::ShootingConfigMutation`'s
-/// "undo this tick is exactly restore the whole-config snapshot from just before it" pattern:
-/// `Mutation::Diff` is the WHOLE `ImperativeConfig` (not a granular patch type), `diff()` returns "the
-/// full config after this op", and `store::impl_whole_record_config!` supplies the
-/// `MutationDiff<ImperativeConfig>` that returns that snapshot verbatim, ignoring `base`.
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslOps)]
-pub enum ImperativeConfigMutation {
-    #[dsl(key = "snapshot")]
-    Snapshot {
-        #[dsl(block)]
-        config: ImperativeConfig,
-    },
-    #[dsl(key = "run-output")]
-    SetRunOutput { json: String },
-    #[dsl(key = "locale")]
-    SetLocale { value: String },
-    #[dsl(key = "contributions")]
-    SetContributions { json: String },
-}
-
-//#region 🔖️OpCodec
-impl protocol::OpText for ImperativeConfigMutation {
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        let variants = <Self as dsl::DslVariants>::variants();
-        for (keyword, spec_fn) in &variants {
-            let probe = format!("{} ", keyword);
-            if line == keyword.as_str() || line.starts_with(&probe) {
-                let record = dsl::parse(line, &spec_fn(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline })?;
-                return <Self as dsl::DslVariants>::from_named_record(keyword, &record);
-            }
-        }
-        Err(dsl::__rt::field_error(format!("unknown mutation line '{line}'")))
-    }
-    fn print_op(&self) -> String {
-        let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
-        let variants = <Self as dsl::DslVariants>::variants();
-        let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
-        dsl::print(&record, &spec_fn(), dsl::JoinMode::Inline)
-    }
-}
-
-/// 🎯️ Handcrafted OpBinary (P6).
-impl protocol::OpBinary for ImperativeConfigMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        const OP_BINARY_FORMAT: u8 = 1;
-        let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
-        let variants = <Self as dsl::DslVariants>::variants();
-        let ordinal = variants.iter().position(|(k, _)| *k == keyword).ok_or(protocol::ProtocolError::Malformed { what: "op variant", offset: 0, detail: format!("keyword {keyword:?} is not a declared variant") })?;
-        let spec = (variants[ordinal].1)();
-        let body = store::pack_rt::encode_record_body(&spec, &record, &store::PackEncodeOptions::default()).map_err(protocol::ProtocolError::from)?;
-        let mut out = Vec::with_capacity(body.len() + 3);
-        out.push(OP_BINARY_FORMAT);
-        store::pack_rt::write_varint_u64(&mut out, ordinal as u64);
-        out.extend_from_slice(&body);
-        Ok(out)
-    }
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        const OP_BINARY_FORMAT: u8 = 1;
-        let mut reader = store::pack_rt::ByteReader::new(bytes);
-        let format = reader.read_u8()?;
-        if format != OP_BINARY_FORMAT {
-            return Err(protocol::ProtocolError::Malformed { what: "op format", offset: 0, detail: format!("unsupported op format {format}") });
-        }
-        let ordinal = reader.read_varint_u64()?;
-        let variants = <Self as dsl::DslVariants>::variants();
-        let (keyword, spec_fn) = variants.get(ordinal as usize).ok_or(protocol::ProtocolError::Malformed { what: "op variant", offset: 1, detail: format!("ordinal {ordinal} out of range for {} declared variants", variants.len()) })?;
-        let spec = spec_fn();
-        let body = &bytes[reader.position()..];
-        let (record, _report) = store::pack_rt::decode_record_body(body, &spec, &store::PackDecodeOptions::default()).map_err(protocol::ProtocolError::from)?;
-        <Self as dsl::DslVariants>::from_named_record(keyword, &record).map_err(|error| protocol::ProtocolError::Malformed { what: "op record", offset: reader.position() as u64, detail: error.to_string() })
-    }
-}
-
-//#endregion 🔖️OpCodec
-
-impl protocol::Mutation<ImperativeConfig> for ImperativeConfigMutation {
-    type Diff = ImperativeConfig;
-
-    fn diff(&self, base: &ImperativeConfig) -> protocol::MutationOutcome<ImperativeConfig> {
-        let mut next = base.clone();
-        match self {
-            ImperativeConfigMutation::Snapshot { config } => {
-                if base == config {
-                    return protocol::MutationOutcome::empty().warn("mutation.no-op", "Config snapshot is already identical to the requested replacement.");
-                }
-                return protocol::MutationOutcome::new(config.clone());
-            }
-            ImperativeConfigMutation::SetRunOutput { json } => {
-                if &base.run_output_json == json {
-                    return protocol::MutationOutcome::empty().warn("mutation.no-op", "Run output is already identical to the requested replacement.");
-                }
-                next.run_output_json = json.clone();
-            }
-            ImperativeConfigMutation::SetLocale { value } => {
-                if &base.locale == value {
-                    return protocol::MutationOutcome::empty().warn("mutation.no-op", format!("Locale is already \"{}\".", value));
-                }
-                next.locale = value.clone();
-            }
-            ImperativeConfigMutation::SetContributions { json } => {
-                imperative_engine::sync_imperative_module_contributions(json);
-                if &base.contributions_json == json {
-                    return protocol::MutationOutcome::empty().warn("mutation.no-op", "Contributions are already identical to the requested replacement.");
-                }
-                next.contributions_json = json.clone();
-            }
-        }
-        protocol::MutationOutcome::new(next)
-    }
-
-    fn inverse(&self, base: &ImperativeConfig) -> Vec<Self> {
-        vec![ImperativeConfigMutation::Snapshot { config: base.clone() }]
-    }
-}
-//#endregion 🔖️ConfigMutations
+#[path = "🧬️schema/🧬️mutations/🦀️.rs"]
+mod mutations;
+pub use mutations::*;
 
 //#region 🧪️Tests
 #[cfg(test)]
@@ -223,14 +109,41 @@ mod tests {
         let base = ImperativeConfig::default();
         let mut snapshot = base.clone();
         snapshot.run_output_json = r#"{"counter":1}"#.into();
-        let operation = ImperativeConfigMutation::Snapshot { config: snapshot.clone() };
+        let operation = ImperativeConfigMutation::ReplaceConfig(ReplaceConfig { config: snapshot.clone() });
         assert_eq!(protocol::Mutation::diff(&operation, &base).diff(), &snapshot);
     }
 
     #[semio_framework_async_macros::async_test]
     async fn config_operation_set_run_output_and_locale_round_trip() {
-        store::os_store::test_support::assert_op_line_round_trip(&ImperativeConfigMutation::SetRunOutput { json: r#"{"counter":1}"#.into() });
-        store::os_store::test_support::assert_op_line_round_trip(&ImperativeConfigMutation::SetLocale { value: "de-DE".into() });
+        store::os_store::test_support::assert_op_line_round_trip(&ImperativeConfigMutation::SetRunOutput(SetRunOutput { json: r#"{"counter":1}"#.into() }));
+        store::os_store::test_support::assert_op_line_round_trip(&ImperativeConfigMutation::SetLocale(SetLocale { value: "de-DE".into() }));
     }
 }
 //#endregion 🧪️Tests
+
+#[cfg(test)]
+mod contract_vectors {
+    use super::*;
+    use protocol::{Mutation, MutationDiff, OpBinary, OpText};
+    use dsl::os_pack as pack;
+
+    #[test]
+    fn imperative_configuration_contract_vectors_match_the_json_oracle() {
+        let vectors: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🔁️mutation-contracts.json")).expect("neutral contract vectors");
+        let base: ImperativeConfig = pack::from_json_str(&vectors["base"].to_string()).expect("owned base decoder");
+        assert_eq!(<ImperativeConfigMutation as Mutation<ImperativeConfig>>::DESCRIPTORS.len(), vectors["cases"].as_array().expect("cases").len());
+        for vector in vectors["cases"].as_array().expect("cases") {
+            let mutation: ImperativeConfigMutation = pack::from_json_str(&vector["mutation"].to_string()).expect("owned operation decoder");
+            assert_eq!(serde_json::from_str::<serde_json::Value>(&pack::to_json_string(&mutation)).expect("independent operation oracle"), vector["mutation"]);
+            assert_eq!(mutation.descriptor().semantic_kind, vector["kind"].as_str().expect("semantic kind"));
+            assert_eq!(ImperativeConfigMutation::parse_op(&mutation.print_op()).expect("operation text"), mutation);
+            assert_eq!(ImperativeConfigMutation::decode_op(&mutation.encode_op().expect("operation binary")).expect("binary decode"), mutation);
+            let outcome = mutation.diff(&base);
+            assert!(outcome.messages().is_empty());
+            let next = outcome.diff().apply(&base).expect("apply diff");
+            assert_eq!(serde_json::from_str::<serde_json::Value>(&pack::to_json_string(&next)).expect("independent state oracle"), vector["expected"]);
+            let restored = mutation.inverse(&base).into_iter().fold(next, |state, inverse| inverse.diff(&state).diff().apply(&state).expect("apply inverse"));
+            assert_eq!(restored, base);
+        }
+    }
+}

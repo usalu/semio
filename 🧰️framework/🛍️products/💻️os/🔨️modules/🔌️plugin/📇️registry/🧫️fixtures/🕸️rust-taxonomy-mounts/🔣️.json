@@ -1,0 +1,131 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "nested-owner-mounts",
+      "files": {
+        "📦️packages/🦀️rust/Cargo.toml": "[package]\nname = \"taxonomy_mount_fixture\"\nversion = \"0.0.0\"\nedition = \"2021\"\n[lib]\npath = \"🦀️.rs\"\n",
+        "📦️packages/🦀️rust/🦀️.rs": "#[path = \"../../🦀️.rs\"]\npub mod owner;\n",
+        "🦀️.rs": "#[path = \"child/🦀️.rs\"]\npub mod child;\n",
+        "child/🦀️.rs": "#[path = \"../nested/🦀️.rs\"]\npub(crate) mod leaf;\n",
+        "nested/🦀️.rs": "pub fn value() -> u32 { 42 }\n"
+      },
+      "expectedCodes": [],
+      "rustcSuccess": true,
+      "expectedUnmounted": []
+    },
+    {
+      "id": "same-line-path-visibility",
+      "files": {
+        "📦️packages/🦀️rust/Cargo.toml": "[package]\nname = \"taxonomy_mount_fixture\"\nversion = \"0.0.0\"\nedition = \"2021\"\n[lib]\npath = \"🦀️.rs\"\n",
+        "📦️packages/🦀️rust/🦀️.rs": "#[path = \"../../🦀️.rs\"] pub(crate) mod owner;\n",
+        "🦀️.rs": "pub fn value() -> u32 { 42 }\n"
+      },
+      "expectedCodes": [],
+      "rustcSuccess": true,
+      "expectedUnmounted": []
+    },
+    {
+      "id": "inline-base-inheritance",
+      "files": {
+        "📦️packages/🦀️rust/Cargo.toml": "[package]\nname = \"taxonomy_mount_fixture\"\nversion = \"0.0.0\"\nedition = \"2021\"\n[lib]\npath = \"🦀️.rs\"\n",
+        "📦️packages/🦀️rust/🦀️.rs": "#[path = \"../../.\"]\npub mod owner {\n  #[path = \".\"]\n  pub mod nested {\n    #[path = \"🦀️.rs\"]\n    pub(crate) mod leaf;\n  }\n}\n",
+        "🦀️.rs": "pub fn value() -> u32 { 42 }\n"
+      },
+      "expectedCodes": [],
+      "rustcSuccess": true,
+      "expectedUnmounted": []
+    },
+    {
+      "id": "missing-nested-target",
+      "files": {
+        "📦️packages/🦀️rust/Cargo.toml": "[package]\nname = \"taxonomy_mount_fixture\"\nversion = \"0.0.0\"\nedition = \"2021\"\n[lib]\npath = \"🦀️.rs\"\n",
+        "📦️packages/🦀️rust/🦀️.rs": "#[path = \"../../🦀️.rs\"]\npub mod owner;\n",
+        "🦀️.rs": "#[path = \"child/🦀️.rs\"]\npub mod child;\n",
+        "child/🦀️.rs": "#[path = \"../nested/🦀️.rs\"]\npub(crate) mod leaf;\n"
+      },
+      "expectedCodes": [
+        "missing-target"
+      ],
+      "rustcSuccess": false,
+      "expectedUnmounted": []
+    },
+    {
+      "id": "unmounted-component",
+      "files": {
+        "📦️packages/🦀️rust/Cargo.toml": "[package]\nname = \"taxonomy_mount_fixture\"\nversion = \"0.0.0\"\nedition = \"2021\"\n[lib]\npath = \"🦀️.rs\"\n",
+        "📦️packages/🦀️rust/🦀️.rs": "#[path = \"../../🦀️.rs\"]\npub mod owner;\n",
+        "🦀️.rs": "#[path = \"child/🦀️.rs\"]\npub mod child;\n",
+        "child/🦀️.rs": "#[path = \"../nested/🦀️.rs\"]\npub(crate) mod leaf;\n",
+        "nested/🦀️.rs": "pub fn value() -> u32 { 42 }\n",
+        "orphan/🦀️.rs": "pub fn orphan() {}\n"
+      },
+      "expectedCodes": [
+        "unmounted"
+      ],
+      "rustcSuccess": true,
+      "expectedUnmounted": [
+        "orphan/🦀️.rs"
+      ]
+    },
+    {
+      "id": "unrelated-manifest-no-authority",
+      "files": {
+        "📦️packages/🦀️rust/Cargo.toml": "[package]\nname = \"taxonomy_mount_fixture\"\nversion = \"0.0.0\"\nedition = \"2021\"\n[lib]\npath = \"🦀️.rs\"\n",
+        "📦️packages/🦀️rust/🦀️.rs": "#[path = \"../../🦀️.rs\"]\npub mod owner;\n",
+        "🦀️.rs": "#[path = \"child/🦀️.rs\"]\npub mod child;\n",
+        "child/🦀️.rs": "#[path = \"../nested/🦀️.rs\"]\npub(crate) mod leaf;\n",
+        "nested/🦀️.rs": "pub fn value() -> u32 { 42 }\n",
+        "orphan/🦀️.rs": "pub fn orphan() {}\n",
+        "orphan/Cargo.toml": "[package]\nname = \"orphan\"\nversion = \"0.0.0\"\nedition = \"2021\"\n[lib]\npath = \"🦀️.rs\"\n"
+      },
+      "expectedCodes": [
+        "unmounted"
+      ],
+      "rustcSuccess": true,
+      "expectedUnmounted": [
+        "orphan/🦀️.rs"
+      ]
+    },
+    {
+      "id": "quoted-and-commented-decoys",
+      "files": {
+        "📦️packages/🦀️rust/Cargo.toml": "[package]\nname = \"taxonomy_mount_fixture\"\nversion = \"0.0.0\"\nedition = \"2021\"\n[lib]\npath = \"🦀️.rs\"\n",
+        "📦️packages/🦀️rust/🦀️.rs": "#[path = \"../../🦀️.rs\"] pub(crate) mod owner;\n",
+        "🦀️.rs": "pub const TEXT: &str = r##\"#[path = \"absent/🦀️.rs\"] pub mod decoy;\"##;\n// #[path = \"missing/🦀️.rs\"]\n// pub mod hidden;\n"
+      },
+      "expectedCodes": [],
+      "rustcSuccess": true,
+      "expectedUnmounted": []
+    },
+    {
+      "id": "dependency-suffix-collision",
+      "files": {
+        "📦️packages/🦀️rust/Cargo.toml": "[package]\nname = \"taxonomy_mount_fixture\"\nversion = \"0.0.0\"\nedition = \"2021\"\n[lib]\npath = \"🦀️.rs\"\n",
+        "📦️packages/🦀️rust/🦀️.rs": "#[path = \"../../🦀️.rs\"]\npub mod owner;\n",
+        "🦀️.rs": "#[path = \"child/🦀️.rs\"]\npub mod child;\n",
+        "child/🦀️.rs": "#[path = \"../deep/nested/🦀️.rs\"]\npub(crate) mod leaf;\n",
+        "nested/🦀️.rs": "pub fn orphan() {}\n",
+        "deep/nested/🦀️.rs": "pub fn value() -> u32 { 42 }\n"
+      },
+      "expectedCodes": [
+        "unmounted"
+      ],
+      "expectedUnmounted": [
+        "nested/🦀️.rs"
+      ],
+      "rustcSuccess": true
+    },
+    {
+      "id": "inactive-conditional-target",
+      "files": {
+        "📦️packages/🦀️rust/Cargo.toml": "[package]\nname = \"taxonomy_mount_fixture\"\nversion = \"0.0.0\"\nedition = \"2021\"\n[lib]\npath = \"🦀️.rs\"\n",
+        "📦️packages/🦀️rust/🦀️.rs": "#[path = \"../../🦀️.rs\"] pub(crate) mod owner;\n",
+        "🦀️.rs": "#[cfg(any())]\n#[path = \"missing/🦀️.rs\"]\npub mod inactive;\n"
+      },
+      "expectedCodes": [],
+      "expectedUnmounted": [],
+      "rustcSuccess": true
+    }
+  ]
+}

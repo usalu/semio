@@ -7,9 +7,11 @@
 use crate::artifacts::fem2d::{element_id, Fem2dSnapshot, FemCamera, FemDof, FemElement, FemLoad};
 use crate::model::Dof;
 use semio_framework_plugin::{BuiltNode, Canvas2dScene};
+#[cfg(test)]
+use semio_framework_ui_scene::canvas2d_snapshot_with_page;
 use semio_framework_ui_scene::{
     canvas2d_snapshot_abort_write, canvas2d_snapshot_abort_write_step, canvas2d_snapshot_admit_page, canvas2d_snapshot_begin, canvas2d_snapshot_begin_close, canvas2d_snapshot_close_step, canvas2d_snapshot_seal, canvas2d_snapshot_terminal_is_empty,
-    canvas2d_snapshot_with_page, canvas2d_snapshot_write_terminal_is_empty, Canvas2dSnapshotDescriptor, Canvas2dSnapshotLease, Canvas2dSnapshotPage, Canvas2dSnapshotWriteToken, CANVAS2D_SNAPSHOT_PAGE_BYTE_CAPACITY,
+    canvas2d_snapshot_write_terminal_is_empty, Canvas2dSnapshotDescriptor, Canvas2dSnapshotLease, Canvas2dSnapshotPage, Canvas2dSnapshotWriteToken, CANVAS2D_SNAPSHOT_PAGE_BYTE_CAPACITY,
 };
 use std::collections::HashMap;
 use std::fmt::Write;
@@ -907,7 +909,7 @@ impl Fem2dVisualJob {
 }
 //#endregion 🧵️MountedVisualJob
 
-fn vector_layer(id: String, origin: (f64, f64), vector: [f64; 2], color: &str) -> dsl::DslValue {
+fn vector_layer(id: String, origin: (f64, f64), vector: [f64; 2], color: &str) -> dsl::json::Value {
     dsl::json!({
         "kind": "polyline",
         "id": id,
@@ -917,7 +919,7 @@ fn vector_layer(id: String, origin: (f64, f64), vector: [f64; 2], color: &str) -
 }
 
 /// 👁️ Deterministic live overlays for mesh, assembly and iterative solve progress.
-pub fn fem2d_live_visual_layers(doc: &Fem2dSnapshot, visual: &Fem2dLiveVisual) -> Vec<dsl::DslValue> {
+pub fn fem2d_live_visual_layers(doc: &Fem2dSnapshot, visual: &Fem2dLiveVisual) -> Vec<dsl::json::Value> {
     let mut layers = Vec::new();
     let mut regions: Vec<_> = doc.regions.iter().collect();
     regions.sort_by(|a, b| a.id.cmp(&b.id));
@@ -1010,7 +1012,7 @@ pub(crate) fn fem2d_model_extent(doc: &Fem2dSnapshot) -> f64 {
 
 /// 🖼️ Nodes/members/supports as Canvas2d layers — shared by this window (bright colors) and the results
 /// window's faint undeformed backdrop (a single muted color for every layer kind).
-pub(crate) fn fem2d_structure_layers(doc: &Fem2dSnapshot, node_color: &str, line_color: &str, support_color: &str) -> Vec<dsl::DslValue> {
+pub(crate) fn fem2d_structure_layers(doc: &Fem2dSnapshot, node_color: &str, line_color: &str, support_color: &str) -> Vec<dsl::json::Value> {
     let mut layers = Vec::new();
     for node in &doc.nodes {
         let (sx, sy) = screen_2d(node.x, node.y);
@@ -1103,7 +1105,7 @@ pub(crate) fn fem2d_region_mesh_triangles(doc: &Fem2dSnapshot) -> Vec<(String, [
 
 /// 🖼️ Every element's deformed-shape polyline (pink), given a node-id-keyed displacement map and a
 /// display scale — shared by the static, modal, and buckling results renders.
-pub(crate) fn fem2d_deformed_shape_layers(doc: &Fem2dSnapshot, disp_map: &HashMap<String, [f64; 6]>, deform_scale: f64) -> Vec<dsl::DslValue> {
+pub(crate) fn fem2d_deformed_shape_layers(doc: &Fem2dSnapshot, disp_map: &HashMap<String, [f64; 6]>, deform_scale: f64) -> Vec<dsl::json::Value> {
     let mut layers = Vec::new();
     for element in &doc.elements {
         let (start, end) = fem2d_element_endpoints(element);
@@ -1128,7 +1130,7 @@ pub(crate) fn fem2d_deformed_shape_layers(doc: &Fem2dSnapshot, disp_map: &HashMa
 //#endregion 🔖️SharedDrawHelpers
 
 //#region 🔖️Render
-pub fn render(doc: &Fem2dSnapshot, camera: &FemCamera) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn render(doc: &Fem2dSnapshot, camera: &FemCamera) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let mut layers = fem2d_structure_layers(doc, "#38bdf8", "#94a3b8", "#f97316");
     for (tri_index, (_, tri)) in fem2d_region_triangles(doc).iter().enumerate() {
         let [(x0, y0), (x1, y1), (x2, y2)] = *tri;
@@ -1144,7 +1146,7 @@ pub fn render(doc: &Fem2dSnapshot, camera: &FemCamera) -> semio_framework_plugin
 }
 
 /// 👁️ Renders the model plus an optional replaceable worker-job progress snapshot.
-pub fn render_with_progress(_doc: &Fem2dSnapshot, camera: &FemCamera, progress: Option<&Fem2dMountedVisualLease>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn render_with_progress(_doc: &Fem2dSnapshot, camera: &FemCamera, progress: Option<&Fem2dMountedVisualLease>) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     crate::app_surface::canvas_2d_surface(BODY_KEY, Canvas2dScene { camera_x: camera.x, camera_y: camera.y, zoom: camera.zoom, layers_json: String::new(), snapshot: progress.map(Fem2dMountedVisualLease::snapshot) })
 }
 //#endregion 🔖️Render
@@ -1192,7 +1194,7 @@ mod tests {
         let mut app = fem2d_app();
         crate::editor::fem2d::testkit::dispatch(&mut app, crate::editor::fem2d::Fem2dCommand::SetActiveExample(crate::editor::fem2d::commands::set_active_example::SetActiveExample { example_id: "default".into() })).await;
         let snapshot = app.snapshot().expect("snapshot");
-        let node = render(&snapshot, &FemCamera::default());
+        let node = render(&snapshot, &FemCamera::default()).expect("fixture surface admission");
         let semio_framework_ui_contract::Component::Surface(props) = &node.component else { panic!("expected canvas surface") };
         let scene: Canvas2dScene = semio_framework_ui_scene::decode(props).expect("decode canvas scene");
         assert!(scene.layers_json.contains("mesh-edge-"), "expected mesh-edge preview layers in the model scene");
@@ -1356,3 +1358,19 @@ mod tests {
     }
 }
 //#endregion 🧪️Tests
+
+#[cfg(test)]
+mod vector_json_contract {
+    use super::*;
+    #[test]
+    fn vector_layer_vectors_match_the_json_oracle() {
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🔣️vectors.json")).expect("neutral vector layers");
+        for row in fixture["cases"].as_array().expect("vector cases") {
+            let origin = (row["origin"][0].as_f64().unwrap(), row["origin"][1].as_f64().unwrap());
+            let vector = [row["vector"][0].as_f64().unwrap(), row["vector"][1].as_f64().unwrap()];
+            let layer = vector_layer(row["id"].as_str().unwrap().into(), origin, vector, row["color"].as_str().unwrap());
+            let actual: serde_json::Value = serde_json::from_str(&dsl::json::to_string(&layer)).expect("independent layer decoder");
+            assert_eq!(actual, row["expected"]);
+        }
+    }
+}

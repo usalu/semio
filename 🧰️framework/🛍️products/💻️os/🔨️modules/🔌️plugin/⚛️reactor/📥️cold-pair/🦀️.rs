@@ -11,7 +11,7 @@ enum ColdDocumentPairPhase {
     Verified,
     Loading,
     Faulted,
-    Applied(ColdDocumentPairApplied),
+    Applied,
     Closing,
 }
 
@@ -121,6 +121,7 @@ pub(crate) struct ColdDocumentPairLoad {
 }
 
 impl ColdDocumentPairLoad {
+    #[cfg(test)]
     pub(crate) fn lifetime(&self) -> ActorInstanceLifetime {
         self.owner.borrow().header.lifetime
     }
@@ -281,7 +282,7 @@ impl<const N: usize> ColdDocumentPairIngressRegistry<N> {
         let status = match result {
             Ok(()) => {
                 let receipt = ColdDocumentPairApplied { lifetime: header.lifetime, transfer_generation: header.transfer_generation, baseline_frontier: header.baseline_frontier.clone(), aggregate_sha256: header.aggregate_sha256 };
-                load.owner.borrow_mut().phase = ColdDocumentPairPhase::Applied(receipt.clone());
+                load.owner.borrow_mut().phase = ColdDocumentPairPhase::Applied;
                 ColdPairIngressStatus::Applied(receipt)
             }
             Err(mut fault) => {
@@ -294,6 +295,7 @@ impl<const N: usize> ColdDocumentPairIngressRegistry<N> {
         status
     }
 
+    #[cfg(test)]
     pub(crate) fn request_close(&mut self, lifetime: ActorInstanceLifetime) -> bool {
         let Some(owner) = self.slots[Self::slot_index(lifetime)].as_ref() else {
             return false;
@@ -395,7 +397,10 @@ impl<const N: usize> ColdDocumentPairIngressRegistry<N> {
 
     #[cfg(test)]
     fn is_applied(&self, lifetime: ActorInstanceLifetime) -> bool {
-        self.slots[Self::slot_index(lifetime)].as_ref().is_some_and(|owner| matches!(owner.borrow().phase, ColdDocumentPairPhase::Applied(ref receipt) if receipt.lifetime == lifetime))
+        self.slots[Self::slot_index(lifetime)].as_ref().is_some_and(|owner| {
+            let owner = owner.borrow();
+            owner.header.lifetime == lifetime && matches!(owner.phase, ColdDocumentPairPhase::Applied)
+        })
     }
 }
 

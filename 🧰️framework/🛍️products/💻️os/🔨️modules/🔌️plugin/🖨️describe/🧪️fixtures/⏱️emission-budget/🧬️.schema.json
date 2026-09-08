@@ -1,0 +1,56 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "format",
+    "cases"
+  ],
+  "properties": {
+    "format": {
+      "const": "semio.descriptor.emission-budget/v1"
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 5,
+      "maxItems": 5,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "budgetMs",
+          "elapsedMs",
+          "expired",
+          "remainingMs"
+        ],
+        "properties": {
+          "name": {
+            "enum": [
+              "unlimited",
+              "before-limit",
+              "at-limit",
+              "after-limit",
+              "already-exhausted"
+            ]
+          },
+          "budgetMs": {
+            "type": "integer",
+            "minimum": -1
+          },
+          "elapsedMs": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "expired": {
+            "type": "boolean"
+          },
+          "remainingMs": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      }
+    }
+  }
+}

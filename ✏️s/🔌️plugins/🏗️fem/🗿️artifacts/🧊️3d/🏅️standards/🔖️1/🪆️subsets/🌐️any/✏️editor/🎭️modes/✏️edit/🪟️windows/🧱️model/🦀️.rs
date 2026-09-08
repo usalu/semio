@@ -4,7 +4,9 @@
 //! `WindowKindDefinition`/`window_kind_def` object is built anywhere in the pre-migration
 //! `create_fem3d_app`, so this node exports just its id/body-key constants and `render()`.
 
-use crate::artifacts::fem3d::{Fem3dSnapshot, FemCamera};
+#[cfg(test)]
+use crate::artifacts::fem3d::Fem3dSnapshot;
+use crate::artifacts::fem3d::FemCamera;
 
 /// 🪟️ The manifest's Model window kind id.
 pub const FEM3D_WINDOW_MODEL: &str = "fem3d-model";
@@ -57,7 +59,7 @@ mod tests {
         let mut app = fem3d_app();
         crate::editor::fem3d::testkit::dispatch(&mut app, crate::editor::fem3d::Fem3dCommand::SetActiveExample(crate::editor::fem3d::commands::set_active_example::SetActiveExample { example_id: "default".into() })).await;
         let snapshot = app.snapshot().expect("snapshot");
-        let node = render(&snapshot, &FemCamera::default());
+        let node = render(&snapshot, &FemCamera::default()).expect("fixture surface admission");
         let semio_framework_ui_contract::Component::Surface(props) = &node.component else { panic!("expected world surface") };
         let scene: semio_framework_ui_scene::World3dScene = semio_framework_ui_scene::decode(props).expect("decode world scene");
         assert!(scene.meshes_json.contains("solid-sol1"), "expected a solid mesh for the example fixture: {}", scene.meshes_json);

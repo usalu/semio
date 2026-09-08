@@ -31,7 +31,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 #[path = "🌐️browser-actor/🦀️.rs"]
 pub mod browser_actor;
 pub use browser_actor::{
-    DocumentBrowserActorByteLengthV1, DocumentBrowserActorErrorV1, DocumentBrowserActorSourceV1, DocumentExecutionTargetBrowserActorV1, DocumentOpenBrowserActorV1, DOCUMENT_BROWSER_ACTOR_INTERFACES, DOCUMENT_BROWSER_ACTOR_MAX_BYTES,
+    DOCUMENT_BROWSER_ACTOR_INTERFACES, DOCUMENT_BROWSER_ACTOR_MAX_BYTES, DocumentBrowserActorByteLengthV1, DocumentBrowserActorErrorV1, DocumentBrowserActorSourceV1, DocumentExecutionTargetBrowserActorV1, DocumentOpenBrowserActorV1,
 };
 
 /// 🔐️ Domain prefix for the one canonical descriptor digest encoding.
@@ -775,6 +775,7 @@ impl AdminIntentV1 {
 pub enum AdminIntentStateV1 {
     Succeeded,
     Accepted,
+    Indeterminate,
     Failed,
     Cancelled,
 }
@@ -799,6 +800,16 @@ pub struct AdminIntentResultV1 {
     pub invite_token: Option<String>,
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub share_token: Option<String>,
+}
+
+impl Drop for AdminIntentResultV1 {
+    fn drop(&mut self) {
+        for value in [&mut self.invite_token, &mut self.share_token].into_iter().flatten() {
+            for byte in unsafe { value.as_bytes_mut() } {
+                unsafe { std::ptr::write_volatile(byte, 0) };
+            }
+        }
+    }
 }
 
 /// 🧾 Receipt for exactly one accepted administrator intent.
@@ -1484,6 +1495,13 @@ pub enum DocumentOpenSurfaceRoleV1 {
     Editor,
 }
 
+/// 📡️ Exact application-channel ABI claimed by the compiled package descriptor.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, ToValue, FromValue)]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
+pub struct DocumentExecutionProtocolV1 {
+    pub app_channel_version: u32,
+}
+
 /// 📦️ Exact verified package projection required by one open plan.
 #[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
@@ -1494,6 +1512,7 @@ pub struct DocumentOpenPackageV1 {
     pub component_sha256: String,
     pub component_blake3: String,
     pub descriptor_byte_sha256: String,
+    pub execution_protocol: DocumentExecutionProtocolV1,
 }
 
 /// 🗂️ Immutable verified-catalog generation selected for one plan.
@@ -1687,6 +1706,7 @@ impl DocumentOpenPlanV1 {
             || !valid_document_open_hash(&self.package.component_sha256)
             || !valid_document_open_hash(&self.package.component_blake3)
             || !valid_document_open_hash(&self.package.descriptor_byte_sha256)
+            || self.package.execution_protocol.app_channel_version != crate::os_spr::CHANNEL_VERSION
             || !valid_document_open_hash(&self.artifact.pack_schema_hash)
             || !self.grant.read
             || !self.grant.observe
@@ -1808,6 +1828,7 @@ impl DocumentExecutionTargetLeaseFieldsV1 {
             || !valid_document_open_hash(&self.package.component_sha256)
             || !valid_document_open_hash(&self.package.component_blake3)
             || !valid_document_open_hash(&self.package.descriptor_byte_sha256)
+            || self.package.execution_protocol.app_channel_version != crate::os_spr::CHANNEL_VERSION
             || !valid_document_open_hash(&self.artifact.pack_schema_hash)
             || !valid_document_open_hash(&self.component.sha256)
             || !valid_document_open_hash(&self.component.blake3)
@@ -2061,6 +2082,53 @@ pub struct GisMapInferenceApprovalReceiptV1 {
     pub command_hash: String,
     pub proposal_hash: String,
     pub applied: bool,
+    pub undo: GisMapApprovalUndoHandleV1,
+}
+
+/// ↩️ Owner-bound durable undo locator minted only from a committed GIS approval witness.
+#[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
+pub struct GisMapApprovalUndoHandleV1 {
+    pub target_id: String,
+    pub expected_current: CheckpointPublicationFrontierV1,
+}
+
+/// 📨️ Closed undo intent: a server-minted target, exact tail expectation and retry identity.
+#[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
+pub struct GisMapApprovalUndoRequestV1 {
+    pub schema: String,
+    pub version: u32,
+    pub target_id: String,
+    pub idempotency_key: String,
+    pub expected_current: CheckpointPublicationFrontierV1,
+}
+
+impl GisMapApprovalUndoRequestV1 {
+    /// 🛡️ Refuses guessed targets, unbounded identities and noncanonical frontiers.
+    pub fn validate(&self) -> bool {
+        self.schema == "semio.hub.gis-map-approval-undo/v1"
+            && self.version == 1
+            && self.target_id.len() == 32
+            && self.target_id.bytes().all(|byte| byte.is_ascii_digit() || matches!(byte, b'a'..=b'f'))
+            && self.idempotency_key.len() == 32
+            && self.idempotency_key.bytes().all(|byte| byte.is_ascii_digit() || matches!(byte, b'a'..=b'f'))
+            && self.expected_current.validate()
+    }
+}
+
+/// 🧾️ Durable inverse receipt published only after the second verified WAL decision and pair.
+#[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
+pub struct GisMapApprovalUndoReceiptV1 {
+    pub schema: String,
+    pub target_id: String,
+    pub original_job_id: String,
+    pub mutation_id: String,
+    pub command_hash: String,
+    pub applied: bool,
+    pub replayed: bool,
+    pub frontier: CheckpointPublicationFrontierV1,
 }
 
 /// 🚦 The complete published failure vocabulary the four authenticated routes may answer with, plus
@@ -2176,11 +2244,7 @@ impl GisMapInferencePortPhaseV1 {
 
     /// 🔊 Work in flight announces politely; every terminal asserts.
     pub const fn aria_role(self) -> &'static str {
-        if self.terminal() {
-            "alert"
-        } else {
-            "status"
-        }
+        if self.terminal() { "alert" } else { "status" }
     }
 
     /// 🗣 Explicit English and German text; there is no default language.

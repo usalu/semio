@@ -3,7 +3,7 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import Ajv from "ajv";
-import { createFlowBrowserFeatures } from "../🌐️flow-browser.js";
+import { createFlowBrowserRuntime } from "../🌐️flow-browser.js";
 
 //#region ⏱️ConsumedClock
 export async function testFlowBrowserClock() {
@@ -23,10 +23,11 @@ export async function testFlowBrowserClock() {
     return value;
   } } });
   try {
-    const { features } = await createFlowBrowserFeatures({ source: await readFile(new URL("../../../../🫀️core/🕸️bindings/flow_core_bg.wasm", import.meta.url)) });
+    const runtime = await createFlowBrowserRuntime({ source: await readFile(new URL("../../../../🫀️core/🕸️bindings/flow_core_bg.wasm", import.meta.url)) });
+    const session = runtime.openSession();
     const started = samples;
-    await features.document.catalogueJson({}).result;
-    await features.lifetime.close();
+    await session.catalogueJson().result;
+    await runtime.close();
     assert.ok(started >= 1, "the consumed module must install its real clock before its first Flow request");
     assert.ok(samples > started && samples >= fixture.clock.minimumSamples, "Flow turns must resample the installed clock");
     assert.ok(last > first, "the consumed clock must advance rather than freeze its startup sample");

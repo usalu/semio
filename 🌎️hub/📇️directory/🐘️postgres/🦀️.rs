@@ -15,7 +15,8 @@ use crate::directory::error::{DirectoryError, DirectoryResult};
 use crate::directory::model::*;
 use crate::directory::{
     active_capability, auth_audit, bounded_event_read, checkpoint_projection_rebuild, directory_command_result_kind_from_str, directory_command_result_kind_str, directory_projection_rejection_v1, directory_projection_space_v1,
-    invite_redemption_preflight, kind_to_str, prepare_auth_session, prepare_invite, prepare_share_token, role_from_wire, role_to_wire, same_admin_operation_request, validate_admin_operation_audit, validate_bounded_auth_text,
+    admin_operation_effect_receipt_v1, invite_redemption_preflight, kind_to_str, prepare_auth_session, prepare_invite, prepare_share_token, role_from_wire, role_to_wire, same_admin_operation_request, validate_admin_operation_audit,
+    validate_admin_operation_effect_receipt, validate_bounded_auth_text,
     validate_checkpoint_publication_claim, validate_checkpoint_publication_completion, validate_directory_command_claim, validate_verified_checkpoint_append, verify_invite_redemption_event, verify_invite_redemption_scope_hint, visibility_to_str,
     ArtifactCasSweepCandidatePage, DirectoryAppendOutcomeV1, DirectoryProjectionRejectionV1, HubClock, HubDirectory, InviteCapability, InviteRedemptionPreflight, InviteRedemptionScopeHintV1, InviteRedemptionSpaceStateV1, NewDirectoryEvent,
     ProjectionRebuildControl, SessionCapability, ShareCapability, ADMIN_PAGE_MAX, ARTIFACT_CAS_RESERVATION_MAX_TTL_MS, ARTIFACT_CAS_SWEEP_PAGE_MAX, ARTIFACT_CHECKPOINT_LINEAGE_MAX, AUTH_AUDIT_PAGE_MAX, AUTH_TEXT_MAX_BYTES,
@@ -154,7 +155,8 @@ CREATE TABLE IF NOT EXISTS hub_share_grant (
     created_at BIGINT NOT NULL,
     expires_at BIGINT NOT NULL,
     revoked_at BIGINT,
-    revoked_reason TEXT
+    revoked_reason TEXT,
+    FOREIGN KEY (space_id, document_id) REFERENCES hub_document_descriptor(space_id, document_id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS hub_space_invite (
@@ -230,6 +232,17 @@ CREATE TABLE IF NOT EXISTS hub_admin_operation_audit (
     outcome_code TEXT NOT NULL,
     reason_code TEXT,
     UNIQUE (request_id, terminal)
+);
+CREATE TABLE IF NOT EXISTS hub_admin_operation_effect_receipt (
+    operation_id TEXT NOT NULL,
+    intent_digest TEXT NOT NULL CHECK (length(intent_digest) = 64),
+    committed_at BIGINT NOT NULL,
+    outcome_code TEXT NOT NULL,
+    event_seq_first BIGINT,
+    event_seq_last BIGINT,
+    PRIMARY KEY (operation_id, intent_digest),
+    UNIQUE (operation_id),
+    CHECK ((event_seq_first IS NULL) = (event_seq_last IS NULL))
 );
 
 CREATE TABLE IF NOT EXISTS hub_directory_event (
@@ -359,8 +372,92 @@ fn now_ms() -> i64 {
     SystemTime::now().duration_since(UNIX_EPOCH).map_or(0, |d| d.as_millis() as i64)
 }
 
+async fn insert_admin_operation_effect_receipt(
+    tx: &mut sqlx_core::transaction::Transaction<'_, sqlx_postgres::Postgres>,
+    receipt: &AdminOperationEffectReceiptV1,
+) -> DirectoryResult<()> {
+    validate_admin_operation_effect_receipt(receipt)?;
+    let inserted = sqlx_core::query::query(
+        "INSERT INTO hub_admin_operation_effect_receipt (operation_id, intent_digest, committed_at, outcome_code, event_seq_first, event_seq_last)
+         VALUES ($1, $2, $3, $4, $5, $6) ON CONFLICT (operation_id) DO NOTHING",
+    )
+    .bind(&receipt.operation_id)
+    .bind(&receipt.intent_digest)
+    .bind(receipt.committed_at)
+    .bind(&receipt.outcome_code)
+    .bind(receipt.event_seq_first.map(i64::try_from).transpose().map_err(backend)?)
+    .bind(receipt.event_seq_last.map(i64::try_from).transpose().map_err(backend)?)
+    .execute(&mut **tx)
+    .await
+    .map_err(backend)?;
+    if inserted.rows_affected() == 1 {
+        return Ok(());
+    }
+    let established: Option<(String, String, i64, String, Option<i64>, Option<i64>)> = sqlx_core::query_as::query_as(
+        "SELECT operation_id, intent_digest, committed_at, outcome_code, event_seq_first, event_seq_last FROM hub_admin_operation_effect_receipt WHERE operation_id = $1 FOR UPDATE",
+    )
+    .bind(&receipt.operation_id)
+    .fetch_optional(&mut **tx)
+    .await
+    .map_err(backend)?;
+    let Some((operation_id, intent_digest, committed_at, outcome_code, first, last)) = established else {
+        return Err(DirectoryError::Conflict("admin operation effect receipt disappeared".into()));
+    };
+    let established = AdminOperationEffectReceiptV1 {
+        operation_id,
+        intent_digest,
+        committed_at,
+        outcome_code,
+        event_seq_first: first.map(u64::try_from).transpose().map_err(backend)?,
+        event_seq_last: last.map(u64::try_from).transpose().map_err(backend)?,
+    };
+    if &established == receipt {
+        Ok(())
+    } else {
+        Err(DirectoryError::Conflict("admin operation effect receipt identity changed".into()))
+    }
+}
+
 fn backend<E: std::fmt::Display>(err: E) -> DirectoryError {
     DirectoryError::Backend(err.to_string())
+}
+
+enum AdminEffectPreflightFailure {
+    RejectedBeforeCommit,
+    Indeterminate,
+}
+
+impl<T> From<AdminEffectPreflightFailure> for AdminEffectCommitV1<T> {
+    fn from(value: AdminEffectPreflightFailure) -> Self {
+        match value {
+            AdminEffectPreflightFailure::RejectedBeforeCommit => Self::RejectedBeforeCommit,
+            AdminEffectPreflightFailure::Indeterminate => Self::Indeterminate,
+        }
+    }
+}
+
+fn admin_effect_preflight<T>(result: DirectoryResult<T>) -> Result<T, AdminEffectPreflightFailure> {
+    match result {
+        Ok(value) => Ok(value),
+        Err(DirectoryError::Backend(_)) => Err(AdminEffectPreflightFailure::Indeterminate),
+        Err(_) => Err(AdminEffectPreflightFailure::RejectedBeforeCommit),
+    }
+}
+
+async fn admin_effect_rollback<T>(tx: sqlx_core::transaction::Transaction<'_, sqlx_postgres::Postgres>) -> AdminEffectCommitV1<T> {
+    match tx.rollback().await {
+        Ok(()) => AdminEffectCommitV1::RejectedBeforeCommit,
+        Err(_) => AdminEffectCommitV1::Indeterminate,
+    }
+}
+
+macro_rules! admin_effect_try {
+    ($tx:ident, $result:expr) => {
+        match $result {
+            Ok(value) => value,
+            Err(_) => return admin_effect_rollback($tx).await,
+        }
+    };
 }
 
 fn array32(bytes: Vec<u8>, field: &str) -> DirectoryResult<[u8; 32]> {
@@ -536,7 +633,15 @@ impl PostgresDirectory {
         Ok(Self { pool })
     }
 
-    async fn revoke_auth_sessions_matching(&self, key: &str, subject_digest: Option<[u8; 32]>, reason: &str, actor_user_id: Option<&str>, correlation_id: &str) -> DirectoryResult<Vec<RevokedAuthSession>> {
+    async fn revoke_auth_sessions_matching(
+        &self,
+        key: &str,
+        subject_digest: Option<[u8; 32]>,
+        reason: &str,
+        actor_user_id: Option<&str>,
+        correlation_id: &str,
+        admin_effect: Option<&NewAdminOperationEffectReceiptV1>,
+    ) -> DirectoryResult<Vec<RevokedAuthSession>> {
         validate_bounded_auth_text(reason, "session revoke reason", AUTH_TEXT_MAX_BYTES)?;
         let revoked_at = now_ms();
         let mut tx = self.pool.begin().await.map_err(backend)?;
@@ -568,8 +673,51 @@ impl PostgresDirectory {
             insert_auth_audit(&mut tx, &audit).await?;
             revoked.push(RevokedAuthSession { id, authorization_generation: u64::try_from(generation).map_err(backend)?, revoked_at });
         }
+        if let Some(effect) = admin_effect {
+            insert_admin_operation_effect_receipt(&mut tx, &admin_operation_effect_receipt_v1(effect, &[])?).await?;
+        }
         tx.commit().await.map_err(backend)?;
         Ok(revoked)
+    }
+
+    async fn revoke_auth_sessions_matching_with_admin_effect(
+        &self,
+        key: &str,
+        reason: &str,
+        actor_user_id: Option<&str>,
+        correlation_id: &str,
+        effect: &NewAdminOperationEffectReceiptV1,
+    ) -> AdminEffectCommitV1<Vec<RevokedAuthSession>> {
+        if let Err(outcome) = admin_effect_preflight(validate_bounded_auth_text(reason, "session revoke reason", AUTH_TEXT_MAX_BYTES)) {
+            return outcome.into();
+        }
+        let revoked_at = now_ms();
+        let mut tx = match self.pool.begin().await {
+            Ok(tx) => tx,
+            Err(_) => return AdminEffectCommitV1::Indeterminate,
+        };
+        let rows: Vec<(String, String, i64, String)> = admin_effect_try!(tx, sqlx_core::query_as::query_as(
+            "UPDATE hub_auth_session SET revoked_at = $2, revoked_reason = $3, authorization_generation = authorization_generation + 1 WHERE user_id = $1 AND revoked_at IS NULL RETURNING id, user_id, authorization_generation, identity_provider",
+        )
+        .bind(key)
+        .bind(revoked_at)
+        .bind(reason)
+        .fetch_all(&mut *tx)
+        .await
+        .map_err(backend));
+        let mut revoked = Vec::with_capacity(rows.len());
+        for (id, user_id, generation, provider) in rows {
+            let audit = admin_effect_try!(tx, auth_audit(revoked_at, "session-revoked", Some(&id), Some(&user_id), actor_user_id, Some(&provider), "success", Some(reason), correlation_id, "server"));
+            admin_effect_try!(tx, insert_auth_audit(&mut tx, &audit).await);
+            let Ok(authorization_generation) = u64::try_from(generation) else { return admin_effect_rollback(tx).await };
+            revoked.push(RevokedAuthSession { id, authorization_generation, revoked_at });
+        }
+        let receipt = admin_effect_try!(tx, admin_operation_effect_receipt_v1(effect, &[]));
+        admin_effect_try!(tx, insert_admin_operation_effect_receipt(&mut tx, &receipt).await);
+        match tx.commit().await {
+            Ok(()) => AdminEffectCommitV1::Applied(revoked),
+            Err(_) => AdminEffectCommitV1::Indeterminate,
+        }
     }
 
     /// @emoji 🌱️ Seeds a placeholder `seed` system user and a default `studio`/`private` space it
@@ -780,20 +928,69 @@ impl HubDirectory for PostgresDirectory {
         let issued = prepare_share_token(scope, ttl_secs, now_ms())?;
         let audit = auth_audit(issued.record.created_at, "share-issued", Some(&issued.record.id), None, actor_user_id, None, "success", None, correlation_id, "server")?;
         let mut tx = self.pool.begin().await.map_err(backend)?;
-        sqlx_core::query::query("INSERT INTO hub_share_grant (id, selector, secret_digest, space_id, document_id, created_at, expires_at, revoked_at, revoked_reason) VALUES ($1, $2, $3, $4, $5, $6, $7, NULL, NULL)")
-            .bind(&issued.record.id)
-            .bind(&issued.record.selector)
-            .bind(issued.record.secret_digest.as_slice())
-            .bind(&scope.space_id)
-            .bind(&scope.document_id)
-            .bind(issued.record.created_at)
-            .bind(issued.record.expires_at)
-            .execute(&mut *tx)
-            .await
-            .map_err(backend)?;
+        let changed = sqlx_core::query::query(
+            "INSERT INTO hub_share_grant (id, selector, secret_digest, space_id, document_id, created_at, expires_at, revoked_at, revoked_reason)
+             SELECT $1, $2, $3, $4, $5, $6, $7, NULL, NULL
+             FROM hub_space AS s JOIN hub_document_descriptor AS d ON d.space_id = s.id
+             WHERE s.id = $4 AND d.space_id = $4 AND d.document_id = $5
+             FOR KEY SHARE OF s, d",
+        )
+        .bind(&issued.record.id)
+        .bind(&issued.record.selector)
+        .bind(issued.record.secret_digest.as_slice())
+        .bind(&scope.space_id)
+        .bind(&scope.document_id)
+        .bind(issued.record.created_at)
+        .bind(issued.record.expires_at)
+        .execute(&mut *tx)
+        .await
+        .map_err(backend)?;
+        if changed.rows_affected() != 1 {
+            return Err(DirectoryError::NotFound(format!("document descriptor {}/{}", scope.space_id, scope.document_id)));
+        }
         insert_auth_audit(&mut tx, &audit).await?;
         tx.commit().await.map_err(backend)?;
         Ok(issued)
+    }
+
+    async fn issue_share_token_as_with_admin_effect(&self, scope: &DocumentScope, ttl_secs: i64, actor_user_id: Option<&str>, correlation_id: &str, effect: &NewAdminOperationEffectReceiptV1) -> AdminEffectCommitV1<IssuedShareToken> {
+        let issued = match admin_effect_preflight(prepare_share_token(scope, ttl_secs, now_ms())) {
+            Ok(value) => value,
+            Err(outcome) => return outcome.into(),
+        };
+        let audit = match admin_effect_preflight(auth_audit(issued.record.created_at, "share-issued", Some(&issued.record.id), None, actor_user_id, None, "success", None, correlation_id, "server")) {
+            Ok(value) => value,
+            Err(outcome) => return outcome.into(),
+        };
+        let mut tx = match self.pool.begin().await {
+            Ok(tx) => tx,
+            Err(_) => return AdminEffectCommitV1::Indeterminate,
+        };
+        let changed = admin_effect_try!(tx, sqlx_core::query::query(
+            "INSERT INTO hub_share_grant (id, selector, secret_digest, space_id, document_id, created_at, expires_at, revoked_at, revoked_reason)
+             SELECT $1,$2,$3,$4,$5,$6,$7,NULL,NULL FROM hub_space AS s JOIN hub_document_descriptor AS d ON d.space_id = s.id
+             WHERE s.id = $4 AND d.space_id = $4 AND d.document_id = $5 FOR KEY SHARE OF s, d",
+        )
+        .bind(&issued.record.id)
+        .bind(&issued.record.selector)
+        .bind(issued.record.secret_digest.as_slice())
+        .bind(&scope.space_id)
+        .bind(&scope.document_id)
+        .bind(issued.record.created_at)
+        .bind(issued.record.expires_at)
+        .execute(&mut *tx)
+        .await
+        .map_err(backend));
+        if changed.rows_affected() != 1 {
+            return admin_effect_rollback(tx).await;
+        }
+        admin_effect_try!(tx, insert_auth_audit(&mut tx, &audit).await);
+        let receipt = admin_effect_try!(tx, admin_operation_effect_receipt_v1(effect, &[]));
+        admin_effect_try!(tx, insert_admin_operation_effect_receipt(&mut tx, &receipt).await);
+        match tx.commit().await {
+            Ok(()) => AdminEffectCommitV1::Applied(issued),
+            Err(_) => AdminEffectCommitV1::Indeterminate,
+        }
     }
 
     async fn revoke_share_token_as(&self, scope: &DocumentScope, share_id: &str, reason: &str, actor_user_id: Option<&str>, correlation_id: &str) -> DirectoryResult<()> {
@@ -816,6 +1013,40 @@ impl HubDirectory for PostgresDirectory {
             insert_auth_audit(&mut tx, &audit).await?;
             tx.commit().await.map_err(backend)?;
             Ok(())
+        }
+    }
+
+    async fn revoke_share_token_as_with_admin_effect(&self, scope: &DocumentScope, share_id: &str, reason: &str, actor_user_id: Option<&str>, correlation_id: &str, effect: &NewAdminOperationEffectReceiptV1) -> AdminEffectCommitV1<()> {
+        if let Err(outcome) = admin_effect_preflight(validate_bounded_auth_text(reason, "share revoke reason", AUTH_TEXT_MAX_BYTES)) {
+            return outcome.into();
+        }
+        let revoked_at = now_ms();
+        let audit = match admin_effect_preflight(auth_audit(revoked_at, "share-revoked", Some(share_id), None, actor_user_id, None, "success", Some(reason), correlation_id, "server")) {
+            Ok(value) => value,
+            Err(outcome) => return outcome.into(),
+        };
+        let mut tx = match self.pool.begin().await {
+            Ok(tx) => tx,
+            Err(_) => return AdminEffectCommitV1::Indeterminate,
+        };
+        let changed = admin_effect_try!(tx, sqlx_core::query::query("UPDATE hub_share_grant SET revoked_at = $4, revoked_reason = $5 WHERE id = $1 AND space_id = $2 AND document_id = $3 AND revoked_at IS NULL")
+            .bind(share_id)
+            .bind(&scope.space_id)
+            .bind(&scope.document_id)
+            .bind(revoked_at)
+            .bind(reason)
+            .execute(&mut *tx)
+            .await
+            .map_err(backend));
+        if changed.rows_affected() != 1 {
+            return admin_effect_rollback(tx).await;
+        }
+        admin_effect_try!(tx, insert_auth_audit(&mut tx, &audit).await);
+        let receipt = admin_effect_try!(tx, admin_operation_effect_receipt_v1(effect, &[]));
+        admin_effect_try!(tx, insert_admin_operation_effect_receipt(&mut tx, &receipt).await);
+        match tx.commit().await {
+            Ok(()) => AdminEffectCommitV1::Applied(()),
+            Err(_) => AdminEffectCommitV1::Indeterminate,
         }
     }
 
@@ -1213,11 +1444,15 @@ impl HubDirectory for PostgresDirectory {
     }
 
     async fn revoke_auth_sessions_for_user(&self, user_id: &str, reason: &str, actor_user_id: Option<&str>, correlation_id: &str) -> DirectoryResult<Vec<RevokedAuthSession>> {
-        self.revoke_auth_sessions_matching(user_id, None, reason, actor_user_id, correlation_id).await
+        self.revoke_auth_sessions_matching(user_id, None, reason, actor_user_id, correlation_id, None).await
+    }
+
+    async fn revoke_auth_sessions_for_user_with_admin_effect(&self, user_id: &str, reason: &str, actor_user_id: Option<&str>, correlation_id: &str, effect: &NewAdminOperationEffectReceiptV1) -> AdminEffectCommitV1<Vec<RevokedAuthSession>> {
+        self.revoke_auth_sessions_matching_with_admin_effect(user_id, reason, actor_user_id, correlation_id, effect).await
     }
 
     async fn revoke_auth_sessions_for_identity(&self, provider: &str, subject_digest: [u8; 32], reason: &str, actor_user_id: Option<&str>, correlation_id: &str) -> DirectoryResult<Vec<RevokedAuthSession>> {
-        self.revoke_auth_sessions_matching(provider, Some(subject_digest), reason, actor_user_id, correlation_id).await
+        self.revoke_auth_sessions_matching(provider, Some(subject_digest), reason, actor_user_id, correlation_id, None).await
     }
 
     async fn list_auth_audit(&self, limit: usize, offset: usize) -> DirectoryResult<Vec<AuthAuditRecord>> {
@@ -1450,6 +1685,34 @@ impl HubDirectory for PostgresDirectory {
         rows.into_iter().map(admin_operation_audit_from_row).collect()
     }
 
+    async fn admin_operation_effect_receipt(&self, operation_id: &str, intent_digest: &str) -> DirectoryResult<Option<AdminOperationEffectReceiptV1>> {
+        validate_bounded_auth_text(operation_id, "admin effect operation id", AUTH_TEXT_MAX_BYTES)?;
+        if intent_digest.len() != 64 || !intent_digest.bytes().all(|byte| byte.is_ascii_hexdigit() && !byte.is_ascii_uppercase()) {
+            return Err(DirectoryError::Conflict("admin effect intent digest must be 64 lowercase hex digits".into()));
+        }
+        let row: Option<(String, String, i64, String, Option<i64>, Option<i64>)> = sqlx_core::query_as::query_as(
+            "SELECT operation_id, intent_digest, committed_at, outcome_code, event_seq_first, event_seq_last FROM hub_admin_operation_effect_receipt WHERE operation_id = $1 AND intent_digest = $2",
+        )
+        .bind(operation_id)
+        .bind(intent_digest)
+        .fetch_optional(&self.pool)
+        .await
+        .map_err(backend)?;
+        row.map(|(operation_id, intent_digest, committed_at, outcome_code, first, last)| {
+            let receipt = AdminOperationEffectReceiptV1 {
+                operation_id,
+                intent_digest,
+                committed_at,
+                outcome_code,
+                event_seq_first: first.map(u64::try_from).transpose().map_err(backend)?,
+                event_seq_last: last.map(u64::try_from).transpose().map_err(backend)?,
+            };
+            validate_admin_operation_effect_receipt(&receipt)?;
+            Ok(receipt)
+        })
+        .transpose()
+    }
+
     async fn list_admin_operation_audit(&self, after_sequence: u64, limit: usize) -> DirectoryResult<Vec<AdminOperationAuditRecord>> {
         if limit == 0 || limit > ADMIN_PAGE_MAX {
             return Err(DirectoryError::Conflict(format!("admin audit limit must be 1..={ADMIN_PAGE_MAX}")));
@@ -1487,6 +1750,39 @@ impl HubDirectory for PostgresDirectory {
         insert_auth_audit(&mut tx, &audit).await?;
         tx.commit().await.map_err(backend)?;
         Ok(issued)
+    }
+
+    async fn issue_invite_as_with_admin_effect(&self, space_id: &str, role: SpaceRole, ttl_secs: i64, actor_user_id: Option<&str>, correlation_id: &str, effect: &NewAdminOperationEffectReceiptV1) -> AdminEffectCommitV1<IssuedInvite> {
+        let issued = match admin_effect_preflight(prepare_invite(space_id, role, ttl_secs, now_ms())) {
+            Ok(value) => value,
+            Err(outcome) => return outcome.into(),
+        };
+        let audit = match admin_effect_preflight(auth_audit(issued.record.created_at, "invite-issued", Some(&issued.record.id), None, actor_user_id, None, "success", None, correlation_id, "server")) {
+            Ok(value) => value,
+            Err(outcome) => return outcome.into(),
+        };
+        let mut tx = match self.pool.begin().await {
+            Ok(tx) => tx,
+            Err(_) => return AdminEffectCommitV1::Indeterminate,
+        };
+        admin_effect_try!(tx, sqlx_core::query::query("INSERT INTO hub_space_invite (id, selector, secret_digest, space_id, role, created_at, expires_at, revoked_at, revoked_reason, accepted_at, accepted_event_id) VALUES ($1,$2,$3,$4,$5,$6,$7,NULL,NULL,NULL,NULL)")
+            .bind(&issued.record.id)
+            .bind(&issued.record.selector)
+            .bind(issued.record.secret_digest.as_slice())
+            .bind(space_id)
+            .bind(role.as_str())
+            .bind(issued.record.created_at)
+            .bind(issued.record.expires_at)
+            .execute(&mut *tx)
+            .await
+            .map_err(backend));
+        admin_effect_try!(tx, insert_auth_audit(&mut tx, &audit).await);
+        let receipt = admin_effect_try!(tx, admin_operation_effect_receipt_v1(effect, &[]));
+        admin_effect_try!(tx, insert_admin_operation_effect_receipt(&mut tx, &receipt).await);
+        match tx.commit().await {
+            Ok(()) => AdminEffectCommitV1::Applied(issued),
+            Err(_) => AdminEffectCommitV1::Indeterminate,
+        }
     }
 
     async fn invite_redemption_scope_hint(&self, capability: &InviteCapability, actor: &DirectoryActor, user_id: &str) -> DirectoryResult<InviteRedemptionScopeHintV1> {
@@ -1582,7 +1878,10 @@ impl HubDirectory for PostgresDirectory {
             .execute(&mut *tx)
             .await
             .map_err(backend)?;
-        self.project(&mut tx, &persisted).await?;
+        if let Err(error) = self.project(&mut tx, &persisted).await {
+            tx.rollback().await.map_err(backend)?;
+            return Err(error);
+        }
         tx.commit().await.map_err(backend)?;
         Ok(InviteRedemptionCommit::NewlyCommitted { event: persisted })
     }
@@ -1607,6 +1906,39 @@ impl HubDirectory for PostgresDirectory {
         insert_auth_audit(&mut tx, &audit).await?;
         tx.commit().await.map_err(backend)?;
         Ok(())
+    }
+
+    async fn revoke_invite_as_with_admin_effect(&self, space_id: &str, invite_id: &str, reason: &str, actor_user_id: Option<&str>, correlation_id: &str, effect: &NewAdminOperationEffectReceiptV1) -> AdminEffectCommitV1<()> {
+        if let Err(outcome) = admin_effect_preflight(validate_bounded_auth_text(reason, "invite revoke reason", AUTH_TEXT_MAX_BYTES)) {
+            return outcome.into();
+        }
+        let revoked_at = now_ms();
+        let audit = match admin_effect_preflight(auth_audit(revoked_at, "invite-revoked", Some(invite_id), None, actor_user_id, None, "success", Some(reason), correlation_id, "server")) {
+            Ok(value) => value,
+            Err(outcome) => return outcome.into(),
+        };
+        let mut tx = match self.pool.begin().await {
+            Ok(tx) => tx,
+            Err(_) => return AdminEffectCommitV1::Indeterminate,
+        };
+        let changed = admin_effect_try!(tx, sqlx_core::query::query("UPDATE hub_space_invite SET revoked_at = $2, revoked_reason = $3 WHERE space_id = $4 AND id = $1 AND revoked_at IS NULL AND accepted_at IS NULL")
+            .bind(invite_id)
+            .bind(revoked_at)
+            .bind(reason)
+            .bind(space_id)
+            .execute(&mut *tx)
+            .await
+            .map_err(backend));
+        if changed.rows_affected() != 1 {
+            return admin_effect_rollback(tx).await;
+        }
+        admin_effect_try!(tx, insert_auth_audit(&mut tx, &audit).await);
+        let receipt = admin_effect_try!(tx, admin_operation_effect_receipt_v1(effect, &[]));
+        admin_effect_try!(tx, insert_admin_operation_effect_receipt(&mut tx, &receipt).await);
+        match tx.commit().await {
+            Ok(()) => AdminEffectCommitV1::Applied(()),
+            Err(_) => AdminEffectCommitV1::Indeterminate,
+        }
     }
 
     async fn list_invites(&self, space_id: &str) -> DirectoryResult<Vec<InviteRecord>> {
@@ -2177,6 +2509,80 @@ impl HubDirectory for PostgresDirectory {
         Ok(DirectoryAppendOutcomeV1::Appended(persisted))
     }
 
+    async fn append_decided_events_with_admin_effect(&self, events: &[NewDirectoryEvent], effect: &NewAdminOperationEffectReceiptV1) -> AdminEffectCommitV1<Vec<DirectoryEvent>> {
+        if events.is_empty() || events.iter().any(|event| matches!(&event.body, DirectoryEventBody::ArtifactCheckpointPublished { .. } | DirectoryEventBody::InviteRedeemed { .. })) {
+            return AdminEffectCommitV1::RejectedBeforeCommit;
+        }
+        let mut tx = match self.pool.begin().await {
+            Ok(tx) => tx,
+            Err(_) => return AdminEffectCommitV1::Indeterminate,
+        };
+        let persisted_result: DirectoryResult<Vec<DirectoryEvent>> = async {
+            let mut persisted = Vec::with_capacity(events.len());
+            for event in events {
+            let id = time_ordered_id();
+            let recorded_at_ms = now_ms();
+            let payload_value = serde_json::Value::from(&event.body.to_value());
+            let kind = payload_value.get("kind").and_then(|value| value.as_str()).unwrap_or_default().to_string();
+            let row: (i64,) = sqlx_core::query_as::query_as("UPDATE hub_directory_event_head SET seq = seq + 1 WHERE singleton RETURNING seq").fetch_one(&mut *tx).await.map_err(backend)?;
+            if self.projection_rejection(&mut tx, &event.body).await?.is_some() {
+                return Err(DirectoryError::Conflict("administrator event projection was rejected".into()));
+            }
+            let full = DirectoryEvent { seq: u64::try_from(row.0).map_err(backend)?, id: id.clone(), hlc: event.hlc, actor: event.actor.clone(), space_id: event.space_id.clone(), user_id: event.user_id.clone(), body: event.body.clone(), recorded_at_ms };
+            validate_directory_event_page_event(&full).map_err(|_| DirectoryError::Conflict("directory event violates the bounded event-page contract".into()))?;
+            sqlx_core::query::query(
+                "INSERT INTO hub_directory_event (seq, id, hlc_physical, hlc_logical, actor_kind, actor_id, space_id, user_id, kind, payload, recorded_at) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)",
+            )
+            .bind(row.0)
+            .bind(&id)
+            .bind(event.hlc.physical_ms)
+            .bind(i64::from(event.hlc.logical))
+            .bind(actor_kind_to_str(event.actor.kind))
+            .bind(&event.actor.id)
+            .bind(&event.space_id)
+            .bind(&event.user_id)
+            .bind(kind)
+            .bind(payload_value)
+            .bind(recorded_at_ms)
+            .execute(&mut *tx)
+            .await
+            .map_err(backend)?;
+            self.project(&mut tx, &full).await?;
+            let release = match &full.body {
+                DirectoryEventBody::ArtifactRetentionAdvanced { retention } => Some(("retention", retention.scope.space_id.as_str(), Some(retention.scope.document_id.as_str()), Some(retention.retained_checkpoint_id))),
+                DirectoryEventBody::SpaceDeleted { space_id } => Some(("space-delete", space_id.as_str(), None, None)),
+                _ => None,
+            };
+            if let Some((operation, space_id, document_id, checkpoint_id)) = release {
+                let generation = cas_generation(&mut tx).await?;
+                sqlx_core::query::query("INSERT INTO hub_artifact_cas_ledger_journal(generation, operation, space_id, document_id, checkpoint_id, event_seq) VALUES ($1,$2,$3,$4,$5,$6)")
+                    .bind(generation)
+                    .bind(operation)
+                    .bind(space_id)
+                    .bind(document_id)
+                    .bind(checkpoint_id.map(|value| value.0.to_vec()))
+                    .bind(row.0)
+                    .execute(&mut *tx)
+                    .await
+                    .map_err(backend)?;
+                cas_project_release(&mut tx, operation, space_id, document_id, checkpoint_id).await?;
+            }
+                persisted.push(full);
+            }
+            insert_admin_operation_effect_receipt(&mut tx, &admin_operation_effect_receipt_v1(effect, &persisted)?).await?;
+            Ok(persisted)
+        }
+        .await;
+        let persisted = match persisted_result {
+            Ok(persisted) => persisted,
+            Err(_) => return admin_effect_rollback(tx).await,
+        };
+        match tx.commit().await {
+            Ok(()) => AdminEffectCommitV1::Applied(persisted),
+            Err(_) => AdminEffectCommitV1::Indeterminate,
+        }
+    }
+
     async fn events_since(&self, since_seq: u64, limit: usize) -> DirectoryResult<Vec<DirectoryEvent>> {
         let (since_seq, limit) = bounded_event_read(since_seq, limit)?;
         let rows: Vec<(i64, String, i64, i64, String, String, Option<String>, Option<String>, serde_json::Value, i64)> = sqlx_core::query_as::query_as(
@@ -2202,6 +2608,7 @@ impl HubDirectory for PostgresDirectory {
 
     async fn rebuild_projections_controlled(&self, control: &dyn ProjectionRebuildControl) -> DirectoryResult<u64> {
         let mut tx = self.pool.begin().await.map_err(backend)?;
+        let _: (i64,) = sqlx_core::query_as::query_as("SELECT seq FROM hub_directory_event_head WHERE singleton FOR UPDATE").fetch_one(&mut *tx).await.map_err(backend)?;
         let (event_count,): (i64,) = sqlx_core::query_as::query_as("SELECT COUNT(*) FROM hub_directory_event").fetch_one(&mut *tx).await.map_err(backend)?;
         let total = u64::try_from(event_count).map_err(backend)?;
         checkpoint_projection_rebuild(control, 0, total)?;
@@ -2235,7 +2642,10 @@ impl HubDirectory for PostgresDirectory {
             for row in rows {
                 cursor = row.0;
                 let event = event_from_row(row)?;
-                self.project(&mut tx, &event).await?;
+                if let Err(error) = self.project(&mut tx, &event).await {
+                    tx.rollback().await.map_err(backend)?;
+                    return Err(DirectoryError::Backend(format!("PostgreSQL projection rebuild event {}: {error}", event.seq)));
+                }
                 if matches!(&event.body, DirectoryEventBody::ArtifactCheckpointPublished { .. }) {
                     let private: Option<(serde_json::Value,)> = sqlx_core::query_as::query_as("SELECT payload FROM hub_artifact_authority_journal WHERE event_seq = $1").bind(cursor).fetch_optional(&mut *tx).await.map_err(backend)?;
                     let checkpoint =

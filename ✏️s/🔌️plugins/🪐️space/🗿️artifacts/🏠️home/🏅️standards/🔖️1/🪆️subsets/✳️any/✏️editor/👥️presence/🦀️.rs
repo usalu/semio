@@ -14,7 +14,7 @@ pub struct HomePresence {}
 
 impl protocol::MutationDiff<HomePresence> for HomePresence {
     fn apply(&self, base: &HomePresence) -> protocol::MutationApplyResult<HomePresence> {
-        Ok({ base.clone() })
+        Ok(base.clone())
     }
     fn absorb(&mut self, _other: Self) {}
 }

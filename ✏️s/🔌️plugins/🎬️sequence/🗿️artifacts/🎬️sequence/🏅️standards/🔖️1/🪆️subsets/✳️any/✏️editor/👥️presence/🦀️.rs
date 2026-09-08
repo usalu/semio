@@ -1,7 +1,6 @@
 //! 👥️ Sequence presence — shareable live ephemeral state + mutations.
 
 use crate::artifacts::sequence::SequenceCamera;
-use protocol::Mutation;
 #[cfg(test)]
 use serde::{Deserialize, Serialize};
 use store::ArtifactPack;
@@ -12,9 +11,9 @@ use store::ArtifactPack;
 /// broadcasts automatically via the framework's typed `PresenceInteraction` (assembled from the
 /// "steps" domain's `InteractionState`, zero app code).
 #[derive(Clone, Debug, PartialEq, dsl::DslArtifact)]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
 #[derive(dsl::ToValue, dsl::FromValue)]
 #[cfg_attr(test, derive(Serialize, Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase", default))]
 #[value(rename_all = "camelCase", default)]
 #[dsl(extension = "sequence.presence")]
 #[dsl(layout = "lines")]
@@ -32,7 +31,7 @@ impl Default for SequencePresence {
 
 impl protocol::MutationDiff<SequencePresence> for SequencePresence {
     fn apply(&self, _base: &SequencePresence) -> protocol::MutationApplyResult<SequencePresence> {
-        Ok({ self.clone() })
+        Ok(self.clone())
     }
     fn absorb(&mut self, other: Self) {
         *self = other;
@@ -85,66 +84,34 @@ impl ArtifactPack for SequencePresence {
 }
 //#endregion 🔖️Presence
 
-//#region 🔖️PresenceMutation
-#[derive(Clone, Debug, PartialEq, dsl::DslOps)]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
-#[derive(dsl::ToValue, dsl::FromValue)]
-#[cfg_attr(test, derive(Serialize, Deserialize))]
-#[value(rename_all = "camelCase")]
-pub enum SequencePresenceMutation {
-    #[dsl(key = "snapshot")]
-    Snapshot {
-        #[dsl(block)]
-        presence: SequencePresence,
-    },
-}
+#[path = "🧬️schema/🧬️mutations/🦀️.rs"]
+mod mutations;
+pub use mutations::*;
 
-impl Mutation<SequencePresence> for SequencePresenceMutation {
-    type Diff = SequencePresence;
 
-    fn diff(&self, _base: &SequencePresence) -> protocol::MutationOutcome<SequencePresence> {
-        match self {
-            Self::Snapshot { presence } => protocol::MutationOutcome::new(presence.clone()),
-        }
-    }
+#[cfg(test)]
+mod contract_vectors {
+    use super::*;
+    use protocol::{Mutation, MutationDiff, OpBinary, OpText};
+    use dsl::os_pack as pack;
 
-    fn inverse(&self, base: &SequencePresence) -> Vec<Self> {
-        vec![Self::Snapshot { presence: base.clone() }]
-    }
-}
-
-impl protocol::OpText for SequencePresenceMutation {
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        let variants = <Self as dsl::DslVariants>::variants();
-        for (keyword, spec_fn) in &variants {
-            let probe = format!("{keyword} ");
-            if line == keyword.as_str() || line.starts_with(&probe) {
-                let body = if line.len() > keyword.len() { line[keyword.len()..].trim_start() } else { "" };
-                let record = dsl::parse(body, &spec_fn(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline })?;
-                return <Self as dsl::DslVariants>::from_named_record(keyword, &record);
-            }
-        }
-        Err(dsl::__rt::field_error(format!("unknown operation line '{line}'")))
-    }
-    fn print_op(&self) -> String {
-        let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
-        let variants = <Self as dsl::DslVariants>::variants();
-        let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
-        let body = dsl::print(&record, &spec_fn(), dsl::JoinMode::Inline);
-        if body.is_empty() {
-            keyword
-        } else {
-            format!("{keyword} {body}")
+    #[test]
+    fn sequence_presence_contract_vectors_match_the_json_oracle() {
+        let vectors: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🔁️mutation-contracts.json")).expect("neutral contract vectors");
+        let base: SequencePresence = pack::from_json_str(&vectors["base"].to_string()).expect("owned base decoder");
+        assert_eq!(<SequencePresenceMutation as Mutation<SequencePresence>>::DESCRIPTORS.len(), vectors["cases"].as_array().expect("cases").len());
+        for vector in vectors["cases"].as_array().expect("cases") {
+            let mutation: SequencePresenceMutation = pack::from_json_str(&vector["mutation"].to_string()).expect("owned operation decoder");
+            assert_eq!(serde_json::from_str::<serde_json::Value>(&pack::to_json_string(&mutation)).expect("independent operation oracle"), vector["mutation"]);
+            assert_eq!(mutation.descriptor().semantic_kind, vector["kind"].as_str().expect("semantic kind"));
+            assert_eq!(SequencePresenceMutation::parse_op(&mutation.print_op()).expect("operation text"), mutation);
+            assert_eq!(SequencePresenceMutation::decode_op(&mutation.encode_op().expect("operation binary")).expect("binary decode"), mutation);
+            let outcome = mutation.diff(&base);
+            assert!(outcome.messages().is_empty());
+            let next = outcome.diff().apply(&base).expect("apply diff");
+            assert_eq!(serde_json::from_str::<serde_json::Value>(&pack::to_json_string(&next)).expect("independent state oracle"), vector["expected"]);
+            let restored = mutation.inverse(&base).into_iter().fold(next, |state, inverse| inverse.diff(&state).diff().apply(&state).expect("apply inverse"));
+            assert_eq!(restored, base);
         }
     }
 }
-
-impl protocol::OpBinary for SequencePresenceMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        dsl::variants_binary::encode_op(self)
-    }
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        dsl::variants_binary::decode_op(bytes)
-    }
-}
-//#endregion 🔖️PresenceMutation

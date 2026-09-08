@@ -43,6 +43,33 @@ import { registryCompilerInputDependencies, registryStaticImports, type Registry
 import { leadingEmojiIdentity, pathEmojiStatuteFindings, semanticDirectoryKindId, semanticOwnedInputFileSnapshot } from "../../🔍️discovery/🟦️.ts";
 import { MUTATION_STRUCTURAL_POLICY_KINDS, inspectMutationRootReachability, inventoryMutationTaxonomy, newScaffoldMutationTree, planMutationTaxonomy, policyMutationStructuralBreaches, runMutationTaxonomyCli, validateJsonSchemaSubset } from "../../../../../../../📜️script.ts";
 
+describe("extension Cargo installation owner", () => {
+  test("preserves the authored extension directory alongside the independent TOML identity", async () => {
+    const library = await import("./🟦️.ts");
+    const root = findRepoRoot(import.meta.dir);
+    const folder = join(import.meta.dir, "🧫️fixtures/📦️extension-installation-owner");
+    const fixture = JSON.parse(readFileSync(join(folder, "🔣️.json"), "utf8"));
+    const validate = new Ajv({ strict: true }).compile(JSON.parse(readFileSync(join(folder, "🧬️.schema.json"), "utf8")));
+    expect(validate(fixture)).toBe(true);
+    const workspace = toml.parse(readFileSync(join(root, "Cargo.toml"), "utf8"));
+    for (const row of fixture.cases) {
+      const manifestPath = join(root, row.manifest);
+      const parsed = library.parseExtensionCargoManifest(manifestPath, root);
+      const reference = toml.parse(readFileSync(manifestPath, "utf8")).package;
+      expect(parsed.directoryName).toBe(row.directoryName);
+      expect(parsed.packageName).toBe(reference.name);
+      expect(parsed.version).toBe(workspace.workspace.package.version);
+      expect(parsed.componentPackageId).toBe(reference.metadata.component.package.slice("semio:".length));
+      expect(parsed.extends).toBe(reference.metadata.semio.extends);
+      expect(parsed.contributes).toEqual(reference.metadata.semio.contributes);
+    }
+    const bad = structuredClone(fixture);
+    bad.cases[0].directoryName = "rust";
+    expect(validate(bad)).toBe(false);
+    console.log("[DEBUG] extension Cargo installation owner: neutral=3 TOML=3 hostile=1");
+  });
+});
+
 describe("current JCO destination authority", () => {
   test("preserves tool-owned declaration pairing and the exact vendored shim payloads", async () => {
     const ts = await import("typescript");
@@ -1804,7 +1831,7 @@ describe("micro-commit", () => {
     }
   });
 
-  test("shouldSkipPathForUloc skips dot paths license templates and .🦑️repo", async () => {
+  test("shouldSkipPathForUloc skips dot paths license templates and .🧬semio", async () => {
     const { shouldSkipPathForUloc } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
     const root = process.cwd();
     expect(shouldSkipPathForUloc(root, ".cursor/plans/foo.plan.md")).toBe(true);
@@ -1812,7 +1839,7 @@ describe("micro-commit", () => {
     expect(shouldSkipPathForUloc(root, "compose/client/ui/LICENSE.md")).toBe(true);
     expect(shouldSkipPathForUloc(root, "repo/AGENTS.md")).toBe(false);
     expect(shouldSkipPathForUloc(root, "repo/CHANGELOG.md")).toBe(false);
-    expect(shouldSkipPathForUloc(root, ".🦑️repo/⚡️cache/x")).toBe(true);
+    expect(shouldSkipPathForUloc(root, ".🧬semio/🦑️repo/⚡️cache/x")).toBe(true);
     expect(shouldSkipPathForUloc(root, "framework/README.md")).toBe(false);
     expect(shouldSkipPathForUloc(root, "puzzle/3d/src/foo.ts")).toBe(false);
   });

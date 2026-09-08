@@ -11,7 +11,6 @@
 extern crate semio_framework_schema as schema;
 
 extern crate semio_framework_os_kernel as dsl;
-extern crate semio_framework_os_kernel as pack;
 extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as store;
 // 🧯️ `clippy::result_large_err` — every `🎮️commands/*` handler returns
@@ -343,8 +342,8 @@ pub mod artifacts {
                                             #[path = "."]
                                             pub mod v1_4 {
                                                 #[path = "."]
-                                                pub mod any {
-                                                    #[path = "../../🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/📖️pdf/🔖️1.4/✳️any/🦀️.rs"]
+                                                pub mod base {
+                                                    #[path = "../../🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/📖️pdf/🔖️1.4/🧱️base/🦀️.rs"]
                                                     mod component;
                                                     pub use component::*;
                                                 }
@@ -424,8 +423,8 @@ pub mod artifacts {
                                             #[path = "."]
                                             pub mod v1_4 {
                                                 #[path = "."]
-                                                pub mod any {
-                                                    #[path = "../../🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📖️pdf/🔖️1.4/✳️any/🦀️.rs"]
+                                                pub mod base {
+                                                    #[path = "../../🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📖️pdf/🔖️1.4/🧱️base/🦀️.rs"]
                                                     mod component;
                                                     pub use component::*;
                                                 }
@@ -506,7 +505,6 @@ pub mod artifacts {
             pub use crate::artifacts::layout::standards::v1::subsets::any::schema::mutations::binary::*;
         }
         pub mod diff {
-            pub use crate::artifacts::layout::standards::v1::subsets::any::schema::diff::text::*;
             pub use crate::artifacts::layout::standards::v1::subsets::any::schema::diff::*;
             pub mod schema {
                 pub use crate::artifacts::layout::standards::v1::subsets::any::schema::diff::*;

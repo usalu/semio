@@ -1,10 +1,13 @@
 /** 📂️ Canonical artifact-opening relay conformance against shared language-neutral vectors. */
 
 import Ajv from "ajv";
+import { applyPatch } from "fast-json-patch";
+import openingScopeFixture from "../../../../🧱️elements/🏛️ShellHost/🧭️opening/🧪️fixtures/📍️scope/🔣️.json";
+import openingScopeSchema from "../../../../🧱️elements/🏛️ShellHost/🧭️opening/🧪️fixtures/📍️scope/🧬️.schema.json";
 import { AppRouter, type AppRouterManifest, type OpeningPreferences } from "@semio-tech/framework";
 import { resolveArtifactOpeningRelay } from "@semio-tech/framework-os";
 import { describe, expect, it } from "vitest";
-import { resolveDocumentOpeningTarget } from "../../../../🧱️elements/🏛️ShellHost/🧭️opening/🟦️.ts";
+import { resolveDocumentOpeningBindings, resolveDocumentOpeningTarget } from "../../../../🧱️elements/🏛️ShellHost/🧭️opening/🟦️.ts";
 import artifactOpeningSchema from "../../../../🧱️elements/🛠️ShellHelpers/🧫️fixtures/🚪️open-artifact/🧬️schema.json";
 import artifactOpeningFixture from "../../../../🧱️elements/🛠️ShellHelpers/🧫️fixtures/🚪️open-artifact/🔣️.json";
 
@@ -29,5 +32,27 @@ describe("artifact opening relay", () => {
     const ink = { pluginId: "ink" };
     expect(resolveDocumentOpeningTarget({ session: next, plugin: ink }, previous, [{ handle: draw }, { handle: ink }])).toEqual({ session: next, plugin: ink });
     expect(resolveDocumentOpeningTarget(undefined, previous, [{ handle: draw }, { handle: ink }])).toEqual({ session: previous, plugin: draw });
+  });
+});
+
+describe("document opening scope", () => {
+  it("pins exact shared destinations and never infers them from the active route", () => {
+    expect(new Ajv({ strict: true, allErrors: true }).compile(openingScopeSchema)(openingScopeFixture)).toBe(true);
+    for (const row of openingScopeFixture.cases) {
+      if (row.error) {
+        expect(() => resolveDocumentOpeningBindings(row.ref, row.context), row.id).toThrow(row.error);
+      } else {
+        const reference = applyPatch(
+          [],
+          (row.expected ?? []).map((value) => ({ op: "add" as const, path: "/-", value: structuredClone(value) })),
+          true,
+          false,
+        ).newDocument;
+        const actual = resolveDocumentOpeningBindings(row.ref, row.context);
+        expect(actual, row.id).toEqual(reference);
+        expect(actual, row.id).toEqual(row.expected);
+      }
+      console.log("[DEBUG] document-opening-scope", row.id, row.error ?? "exact-bindings");
+    }
   });
 });

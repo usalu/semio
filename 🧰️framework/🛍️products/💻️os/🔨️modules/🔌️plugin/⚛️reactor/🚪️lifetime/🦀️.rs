@@ -121,10 +121,6 @@ impl<O: GuestLifetimeOwner> GuestLifecycleCell<O> {
     pub(crate) fn is_released(&self) -> bool {
         self.phase == Phase::Released
     }
-    pub(crate) fn is_closing(&self) -> bool {
-        matches!(self.phase, Phase::Accepted | Phase::Closing | Phase::Retired)
-    }
-
     pub(crate) fn install_owner(&mut self, owner: O) -> Result<(), O> {
         if self.phase != Phase::Opening || self.owner.is_some() {
             return Err(owner);
@@ -275,11 +271,6 @@ pub(crate) struct NativeLifetimeOwner<PA: crate::app::PluginApp> {
 }
 
 impl<PA: crate::app::PluginApp> NativeLifetimeOwner<PA> {
-    pub(crate) fn capture(lifetime: ActorInstanceLifetime, runtime: &crate::plugin_runtime::PluginRuntime<PA>) -> Result<Self, semio_framework::Fault> {
-        let lease = crate::plugin_runtime::plugin_capture_instance_close(runtime, lifetime.instance_id)?;
-        Self::from_lease(lifetime, lease)
-    }
-
     pub(crate) fn from_lease(lifetime: ActorInstanceLifetime, lease: crate::plugin_runtime::PluginInstanceCloseLease<PA>) -> Result<Self, semio_framework::Fault> {
         let key = NativeCloseKey::capture(lifetime, &lease).map_err(super::reactor_close_fault)?;
         Ok(Self { lease, key, request: None, reserved: [false; 4], active: [false; 4], released: [false; 4] })

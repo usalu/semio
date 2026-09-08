@@ -1,0 +1,41 @@
+# Catalog Root Read Ownership
+
+## Scope and Source Evidence
+
+CatalogRead is a separate retained actor from the capability opener. It owns the exact storage facade, catalog key, and at most 64 KiB of governed root pages plus an epoch fence. Its current scheduled flag is cleared before Handoff, RetainWork and Poll take/move a work owner. Public cleanup, resume and a second submitted driver do not share an exclusive authority while that owner is stack-local. The successful public fast path also leaves the previous waiter behind, and no active publisher finalizer closes the consumed-completion check-to-release window.
+
+The current cancellation/stale entry gate restages a terminal error before every non-Terminal phase even when one already exists; this can prevent cleanup progression. The old cancellation/stale test also expects its controlled fixture's owner in work although the fixture installs poll_work. These remain source findings, not runtime qualification.
+
+## Test-First Plan
+
+The sibling closed language-neutral catalog-read-ownership fixture covers three paused transfers and eight real publication pipelines: exact pages or inner backend failure across synchronous, before-wake, after-finalizer-check and refused-finalizer placement. Root identity includes the exact storage Arc, key, governed page operation identity, bytes and epoch. An independent SQLite transition reference must produce the same exclusion and retirement outputs. Native barriers and drain loops will remain bounded. The existing seven CatalogRead laws remain part of the focused cohort.
+
+The planned production repair is private and type-specific: Active/Queued/Closed driver authority shared by worker, retry and public owner mutation; bounded generation-fenced retry; a distinct CatalogRead guard with explicit consumed-completion retirement; and preserved key/page/error result ownership. It will not generalize capability and root-page storage through an adapter. This report currently records schema preparation only; no CatalogRead production change or native qualification is claimed. Capability finalizer regression owns the shared native target, followed by GIS.
+
+## Registered Regression Frontier
+
+Source target `@semio-tech/framework-os-kernel:database-catalog-read-ownership-check` passed (session53106): AJV1 and independent SQLite transfers3/completion8. The new native target registers two new laws plus the existing seven CatalogRead laws. Launch seed entries preserve grouping/order at411.0763/411.0764 and use the shared single-job native target.
+
+The two native laws now exist with bounded five-second real-driver/publication barriers and bounded64/128 cleanup grants. Paused transfers record real submitted jobs while the exact storage is stack-local, call the actual public future Drop/resume/close, then require coalesced exclusion and final exact registry release. Publication rows drive the real actor phase chain with an exact controlled backend result and verify storage/key, governed page operation/bytes/epoch or the exact inner backend error. The refused row forwards one exact job through the common Shutdown rejection path. Only test hooks plus behavior-preserving submission factoring and test synchronous hook-lock release have changed; CatalogRead production ownership is not repaired yet. Native RED waits for GIS's current target ownership.
+
+## Recovery Coverage Before Production Repair
+
+Expanded the closed fixture with six recovery rows: pages/backend-error for saturated retry ABA, abandoned terminal_completion resume and checked-out terminal_result resume. The retry seam captures the actual delayed callback job and the exact submission hook now sits in submit_exact so resumed/retried jobs cannot bypass deterministic capture. The retry law requires no competing cancellation successor while its exact retry root is retained, old callback inert after replacement retry, then exact output. Terminal completion is produced by the real paused publisher plus public Drop. Terminal result comes from real post-Ready cancellation; its checkout must block final admission release, survive shallow Drop, and resume the identical governed result. Paused transfer rows now explicitly cancel before public Drop.
+
+Registered source gate passed again (session98081): AJV1, independent SQLite transfers3/completion8/recovery6. Native cohort now10 (three new + seven existing). Scoped whitespace passed. Registry generate session32235 and check-generated session83171 passed for launcher freshness only. No CatalogRead native test or production lease repair has run/applied; Home now owns the shared target for retained-administrator native verification, with GIS pure preflight diagnostics next.
+
+## Native RED and Private Lease Repair
+
+Before production changes, native `exact-cargo-laws-lV4h0J/00` (session86710) built/listed and failed the new paused-Handoff law: one successor was submitted while a driver still held stack-local work (required0); bounded cleanup remained nonempty. Exact storage/admission were retained in this particular interleaving, so this run proves duplicate scheduling/nonconvergence, not premature admission release.
+
+Applied the private CatalogRead lease: all worker/public/retry root movement shares Active/Queued/Closed; retained exact jobs suppress competing successors; retry callbacks carry generation fences, and public resume invalidates the prior callback. Completion consumption and publication synchronize abandonment, clear the waiter, and finalize under exclusive ownership, including refused retirement. Work records whether it may still be polled; Ready/panicked work cannot be resumed as a fresh backend future. Staged results require shallow result checkout/resume. Cancellation/stale entry checks preserve the existing terminal decision so cleanup progresses. The 64 KiB per-read bound is unchanged.
+
+Fresh `exact-cargo-laws-gBKzau/00` (session1441) built/listed and passed laws0–6: all19 new neutral cases (transfers3, publication8, recovery8), admission/ABA, real storage/key/root success, wake coalescing/panic cleanup, and registration-window completion. Every DEBUG output was read. Law7 reached its unchanged120s timeout/SIGKILL: its pre-existing chained queue-pop-and-call holds the queue mutex while the job tries to enqueue the next close grant. Split both storage/key calls into a local popped job then invocation. The old cancellation/stale law is also corrected to drive a real captured job across actual generation invalidation, locate exactly one owner across work/poll_work/terminal_work, and require bounded exact registry cleanup. No previous result is called full GREEN10. Fresh corrected cohort is running; no process or unrelated cache was manually terminated/deleted.
+
+## Qualified Native Result
+
+Fresh `exact-cargo-laws-6NMGK8/00` (session45489) passed the entire10-law cohort with a clean build/list and19 neutral source rows. All19 new DEBUG cases, both real cancellation/stale interruption DEBUG outcomes and all10 native success lines were read. Executable SHA256: `b0b090b7726b951146bd449b39ec62510254a946235ad9effe0445372583bc83`. Both distinct rejected storage/key close grants and the corrected exact cancellation/stale owner law now pass. Rustfmt with the repository's2021 edition and scoped whitespace checks passed.
+
+This qualifies the recorded owner-transfer, root-page/backend-error publication, refused finalizer, retry ABA, terminal-completion/result resume and spent-Ready rejection cases. The broader HistoryFuture gap and genuine GIS/Shell/two-peer acceptance remain separate. The existing capability17 cohort is now rerunning against this updated shared DB source before the target is explicitly handed to the administration lane. Ticket and goal remain active.
+
+The capability regression completed GREEN17 in `exact-cargo-laws-PlQU4K/00` (session35429), including all15 neutral rows. Every DEBUG output and success line was read. It used the same `b0b090b7726b951146bd449b39ec62510254a946235ad9effe0445372583bc83` executable as CatalogRead GREEN10, qualifying both cohorts against one coherent DB build. The shared native target was explicitly released to Home for the corrected retained-administration cohort. Root has no remaining native process. Independent production audit is continuing; no full end-to-end claim is made.

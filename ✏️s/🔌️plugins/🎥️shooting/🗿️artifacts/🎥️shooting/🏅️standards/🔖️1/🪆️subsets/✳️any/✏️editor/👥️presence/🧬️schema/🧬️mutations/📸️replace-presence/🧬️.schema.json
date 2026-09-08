@@ -1,0 +1,86 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Replace Shooting Presence",
+  "type": "object",
+  "properties": {
+    "presence": {
+      "type": "object",
+      "properties": {
+        "selectedShotIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "camera": {
+          "type": "object",
+          "properties": {
+            "position": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "minItems": 3,
+              "maxItems": 3
+            },
+            "target": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              },
+              "minItems": 3,
+              "maxItems": 3
+            },
+            "zoom": {
+              "type": "number"
+            },
+            "fov": {
+              "type": "number"
+            },
+            "up": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "number"
+                  },
+                  "minItems": 3,
+                  "maxItems": 3
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "projection": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          "required": [
+            "position",
+            "target",
+            "zoom",
+            "fov"
+          ],
+          "additionalProperties": false
+        },
+        "activeUtilityId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "selectedShotIds",
+        "camera",
+        "activeUtilityId"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "presence"
+  ],
+  "additionalProperties": false
+}

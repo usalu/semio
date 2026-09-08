@@ -7,7 +7,7 @@ use semio_framework_plugin::{Emit, Fault};
 
 pub(crate) fn set_viewport(viewport_json: &str) -> Result<Emit<TrinityGraphMutation, JackConfigMutation>, Fault> {
     match pack::from_json_str::<Camera>(viewport_json) {
-        Ok(camera) => Ok(Emit::config(vec![JackConfigMutation::SetCamera { camera }])),
+        Ok(camera) => Ok(Emit::config(vec![JackConfigMutation::SetCamera(crate::editor::jack::config::SetCamera { camera })])),
         Err(_) => Ok(Emit::default()),
     }
 }

@@ -8,9 +8,7 @@ use pack::json::{self, Value as JsonValue};
 use semio_framework_plugin::app::ArtifactContribution;
 use semio_framework_plugin::{ArtifactInferenceExecution, ArtifactInferenceExecutionError, ArtifactInferenceExecutionRequest, ArtifactInferenceService, ArtifactInferenceServiceMetadata, ExecutionMode, ExtensionBundle};
 use semio_framework_os_kernel::{pack_rt, DslValue, FromValue, ToValue};
-use semio_s_plugin_cad::artifacts::cad::mutations::change_active_model_definition::ChangeActiveModelDefinition;
-use semio_s_plugin_cad::artifacts::cad::mutations::create_node::CreateNode;
-use semio_s_plugin_cad::artifacts::cad::{CadMutation, CadNode, CadSnapshot, CAD_DOCUMENT_SCHEMA};
+use semio_s_plugin_cad::artifacts::cad::{CadMutation, CadSnapshot, CAD_DOCUMENT_SCHEMA};
 use std::collections::BTreeMap;
 
 //#region 🔖️Manifest
@@ -119,47 +117,9 @@ semio_framework_plugin::extension_exports!(bundle);
 //#endregion 🔖️Manifest
 
 //#region 🔖️Composite
-/// 🏢️ Composite mutation contributed onto cad's `s.cad.cad` artifact — a real building-domain
-/// workflow step cad itself has no notion of (a bare CAD tool has no concept of a "storey"), planned
-/// entirely from two of cad's OWN leaf mutations (`create-node`, `change-active-model-definition`)
-/// through `protocol::Planner::call`. Frozen id grammar (contract freeze §3):
-/// `"<target-document-schema>#<contributor-plugin-id>:<kebab-kind>"` — assembled by
-/// `ArtifactContribution::resolve`, never hand-formatted here.
-// 🌱️ `CompositeMutationKind`'s supertrait bound is `ToValue`/`FromValue` (see that trait's own
-// doc) — no `serde` derive needed here at all.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
-#[value(rename_all = "camelCase")]
-pub struct CreateBuildingStorey {
-    pub storey_id: String,
-    pub level_index: i32,
-    pub storey_name: String,
-}
-
-impl CreateBuildingStorey {
-    // 🚫️async: E1 pure — `format!` only, zero suspension points; consumed unawaited by both
-    // `CompositeMutationKind::plan`/`label` below (still `fn` — external trait, see R9 case 1)
-    // and this file's own tests — see R9.
-    fn storey_label(&self) -> String {
-        format!("Level {}: {}", self.level_index, self.storey_name)
-    }
-}
-
-impl protocol::CompositeMutationKind<CadSnapshot, CadMutation> for CreateBuildingStorey {
-    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "building-storey", kind: "create-building-storey", record: "CreatedBuildingStorey" };
-
-    fn plan(&self, _base: &CadSnapshot, planner: &mut protocol::Planner<CadSnapshot, CadMutation>) -> Result<(), protocol::PlanError> {
-        planner.call(CadMutation::CreateNode(CreateNode { node: CadNode { id: self.storey_id.clone(), label: self.storey_label(), kind: "building-storey".into() } }))?;
-        planner.call(CadMutation::ChangeActiveModelDefinition(ChangeActiveModelDefinition { new_model_definition_id: "aec.building".into() }))
-    }
-
-    fn label(&self) -> String {
-        format!("Create building storey \"{}\"", self.storey_label())
-    }
-
-    fn target(&self) -> Vec<String> {
-        vec![self.storey_id.clone()]
-    }
-}
+#[path = "🧬️schema/🧬️mutations/🏢️create-building-storey/🦀️.rs"]
+mod create_building_storey;
+pub use create_building_storey::CreateBuildingStorey;
 
 /// 💡️ Contributed inference over cad's `s.cad.cad` artifact — a building-domain summary (does the
 /// document have a building model attached, how many storeys has this extension's own composite
@@ -225,6 +185,9 @@ fn building_storey_contribution() -> ArtifactContribution {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use semio_s_plugin_cad::artifacts::cad::mutations::change_active_model_definition::ChangeActiveModelDefinition;
+    use semio_s_plugin_cad::artifacts::cad::mutations::create_node::CreateNode;
+    use semio_s_plugin_cad::artifacts::cad::CadNode;
     use protocol::{Mutation, MutationDiff, SemanticMutation};
     use semio_framework_plugin::{WireArtifactInferenceBudget, WireArtifactInferenceCacheMode};
 

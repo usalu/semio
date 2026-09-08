@@ -7,7 +7,7 @@
 
 use crate::artifacts::jack::{JackSnapshot, Node, PortDirection};
 use semio_framework_plugin::{LocalizedLabel, NodeGraphEdgeRecord, NodeGraphNodeRecord, NodeGraphPortRecord, NodeGraphScene, NodeGraphViewport, WindowKindDefinition, WindowOptions};
-use semio_framework_ui_contract::{Buildable, HasBase, SurfaceKind};
+use semio_framework_ui_contract::SurfaceKind;
 
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = "trinity-jack-view-graph";
@@ -25,7 +25,7 @@ pub fn definition() -> WindowKindDefinition {
         id: WINDOW_KIND_ID.into(),
         label: LocalizedLabel::native("Nakagin Graph", "Nakagin-Graph"),
         body_key: BODY_KEY.into(),
-        surface_kind: SurfaceKind::NodeGraph,
+        surface_kind: semio_framework_plugin::SurfaceKind::NodeGraph,
         icon_id: "graph-dag".into(),
         options: WindowOptions::default(),
         actions: Vec::new(),
@@ -79,12 +79,7 @@ pub fn render(document: &JackSnapshot) -> semio_framework_plugin::UiAssemblyResu
     let viewport = NodeGraphViewport { x: document.camera.x, y: document.camera.y, zoom: document.camera.zoom };
     let mut scene = NodeGraphScene { editable: Some(false), ..NodeGraphScene::base(nodes, edges, viewport) };
     scene.controls_json = Some(pack::json!({ "controllerId": TRINITY_JACK_VIEW_CONTROLLER_ID }).to_string());
-    let props = semio_framework_ui_scene::encode(SurfaceKind::NodeGraph, &scene).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.scene.encode", "Trinity node-graph scene admission failed"))?;
-    semio_framework_ui_contract::surface(props)
-        .try_id(SURFACE_ID)
-        .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.scene.id", "Trinity node-graph surface id admission failed"))?
-        .try_build()
-        .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.scene.build", "Trinity node-graph surface admission failed"))
+    semio_framework_plugin::scene_surface(SURFACE_ID, SurfaceKind::NodeGraph, &scene)
 }
 //#endregion 🔖️Render
 
@@ -97,14 +92,14 @@ mod tests {
     async fn definition_declares_a_node_graph_window() {
         let def = definition();
         assert_eq!(def.id, WINDOW_KIND_ID);
-        assert_eq!(def.surface_kind, SurfaceKind::NodeGraph);
+        assert_eq!(def.surface_kind, semio_framework_plugin::SurfaceKind::NodeGraph);
     }
 
     #[semio_framework_async_macros::async_test]
     async fn render_produces_a_scene_node_for_the_default_document() {
         let document = crate::artifacts::jack::empty_trinity_graph_fixture();
-        let node = render(&document);
-        assert!(pack::to_json_string(&node).contains("node-graph"));
+        let node = render(&document).expect("node graph surface");
+        assert!(serde_json::to_string(&node).expect("serialize semantic UI test tree").contains("node-graph"));
     }
 }
 //#endregion 🧪️Tests

@@ -119,7 +119,6 @@ mod tests {
     use crate::artifacts::wires::empty_wires_snapshot;
     use crate::artifacts::wires::standards::v1::subsets::any::schema::inferences::find_board_node;
     use protocol::{Mutation, SemanticMutation};
-    use serde_json::json;
     use store::apply_mutation;
 
     /// 🏷️ The three declarations of this vocabulary — the enum, [`KINDS`] and the committed catalog
@@ -142,7 +141,7 @@ mod tests {
     use store::os_store::test_support::assert_op_line_round_trip;
 
     fn node(id: &str, text: &str) -> DslValue {
-        dsl::to_dsl_value(&json!({ "id": id, "nodeKind": "identity", "shape": "circle", "x": 0.0, "y": 0.0, "radius": 24.0, "text": text, "handles": [] })).unwrap()
+        dsl::to_dsl_value(&dsl::json!({ "id": id, "nodeKind": "identity", "shape": "circle", "x": 0.0, "y": 0.0, "radius": 24.0, "text": text, "handles": [] })).unwrap()
     }
 
     fn round_trip(snapshot: &WiresSnapshot, operation: &WiresMutation) -> WiresSnapshot {
@@ -214,8 +213,8 @@ mod tests {
         let mut snapshot = empty_wires_snapshot();
         snapshot = apply_mutation(&snapshot, &create_node(node("node-1", "A"))).expect("valid mutation").0;
         snapshot = apply_mutation(&snapshot, &create_node(node("node-2", "B"))).expect("valid mutation").0;
-        let edge = dsl::to_dsl_value(&json!({ "id": "edge-1", "edgeKind": "wires.owns", "source": "node-1", "target": "node-2" })).unwrap();
-        let relationship = dsl::to_dsl_value(&json!({ "edgeId": "edge-1", "kind": "owns", "sourceIdentityId": 1, "targetIdentityId": 2 })).unwrap();
+        let edge = dsl::to_dsl_value(&dsl::json!({ "id": "edge-1", "edgeKind": "wires.owns", "source": "node-1", "target": "node-2" })).unwrap();
+        let relationship = dsl::to_dsl_value(&dsl::json!({ "edgeId": "edge-1", "kind": "owns", "sourceIdentityId": 1, "targetIdentityId": 2 })).unwrap();
         let with_edge = round_trip(&snapshot, &connect_nodes(edge, relationship));
         assert_eq!(crate::artifacts::wires::wires_working_board(&with_edge).get("edges").and_then(|value| value.as_array()).map(|items| items.len()), Some(1));
         assert_eq!(with_edge.wires_fixture.get("relationships").and_then(|value| value.as_array()).map(|items| items.len()), Some(1));
@@ -243,17 +242,17 @@ mod tests {
     async fn create_node_satisfies_the_inverse_and_absorb_laws() {
         let base = empty_wires_snapshot();
         let mutation = create_node(node("node-1", "Alpha"));
-        protocol::testkit::assert_mutation_inverse_law(&base, &mutation);
+        protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &mutation).await;
         let d1 = mutation.diff(&base).diff().clone();
         let d2 = create_node(node("node-2", "Beta")).diff(&base).diff().clone();
-        protocol::testkit::assert_mutation_diff_absorb_law(&base, d1, d2);
+        protocol::os_spr::testkit::assert_mutation_diff_absorb_law(&base, d1, d2).await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn move_node_satisfies_the_inverse_law() {
         let base = round_trip(&empty_wires_snapshot(), &create_node(node("node-1", "Alpha")));
         let mutation = move_node("node-1".into(), 40.0, 30.0);
-        protocol::testkit::assert_mutation_inverse_law(&base, &mutation);
+        protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &mutation).await;
     }
     //#endregion 🧪️MutationLaws
 
@@ -264,59 +263,59 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn delete_missing_node_is_a_target_missing_error() {
         let base = empty_wires_snapshot();
-        protocol::testkit::assert_missing_target_is_error(&base, &delete_node("does-not-exist".into()));
+        protocol::os_spr::testkit::assert_missing_target_is_error(&base, &delete_node("does-not-exist".into())).await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn move_missing_node_is_a_target_missing_error() {
         let base = empty_wires_snapshot();
-        protocol::testkit::assert_missing_target_is_error(&base, &move_node("does-not-exist".into(), 1.0, 2.0));
+        protocol::os_spr::testkit::assert_missing_target_is_error(&base, &move_node("does-not-exist".into(), 1.0, 2.0)).await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn disconnect_missing_edge_is_a_target_missing_error() {
         let base = empty_wires_snapshot();
-        protocol::testkit::assert_missing_target_is_error(&base, &disconnect_nodes("does-not-exist".into()));
+        protocol::os_spr::testkit::assert_missing_target_is_error(&base, &disconnect_nodes("does-not-exist".into())).await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn create_node_duplicate_id_never_applies() {
         let base = round_trip(&empty_wires_snapshot(), &create_node(node("node-1", "Alpha")));
         let duplicate = create_node(node("node-1", "Alpha Again"));
-        protocol::testkit::assert_fatal_never_applies(&duplicate.diff(&base));
+        protocol::os_spr::testkit::assert_fatal_never_applies(&duplicate.diff(&base)).await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn create_node_outcome_obeys_the_policy_matrix() {
         let base = empty_wires_snapshot();
-        protocol::testkit::assert_outcome_policy_matrix(&base, &create_node(node("node-1", "Alpha")));
+        protocol::os_spr::testkit::assert_outcome_policy_matrix(&base, &create_node(node("node-1", "Alpha"))).await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn delete_node_outcome_obeys_the_policy_matrix() {
         let base = round_trip(&empty_wires_snapshot(), &create_node(node("node-1", "Alpha")));
-        protocol::testkit::assert_outcome_policy_matrix(&base, &delete_node("node-1".into()));
+        protocol::os_spr::testkit::assert_outcome_policy_matrix(&base, &delete_node("node-1".into())).await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn move_and_resize_node_outcomes_obey_the_policy_matrix() {
         let base = round_trip(&empty_wires_snapshot(), &create_node(node("node-1", "Alpha")));
-        protocol::testkit::assert_outcome_policy_matrix(&base, &move_node("node-1".into(), 40.0, 30.0));
-        protocol::testkit::assert_outcome_policy_matrix(&base, &resize_node("node-1".into(), Some(48.0), None, None));
+        protocol::os_spr::testkit::assert_outcome_policy_matrix(&base, &move_node("node-1".into(), 40.0, 30.0)).await;
+        protocol::os_spr::testkit::assert_outcome_policy_matrix(&base, &resize_node("node-1".into(), Some(48.0), None, None)).await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn change_and_set_node_outcomes_obey_the_policy_matrix() {
         let base = round_trip(&empty_wires_snapshot(), &create_node(node("node-1", "Alpha")));
-        protocol::testkit::assert_outcome_policy_matrix(&base, &change_node_kind("node-1".into(), "topic".into()));
-        protocol::testkit::assert_outcome_policy_matrix(&base, &change_node_shape("node-1".into(), "rectangle".into()));
-        protocol::testkit::assert_outcome_policy_matrix(&base, &set_node_root("node-1".into(), true));
+        protocol::os_spr::testkit::assert_outcome_policy_matrix(&base, &change_node_kind("node-1".into(), "topic".into())).await;
+        protocol::os_spr::testkit::assert_outcome_policy_matrix(&base, &change_node_shape("node-1".into(), "rectangle".into())).await;
+        protocol::os_spr::testkit::assert_outcome_policy_matrix(&base, &set_node_root("node-1".into(), true)).await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn edit_node_text_outcome_obeys_the_policy_matrix() {
         let base = round_trip(&empty_wires_snapshot(), &create_node(node("node-1", "Alpha")));
-        protocol::testkit::assert_outcome_policy_matrix(&base, &edit_node_text("node-1".into(), "Renamed".into()));
+        protocol::os_spr::testkit::assert_outcome_policy_matrix(&base, &edit_node_text("node-1".into(), "Renamed".into())).await;
     }
 
     #[semio_framework_async_macros::async_test]
@@ -324,12 +323,12 @@ mod tests {
         let mut snapshot = empty_wires_snapshot();
         snapshot = apply_mutation(&snapshot, &create_node(node("node-1", "A"))).expect("valid mutation").0;
         snapshot = apply_mutation(&snapshot, &create_node(node("node-2", "B"))).expect("valid mutation").0;
-        let edge = dsl::to_dsl_value(&json!({ "id": "edge-1", "edgeKind": "wires.owns", "source": "node-1", "target": "node-2" })).unwrap();
-        let relationship = dsl::to_dsl_value(&json!({ "edgeId": "edge-1", "kind": "owns", "sourceIdentityId": 1, "targetIdentityId": 2 })).unwrap();
+        let edge = dsl::to_dsl_value(&dsl::json!({ "id": "edge-1", "edgeKind": "wires.owns", "source": "node-1", "target": "node-2" })).unwrap();
+        let relationship = dsl::to_dsl_value(&dsl::json!({ "edgeId": "edge-1", "kind": "owns", "sourceIdentityId": 1, "targetIdentityId": 2 })).unwrap();
         let connect = connect_nodes(edge, relationship);
         let with_edge = round_trip(&snapshot, &connect);
-        protocol::testkit::assert_outcome_policy_matrix(&snapshot, &connect);
-        protocol::testkit::assert_outcome_policy_matrix(&with_edge, &disconnect_nodes("edge-1".into()));
+        protocol::os_spr::testkit::assert_outcome_policy_matrix(&snapshot, &connect).await;
+        protocol::os_spr::testkit::assert_outcome_policy_matrix(&with_edge, &disconnect_nodes("edge-1".into())).await;
     }
     //#endregion 🧪️OutcomeLaws
 

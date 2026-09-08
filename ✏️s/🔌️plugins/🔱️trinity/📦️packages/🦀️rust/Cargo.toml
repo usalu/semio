@@ -39,6 +39,8 @@ default = ["plugin-entry"]
 plugin-entry = []
 
 [dependencies]
+semio-framework-ui-contract.workspace = true
+framework_editor = { path = "../../../../../🧰️framework/🔨️modules/✍️editor/📦️packages/🦀️rust", package = "semio-framework-editor" }
 semio-s-plugin-stdio = { path = "../../../🗄️stdio/📦️packages/🦀️rust", package = "semio-s-plugin-stdio", default-features = false, features = ["full-artifact-catalog"] }
 math = { path = "../../../../../🧰️framework/🔨️modules/🧮️math/📦️packages/🦀️rust", package = "semio-framework-math" }
 geometry = { path = "../../../../../🧰️framework/🔨️modules/📐️geometry/📦️packages/🦀️rust", package = "semio-framework-geometry" }

@@ -13,7 +13,11 @@
       "options": {
         "cwd": "✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts wasm"
-      }
+      },
+      "outputs": [
+        "{projectRoot}/pkg"
+      ],
+      "cache": true
     },
     "test": {
       "executor": "nx:run-commands",

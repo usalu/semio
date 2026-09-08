@@ -5,6 +5,7 @@ use semio_framework_plugin::{ArtifactKindSpec, Dialect, MediaClass, MediaForm, M
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::text::schema::snapshot::{SemioTextMark, SemioTextMarkKind, SemioTextRun, SemioTextSnapshot, STDIO_SEMIOTEXT_DOCUMENT_SCHEMA};
 use serde::{Deserialize, Serialize};
 use semio_framework_value_derive::{FromValue, ToValue};
+#[cfg(test)]
 use std::collections::BTreeMap;
 
 //#region 🔖️Register
@@ -145,11 +146,9 @@ pub fn default_zoom() -> f64 {
     1.0
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::DslEnum)]
-#[serde(tag = "kind", rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslEnum)]
 #[value(tag = "kind", rename_all = "camelCase")]
 pub enum NoteBlockNode {
-    #[serde(rename = "text", rename_all = "camelCase")]
     #[value(rename = "text", rename_all = "camelCase")]
     Text {
         id: String,
@@ -158,13 +157,10 @@ pub enum NoteBlockNode {
         y: f64,
         width: f64,
         height: f64,
-        #[serde(default)]
         #[value(default)]
         rotation: f64,
-        #[serde(default = "default_true")]
         #[value(default = "default_true")]
         visible: bool,
-        #[serde(default)]
         #[value(default)]
         locked: bool,
         /// ✏️ Composed content — ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` (`note→C:text`):
@@ -177,7 +173,6 @@ pub enum NoteBlockNode {
         font_weight: String,
         align: String,
     },
-    #[serde(rename = "image", rename_all = "camelCase")]
     #[value(rename = "image", rename_all = "camelCase")]
     Image {
         id: String,
@@ -186,18 +181,14 @@ pub enum NoteBlockNode {
         y: f64,
         width: f64,
         height: f64,
-        #[serde(default)]
         #[value(default)]
         rotation: f64,
-        #[serde(default = "default_true")]
         #[value(default = "default_true")]
         visible: bool,
-        #[serde(default)]
         #[value(default)]
         locked: bool,
         image_key: String,
     },
-    #[serde(rename = "table", rename_all = "camelCase")]
     #[value(rename = "table", rename_all = "camelCase")]
     Table {
         id: String,
@@ -206,19 +197,15 @@ pub enum NoteBlockNode {
         y: f64,
         width: f64,
         height: f64,
-        #[serde(default)]
         #[value(default)]
         rotation: f64,
-        #[serde(default = "default_true")]
         #[value(default = "default_true")]
         visible: bool,
-        #[serde(default)]
         #[value(default)]
         locked: bool,
         columns: Vec<String>,
         rows: Vec<Vec<NoteTableCell>>,
     },
-    #[serde(rename = "math", rename_all = "camelCase")]
     #[value(rename = "math", rename_all = "camelCase")]
     Math {
         id: String,
@@ -227,20 +214,16 @@ pub enum NoteBlockNode {
         y: f64,
         width: f64,
         height: f64,
-        #[serde(default)]
         #[value(default)]
         rotation: f64,
-        #[serde(default = "default_true")]
         #[value(default = "default_true")]
         visible: bool,
-        #[serde(default)]
         #[value(default)]
         locked: bool,
         #[dsl(lang = "tex")]
         tex: String,
         display_mode: bool,
     },
-    #[serde(rename = "stroke", rename_all = "camelCase")]
     #[value(rename = "stroke", rename_all = "camelCase")]
     #[dsl(key = "stroke")]
     Ink {
@@ -250,20 +233,16 @@ pub enum NoteBlockNode {
         y: f64,
         width: f64,
         height: f64,
-        #[serde(default)]
         #[value(default)]
         rotation: f64,
-        #[serde(default = "default_true")]
         #[value(default = "default_true")]
         visible: bool,
-        #[serde(default)]
         #[value(default)]
         locked: bool,
         points: Vec<[f64; 2]>,
         stroke_width: f64,
         color: [f64; 4],
     },
-    #[serde(rename = "group", rename_all = "camelCase")]
     #[value(rename = "group", rename_all = "camelCase")]
     Group {
         id: String,
@@ -272,13 +251,10 @@ pub enum NoteBlockNode {
         y: f64,
         width: f64,
         height: f64,
-        #[serde(default)]
         #[value(default)]
         rotation: f64,
-        #[serde(default = "default_true")]
         #[value(default = "default_true")]
         visible: bool,
-        #[serde(default)]
         #[value(default)]
         locked: bool,
         #[dsl(statements, block)]
@@ -289,12 +265,10 @@ pub enum NoteBlockNode {
 //#region 🔖️ComposedTypes
 /// 🕸️ Snapshot-owned text child record. The handle preserves composition identity while the bounded
 /// paragraph records are durable authority that survives reopen and worker migration.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::DslRecord)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct NoteTextChild {
     pub handle: store::ArtifactChild<SemioTextSnapshot>,
-    #[serde(default)]
     #[value(default)]
     pub paragraphs: Vec<NoteTextParagraph>,
 }
@@ -533,11 +507,18 @@ mod tests {
         document.assets.insert("asset-1".into(), NoteImageAsset { mime: "image/png".into(), data: "data:image/png;base64,abc".into(), width: Some(10.0), height: Some(20.0) });
         document.grid_subdivisions = Some(6.0);
         document.grid_opacity = Some(0.5);
-        let json_text = serde_json::to_string(&document).unwrap();
-        let parsed: NoteSnapshot = serde_json::from_str(&json_text).unwrap();
+        let json_text = dsl::os_pack::to_json_string(&document);
+        let parsed: NoteSnapshot = dsl::os_pack::from_json_str(&json_text).unwrap();
         assert_eq!(parsed.assets.get("asset-1").unwrap().mime, "image/png");
         assert_eq!(parsed.grid_subdivisions, Some(6.0));
         assert_eq!(parsed.grid_opacity, Some(0.5));
     }
 }
 //#endregion 🧪️Tests
+
+/// 🖼️ Encodes persisted Note fields and the local camera for an ink-canvas scene.
+pub fn note_canvas_document_json(document: &NoteSnapshot, camera: &NoteCamera) -> String {
+    let mut value = dsl::os_pack::json_from_dsl_value(&dsl::ToValue::to_value(document));
+    value.as_object_mut().expect("NoteSnapshot is a record").insert("camera", dsl::os_pack::json_from_dsl_value(&dsl::ToValue::to_value(camera)));
+    dsl::os_pack::json_to_string(&value)
+}

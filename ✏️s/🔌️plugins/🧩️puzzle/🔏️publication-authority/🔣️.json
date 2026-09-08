@@ -8,23 +8,76 @@
       "groups": [
         {
           "status": "Migrated",
-          "lanes": ["HostOnly"],
-          "routes": ["lodScaleJson", "selectSameKind"]
+          "lanes": [
+            "HostOnly"
+          ],
+          "routes": [
+            "lodScaleJson",
+            "selectSameKind"
+          ]
         },
         {
           "status": "Migrated",
-          "lanes": ["Artifact"],
-          "routes": ["addNode", "forceLayout", "import-media", "redrawHandles", "reorganize"]
+          "lanes": [
+            "Artifact"
+          ],
+          "routes": [
+            "addNode",
+            "forceLayout",
+            "import-media",
+            "redrawHandles",
+            "reorganize"
+          ]
         },
         {
           "status": "Migrated",
-          "lanes": ["Config"],
-          "routes": ["brushCancelSlot", "brushCycleCandidate", "brushFillSessionAdopt", "brushFillSessionCancel", "brushFillSessionClear", "brushFillSessionDiscard", "brushOpenSlot", "brushSetCandidateIndex", "engagementAbort", "engagementControlSelect", "engagementInput", "engagementSubmit", "focusSelection", "setBrushKindWeights", "setBrushNodeSize", "setCamera", "setGridFactor", "setGridSnapEnabled", "setLocale", "setLodModeForPane", "setSuggestionOffset", "setTerminology"]
+          "lanes": [
+            "Config"
+          ],
+          "routes": [
+            "brushCancelSlot",
+            "brushCycleCandidate",
+            "brushFillSessionAdopt",
+            "brushFillSessionCancel",
+            "brushFillSessionClear",
+            "brushFillSessionDiscard",
+            "brushOpenSlot",
+            "brushSetCandidateIndex",
+            "engagementAbort",
+            "engagementControlSelect",
+            "engagementInput",
+            "engagementSubmit",
+            "focusSelection",
+            "setBrushKindWeights",
+            "setBrushNodeSize",
+            "setCamera",
+            "setGridFactor",
+            "setGridSnapEnabled",
+            "setLocale",
+            "setLodModeForPane",
+            "setSuggestionOffset",
+            "setTerminology"
+          ]
         },
         {
           "status": "Migrated",
-          "lanes": ["Artifact", "Config"],
-          "routes": ["applyBoardEvents", "brushCommitSlot", "brushFillSessionBegin", "brushFillSessionRetry", "brushFillSessionStep", "deleteSelection", "duplicateSelection", "patchInspectorNodes", "setActiveExample", "setFillCount", "setSelectionFlag"]
+          "lanes": [
+            "Artifact",
+            "Config"
+          ],
+          "routes": [
+            "applyBoardEvents",
+            "brushCommitSlot",
+            "brushFillSessionBegin",
+            "brushFillSessionRetry",
+            "brushFillSessionStep",
+            "deleteSelection",
+            "duplicateSelection",
+            "patchInspectorNodes",
+            "setActiveExample",
+            "setFillCount",
+            "setSelectionFlag"
+          ]
         }
       ]
     },
@@ -34,34 +87,119 @@
       "groups": [
         {
           "status": "Migrated",
-          "lanes": ["HostOnly"],
-          "routes": ["openAddObjectDialog", "worldPointerDown"]
+          "lanes": [
+            "HostOnly"
+          ],
+          "routes": [
+            "openAddObjectDialog",
+            "worldPointerDown"
+          ]
         },
         {
           "status": "Migrated",
-          "lanes": ["Config"],
-          "routes": ["closeVortexSuggestions", "cycleBrushCandidate", "cycleBrushCandidateBack", "engagementAbort", "engagementControlSelect", "engagementInput", "engagementRepeatLast", "engagementSubmit", "fillBuildTick", "focusSelection", "hoverSuggestion", "openVortexSuggestions", "registerBrushMesh", "selectSameKindSelection", "setBrushPlacementOverlapBudget", "setCamera", "setChunkSize", "setFillCount", "setGridSnapEnabled", "setGridSpacing", "setGridVisible", "setLocale", "setLodAutomatic", "setLodDepthVariable", "setLodManual", "setObjectKindWeight", "setProjection", "setProjectionParam", "setProximityRadius", "setSelectableKind", "setSunAzimuth", "setSunElevation", "setSunIntensity", "setTerminology", "setTransformGumballFlag", "setVortexDirection", "setVortexKindWeight", "setVortexShow", "setVoxelDims", "suggestionsTick", "toggleSun"]
+          "lanes": [
+            "Config"
+          ],
+          "routes": [
+            "closeVortexSuggestions",
+            "cycleBrushCandidate",
+            "cycleBrushCandidateBack",
+            "engagementAbort",
+            "engagementControlSelect",
+            "engagementInput",
+            "engagementRepeatLast",
+            "engagementSubmit",
+            "fillBuildTick",
+            "focusSelection",
+            "hoverSuggestion",
+            "openVortexSuggestions",
+            "registerBrushMesh",
+            "selectSameKindSelection",
+            "setBrushPlacementOverlapBudget",
+            "setCamera",
+            "setChunkSize",
+            "setFillCount",
+            "setGridSnapEnabled",
+            "setGridSpacing",
+            "setGridVisible",
+            "setLocale",
+            "setLodAutomatic",
+            "setLodDepthVariable",
+            "setLodManual",
+            "setObjectKindWeight",
+            "setProjection",
+            "setProjectionParam",
+            "setProximityRadius",
+            "setSelectableKind",
+            "setSunAzimuth",
+            "setSunElevation",
+            "setSunIntensity",
+            "setTerminology",
+            "setTransformGumballFlag",
+            "setVortexDirection",
+            "setVortexKindWeight",
+            "setVortexShow",
+            "setVoxelDims",
+            "suggestionsTick",
+            "toggleSun"
+          ]
         },
         {
           "status": "Migrated",
-          "lanes": ["Artifact", "Config"],
-          "routes": ["acceptSuggestion", "addBrushObject", "addObjectKind", "createAttraction", "deleteAttraction", "deleteSelection", "deleteTargetVolume", "duplicateSelection", "patchInspector", "rotateSelection", "scaleSelection", "setActiveExample", "setFillCountStep", "setSelectionFlag", "setTargetVolumeFlag", "translateSelection", "worldRelocate"]
+          "lanes": [
+            "Artifact",
+            "Config"
+          ],
+          "routes": [
+            "acceptSuggestion",
+            "addBrushObject",
+            "addObjectKind",
+            "createAttraction",
+            "deleteAttraction",
+            "deleteSelection",
+            "deleteTargetVolume",
+            "duplicateSelection",
+            "patchInspector",
+            "rotateSelection",
+            "scaleSelection",
+            "setActiveExample",
+            "setFillCountStep",
+            "setSelectionFlag",
+            "setTargetVolumeFlag",
+            "translateSelection",
+            "worldRelocate"
+          ]
         },
         {
           "status": "Migrated",
-          "lanes": ["Artifact"],
-          "routes": ["addTargetVolume", "relocateTargetVolume"]
+          "lanes": [
+            "Artifact"
+          ],
+          "routes": [
+            "addTargetVolume",
+            "relocateTargetVolume"
+          ]
         },
         {
           "status": "BatchOnlyPendingRewrite",
-          "lanes": ["HostOnly"],
-          "routes": ["transformBegin", "transformEnd"],
+          "lanes": [
+            "HostOnly"
+          ],
+          "routes": [
+            "transformBegin",
+            "transformEnd"
+          ],
           "blocker": "the current empty/effect-only completion does not reproduce the route's semantic runtime transition"
         },
         {
           "status": "BatchOnlyPendingRewrite",
-          "lanes": ["Artifact", "Config"],
-          "routes": ["setFixtureJson"],
+          "lanes": [
+            "Artifact",
+            "Config"
+          ],
+          "routes": [
+            "setFixtureJson"
+          ],
           "blocker": "argument is a whole fixture (~129KB for the Nakagin example) against the shared 8,192-byte PUZZLE_COMMAND_RAW_BYTES retained-job wire cap; needs a chunked or resumable wire path, not a wiring change"
         }
       ]
@@ -72,35 +210,107 @@
       "groups": [
         {
           "status": "Migrated",
-          "lanes": ["HostOnly"],
-          "routes": ["canvasPointerDown", "copy", "importComposeKit", "selectSameKindSelection", "worldPointerDown"]
+          "lanes": [
+            "HostOnly"
+          ],
+          "routes": [
+            "canvasPointerDown",
+            "copy",
+            "importComposeKit",
+            "selectSameKindSelection",
+            "worldPointerDown"
+          ]
         },
         {
           "status": "Migrated",
-          "lanes": ["Artifact"],
-          "routes": ["cut", "deleteSelection", "duplicateSelection", "import-media", "paste", "setFixtureJson", "setSelectionFlag"]
+          "lanes": [
+            "Artifact"
+          ],
+          "routes": [
+            "cut",
+            "deleteSelection",
+            "duplicateSelection",
+            "import-media",
+            "paste",
+            "setFixtureJson",
+            "setSelectionFlag"
+          ]
         },
         {
           "status": "Migrated",
-          "lanes": ["Config"],
-          "routes": ["zoomToSelection"]
+          "lanes": [
+            "Config"
+          ],
+          "routes": [
+            "zoomToSelection"
+          ]
         },
         {
           "status": "BatchOnlyPendingRewrite",
-          "lanes": ["Artifact"],
-          "routes": ["addBrushObject", "addBrushPart", "addNode", "addPartKind", "applyBoardEvents", "createFastener", "deleteFastener", "editFastener", "patchFastener", "patchGrip", "patchPart", "proximityConnect", "retargetFastener", "rotateSelection", "scaleSelection", "setActiveExample", "translateSelection", "worldRelocate"],
+          "lanes": [
+            "Artifact"
+          ],
+          "routes": [
+            "addBrushObject",
+            "addBrushPart",
+            "addNode",
+            "addPartKind",
+            "applyBoardEvents",
+            "createFastener",
+            "deleteFastener",
+            "editFastener",
+            "patchFastener",
+            "patchGrip",
+            "patchPart",
+            "proximityConnect",
+            "retargetFastener",
+            "rotateSelection",
+            "scaleSelection",
+            "setActiveExample",
+            "translateSelection",
+            "worldRelocate"
+          ],
           "blocker": "artifact-lane completion has no app-owned retained preparation and root-retirement factory"
         },
         {
           "status": "BatchOnlyPendingRewrite",
-          "lanes": ["Config"],
-          "routes": ["cycleBrushCandidate", "engagementAbort", "engagementControlSelect", "engagementInput", "engagementSubmit", "focusSelection", "setBrushPlacementOverlapBudget", "setCamera", "setCamera2d", "setCamera3d", "setFillCount", "setGridFactor", "setGridSnapEnabled", "setLodMode", "setObjectKindWeight", "setSuggestionOffset", "setSunAzimuth", "setSunElevation", "setSunIntensity", "setVortexKindWeight", "toggleSun"],
+          "lanes": [
+            "Config"
+          ],
+          "routes": [
+            "cycleBrushCandidate",
+            "engagementAbort",
+            "engagementControlSelect",
+            "engagementInput",
+            "engagementSubmit",
+            "focusSelection",
+            "setBrushPlacementOverlapBudget",
+            "setCamera",
+            "setCamera2d",
+            "setCamera3d",
+            "setFillCount",
+            "setGridFactor",
+            "setGridSnapEnabled",
+            "setLodMode",
+            "setObjectKindWeight",
+            "setSuggestionOffset",
+            "setSunAzimuth",
+            "setSunElevation",
+            "setSunIntensity",
+            "setVortexKindWeight",
+            "toggleSun"
+          ],
           "blocker": "config-lane completion has no app-owned retained preparation and root-retirement factory"
         },
         {
           "status": "BatchOnlyPendingRewrite",
-          "lanes": ["HostOnly"],
-          "routes": ["registerBrushMesh", "selectSameKind"],
+          "lanes": [
+            "HostOnly"
+          ],
+          "routes": [
+            "registerBrushMesh",
+            "selectSameKind"
+          ],
           "blocker": "the current empty completion does not reproduce the route's semantic runtime or selection transition"
         }
       ]

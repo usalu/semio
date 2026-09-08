@@ -1,0 +1,456 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.tech/schemas/hub/gis-map-collaboration/v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "prerequisites",
+    "selection",
+    "peers",
+    "authority",
+    "lifecycle",
+    "equalBindings",
+    "refreshedBindings",
+    "approval",
+    "teardown",
+    "forbiddenSubstitutes",
+    "nonclaims"
+  ],
+  "properties": {
+    "schema": {
+      "const": "semio.hub.gis-map-collaboration/v1"
+    },
+    "prerequisites": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "bootstrapFixture",
+        "browserFixture",
+        "approvalFixture"
+      ],
+      "properties": {
+        "bootstrapFixture": {
+          "const": "🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🧪️fixtures/🧬️stdio-gis-bootstrap/🔣️.json"
+        },
+        "browserFixture": {
+          "const": "🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🧪️fixtures/🧬️retained-gis-browser/🔣️.json"
+        },
+        "approvalFixture": {
+          "const": "🌎️hub/🧪️fixtures/🗳️gis-map-proposal-approval-v1/🔣️.json"
+        }
+      }
+    },
+    "selection": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "profileId",
+        "packageId",
+        "artifactKind",
+        "documentSchema",
+        "parentDialect",
+        "surfaceId",
+        "grantedMode",
+        "serviceId",
+        "generation",
+        "actor"
+      ],
+      "properties": {
+        "profileId": {
+          "const": "local-stdio-gis-open-v1"
+        },
+        "packageId": {
+          "const": "semio:gis"
+        },
+        "artifactKind": {
+          "const": "s.gis.gismap"
+        },
+        "documentSchema": {
+          "const": "gis.map"
+        },
+        "parentDialect": {
+          "const": "s.gis.gismap@1/*"
+        },
+        "surfaceId": {
+          "const": "s.gis.gismap@1/*#editor"
+        },
+        "grantedMode": {
+          "const": "read-write-observe"
+        },
+        "serviceId": {
+          "const": "s.gis.gismap.inference"
+        },
+        "generation": {
+          "const": "same-published-current-through-teardown"
+        },
+        "actor": {
+          "const": "retained-not-rebuilt"
+        }
+      }
+    },
+    "peers": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "prefixItems": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "name",
+            "role",
+            "language"
+          ],
+          "properties": {
+            "name": {
+              "const": "author-a"
+            },
+            "role": {
+              "const": "author"
+            },
+            "language": {
+              "const": "en"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "name",
+            "role",
+            "language"
+          ],
+          "properties": {
+            "name": {
+              "const": "author-b"
+            },
+            "role": {
+              "const": "author"
+            },
+            "language": {
+              "const": "de"
+            }
+          }
+        }
+      ],
+      "items": false
+    },
+    "authority": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "sessions",
+        "capabilities",
+        "createDocument",
+        "initialCheckpoint",
+        "open",
+        "pair",
+        "load",
+        "scene",
+        "sceneAck",
+        "concurrency"
+      ],
+      "properties": {
+        "sessions": {
+          "const": "distinct-authenticated-react-relay-profiles"
+        },
+        "capabilities": {
+          "const": "host-only-never-page-worker-or-report"
+        },
+        "createDocument": {
+          "const": "production-directory-command"
+        },
+        "initialCheckpoint": {
+          "const": "normal-checkpoint-publication"
+        },
+        "open": {
+          "const": "production-plan-asset-grant-session"
+        },
+        "pair": {
+          "const": "actual-terminal-pack-spr-receipt"
+        },
+        "load": {
+          "const": "genuine-plugin-load-document-pack"
+        },
+        "scene": {
+          "const": "mounted-shell-tiled-map-host"
+        },
+        "sceneAck": {
+          "const": "scope-client-surface-session-bound-ui-owner"
+        },
+        "concurrency": {
+          "const": "both-sockets-live-before-mutation"
+        }
+      }
+    },
+    "lifecycle": {
+      "type": "array",
+      "minItems": 21,
+      "maxItems": 21,
+      "prefixItems": [
+        {
+          "const": "publish-qualified-generation"
+        },
+        {
+          "const": "create-shared-document"
+        },
+        {
+          "const": "publish-initial-checkpoint"
+        },
+        {
+          "const": "open-two-authenticated-shells"
+        },
+        {
+          "const": "observe-two-initial-gis-scenes"
+        },
+        {
+          "const": "cancel-separate-owner-job"
+        },
+        {
+          "const": "deny-peer-access-to-owner-private-job"
+        },
+        {
+          "const": "observe-server-stamped-create-region-proposal"
+        },
+        {
+          "const": "approve-owner-proposal"
+        },
+        {
+          "const": "observe-committed-wal-event"
+        },
+        {
+          "const": "observe-actor-frontier"
+        },
+        {
+          "const": "observe-public-checkpoint"
+        },
+        {
+          "const": "observe-ledger-applied"
+        },
+        {
+          "const": "observe-two-live-rebootstrap-frames"
+        },
+        {
+          "const": "observe-two-fresh-plan-grant-sessions"
+        },
+        {
+          "const": "observe-two-later-cold-pairs"
+        },
+        {
+          "const": "observe-two-equal-region-scenes"
+        },
+        {
+          "const": "undo-via-ordinary-document-command"
+        },
+        {
+          "const": "observe-two-equal-undone-scenes"
+        },
+        {
+          "const": "close-all-owners"
+        },
+        {
+          "const": "verify-unchanged-catalog-generation"
+        }
+      ],
+      "items": false
+    },
+    "equalBindings": {
+      "type": "array",
+      "minItems": 13,
+      "maxItems": 13,
+      "prefixItems": [
+        {
+          "const": "profileId"
+        },
+        {
+          "const": "catalogGenerationId"
+        },
+        {
+          "const": "packageId"
+        },
+        {
+          "const": "componentSha256"
+        },
+        {
+          "const": "descriptorByteSha256"
+        },
+        {
+          "const": "browserActorSha256"
+        },
+        {
+          "const": "browserActorByteLength"
+        },
+        {
+          "const": "documentId"
+        },
+        {
+          "const": "surfaceId"
+        },
+        {
+          "const": "parentDialect"
+        },
+        {
+          "const": "coldPairManifestHash"
+        },
+        {
+          "const": "frontier"
+        },
+        {
+          "const": "visibleMapScene"
+        }
+      ],
+      "items": false
+    },
+    "refreshedBindings": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "prefixItems": [
+        {
+          "const": "sessionId"
+        },
+        {
+          "const": "socketGrant"
+        },
+        {
+          "const": "coldPairReceiptGeneration"
+        }
+      ],
+      "items": false
+    },
+    "approval": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "command",
+        "regionId",
+        "kind",
+        "inverse",
+        "effectCount",
+        "peerMaySubmitOwnJob",
+        "peerMayReadOwnerJob",
+        "peerMayCancelOwnerJob",
+        "peerMayApproveOwnerJob"
+      ],
+      "properties": {
+        "command": {
+          "const": "CreateRegion"
+        },
+        "regionId": {
+          "const": "inference-<owner-job-id>"
+        },
+        "kind": {
+          "const": "inference-bounds"
+        },
+        "inverse": {
+          "const": "DeleteRegion"
+        },
+        "effectCount": {
+          "const": 1
+        },
+        "peerMaySubmitOwnJob": {
+          "const": true
+        },
+        "peerMayReadOwnerJob": {
+          "const": false
+        },
+        "peerMayCancelOwnerJob": {
+          "const": false
+        },
+        "peerMayApproveOwnerJob": {
+          "const": false
+        }
+      }
+    },
+    "teardown": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "pages",
+        "workers",
+        "relays",
+        "childActors",
+        "childBytes",
+        "retainedDocumentOwners",
+        "hubProcesses"
+      ],
+      "properties": {
+        "pages": {
+          "const": 0
+        },
+        "workers": {
+          "const": 0
+        },
+        "relays": {
+          "const": 0
+        },
+        "childActors": {
+          "const": 0
+        },
+        "childBytes": {
+          "const": 0
+        },
+        "retainedDocumentOwners": {
+          "const": 0
+        },
+        "hubProcesses": {
+          "const": 0
+        }
+      }
+    },
+    "forbiddenSubstitutes": {
+      "type": "array",
+      "minItems": 8,
+      "maxItems": 8,
+      "prefixItems": [
+        {
+          "const": "sequential-peers"
+        },
+        {
+          "const": "controlled-actor"
+        },
+        {
+          "const": "independently-rebuilt-actor"
+        },
+        {
+          "const": "direct-artifact-store-write"
+        },
+        {
+          "const": "direct-ui-document-store-patch"
+        },
+        {
+          "const": "injected-rebootstrap-frame"
+        },
+        {
+          "const": "patch-positions-as-ai-approval"
+        },
+        {
+          "const": "raw-capability-in-page"
+        }
+      ],
+      "items": false
+    },
+    "nonclaims": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "prefixItems": [
+        {
+          "const": "all-plugin-assets-qualified"
+        },
+        {
+          "const": "external-model-provider-qualified"
+        },
+        {
+          "const": "postgres-live-qualified"
+        },
+        {
+          "const": "neo4j-live-qualified"
+        }
+      ],
+      "items": false
+    }
+  }
+}

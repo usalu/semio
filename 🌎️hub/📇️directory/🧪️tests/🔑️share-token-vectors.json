@@ -10,8 +10,8 @@
     }
   ],
   "scope": {
-    "grant": { "spaceId": "space-a", "documentId": "shared" },
-    "allowed": { "spaceId": "space-a", "documentId": "shared" },
+    "grant": { "spaceId": "default", "documentId": "shared" },
+    "allowed": { "spaceId": "default", "documentId": "shared" },
     "denied": { "spaceId": "space-b", "documentId": "shared" }
   }
 }

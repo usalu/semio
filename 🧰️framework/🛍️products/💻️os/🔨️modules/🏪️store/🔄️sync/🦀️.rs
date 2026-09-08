@@ -608,6 +608,8 @@ pub mod backbone_worker_wire {
     pub enum BackboneWorkerRequest {
         Open {
             document_id: String,
+            #[value(default, skip_serializing_if = "Option::is_none")]
+            client_instance_id: Option<String>,
             schema: String,
             bindings: Vec<PersistenceBinding>,
             #[value(default, skip_serializing_if = "Option::is_none")]
@@ -616,9 +618,13 @@ pub mod backbone_worker_wire {
         },
         Close {
             document_id: String,
+            #[value(default, skip_serializing_if = "Option::is_none")]
+            client_instance_id: Option<String>,
         },
         Send {
             document_id: String,
+            #[value(default, skip_serializing_if = "Option::is_none")]
+            client_instance_id: Option<String>,
             message: Box<ArtifactActorMsg>,
         },
     }
@@ -626,13 +632,13 @@ pub mod backbone_worker_wire {
     #[derive(Clone, Debug, ToValue, FromValue)]
     #[value(tag = "kind", rename_all = "camelCase")]
     pub enum BackboneWorkerResponse {
-        Event { document_id: String, event: ArtifactEvent },
+        Event { document_id: String, client_instance_id: String, event: ArtifactEvent },
         Ready,
     }
 
     impl BackboneWorkerRequest {
         pub async fn actor_config(&self) -> Option<ArtifactActorConfig> {
-            let Self::Open { document_id, schema, bindings, watch_external, actor } = self else {
+            let Self::Open { document_id, schema, bindings, watch_external, actor, .. } = self else {
                 return None;
             };
             Some(ArtifactActorConfig { document_id: document_id.clone(), schema: schema.clone(), bindings: bindings.clone(), watch_external: watch_external.unwrap_or(true), actor: actor.clone() })
@@ -3361,6 +3367,7 @@ mod native_actor {
                     component_sha256: "33".repeat(32),
                     component_blake3: "44".repeat(32),
                     descriptor_byte_sha256: "55".repeat(32),
+                    execution_protocol: crate::os_directory::DocumentExecutionProtocolV1 { app_channel_version: crate::os_spr::CHANNEL_VERSION },
                 },
                 component: crate::os_directory::DocumentExecutionTargetComponentV1 { sha256: "33".repeat(32), blake3: "44".repeat(32), byte_length: 1024 },
                 descriptor: crate::os_directory::DocumentExecutionTargetDescriptorV1 { sha256: "55".repeat(32), byte_length: 512 },
@@ -4530,6 +4537,21 @@ mod tests {
         POOL.get_or_init(|| std::sync::Arc::new(semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::InteractiveNative, 3)))).clone()
     }
 
+    #[semio_framework_async_macros::async_test]
+    async fn document_opening_attempt_wire_preserves_outer_owner_without_widening_actor_messages() {
+        let attempt = "11111111-1111-4111-8111-111111111111";
+        let request =
+            backbone_worker_wire::BackboneWorkerRequest::Open { document_id: "document-a".into(), client_instance_id: Some(attempt.into()), schema: "demo/v1".into(), bindings: Vec::new(), watch_external: Some(true), actor: "actor-a".into() };
+        let wire = backbone_worker_wire::encode_request(&request).await.expect("encode exact opening owner");
+        let decoded = backbone_worker_wire::decode_request(&wire).await.expect("decode exact opening owner");
+        assert!(matches!(decoded, backbone_worker_wire::BackboneWorkerRequest::Open { client_instance_id: Some(owner), .. } if owner == attempt));
+
+        let response = backbone_worker_wire::BackboneWorkerResponse::Event { document_id: "document-a".into(), client_instance_id: attempt.into(), event: ArtifactEvent::Status(ArtifactSyncStatus::default()) };
+        let wire = backbone_worker_wire::encode_response(&response).await.expect("encode exact event owner");
+        let decoded = backbone_worker_wire::decode_response(&wire).await.expect("decode exact event owner");
+        assert!(matches!(decoded, backbone_worker_wire::BackboneWorkerResponse::Event { client_instance_id: owner, .. } if owner == attempt));
+    }
+
     #[test]
     fn artifact_mailbox_item_cap_plus_one_returns_exact_owner_and_preserves_fifo() {
         let (sender, receiver) = artifact_mailbox_pair();
@@ -5158,6 +5180,7 @@ mod tests {
                             component_sha256: "6".repeat(64),
                             component_blake3: "7".repeat(64),
                             descriptor_byte_sha256: "8".repeat(64),
+                            execution_protocol: crate::os_directory::DocumentExecutionProtocolV1 { app_channel_version: crate::os_spr::CHANNEL_VERSION },
                         },
                         artifact: DocumentOpenArtifactV1 { kind: "trusted.document".into(), schema: expectation.artifact_schema.clone(), pack_schema_hash: "1".repeat(64) },
                         parent_dialect: DocumentOpenParentDialectV1 { artifact_kind: "trusted.document".into(), standard: "1".into(), subset: "*".into() },

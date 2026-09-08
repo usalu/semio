@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🧬️mutations/⚙️set-editor-settings",
+  "semanticKind": "set-editor-settings",
+  "displayName": "Set Editor Settings",
+  "emoji": "⚙️",
+  "aggregateVariant": "SetEditorSettings",
+  "payloadSchema": "🧬️.schema.json",
+  "textOpcode": "set-editor-settings",
+  "binaryTag": 5,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "apply-only",
+  "outcomeClasses": [
+    "applied"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "text",
+    "binary",
+    "json-schema"
+  ]
+}

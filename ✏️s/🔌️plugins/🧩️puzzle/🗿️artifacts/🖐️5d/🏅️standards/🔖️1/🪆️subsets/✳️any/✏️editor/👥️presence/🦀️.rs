@@ -27,7 +27,7 @@ impl Default for Puzzle5dPresence {
 
 impl protocol::MutationDiff<Puzzle5dPresence> for Puzzle5dPresence {
     fn apply(&self, _base: &Puzzle5dPresence) -> protocol::MutationApplyResult<Puzzle5dPresence> {
-        Ok({ self.clone() })
+        Ok(self.clone())
     }
     fn absorb(&mut self, other: Self) {
         *self = other;

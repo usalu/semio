@@ -1,0 +1,3 @@
+; abnf stdio.pdf snapshot
+document = payload
+payload = *OCTET

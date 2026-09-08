@@ -12,7 +12,7 @@
  */
 // #endregion Header
 
-import type { AppRef, AppRole, AppRouter, ArtifactDialect, Conflict, ConflictResolution, DispatchReport, Fault, FetchTimeoutResponse, MergePolicy, MergeReport, MutationMessage, OpeningPreferences, PluginWasmHandle, TurnOutcome, UtilityLeaf } from "@semio-tech/framework";
+import type { AppRef, AppRole, AppRouter, ArtifactDialect, ArtifactDiff, Conflict, ConflictResolution, DispatchReport, Fault, FetchTimeoutResponse, InverseMutation, KernelMutation, MergePolicy, MergeReport, MutationMessage, OpeningPreferences, PluginWasmHandle, TurnOutcome, UndoGroup, UndoPolicy, UtilityLeaf } from "@semio-tech/framework";
 import { conflictResolutionAsU8, createTurnOutcomeBroadcast, dialectCoordinate, fetchWithTimeout, mergePolicyAsU8, parseDialectCoordinate, parseSurfaceAppId, resolveOpeningApp, retryWithJitteredBackoff } from "@semio-tech/framework";
 /** 📇️ Directory event/command/DTO types (contract-freeze §C1/§C6) — imported once here for
  * {@link BackboneWorkerRequest}/{@link BackboneWorkerResponse}'s `directory-*` variants and this
@@ -718,14 +718,26 @@ export function encodeBackboneWorkerRequest(request: BackboneWorkerRequest): Uin
 /** @emoji 🧵️ Decodes a {@link BackboneWorkerRequest} from the wasm actor or structured-clone twin. */
 export function decodeBackboneWorkerRequest(wire: Uint8Array): BackboneWorkerRequest {
   const parsed = parseBackboneWorkerWire(wire, (value) => value as Record<string, unknown>);
-  if (parsed.kind === "browser-actor-ui-patch-result") return parseBrowserActorUiPatchResultV1(parsed);
+  if (parsed.kind === "browser-actor-ui-patch-result") {
+    const clientInstanceId = workerWireClientInstanceIdV1(parsed.clientInstanceId);
+    if (clientInstanceId === null) throw new Error("backbone worker request: invalid client instance id");
+    const { clientInstanceId: _clientInstanceId, ...result } = parsed;
+    return { ...parseBrowserActorUiPatchResultV1(result), clientInstanceId };
+  }
   if (parsed.kind === "send" && typeof parsed.message === "object" && parsed.message !== null) {
+    const clientInstanceId = parsed.clientInstanceId === undefined ? undefined : workerWireClientInstanceIdV1(parsed.clientInstanceId);
+    if (clientInstanceId === null) throw new Error("backbone worker request: invalid client instance id");
     return {
       kind: "send",
       documentId: String(parsed.documentId),
       ...(typeof parsed.spaceId === "string" ? { spaceId: parsed.spaceId } : {}),
+      ...(clientInstanceId === undefined ? {} : { clientInstanceId }),
       message: parseArtifactActorMsg(parsed.message as Record<string, unknown>),
     };
+  }
+  if (parsed.kind === "open" || parsed.kind === "close") {
+    const clientInstanceId = parsed.clientInstanceId === undefined ? undefined : workerWireClientInstanceIdV1(parsed.clientInstanceId);
+    if (parsed.clientInstanceId !== undefined && clientInstanceId === null) throw new Error("backbone worker request: invalid client instance id");
   }
   return parsed as BackboneWorkerRequest;
 }
@@ -741,16 +753,23 @@ export function encodeBackboneWorkerResponse(response: BackboneWorkerResponse): 
 /** @emoji 🧵️ Decodes a worker response/event wire payload from the wasm actor. */
 export function decodeBackboneWorkerResponse(wire: Uint8Array): BackboneWorkerResponse {
   const parsed = parseBackboneWorkerWire(wire, (value) => value as Record<string, unknown>);
-  if (parsed.kind === "browser-actor-ui-patch") return parseBrowserActorUiPatchOfferV1(parsed);
+  if (parsed.kind === "browser-actor-ui-patch") {
+    const clientInstanceId = workerWireClientInstanceIdV1(parsed.clientInstanceId);
+    if (clientInstanceId === null) throw new Error("backbone worker response: invalid client instance id");
+    const { clientInstanceId: _clientInstanceId, ...offer } = parsed;
+    return { ...parseBrowserActorUiPatchOfferV1(offer), clientInstanceId };
+  }
   if (parsed.kind === "event" && typeof parsed.event === "object" && parsed.event !== null) {
     const documentId = workerWireIdV1(parsed.documentId);
     if (documentId === null) throw new Error("backbone worker response: invalid document id");
+    const clientInstanceId = workerWireClientInstanceIdV1(parsed.clientInstanceId);
+    if (clientInstanceId === null) throw new Error("backbone worker response: invalid client instance id");
     const event = parseArtifactEvent(parsed.event as Record<string, unknown>);
     const scope = workerWireScopeV1(parsed.scope, documentId);
-    if (event.kind !== "presence") return { kind: "event", documentId, event, ...(scope === null ? {} : { scope }) };
+    if (event.kind !== "presence") return { kind: "event", documentId, clientInstanceId, event, ...(scope === null ? {} : { scope }) };
     const verifiedSurfaceId = workerWireIdV1(parsed.verifiedSurfaceId);
-    if (scope === null || verifiedSurfaceId === null) return { kind: "event", documentId, event: { kind: "presence", peers: [] }, ...(scope === null ? {} : { scope }) };
-    return { kind: "event", documentId, scope, verifiedSurfaceId, event };
+    if (scope === null || verifiedSurfaceId === null) return { kind: "event", documentId, clientInstanceId, event: { kind: "presence", peers: [] }, ...(scope === null ? {} : { scope }) };
+    return { kind: "event", documentId, clientInstanceId, scope, verifiedSurfaceId, event };
   }
   if (
     parsed.kind === "socket-actor"
@@ -762,10 +781,12 @@ export function decodeBackboneWorkerResponse(wire: Uint8Array): BackboneWorkerRe
   ) {
     const documentId = workerWireIdV1(parsed.documentId);
     if (documentId === null) throw new Error("backbone worker response: invalid document id");
+    const clientInstanceId = workerWireClientInstanceIdV1(parsed.clientInstanceId);
+    if (clientInstanceId === null) throw new Error("backbone worker response: invalid client instance id");
     let scope = workerWireScopeV1(parsed.scope, documentId);
     if (parsed.kind === "execution-target-status" && scope !== null && parsed.spaceId !== scope.spaceId) scope = null;
-    const { documentId: _documentId, scope: _scope, ...rest } = parsed;
-    return { ...rest, documentId, ...(scope === null ? {} : { scope }) } as BackboneWorkerResponse;
+    const { documentId: _documentId, clientInstanceId: _clientInstanceId, scope: _scope, ...rest } = parsed;
+    return { ...rest, documentId, clientInstanceId, ...(scope === null ? {} : { scope }) } as BackboneWorkerResponse;
   }
   if (parsed.kind === "inference-port-status") {
     if (!Number.isSafeInteger(parsed.operationEpoch) || (parsed.operationEpoch as number) < 0 || typeof parsed.scope !== "object" || parsed.scope === null || Array.isArray(parsed.scope)) throw new Error("backbone worker response: invalid inference owner");
@@ -782,6 +803,11 @@ export function decodeBackboneWorkerResponse(wire: Uint8Array): BackboneWorkerRe
 function workerWireIdV1(value: unknown): string | null {
   if (typeof value !== "string" || value.length === 0 || new TextEncoder().encode(value).length > 256 || /[\u0000-\u001f\u007f]/u.test(value)) return null;
   return value;
+}
+
+function workerWireClientInstanceIdV1(value: unknown): string | null {
+  const id = workerWireIdV1(value);
+  return id !== null && /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/u.test(id) ? id : null;
 }
 
 function workerWireScopeV1(value: unknown, documentId: string): DocumentScope | null {
@@ -818,9 +844,9 @@ export type DirectoryAdministrationInviteCapabilityStatusV1 = "available" | "cop
  * — plugin surfaces never talk to the network, and the shell never opens a directory socket on the
  * UI thread; see `🧵️backbone-worker.ts`'s `🔖️Directory` region. */
 export type BackboneWorkerRequest =
-  | ({ readonly kind: "open" } & ArtifactActorConfig)
-  | { readonly kind: "close"; readonly documentId: string; readonly spaceId?: string }
-  | { readonly kind: "send"; readonly documentId: string; readonly spaceId?: string; readonly message: ArtifactActorMsg }
+  | ({ readonly kind: "open"; readonly clientInstanceId?: string } & ArtifactActorConfig)
+  | { readonly kind: "close"; readonly documentId: string; readonly spaceId?: string; readonly clientInstanceId?: string }
+  | { readonly kind: "send"; readonly documentId: string; readonly spaceId?: string; readonly clientInstanceId?: string; readonly message: ArtifactActorMsg }
   | { readonly kind: "directory-open"; readonly baseUrl: string; readonly since: number }
   | { readonly kind: "directory-bootstrap-open"; readonly baseUrl: string; readonly after: number; readonly bootstrapEpoch: number }
   | ({ readonly kind: "directory-bootstrap-ack" } & DirectoryEventPageAckV1)
@@ -847,7 +873,7 @@ export type BackboneWorkerRequest =
   | { readonly kind: "inference-cancel"; readonly operationEpoch: number }
   | { readonly kind: "inference-approve"; readonly operationEpoch: number }
   | { readonly kind: "inference-close"; readonly operationEpoch: number }
-  | BrowserActorUiPatchResultV1;
+  | (BrowserActorUiPatchResultV1 & { readonly clientInstanceId: string });
 
 /** 🛰️ Worker-local P2-C recovery lifecycle. These are not persisted artifact events: they describe
  * one bounded public bootstrap transfer and therefore remain explicit top-level worker responses. */
@@ -855,6 +881,7 @@ export type ArtifactBootstrapWorkerEvent =
   | {
       readonly kind: "artifact-bootstrap-progress";
       readonly documentId: string;
+      readonly clientInstanceId: string;
       readonly receivedBytes: number;
       readonly totalBytes: number;
       readonly receivedChunks: number;
@@ -864,6 +891,7 @@ export type ArtifactBootstrapWorkerEvent =
   | {
       readonly kind: "artifact-bootstrap-failed";
       readonly documentId: string;
+      readonly clientInstanceId: string;
       readonly code: "cancelled" | "deadline-exceeded" | "invalid-bootstrap" | "transport-failure";
       readonly message: string;
       readonly retryable: boolean;
@@ -872,6 +900,7 @@ export type ArtifactBootstrapWorkerEvent =
   | {
       readonly kind: "artifact-rebootstrap-required";
       readonly documentId: string;
+      readonly clientInstanceId: string;
       readonly message: string;
       readonly retryable: true;
       readonly scope?: DocumentScope;
@@ -881,7 +910,7 @@ export type ArtifactBootstrapWorkerEvent =
  * bounded, in-memory offline queue's length (contract-freeze §C6 "commands queue... and flush on
  * reconnect"). */
 export type BackboneWorkerResponse =
-  | { readonly kind: "event"; readonly documentId: string; readonly event: ArtifactEvent; readonly scope?: DocumentScope; readonly verifiedSurfaceId?: string }
+  | { readonly kind: "event"; readonly documentId: string; readonly clientInstanceId: string; readonly event: ArtifactEvent; readonly scope?: DocumentScope; readonly verifiedSurfaceId?: string }
   | ArtifactBootstrapWorkerEvent
   | { readonly kind: "ready" }
   | { readonly kind: "directory-message"; readonly message: DirectoryStreamMessage }
@@ -890,12 +919,12 @@ export type BackboneWorkerResponse =
   | { readonly kind: "directory-scope-revoked"; readonly scope: DocumentScope }
   | { readonly kind: "directory-command-receipt"; readonly requestId: string; readonly receipt: DirectoryCommandReceiptV1 }
   | { readonly kind: "directory-command-failed"; readonly requestId: string; readonly code: DirectoryCommandErrorCodeV1 }
-  | { readonly kind: "socket-actor"; readonly documentId: string; readonly scope?: DocumentScope; readonly actorId: string }
-  | { readonly kind: "socket-actor-failed"; readonly documentId: string; readonly scope?: DocumentScope; readonly code: "installed-target-unavailable" | "session-mismatch" }
+  | { readonly kind: "socket-actor"; readonly documentId: string; readonly clientInstanceId: string; readonly scope?: DocumentScope; readonly actorId: string }
+  | { readonly kind: "socket-actor-failed"; readonly documentId: string; readonly clientInstanceId: string; readonly scope?: DocumentScope; readonly code: "installed-target-unavailable" | "session-mismatch" }
   /** 🪪️ Bounded execution-target install status for the React host's localized live region. It
    * carries a status code and byte counters only — never bytes, an origin, a path, a module URL, a
    * receipt, a grant or a digest. */
-  | { readonly kind: "execution-target-status"; readonly documentId: string; readonly spaceId: string; readonly scope?: DocumentScope; readonly code: DocumentExecutionTargetStatusCodeV1; readonly progress?: DocumentExecutionTargetProgressV1 }
+  | { readonly kind: "execution-target-status"; readonly documentId: string; readonly clientInstanceId: string; readonly spaceId: string; readonly scope?: DocumentScope; readonly code: DocumentExecutionTargetStatusCodeV1; readonly progress?: DocumentExecutionTargetProgressV1 }
   /** 🏛️ The complete renderer-visible administration state. `canonicalJson` is the exact page the
    * hub sealed; `inviteCapabilityPending` says a one-shot invite token remains held by the worker
    * until exact clipboard success. No session identity, bearer, or invite token ever appears here. */
@@ -920,7 +949,7 @@ export type BackboneWorkerResponse =
    * phase, the server's own job id, the bounded progress cursor and the hash the server published —
    * never a receipt, bearer, origin, path, base pack, proposal body or user identity. */
   | { readonly kind: "inference-port-status"; readonly operationEpoch: number; readonly scope: DocumentScope; readonly status: GisMapInferencePortStatusV1 }
-  | BrowserActorUiPatchOfferV1
+  | (BrowserActorUiPatchOfferV1 & { readonly clientInstanceId: string })
   | { readonly kind: "directory-status"; readonly pendingCommands: number };
 
 function wireArtifactActorMsg(message: ArtifactActorMsg): unknown {
@@ -1148,7 +1177,7 @@ export type PackInteger = Readonly<{ readonly kind: "int" | "uint"; readonly val
 
 /** 🌱️ Everything the dynamic pack grammar can carry. `number` is always `TAG_F64`; an exact
  * integer is always a {@link PackInteger}. */
-export type PackValue = null | boolean | number | string | PackInteger | readonly PackValue[] | Readonly<Record<string, PackValue>>;
+export type PackValue = null | boolean | number | string | PackInteger | readonly PackValue[] | { readonly [key: string]: PackValue };
 
 const PACK_U64_MAX = (1n << 64n) - 1n;
 const PACK_I64_MIN = -(1n << 63n);
@@ -1241,7 +1270,7 @@ const packZigzagDecode = (raw: bigint): bigint => (raw >> 1n) ^ -(raw & 1n);
  * `DslValue::Object` case only walks entry VALUES); a string is interned (added to the symbol
  * table) iff its UTF-8 byte length is `<= 128` or it occurs `>= 2` times, matching `pack_value`'s
  * rule exactly (note: `.len()` on the Rust side is UTF-8 BYTE length, not char count). */
-function packCollectStrings(value: PackValue, counts: Map<string, number>): void {
+function packCollectStrings(value: unknown, counts: Map<string, number>): void {
   if (typeof value === "string") {
     counts.set(value, (counts.get(value) ?? 0) + 1);
     return;
@@ -1255,7 +1284,7 @@ function packCollectStrings(value: PackValue, counts: Map<string, number>): void
     for (const item of Object.values(value as Record<string, PackValue>)) packCollectStrings(item, counts);
   }
 }
-function packBuildSymbols(value: PackValue): string[] {
+function packBuildSymbols(value: unknown): string[] {
   const counts = new Map<string, number>();
   packCollectStrings(value, counts);
   const encoder = new TextEncoder();
@@ -1309,7 +1338,7 @@ function packDecodeString(bytes: Uint8Array, symbols: readonly string[], pos: [n
  * unsigned/zig-zag LEB128. `-0` keeps its sign bit, byte-for-byte with Rust's `normalize_f64`
  * (which only folds `NaN`). Object entries sort by key BYTES with keys always forced inline,
  * never a symref. */
-function packEncodeValue(value: PackValue, symbolIndex: ReadonlyMap<string, number>, out: number[]): void {
+function packEncodeValue(value: unknown, symbolIndex: ReadonlyMap<string, number>, out: number[]): void {
   if (value === null || value === undefined) {
     out.push(PACK_TAG_NULL);
     return;
@@ -1409,8 +1438,9 @@ function packDecodeValue(bytes: Uint8Array, symbols: readonly string[], pos: [nu
  * TAG_VALUE, <value>`, matching `pack_value::encode_record_fields`'s grammar exactly). No header,
  * segments, manifest, or footer — byte-exact against real Rust output (verified against the
  * `pack_wire_value_fixture_corpus_hex_dump` fixture corpus, `store/rs/lib.rs`'s
- * `🔖️PackValueFixtures` region). */
-export function encodePackValue(value: PackValue): Uint8Array {
+ * `🔖️PackValueFixtures` region). Input is runtime-checked; decoded {@link PackValue} retains
+ * the closed grammar without requiring callers' typed objects to declare an index signature. */
+export function encodePackValue(value: unknown): Uint8Array<ArrayBuffer> {
   const symbols = packBuildSymbols(value);
   const symbolIndex = new Map(symbols.map((symbol, index) => [symbol, index] as const));
   const encoder = new TextEncoder();
@@ -1569,6 +1599,107 @@ export function packWireNatural(raw: unknown, field = "natural"): number {
  * without this projection leaks `{kind, value}` carriers into node ids, revisions and effect params. */
 export function decodePackWire(bytes: Uint8Array, path = "$"): unknown {
   return packValueToExactJson(decodePackValue(bytes) as PackValue, path);
+}
+
+function invocationResultObject(value: unknown, path: string, required: readonly string[], optional: readonly string[] = []): Readonly<Record<string, unknown>> {
+  if (value === null || typeof value !== "object" || Array.isArray(value)) throw new Error(`${path}: expected an object`);
+  const record = value as Readonly<Record<string, unknown>>;
+  const allowed = new Set([...required, ...optional]);
+  if (Object.keys(record).some((key) => !allowed.has(key)) || required.some((key) => !(key in record))) throw new Error(`${path}: invalid exact fields`);
+  return record;
+}
+
+function invocationResultString(value: unknown, path: string): string {
+  if (typeof value !== "string" || value.length === 0) throw new Error(`${path}: expected a nonempty string`);
+  return value;
+}
+
+function invocationResultNatural(value: unknown, path: string): number {
+  if (typeof value !== "number" || !Number.isSafeInteger(value) || value < 0) throw new Error(`${path}: expected a safe natural number`);
+  return value;
+}
+
+function invocationResultBytes(value: unknown, path: string): readonly number[] {
+  if (!Array.isArray(value) || value.some((byte) => typeof byte !== "number" || !Number.isInteger(byte) || byte < 0 || byte > 255)) throw new Error(`${path}: expected bytes`);
+  return value;
+}
+
+function invocationResultStrings(value: unknown, path: string): readonly string[] {
+  if (!Array.isArray(value)) throw new Error(`${path}: expected an array`);
+  return value.map((entry, index) => invocationResultString(entry, `${path}[${index}]`));
+}
+
+function invocationResultDiff(value: unknown, path: string): ArtifactDiff {
+  const record = invocationResultObject(value, path, ["schema", "payload"]);
+  return { schema: invocationResultString(record.schema, `${path}.schema`), payload: invocationResultBytes(record.payload, `${path}.payload`) };
+}
+
+function invocationResultUndoPolicy(value: unknown, path: string): UndoPolicy {
+  if (value === "ExactBaseOnly" || value === "TransformAgainstConcurrent" || value === "SemanticUndo" || value === "CompensatingAction") return value;
+  throw new Error(`${path}: invalid undo policy`);
+}
+
+function invocationResultInverse(value: unknown, path: string): InverseMutation {
+  const record = invocationResultObject(value, path, ["targetMutation", "inverseDiff", "baseVersion", "undoPolicy"], ["dependencies"]);
+  return {
+    targetMutation: invocationResultString(record.targetMutation, `${path}.targetMutation`),
+    inverseDiff: invocationResultDiff(record.inverseDiff, `${path}.inverseDiff`),
+    baseVersion: invocationResultNatural(record.baseVersion, `${path}.baseVersion`),
+    ...(record.dependencies === undefined ? {} : { dependencies: invocationResultStrings(record.dependencies, `${path}.dependencies`) }),
+    undoPolicy: invocationResultUndoPolicy(record.undoPolicy, `${path}.undoPolicy`),
+  };
+}
+
+function invocationResultMutation(value: unknown, path: string): KernelMutation {
+  const record = invocationResultObject(value, path, ["id", "document", "baseVersion", "invocationId", "diff", "inverse", "author", "timestamp"], ["dependencies"]);
+  const timestamp = invocationResultObject(record.timestamp, `${path}.timestamp`, ["actor", "physical_ms", "logical"]);
+  return {
+    id: invocationResultString(record.id, `${path}.id`),
+    document: invocationResultString(record.document, `${path}.document`),
+    baseVersion: invocationResultNatural(record.baseVersion, `${path}.baseVersion`),
+    invocationId: invocationResultString(record.invocationId, `${path}.invocationId`),
+    diff: invocationResultDiff(record.diff, `${path}.diff`),
+    inverse: invocationResultInverse(record.inverse, `${path}.inverse`),
+    ...(record.dependencies === undefined ? {} : { dependencies: invocationResultStrings(record.dependencies, `${path}.dependencies`) }),
+    author: invocationResultString(record.author, `${path}.author`),
+    timestamp: {
+      actor: invocationResultNatural(timestamp.actor, `${path}.timestamp.actor`),
+      physical_ms: invocationResultNatural(timestamp.physical_ms, `${path}.timestamp.physical_ms`),
+      logical: invocationResultNatural(timestamp.logical, `${path}.timestamp.logical`),
+    },
+  };
+}
+
+function invocationResultUndoGroup(value: unknown, path: string): UndoGroup {
+  const record = invocationResultObject(value, path, ["invocationId", "mutations", "inverseMutations"], ["memberEdits"]);
+  if (typeof record.invocationId !== "string") throw new Error(`${path}.invocationId: expected a string`);
+  if (!Array.isArray(record.inverseMutations)) throw new Error(`${path}.inverseMutations: expected an array`);
+  if (record.memberEdits !== undefined && !Array.isArray(record.memberEdits)) throw new Error(`${path}.memberEdits: expected an array`);
+  const mutations = invocationResultStrings(record.mutations, `${path}.mutations`);
+  if (record.invocationId.length === 0 && (mutations.length !== 0 || record.inverseMutations.length !== 0 || (record.memberEdits?.length ?? 0) !== 0)) throw new Error(`${path}.invocationId: empty identity cannot own mutation results`);
+  return {
+    invocationId: record.invocationId,
+    mutations,
+    inverseMutations: record.inverseMutations.map((entry, index) => invocationResultInverse(entry, `${path}.inverseMutations[${index}]`)),
+    ...(record.memberEdits === undefined
+      ? {}
+      : {
+          memberEdits: record.memberEdits.map((entry, index) => {
+            const edit = invocationResultObject(entry, `${path}.memberEdits[${index}]`, ["document", "editId"]);
+            return { document: invocationResultString(edit.document, `${path}.memberEdits[${index}].document`), editId: invocationResultString(edit.editId, `${path}.memberEdits[${index}].editId`) };
+          }),
+        }),
+  };
+}
+
+/** 📥️ Decodes the exact packed mutation and inverse-group fields retained by an Invocation frame. */
+export function decodeInvocationResultPacks(frame: { readonly mutations: ArrayLike<number>; readonly inverse_group: ArrayLike<number> }): Pick<import("@semio-tech/framework").InvocationResponse, "mutations" | "inverseGroup"> {
+  if (frame.mutations.length > INVOCATION_RESULT_PACK_MAXIMUM_BYTES || frame.inverse_group.length > INVOCATION_RESULT_PACK_MAXIMUM_BYTES) throw new Error("invocation result: packed field exceeds command transport authority");
+  if (frame.mutations.length === 0 && frame.inverse_group.length === 0) return { mutations: [], inverseGroup: { invocationId: "", mutations: [], inverseMutations: [] } };
+  if (frame.mutations.length === 0 || frame.inverse_group.length === 0) throw new Error("invocation result: mutations and inverse group must be published together");
+  const mutations = decodePackWire(new Uint8Array(frame.mutations), "invocation.mutations");
+  if (!Array.isArray(mutations)) throw new Error("invocation.mutations: expected an array");
+  return { mutations: mutations.map((entry, index) => invocationResultMutation(entry, `invocation.mutations[${index}]`)), inverseGroup: invocationResultUndoGroup(decodePackWire(new Uint8Array(frame.inverse_group), "invocation.inverseGroup"), "invocation.inverseGroup") };
 }
 
 /** @emoji 🔢️ Throwing form of {@link packUIntSafeOrNull} for a required schema field. */
@@ -1791,6 +1922,8 @@ export type AppFrameValue =
         readonly ui_scope: readonly number[];
         readonly history_patch: readonly number[];
         readonly messages: readonly number[];
+        readonly mutations: readonly number[];
+        readonly inverse_group: readonly number[];
       };
     }
   | { readonly DocumentChanged: { readonly envelopes: readonly (readonly number[])[]; readonly origin: string } }
@@ -1827,6 +1960,8 @@ export type AppFrameValue =
   | { readonly UiPatch: { readonly in_reply_to: number | null; readonly surface: string; readonly kind: string; readonly revision: number; readonly base_revision: number; readonly ops: readonly number[] } }
   /** 🏁️ Marks the end of one surface's initial full-body snapshot burst. CHANNEL_VERSION 12 wire addition. */
   | { readonly UiSnapshotEnd: { readonly revision: number } };
+
+export const INVOCATION_RESULT_PACK_MAXIMUM_BYTES = 4_096 * 64;
 //#endregion 🔖️Types
 
 //#region 🔖️Combinators
@@ -2194,6 +2329,7 @@ export function encodeAppFrame(frame: AppFrameValue): Uint8Array {
     out.push(APP_FRAME_TAGS.Done);
     writeVarintU64(out, frame.Done.in_reply_to);
   } else if ("Invocation" in frame) {
+    if (frame.Invocation.mutations.length > INVOCATION_RESULT_PACK_MAXIMUM_BYTES || frame.Invocation.inverse_group.length > INVOCATION_RESULT_PACK_MAXIMUM_BYTES) throw new Error("encodeAppFrame: invocation result pack exceeds command transport authority");
     out.push(APP_FRAME_TAGS.Invocation);
     writeVarintU64(out, frame.Invocation.in_reply_to);
     writeBytes(out, frame.Invocation.output);
@@ -2201,6 +2337,8 @@ export function encodeAppFrame(frame: AppFrameValue): Uint8Array {
     writeBytes(out, frame.Invocation.ui_scope);
     writeBytes(out, frame.Invocation.history_patch);
     writeBytes(out, frame.Invocation.messages);
+    writeBytes(out, frame.Invocation.mutations);
+    writeBytes(out, frame.Invocation.inverse_group);
   } else if ("DocumentChanged" in frame) {
     out.push(APP_FRAME_TAGS.DocumentChanged);
     writeVecBytes(out, frame.DocumentChanged.envelopes);
@@ -2331,7 +2469,18 @@ export function decodeAppFrame(bytes: Uint8Array): AppFrameValue {
       const ui_scope = readBytes(bytes, pos);
       const history_patch = readBytes(bytes, pos);
       const messages = readBytes(bytes, pos);
-      return { Invocation: { in_reply_to, output, diagnostics, ui_scope, history_patch, messages } };
+      const readInvocationResultPack = (): readonly number[] => {
+        const length = readVarintU64(bytes, pos);
+        if (length > INVOCATION_RESULT_PACK_MAXIMUM_BYTES) throw new Error("decodeAppFrame: invocation result pack exceeds command transport authority");
+        const end = pos[0] + length;
+        if (!Number.isSafeInteger(end) || end > bytes.length) throw new Error("decodeAppFrame: invocation result pack is truncated");
+        const value = Array.from(bytes.subarray(pos[0], end));
+        pos[0] = end;
+        return value;
+      };
+      const mutations = readInvocationResultPack();
+      const inverse_group = readInvocationResultPack();
+      return { Invocation: { in_reply_to, output, diagnostics, ui_scope, history_patch, messages, mutations, inverse_group } };
     }
     case APP_FRAME_TAGS.DocumentChanged: {
       const envelopes = readVecBytes(bytes, pos);
@@ -2508,7 +2657,7 @@ export function decodeConflictsFromWire(conflictsBytes: readonly number[], decod
  * had moved to 10, so the pin exists to make a half-done bump fail a test instead of a session.
  * Channel v12 retired the `Hello`/`Welcome` handshake this constant used to be carried on — it now
  * exists purely for the drift-guard test below. */
-const APP_CHANNEL_VERSION = 13;
+export const APP_CHANNEL_VERSION = 14;
 
 /** 📡️ The slice of {@link PluginWasmHandle} {@link AppChannelClient} needs — deliberately narrower
  * than the full handle so a caller can hand in any object shaped like it (a real handle, a test
@@ -2859,7 +3008,7 @@ export class AppChannelClient {
 
   /** 📂️ Opens an artifact in its resolved (or explicitly named) viewer/editor surface —
    * `os.open-artifact` (contract-freeze §3 of
-   * `.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET/`). Empty
+   * `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET/`). Empty
    * `pluginId`/`appId` means "resolve via the `OpeningResolver`". `role` is `0` Viewer, `1`
    * Editor — declaration order of `AppRole` (kernel `🔖️AppRouter` region). */
   async openArtifact(artifactRef: string, role: number, pluginId = "", appId = ""): Promise<AppFrameValue[]> {
@@ -3232,7 +3381,9 @@ if (import.meta.vitest) {
         if (row.variant === "uint" || row.variant === "int") {
           expect(isPackInteger(decoded)).toBe(true);
           expect((decoded as PackInteger).kind).toBe(row.variant);
-          expect((decoded as PackInteger).value).toBe(BigInt(row.value[row.variant]));
+          const magnitude = row.value[row.variant];
+          if (typeof magnitude !== "string") throw new Error("integer corpus magnitude is missing");
+          expect((decoded as PackInteger).value).toBe(BigInt(magnitude));
         }
         expect(bytesToHex(encodePackValue(decoded)), row.id).toBe(row.wireHex);
       }
@@ -3245,6 +3396,7 @@ if (import.meta.vitest) {
         if (row.outcome === "decode-error") expect(() => decodePackValue(bytes), row.id).toThrow();
         else {
           const decoded = decodePackValue(bytes);
+          if (!row.decodes) throw new Error("noncanonical corpus decoded value is missing");
           expect(decoded, row.id).toEqual(corpusValue(row.decodes));
           expect(bytesToHex(encodePackValue(decoded)), row.id).not.toBe(row.wireHex);
         }
@@ -3346,8 +3498,8 @@ if (import.meta.vitest) {
 
     const sampleFrames: readonly AppFrameValue[] = [
       { Done: { in_reply_to: 1 } },
-      { Invocation: { in_reply_to: 2, output: [1], diagnostics: [], ui_scope: [], history_patch: [], messages: [] } },
-      { Invocation: { in_reply_to: 2, output: [1], diagnostics: [], ui_scope: [], history_patch: [], messages: [9] } },
+      { Invocation: { in_reply_to: 2, output: [1], diagnostics: [], ui_scope: [], history_patch: [], messages: [], mutations: [], inverse_group: [] } },
+      { Invocation: { in_reply_to: 2, output: [1], diagnostics: [], ui_scope: [], history_patch: [], messages: [9], mutations: [10], inverse_group: [11] } },
       { DocumentChanged: { envelopes: [[1, 2]], origin: "remote" } },
       { Document: { in_reply_to: 6, pack: [1, 2], spr: [3, 4], ops: "op-log" } },
       { ContextMenu: { in_reply_to: 7, items: [1, 2, 3] } },
@@ -3374,6 +3526,30 @@ if (import.meta.vitest) {
       { UiPatch: { in_reply_to: null, surface: "1:body", kind: "window", revision: 1, base_revision: 0, ops: [] } },
       { UiSnapshotEnd: { revision: 5 } },
     ];
+
+    it("projects exact packed invocation mutations and inverse ownership without legacy field aliases", () => {
+      const inverse = { targetMutation: "mutation-1", inverseDiff: { schema: "s.map.patch@1", payload: [9] }, baseVersion: 7, undoPolicy: "ExactBaseOnly" } as const;
+      const mutation = {
+        id: "mutation-1",
+        document: "340282366920938463463374607431768211455",
+        baseVersion: 7,
+        invocationId: "invocation-1",
+        diff: { schema: "s.map.patch@1", payload: [1, 2] },
+        inverse,
+        author: "actor-1",
+        timestamp: { actor: 3, physical_ms: 5, logical: 1 },
+      } as const;
+      const inverseGroup = { invocationId: "invocation-1", mutations: ["mutation-1"], inverseMutations: [inverse], memberEdits: [{ document: mutation.document, editId: "edit-1" }] } as const;
+      expect(decodeInvocationResultPacks({ mutations: encodePackValue([mutation]), inverse_group: encodePackValue(inverseGroup) })).toEqual({ mutations: [mutation], inverseGroup });
+      expect(() => decodeInvocationResultPacks({ mutations: encodePackValue([{ ...mutation, artifact: 1 }]), inverse_group: encodePackValue(inverseGroup) })).toThrow("invalid exact fields");
+      expect(() => decodeInvocationResultPacks({ mutations: encodePackValue([mutation]), inverse_group: [] })).toThrow("must be published together");
+    });
+
+    it("rejects invocation result packs outside the command transport byte authority", () => {
+      const oversized = new Array<number>(INVOCATION_RESULT_PACK_MAXIMUM_BYTES + 1).fill(0);
+      expect(() => encodeAppFrame({ Invocation: { in_reply_to: 1, output: [], diagnostics: [], ui_scope: [], history_patch: [], messages: [], mutations: oversized, inverse_group: [] } })).toThrow("exceeds command transport authority");
+      expect(() => decodeInvocationResultPacks({ mutations: oversized, inverse_group: [] })).toThrow("exceeds command transport authority");
+    });
 
     it.each(sampleCommands.map((cmd) => [cmd] as const))("round-trips AppCommand %j", (cmd) => {
       expect(decodeAppCommand(encodeAppCommand(cmd))).toEqual(cmd);
@@ -3404,7 +3580,7 @@ if (import.meta.vitest) {
 
     it("tags every AppFrame variant per the agreed contract order (Done=0 ... UiSnapshotEnd=22)", () => {
       expect(encodeAppFrame({ Done: { in_reply_to: 0 } })[0]).toBe(0);
-      expect(encodeAppFrame({ Invocation: { in_reply_to: 0, output: [], diagnostics: [], ui_scope: [], history_patch: [], messages: [] } })[0]).toBe(1);
+      expect(encodeAppFrame({ Invocation: { in_reply_to: 0, output: [], diagnostics: [], ui_scope: [], history_patch: [], messages: [], mutations: [], inverse_group: [] } })[0]).toBe(1);
       expect(encodeAppFrame({ Error: { in_reply_to: null, fault: [], report: [] } })[0]).toBe(9);
       expect(encodeAppFrame({ Ephemeral: { presence: [], presence_generation: 0, transient_generation: 0, interaction: [] } })[0]).toBe(13);
       expect(encodeAppFrame({ HistorySnapshot: { in_reply_to: 0, history_patch: [] } })[0]).toBe(14);
@@ -3469,7 +3645,7 @@ if (import.meta.vitest) {
       };
             const frameFixtures: readonly (readonly [string, AppFrameValue])[] = [
         ["Done", { Done: { in_reply_to: 1 } }],
-        ["Invocation", { Invocation: { in_reply_to: 1, output: [1], diagnostics: [], ui_scope: [], history_patch: [], messages: [] } }],
+        ["Invocation", { Invocation: { in_reply_to: 1, output: [1], diagnostics: [], ui_scope: [], history_patch: [], messages: [], mutations: [], inverse_group: [] } }],
         ["DocumentChanged", { DocumentChanged: { envelopes: [], origin: "o" } }],
         ["Document", { Document: { in_reply_to: 1, pack: [1], spr: [2], ops: "o" } }],
         ["Config", { Config: { in_reply_to: 1, pack: [1], spr: [2], ops: "c" } }],
@@ -3488,7 +3664,7 @@ if (import.meta.vitest) {
       ];
             const frameGoldenHex: Readonly<Record<string, string>> = {
         Done: "0001",
-        Invocation: "0101010100000000",
+        Invocation: "01010101000000000000",
         DocumentChanged: "0200016f",
         Document: "030101010102016f",
         Config: "0401010101020163",
@@ -3597,7 +3773,7 @@ if (import.meta.vitest) {
      * plus the extended `Invocation`/`Error` frames: both this suite and `protocol_channel`'s
      * `channel_merge_fixtures_match_shared_cross_language_json_vectors` Rust test load the SAME two
      * JSON files under `🧫️fixtures/📡️channel/` — see contract-freeze.md §C8 of
-     * `.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS/`.
+     * `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS/`.
      */
     it("matches the shared cross-language merge fixture vectors, byte-for-byte", async () => {
       const { readFileSync } = await import("node:fs");
@@ -3617,7 +3793,7 @@ if (import.meta.vitest) {
       const frameCases: Readonly<Record<string, AppFrameValue>> = {
         MergeReport: { MergeReport: { in_reply_to: 1, report: [1] } },
         Conflicts: { Conflicts: { in_reply_to: null, conflicts: [2] } },
-        Invocation: { Invocation: { in_reply_to: 1, output: [1], diagnostics: [], ui_scope: [], history_patch: [], messages: [9] } },
+        Invocation: { Invocation: { in_reply_to: 1, output: [1], diagnostics: [], ui_scope: [], history_patch: [], messages: [9], mutations: [10], inverse_group: [11] } },
         Error: { Error: { in_reply_to: null, fault: [99], report: [7] } },
       };
 
@@ -3864,7 +4040,7 @@ if (import.meta.vitest) {
         const cmd = commands[0];
         if (cmd && "Command" in cmd) seqsSeen.push(cmd.Command.seq);
         return [
-          { Invocation: { in_reply_to: seqsSeen.at(-1) ?? 0, output: [1], diagnostics: [], ui_scope: [], history_patch: [], messages: [] } },
+          { Invocation: { in_reply_to: seqsSeen.at(-1) ?? 0, output: [1], diagnostics: [], ui_scope: [], history_patch: [], messages: [], mutations: [], inverse_group: [] } },
           { UiPatch: { in_reply_to: seqsSeen.at(-1) ?? 0, surface: "1:body", kind: "window", revision: 1, base_revision: 0, ops: [] } },
         ];
       });
@@ -3975,7 +4151,7 @@ if (import.meta.vitest) {
 
     it("command() surfaces unsolicited MergeReport/Conflicts frames and the extended Invocation.messages/Error.report fields verbatim", async () => {
       const handle = fakeHandle(() => [
-        { Invocation: { in_reply_to: 1, output: [], diagnostics: [], ui_scope: [], history_patch: [], messages: [9] } },
+        { Invocation: { in_reply_to: 1, output: [], diagnostics: [], ui_scope: [], history_patch: [], messages: [9], mutations: [], inverse_group: [] } },
         { MergeReport: { in_reply_to: null, report: [1] } },
         { Conflicts: { in_reply_to: null, conflicts: [2] } },
       ]);
@@ -5112,7 +5288,7 @@ if (import.meta.vitest) {
     it("preserves canonical response text and rejects a substituted request frontier", async () => {
       const canonical = await sampleCanonicalDirectoryEventPage();
       const text = vi.fn(async () => canonical);
-      const request = vi.fn(async () => ({ ok: true, status: 200, statusText: "OK", headers: { get: () => "application/json" }, json: async () => { throw new Error("event pages never use response.json"); }, text }));
+      const request = vi.fn(async (..._args: Parameters<typeof fetchWithTimeout>) => ({ ok: true, status: 200, statusText: "OK", headers: { get: () => "application/json" }, json: async () => { throw new Error("event pages never use response.json"); }, text }));
       const page = await new DirectoryClient("https://hub.test", { request: request as unknown as typeof fetchWithTimeout }).eventPage(3);
       expect(page.canonicalJson).toBe(canonical);
       expect(page.afterSeqExclusive).toBe(3);
@@ -5193,7 +5369,7 @@ if (import.meta.vitest) {
 
     it("fetches the exact canonical bytes and refuses a foreign space or a bad cursor", async () => {
       const canonical = await sampleCanonicalAdministrationPage("author");
-      const request = vi.fn(async () => administrationResponse(canonical));
+      const request = vi.fn(async (..._args: Parameters<typeof fetchWithTimeout>) => administrationResponse(canonical));
       const client = new DirectoryClient("https://hub.test", { request: request as unknown as typeof fetchWithTimeout });
       const fetched = await client.spaceAdministrationPage("space-1");
       expect(fetched.canonicalJson).toBe(canonical);
@@ -5213,6 +5389,31 @@ if (import.meta.vitest) {
       const response: BackboneWorkerResponse = { kind: "directory-scope-revoked", scope };
       expect(decodeBackboneWorkerRequest(encodeBackboneWorkerRequest(request))).toEqual(request);
       expect(decodeBackboneWorkerResponse(encodeBackboneWorkerResponse(response))).toEqual(response);
+    });
+
+    it("document opening attempt stays outer-wire-owned without widening the browser patch contract", async () => {
+      const clientInstanceId = "33333333-3333-4333-8333-333333333333";
+      const requests: readonly BackboneWorkerRequest[] = [
+        { kind: "open", documentId: "same-document", clientInstanceId, schema: "gis.map", actor: "caller", bindings: [{ kind: "hub", baseUrl: "https://hub.test", spaceId: "space-a" }] },
+        { kind: "send", documentId: "same-document", spaceId: "space-a", clientInstanceId, message: { kind: "externalChanged" } },
+        { kind: "close", documentId: "same-document", spaceId: "space-a", clientInstanceId },
+      ];
+      for (const request of requests) expect(decodeBackboneWorkerRequest(encodeBackboneWorkerRequest(request))).toEqual(request);
+
+      const event: BackboneWorkerResponse = { kind: "event", documentId: "same-document", clientInstanceId, scope: { spaceId: "space-a", documentId: "same-document" }, event: { kind: "status", persisted: true, pendingMutations: 0, remote: { kind: "live", peerCount: 1 } } };
+      expect(decodeBackboneWorkerResponse(encodeBackboneWorkerResponse(event))).toEqual(event);
+      const fixture = JSON.parse(await (await import("node:fs/promises")).readFile(new URL("./🔨️modules/🔌️plugin/🌐️browser-bundle/🩹️patch-handoff/🧫️fixture/🔣️.json", import.meta.url), "utf8"));
+      const offer = parseBrowserActorUiPatchOfferV1(fixture.offer);
+      const result = parseBrowserActorUiPatchResultV1(fixture.acknowledged);
+      expect(decodeBackboneWorkerResponse(encodeBackboneWorkerResponse({ ...offer, clientInstanceId }))).toEqual({ ...offer, clientInstanceId });
+      expect(decodeBackboneWorkerRequest(encodeBackboneWorkerRequest({ ...result, clientInstanceId }))).toEqual({ ...result, clientInstanceId });
+      expect(Object.hasOwn(parseBrowserActorUiPatchOfferV1(fixture.offer), "clientInstanceId")).toBe(false);
+      expect(Object.hasOwn(parseBrowserActorUiPatchResultV1(fixture.acknowledged), "clientInstanceId")).toBe(false);
+
+      const missing = new Uint8Array([BACKBONE_WORKER_WIRE_MAGIC, ...encodePackValue({ kind: "event", documentId: "same-document", event: event.event })]);
+      expect(() => decodeBackboneWorkerResponse(missing)).toThrow("invalid client instance id");
+      const malformed = new Uint8Array([BACKBONE_WORKER_WIRE_MAGIC, ...encodePackValue({ kind: "close", documentId: "same-document", clientInstanceId: "not-an-owner" })]);
+      expect(() => decodeBackboneWorkerRequest(malformed)).toThrow("invalid client instance id");
     });
 
     it("keeps inference status scope and validated preview exact across the private worker wire", () => {

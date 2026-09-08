@@ -7,7 +7,7 @@
 
 use crate::artifacts::csv::schema::snapshot::{CsvField, CsvRecord, CsvSnapshot};
 // 🔗 `DiffAlgebra` (spine S-1) isn't in the `protocol` facade's curated re-export list yet
-// (`.🦑️repo/🎫️tickets/…/ARTIFACT-SYSTEM-OVERHAUL…/f1-csv-report.md` `## Deviations`); reach it
+// (`.🧬semio/🦑️repo/🎫️tickets/…/ARTIFACT-SYSTEM-OVERHAUL…/f1-csv-report.md` `## Deviations`); reach it
 // via the same crate's directly-mounted `command` module instead of editing the shared facade.
 use protocol::command::DiffAlgebra;
 use protocol::DiffCodec;

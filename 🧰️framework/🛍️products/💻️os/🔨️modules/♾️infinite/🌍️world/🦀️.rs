@@ -5,13 +5,15 @@ use crate::framework_surface_terrain::TerrainSessionCore;
 // wgpu-tier split): `draw_text`/`WidgetContext`/the paint half of `gizmo` are genuinely GPU-adjacent
 // (font/icon atlases) and are imported locally inside `render_world_3d`, the one function that is
 // itself `#[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]`-gated instead.
+#[cfg(test)]
+use ui_wgpu::wgpu::{World3dSnapshotItem, screen_select_components, screen_select_instances};
+#[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
+use ui_wgpu::wgpu::{LineDraw3d, ScenePass3d, TexturedDraw3d, TexturedInstance3d, aabb_intersects_frustum, frustum_planes, grid_placement_anchor, paint_selection_marquee, transform_aabb};
 use ui_wgpu::wgpu::{
-    aabb_intersects_frustum, axis_rotate_angle, frustum_planes, gizmo, grid_placement_anchor, gumball_extent, gumball_eye, gumball_project_ray_onto_axis, interpolate_mesh_uv, lod_from_camera_distance, lod_progressive_grid_layers,
-    marquee_is_crossing_from_path, mesh3d_abort, mesh3d_abort_step, mesh3d_allocate_step, mesh3d_begin, mesh3d_begin_close, mesh3d_close_step, mesh3d_seal, mesh3d_terminal_is_empty, mesh3d_write_u32, mesh3d_write_vec3, mesh_content_version,
-    paint_selection_marquee, pick_closest_mesh_url, quat_from_basis, ray_aabb_slab, ray_pick_instance, ray_pick_mesh_detail, ray_plane_point, ray_segment_distance, rotate_vector, screen_select_components, screen_select_instances, transform_aabb,
-    vec3_from_f64, world3d_snapshot_claim_draw_permit, world3d_snapshot_with_page, ActionDescriptor, Camera3d, HitKind, HitTarget, Instance3d, LineDraw3d, LineVertex3d, LocalizedLabel, Mat4, Mesh3dField, Mesh3dLease, Mesh3dSchema,
-    Mesh3dWriteToken, OrbitController, PointerModifiers, PreparedRasterProducer, PreparedRasterRejected, PreparedRenderEviction, PreparedRenderUpload, Rect, Rgba, SceneDraw3d, ScenePass3d, TexturedDraw3d, TexturedInstance3d, UiComponentSceneNode,
-    Vec3, World3dSnapshotDrawPermit, World3dSnapshotFault, World3dSnapshotItem, World3dSnapshotLease, World3dSnapshotPageKind,
+    axis_rotate_angle, gizmo, gumball_extent, gumball_eye, gumball_project_ray_onto_axis, interpolate_mesh_uv, lod_from_camera_distance, lod_progressive_grid_layers,
+    marquee_is_crossing_from_path, mesh3d_abort, mesh3d_abort_step, mesh3d_allocate_step, mesh3d_begin, mesh3d_begin_close, mesh3d_close_step, mesh3d_seal, mesh3d_terminal_is_empty, mesh3d_write_u32, mesh3d_write_vec3, pick_closest_mesh_url, quat_from_basis, ray_aabb_slab, ray_pick_instance, ray_pick_mesh_detail, ray_plane_point, ray_segment_distance, rotate_vector, world3d_snapshot_claim_draw_permit, world3d_snapshot_with_page, ActionDescriptor, Camera3d, HitKind, HitTarget, Instance3d, LineVertex3d, LocalizedLabel, Mat4, Mesh3dField, Mesh3dLease, Mesh3dSchema,
+    Mesh3dWriteToken, OrbitController, PointerModifiers, PreparedRasterProducer, PreparedRasterRejected, PreparedRenderEviction, PreparedRenderUpload, Rect, Rgba, SceneDraw3d, UiComponentSceneNode,
+    Vec3, World3dSnapshotDrawPermit, World3dSnapshotFault, World3dSnapshotLease, World3dSnapshotPageKind,
 };
 
 //#region 📦️PreparedWorldResources
@@ -39,11 +41,7 @@ impl World3dBuildRejected {
 
     pub fn terminal_is_empty(&self) -> bool {
         match self {
-            #[cfg(test)]
-            Self::Upload(PreparedRenderUpload::GlyphAtlas { pixels, .. } | PreparedRenderUpload::IconAtlas { pixels, .. }) => pixels.is_empty(),
             Self::Upload(PreparedRenderUpload::GlyphAtlasPages { pixels } | PreparedRenderUpload::IconAtlasPages { pixels }) => pixels.terminal_is_empty(),
-            #[cfg(test)]
-            Self::Upload(PreparedRenderUpload::Raster { key, pixels, .. }) => key.is_empty() && pixels.is_empty(),
             Self::Upload(PreparedRenderUpload::RasterPages { key, .. }) => key.is_empty(),
             Self::Upload(PreparedRenderUpload::Mesh { key, .. }) => key.is_empty(),
             Self::RasterProducer(producer) => producer.terminal_is_empty(),
@@ -332,7 +330,6 @@ impl World3dBuildContext {
 //#endregion 📦️PreparedWorldResources
 
 use semio_framework::{optional_json_to_dsl, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, MergeMode, SelectionMethod, SelectionMode, SelectionSpec};
-use serde::de::Error as DeError;
 use serde::Deserialize;
 use serde_json::json;
 use std::collections::{HashMap, HashSet};
@@ -345,30 +342,7 @@ fn action_args(value: serde_json::Value) -> Option<semio_framework::DslValue> {
 }
 
 //#region SceneRecords
-fn deserialize_optional_string_vec<'de, D>(deserializer: D) -> Result<Option<Vec<String>>, D::Error>
-where
-    D: serde::Deserializer<'de>,
-{
-    let value = Option::<serde_json::Value>::deserialize(deserializer)?;
-    match value {
-        None => Ok(None),
-        Some(serde_json::Value::Array(items)) => Ok(Some(
-            items
-                .into_iter()
-                .filter_map(|item| match item {
-                    serde_json::Value::String(value) => Some(value),
-                    serde_json::Value::Number(value) => value.as_u64().map(|id| id.to_string()),
-                    _ => None,
-                })
-                .collect(),
-        )),
-        Some(other) => Err(D::Error::custom(format!("expected array for component ids, got {other}"))),
-    }
-}
 
-fn json_id_to_string(value: &serde_json::Value) -> Option<String> {
-    value.as_str().map(str::to_string).or_else(|| value.as_u64().map(|id| id.to_string()))
-}
 
 fn dsl_id_to_string(value: &semio_framework::DslValue) -> Option<String> {
     value.as_str().map(str::to_string).or_else(|| value.as_f64().map(|n| if n.fract() == 0.0 { format!("{}", n as u64) } else { n.to_string() }))
@@ -378,25 +352,6 @@ fn dsl_string_vec(value: &semio_framework::DslValue) -> Vec<String> {
     value.as_array().map(|items| items.iter().filter_map(dsl_id_to_string).collect()).unwrap_or_default()
 }
 
-#[derive(Clone, Debug, Deserialize, Default, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
-#[serde(rename_all = "camelCase")]
-#[value(rename_all = "camelCase")]
-struct WorldCameraRecord {
-    #[value(default)]
-    position: Option<[f64; 3]>,
-    #[value(default)]
-    target: Option<[f64; 3]>,
-    #[value(default)]
-    up: Option<[f64; 3]>,
-    #[value(default)]
-    fov: Option<f64>,
-    #[value(default)]
-    x: Option<f64>,
-    #[value(default)]
-    y: Option<f64>,
-    #[value(default)]
-    z: Option<f64>,
-}
 
 #[derive(Clone, Debug, Deserialize, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
 #[serde(rename_all = "camelCase")]
@@ -406,16 +361,6 @@ struct WorldMeshLodEntry {
     url: String,
 }
 
-#[derive(Clone, Debug, Deserialize, Default, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
-#[serde(rename_all = "camelCase")]
-#[value(rename_all = "camelCase")]
-struct WorldMeshRecord {
-    id: String,
-    #[value(default)]
-    url: Option<String>,
-    #[value(default)]
-    lods: Option<Vec<WorldMeshLodEntry>>,
-}
 
 #[derive(Clone, Debug, Deserialize, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
 #[serde(rename_all = "camelCase")]
@@ -470,32 +415,6 @@ fn default_grid_factor() -> f64 {
     10.0
 }
 
-#[derive(Clone, Debug, Deserialize, Default, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
-#[serde(rename_all = "camelCase")]
-#[value(rename_all = "camelCase")]
-struct WorldInstanceRecord {
-    id: String,
-    #[value(default)]
-    mesh_id: Option<String>,
-    #[value(default)]
-    position: Option<[f64; 3]>,
-    #[value(default)]
-    rotation: Option<[f64; 4]>,
-    #[value(default)]
-    scale: Option<[f64; 3]>,
-    #[value(default)]
-    x: Option<f64>,
-    #[value(default)]
-    y: Option<f64>,
-    #[value(default)]
-    z: Option<f64>,
-    #[value(default)]
-    color: Option<String>,
-    #[value(default)]
-    selected: Option<bool>,
-    #[value(default)]
-    hovered: Option<bool>,
-}
 
 #[derive(Clone, Debug, Default, Deserialize, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
 #[serde(rename_all = "camelCase")]
@@ -516,42 +435,6 @@ fn default_true() -> bool {
     true
 }
 
-#[derive(Clone, Debug, Deserialize, Default, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
-#[serde(rename_all = "camelCase")]
-#[value(rename_all = "camelCase")]
-struct WorldSelectionRecord {
-    #[value(default)]
-    method: Option<String>,
-    #[value(default)]
-    ids: Option<Vec<String>>,
-    #[value(default)]
-    hovered_id: Option<String>,
-    #[value(default)]
-    granularity: Option<String>,
-    #[serde(default, deserialize_with = "deserialize_optional_string_vec")]
-    // 🌉️ No `with` clause: `deserialize_optional_string_vec` has serde's `Deserializer`-based
-    // signature, incompatible with `#[value(deserialize_with = "…")]`'s `fn(DslValue) -> Result<T,
-    // ValueError>` shape. Plain `Option<Vec<String>>` round-trips through the blanket `ToValue`/
-    // `FromValue` for `Option`/`Vec` unaided — the serde hook only tolerates loose legacy JS input
-    // shapes on the wire, irrelevant to `FromValue(ToValue(x)) == x` round-tripping this crate's
-    // own values.
-    #[value(default)]
-    component_ids: Option<Vec<String>>,
-    #[value(default)]
-    transform_mode: Option<String>,
-    #[value(default)]
-    interaction_mode: Option<String>,
-    #[value(default)]
-    gumball_target: Option<[f64; 3]>,
-    #[value(default)]
-    selection_mode: Option<String>,
-    #[value(default)]
-    show_edges: Option<bool>,
-    #[value(default)]
-    targets: Option<WorldSelectionTargets>,
-    #[value(default)]
-    active_object_id: Option<String>,
-}
 
 #[derive(Clone, Debug, Deserialize, Default, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
 #[serde(rename_all = "camelCase")]
@@ -665,15 +548,6 @@ impl dsl::FromValue for WorldBrushPreviewRecord {
     }
 }
 
-#[derive(Clone, Debug, Deserialize, Default, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
-#[serde(rename_all = "camelCase")]
-#[value(rename_all = "camelCase")]
-struct WorldInteractionRecord {
-    #[value(default)]
-    active_utility: Option<String>,
-    #[value(default)]
-    hovered_vortex_full_id: Option<String>,
-}
 
 //#region Environment
 /// ☀️ Directional sun light — `enabled` gates whether `azimuth`/`elevation` (degrees, horizontal
@@ -1402,17 +1276,6 @@ pub struct World3dState {
     pub pending_glb_urls: HashSet<String>,
     pub marquee_points: Vec<[f32; 2]>,
     pub marquee_active: bool,
-    scene_camera_json: Option<String>,
-    scene_meshes_json: Option<String>,
-    scene_instances_json: Option<String>,
-    scene_selection_json: Option<String>,
-    scene_vortices_json: Option<String>,
-    scene_attractions_json: Option<String>,
-    scene_target_volumes_json: Option<String>,
-    scene_references_json: Option<String>,
-    scene_brush_preview_json: Option<String>,
-    scene_interaction_json: Option<String>,
-    scene_engagement_preview_json: Option<String>,
     /// 🪟️ The app-bound `InteractionDefinition` id for this window (see `World3dScene.domain_id`'s
     /// doc comment) — `None` means this window binds no app domain, so plain picks/hover target the
     /// OS's own shared `world` board domain (see `resolved_domain_id`).
@@ -1460,16 +1323,11 @@ pub struct World3dState {
     mesh_lod_catalog: HashMap<String, Vec<WorldMeshLodEntry>>,
     mesh_url_fallback: HashMap<String, String>,
     instance_positions: HashMap<String, [f64; 3]>,
-    parsed_instances: Vec<WorldInstanceRecord>,
     mesh_pool: RefCountPool<String>,
     mesh_source_urls: HashMap<String, String>,
     resolved_lod_pick: Option<f64>,
-    scene_lod_json: Option<String>,
-    scene_chunking_json: Option<String>,
     environment: WorldEnvironmentRecord,
-    scene_environment_json: Option<String>,
     terrain_style: Option<WorldTerrainStyle>,
-    scene_terrain_json: Option<String>,
     terrain_applied_signature: Option<(String, f64, f64, f64)>,
     terrain_session: TerrainSessionCore,
     terrain_visible_tiles: HashSet<(u32, u32, u32)>,
@@ -1522,17 +1380,6 @@ impl World3dState {
             pending_glb_urls: HashSet::new(),
             marquee_points: Vec::new(),
             marquee_active: false,
-            scene_camera_json: None,
-            scene_meshes_json: None,
-            scene_instances_json: None,
-            scene_selection_json: None,
-            scene_vortices_json: None,
-            scene_attractions_json: None,
-            scene_target_volumes_json: None,
-            scene_references_json: None,
-            scene_brush_preview_json: None,
-            scene_interaction_json: None,
-            scene_engagement_preview_json: None,
             bound_domain_id: None,
             bound_domain_granularity_id: None,
             vortices: Vec::new(),
@@ -1576,16 +1423,11 @@ impl World3dState {
             mesh_lod_catalog: HashMap::new(),
             mesh_url_fallback: HashMap::new(),
             instance_positions: HashMap::new(),
-            parsed_instances: Vec::new(),
             mesh_pool: RefCountPool::new(),
             mesh_source_urls: HashMap::new(),
             resolved_lod_pick: None,
-            scene_lod_json: None,
-            scene_chunking_json: None,
             environment: WorldEnvironmentRecord::default(),
-            scene_environment_json: None,
             terrain_style: None,
-            scene_terrain_json: None,
             terrain_applied_signature: None,
             terrain_session: TerrainSessionCore::default(),
             terrain_visible_tiles: HashSet::new(),
@@ -2578,7 +2420,7 @@ struct WorldFlatAction {
     kind: WorldFlatActionKind,
     strings: [Option<WorldInteractionSpan>; 8],
     numbers: [f64; 10],
-    number_len: u8,
+
 }
 
 pub struct WorldInteractionPlan {
@@ -3841,7 +3683,7 @@ impl WorldRayPickCursor {
                     let mut plan = WorldInteractionPlan::new(self.revision, generation);
                     let controller = plan.push_string(&state.controller_id).ok_or(WorldInteractionStep::Fault)?;
                     let domain = plan.push_string(resolved_domain_id(state)).ok_or(WorldInteractionStep::Fault)?;
-                    let action = WorldFlatAction { kind: WorldFlatActionKind::Hover, strings: [Some(controller), None, None, Some(domain), None, None, None, None], numbers: [0.0; 10], number_len: 0 };
+                    let action = WorldFlatAction { kind: WorldFlatActionKind::Hover, strings: [Some(controller), None, None, Some(domain), None, None, None, None], numbers: [0.0; 10] };
                     plan.push_action(action).then_some(plan).ok_or(WorldInteractionStep::Fault).map(Some)
                 }
                 WorldRayPickPurpose::Instance => {
@@ -3856,7 +3698,7 @@ impl WorldRayPickCursor {
                         })
                         .ok_or(WorldInteractionStep::Fault)?;
                     let method = plan.push_string(selection_method_wire_str(SelectionMethod::Pick)).ok_or(WorldInteractionStep::Fault)?;
-                    let action = WorldFlatAction { kind: WorldFlatActionKind::Select, strings: [Some(controller), None, None, Some(domain), None, Some(merge), Some(method), None], numbers: [0.0; 10], number_len: 0 };
+                    let action = WorldFlatAction { kind: WorldFlatActionKind::Select, strings: [Some(controller), None, None, Some(domain), None, Some(merge), Some(method), None], numbers: [0.0; 10] };
                     plan.push_action(action).then_some(plan).ok_or(WorldInteractionStep::Fault).map(Some)
                 }
                 _ => Ok(None),
@@ -3879,13 +3721,12 @@ impl WorldRayPickCursor {
         let action = match self.purpose {
             WorldRayPickPurpose::Paint => {
                 let (u, v) = interpolate_mesh_uv(mesh, hit.triangle as usize, hit.bary_u, hit.bary_v).ok_or(WorldInteractionStep::Fault)?;
-                WorldFlatAction { kind: WorldFlatActionKind::PaintAt, strings: [Some(controller), Some(surface), Some(object), None, None, None, None, None], numbers: [u as f64, v as f64, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], number_len: 2 }
+                WorldFlatAction { kind: WorldFlatActionKind::PaintAt, strings: [Some(controller), Some(surface), Some(object), None, None, None, None, None], numbers: [u as f64, v as f64, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0] }
             }
             WorldRayPickPurpose::Surface => WorldFlatAction {
                 kind: WorldFlatActionKind::SurfacePlace,
                 strings: [Some(controller), Some(surface), Some(object), None, None, None, None, None],
                 numbers: [hit.point.x as f64, hit.point.y as f64, hit.point.z as f64, hit.normal.x as f64, hit.normal.y as f64, hit.normal.z as f64, 0.0, 0.0, 0.0, 0.0],
-                number_len: 6,
             },
             WorldRayPickPurpose::Instance => {
                 let domain = plan.push_string(resolved_domain_id(state)).ok_or(WorldInteractionStep::Fault)?;
@@ -3902,7 +3743,6 @@ impl WorldRayPickCursor {
                     kind: WorldFlatActionKind::Select,
                     strings: [Some(controller), Some(surface), Some(object), Some(domain), Some(granularity), Some(merge), Some(method), None],
                     numbers: [if state.bound_domain_id.is_some() { 1.0 } else { 0.0 }, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-                    number_len: 1,
                 }
             }
             WorldRayPickPurpose::Hover => {
@@ -3912,7 +3752,6 @@ impl WorldRayPickCursor {
                     kind: WorldFlatActionKind::Hover,
                     strings: [Some(controller), Some(surface), Some(object), Some(domain), Some(granularity), None, None, None],
                     numbers: [if state.bound_domain_id.is_some() { 1.0 } else { 0.0 }, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-                    number_len: 1,
                 }
             }
         };
@@ -4030,7 +3869,7 @@ impl WorldObjectPickCursor {
         let action = match self.purpose {
             WorldObjectPickPurpose::VortexHover => {
                 let hit = entry.map(|entry| plan.push_string(entry.id.as_str()).ok_or(WorldInteractionStep::Fault)).transpose()?;
-                WorldFlatAction { kind: WorldFlatActionKind::VortexHover, strings: [Some(controller), Some(surface), hit, None, None, None, None, None], numbers: [0.0; 10], number_len: 0 }
+                WorldFlatAction { kind: WorldFlatActionKind::VortexHover, strings: [Some(controller), Some(surface), hit, None, None, None, None, None], numbers: [0.0; 10] }
             }
             WorldObjectPickPurpose::VortexSelect => {
                 let Some(entry) = entry else {
@@ -4044,7 +3883,7 @@ impl WorldObjectPickCursor {
                         _ => "replace",
                     })
                     .ok_or(WorldInteractionStep::Fault)?;
-                WorldFlatAction { kind: WorldFlatActionKind::VortexSelect, strings: [Some(controller), Some(surface), Some(hit), Some(merge), None, None, None, None], numbers: [0.0; 10], number_len: 0 }
+                WorldFlatAction { kind: WorldFlatActionKind::VortexSelect, strings: [Some(controller), Some(surface), Some(hit), Some(merge), None, None, None, None], numbers: [0.0; 10] }
             }
             WorldObjectPickPurpose::ReferenceHover => {
                 let hit = entry.map(|entry| plan.push_joined(&["reference:", entry.id.as_str()]).ok_or(WorldInteractionStep::Fault)).transpose()?;
@@ -4060,7 +3899,6 @@ impl WorldObjectPickCursor {
                     kind: WorldFlatActionKind::Hover,
                     strings: [Some(controller), Some(surface), hit, Some(domain), granularity, None, None, None],
                     numbers: [if state.bound_domain_id.is_some() { 1.0 } else { 0.0 }, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-                    number_len: 1,
                 }
             }
         };
@@ -4274,7 +4112,6 @@ impl WorldComponentPickCursor {
             kind: if self.purpose == WorldComponentPickPurpose::Hover { WorldFlatActionKind::ComponentHover } else { WorldFlatActionKind::ComponentSelect },
             strings: [Some(controller), Some(surface), object_span, Some(mode), merge, None, None, None],
             numbers: [object.map(|(_, id)| id as f64).unwrap_or(0.0), if object.is_some() { 1.0 } else { 0.0 }, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-            number_len: 2,
         };
         plan.push_action(action).then_some(plan).ok_or(WorldInteractionStep::Fault).map(Some)
     }
@@ -4388,7 +4225,6 @@ impl WorldContextMenuCursor {
             kind: WorldFlatActionKind::ContextMenu,
             strings: [Some(controller), Some(surface), Some(id), Some(kind), None, None, None, None],
             numbers: [self.x as f64, self.y as f64, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-            number_len: 2,
         };
         plan.push_action(action).then_some(plan).ok_or(WorldInteractionStep::Fault).map(Some)
     }
@@ -5558,7 +5394,6 @@ impl WorldInteractionAuthority {
                 self.queue.begin_close();
                 None
             }
-            _ => None,
         };
         let Some(active) = active else {
             if intent.phase == WorldInteractionPhase::Close {
@@ -6055,7 +5890,6 @@ pub fn plan_world3d_wheel(state: &World3dState, generation: u64, delta: f32) -> 
         kind: WorldFlatActionKind::Camera,
         strings: [Some(controller), Some(surface), None, None, None, None, None, None],
         numbers: [camera.position.x as f64, camera.position.y as f64, camera.position.z as f64, camera.target.x as f64, camera.target.y as f64, camera.target.z as f64, next.fov_y.to_degrees() as f64, delta as f64, 0.0, 0.0],
-        number_len: 9,
     };
     plan.push_action(action).then_some(plan)
 }
@@ -6082,7 +5916,6 @@ pub fn plan_world3d_drag(state: &World3dState, generation: u64, dx: f32, dy: f32
         kind: WorldFlatActionKind::Camera,
         strings: [Some(controller), Some(surface), None, None, None, None, None, None],
         numbers: [camera.position.x as f64, camera.position.y as f64, camera.position.z as f64, camera.target.x as f64, camera.target.y as f64, camera.target.z as f64, next.fov_y.to_degrees() as f64, dx as f64, operation, dy as f64],
-        number_len: 10,
     };
     plan.push_action(action).then_some(plan)
 }
@@ -6098,7 +5931,6 @@ pub fn plan_world3d_paint_stroke(state: &World3dState, generation: u64, down: bo
         kind: if down { WorldFlatActionKind::PaintStrokeBegin } else { WorldFlatActionKind::PaintStrokeEnd },
         strings: [Some(controller), Some(surface), None, None, None, None, None, None],
         numbers: [if down { 1.0 } else { 0.0 }, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-        number_len: 1,
     };
     plan.push_action(action).then_some(plan)
 }
@@ -7853,29 +7685,6 @@ fn face_component_mode_active(state: &World3dState) -> bool {
     state.selection_targets.face || state.granularity == "face"
 }
 
-fn apply_hovered_component_from_selection(state: &mut World3dState, selection_json: &str) {
-    let Some(selection_value) = serde_json::from_str::<serde_json::Value>(selection_json).ok() else {
-        return;
-    };
-    match selection_value.get("hoveredComponent") {
-        None => return,
-        Some(value) if value.is_null() => {
-            state.hovered_component_id = None;
-            state.hovered_component_object_id = None;
-            state.hovered_component_mode = None;
-        }
-        Some(value) => {
-            state.hovered_component_id = value.get("id").and_then(json_id_to_string);
-            state.hovered_component_object_id = value.get("objectId").and_then(|entry| entry.as_str()).map(str::to_string);
-            state.hovered_component_mode = value.get("mode").and_then(|entry| entry.as_str()).map(str::to_string);
-        }
-    }
-    if state.hovered_component_mode.as_deref() != Some(state.granularity.as_str()) {
-        state.hovered_component_id = None;
-        state.hovered_component_object_id = None;
-        state.hovered_component_mode = None;
-    }
-}
 fn mesh_vertex(mesh: Mesh3dLease, index: u32) -> Option<Vec3> {
     world_mesh_vertex(mesh, index)
 }
@@ -9220,203 +9029,6 @@ pub fn sync_world3d_state(state: &mut World3dState, scene: &UiComponentSceneNode
     state.snapshot_fault = None;
 }
 
-#[cfg(test)]
-fn sync_world3d_state_legacy(state: &mut World3dState, scene: &UiComponentSceneNode, bounds: Rect) {
-    state.bounds = bounds;
-    let Some(world) = &scene.world_3d else {
-        if state.scene_camera_json.is_some() || state.scene_meshes_json.is_some() || state.scene_instances_json.is_some() {
-            state.interaction_revision = state.interaction_revision.wrapping_add(1);
-        }
-        if state.draws.clear_into_quarantine().is_err() {
-            mark_world_dynamic_fault(state, WorldDynamicFault::QuarantineCapacity);
-            return;
-        }
-        state.scene_camera_json = None;
-        state.scene_meshes_json = None;
-        state.scene_instances_json = None;
-        state.scene_selection_json = None;
-        state.scene_vortices_json = None;
-        state.scene_attractions_json = None;
-        state.scene_target_volumes_json = None;
-        state.scene_references_json = None;
-        state.scene_brush_preview_json = None;
-        state.scene_interaction_json = None;
-        state.scene_engagement_preview_json = None;
-        state.scene_lod_json = None;
-        state.scene_chunking_json = None;
-        state.scene_environment_json = None;
-        state.environment = WorldEnvironmentRecord::default();
-        state.scene_terrain_json = None;
-        state.terrain_style = None;
-        state.bound_domain_id = None;
-        state.bound_domain_granularity_id = None;
-        return;
-    };
-    let unchanged = state.scene_camera_json.as_deref() == Some(world.camera_json.as_str())
-        && state.scene_meshes_json.as_deref() == Some(world.meshes_json.as_str())
-        && state.scene_instances_json.as_deref() == Some(world.instances_json.as_str())
-        && state.scene_selection_json.as_deref() == Some(world.selection_json.as_str())
-        && state.scene_vortices_json.as_deref() == world.vortices_json.as_deref()
-        && state.scene_attractions_json.as_deref() == world.attractions_json.as_deref()
-        && state.scene_target_volumes_json.as_deref() == world.target_volumes_json.as_deref()
-        && state.scene_references_json.as_deref() == world.references_json.as_deref()
-        && state.scene_brush_preview_json.as_deref() == world.brush_preview_json.as_deref()
-        && state.scene_interaction_json.as_deref() == world.interaction_json.as_deref()
-        && state.scene_engagement_preview_json.as_deref() == world.engagement_preview_json.as_deref()
-        && state.scene_lod_json.as_deref() == world.lod_json.as_deref()
-        && state.scene_chunking_json.as_deref() == world.chunking_json.as_deref()
-        && state.scene_environment_json.as_deref() == world.environment_json.as_deref()
-        && state.scene_terrain_json.as_deref() == world.terrain_json.as_deref()
-        && state.bound_domain_id.as_deref() == world.domain_id.as_deref()
-        && state.bound_domain_granularity_id.as_deref() == world.domain_granularity_id.as_deref();
-    if unchanged {
-        return;
-    }
-    state.interaction_revision = state.interaction_revision.wrapping_add(1);
-    let geometry_unchanged = state.scene_camera_json.as_deref() == Some(world.camera_json.as_str())
-        && state.scene_meshes_json.as_deref() == Some(world.meshes_json.as_str())
-        && state.scene_instances_json.as_deref() == Some(world.instances_json.as_str())
-        && state.scene_attractions_json.as_deref() == world.attractions_json.as_deref()
-        && state.scene_target_volumes_json.as_deref() == world.target_volumes_json.as_deref()
-        && state.scene_references_json.as_deref() == world.references_json.as_deref()
-        && state.scene_brush_preview_json.as_deref() == world.brush_preview_json.as_deref()
-        && state.scene_interaction_json.as_deref() == world.interaction_json.as_deref()
-        && state.scene_engagement_preview_json.as_deref() == world.engagement_preview_json.as_deref()
-        && state.scene_lod_json.as_deref() == world.lod_json.as_deref()
-        && state.scene_chunking_json.as_deref() == world.chunking_json.as_deref()
-        && state.scene_environment_json.as_deref() == world.environment_json.as_deref()
-        && state.scene_terrain_json.as_deref() == world.terrain_json.as_deref()
-        && state.bound_domain_id.as_deref() == world.domain_id.as_deref()
-        && state.bound_domain_granularity_id.as_deref() == world.domain_granularity_id.as_deref();
-    if geometry_unchanged {
-        let selection_changed = state.scene_selection_json.as_deref() != Some(world.selection_json.as_str());
-        let vortices_changed = state.scene_vortices_json.as_deref() != world.vortices_json.as_deref();
-        if selection_changed {
-            state.scene_selection_json = Some(world.selection_json.clone());
-            let selection: WorldSelectionRecord = serde_json::from_str(&world.selection_json).unwrap_or_default();
-            state.selection_method = selection.method.unwrap_or_else(|| "rectangle".into());
-            state.local_hover_id = selection.hovered_id;
-            state.selected_ids = selection.ids.clone().unwrap_or_default();
-            state.component_ids = selection.component_ids.clone().unwrap_or_default();
-            state.granularity = selection.granularity.or(selection.selection_mode).unwrap_or_else(|| "object".into());
-            if state.granularity == "object" {
-                state.granularity = "mesh".into();
-            }
-            state.interaction_mode = selection.interaction_mode.unwrap_or_else(|| "model".into());
-            state.gumball_target = selection.gumball_target.map(|target| [target[0] as f32, target[1] as f32, target[2] as f32]);
-            apply_hovered_component_from_selection(state, &world.selection_json);
-            state.show_edges = selection.show_edges.unwrap_or(true);
-            state.selection_targets = selection.targets.unwrap_or_default();
-            state.active_object_id = selection.active_object_id;
-            state.transform_mode = selection.transform_mode.unwrap_or_else(|| "translate".into());
-        }
-        if vortices_changed {
-            state.scene_vortices_json = world.vortices_json.clone();
-            state.vortices = world.vortices_json.as_deref().and_then(|json| serde_json::from_str(json).ok()).unwrap_or_default();
-        }
-        if selection_changed || vortices_changed {
-            return;
-        }
-    }
-    let camera_changed = state.scene_camera_json.as_deref() != Some(world.camera_json.as_str());
-    state.scene_camera_json = Some(world.camera_json.clone());
-    state.scene_meshes_json = Some(world.meshes_json.clone());
-    state.scene_instances_json = Some(world.instances_json.clone());
-    state.scene_selection_json = Some(world.selection_json.clone());
-    state.scene_vortices_json = world.vortices_json.clone();
-    state.scene_attractions_json = world.attractions_json.clone();
-    state.scene_target_volumes_json = world.target_volumes_json.clone();
-    state.scene_references_json = world.references_json.clone();
-    state.scene_brush_preview_json = world.brush_preview_json.clone();
-    state.scene_interaction_json = world.interaction_json.clone();
-    state.scene_engagement_preview_json = world.engagement_preview_json.clone();
-    state.scene_lod_json = world.lod_json.clone();
-    state.scene_chunking_json = world.chunking_json.clone();
-    state.scene_environment_json = world.environment_json.clone();
-    state.scene_terrain_json = world.terrain_json.clone();
-    state.bound_domain_id = world.domain_id.clone();
-    state.bound_domain_granularity_id = world.domain_granularity_id.clone();
-    state.lod = world.lod_json.as_deref().and_then(|json| serde_json::from_str(json).ok()).unwrap_or_else(default_lod_record);
-    state.chunking = world.chunking_json.as_deref().and_then(|json| serde_json::from_str(json).ok());
-    state.environment = world.environment_json.as_deref().and_then(|json| serde_json::from_str(json).ok()).unwrap_or_default();
-    state.terrain_style = world.terrain_json.as_deref().and_then(|json| serde_json::from_str(json).ok());
-    state.vortices = world.vortices_json.as_deref().and_then(|json| serde_json::from_str(json).ok()).unwrap_or_default();
-    state.attractions = world.attractions_json.as_deref().and_then(|json| serde_json::from_str(json).ok()).unwrap_or_default();
-    state.target_volumes = world.target_volumes_json.as_deref().and_then(|json| serde_json::from_str(json).ok()).unwrap_or_default();
-    state.references = world.references_json.as_deref().and_then(|json| serde_json::from_str(json).ok()).unwrap_or_default();
-    state.brush_preview = world.brush_preview_json.as_deref().and_then(|json| serde_json::from_str(json).ok());
-    let interaction: WorldInteractionRecord = world.interaction_json.as_deref().and_then(|json| serde_json::from_str(json).ok()).unwrap_or_default();
-    state.active_utility = interaction.active_utility.unwrap_or_else(|| "select".into());
-    state.hovered_vortex_id = interaction.hovered_vortex_full_id;
-    for reference in &state.references {
-        if reference.hidden.unwrap_or(false) {
-            continue;
-        }
-        if let Some(url) = reference.url.as_deref() {
-            if !state.reference_pixels.contains_key(url) {
-                state.pending_image_urls.insert(url.to_string());
-            }
-        }
-    }
-    let camera: WorldCameraRecord = serde_json::from_str(&world.camera_json).unwrap_or_default();
-    if camera_changed {
-        if let (Some(position), Some(target)) = (camera.position, camera.target) {
-            state.orbit = OrbitController::from_camera(&Camera3d {
-                position: vec3_from_f64(position),
-                target: vec3_from_f64(target),
-                up: camera.up.map(vec3_from_f64).unwrap_or(Vec3::new(0.0, 0.0, 1.0)),
-                fov_y: camera.fov.unwrap_or(45.0) as f32 * std::f32::consts::PI / 180.0,
-                near: 0.1,
-                far: 1000.0,
-            });
-        } else if camera.x.is_some() || camera.y.is_some() || camera.z.is_some() {
-            state.orbit = OrbitController::from_camera(&Camera3d {
-                position: Vec3::new(camera.x.unwrap_or(4.0) as f32, camera.y.unwrap_or(-4.0) as f32, camera.z.unwrap_or(3.0) as f32),
-                target: Vec3::ZERO,
-                up: Vec3::new(0.0, 0.0, 1.0),
-                fov_y: camera.fov.unwrap_or(45.0) as f32 * std::f32::consts::PI / 180.0,
-                near: 0.1,
-                far: 1000.0,
-            });
-        }
-    }
-    let meshes: Vec<WorldMeshRecord> = serde_json::from_str(&world.meshes_json).unwrap_or_default();
-    state.mesh_lod_catalog.clear();
-    state.mesh_url_fallback.clear();
-    for mesh in meshes {
-        if let Some(lods) = mesh.lods.filter(|entries| !entries.is_empty()) {
-            state.mesh_lod_catalog.insert(mesh.id.clone(), lods);
-            if let Some(url) = mesh.url.clone() {
-                state.mesh_url_fallback.insert(mesh.id.clone(), url);
-            }
-            queue_lod_mesh_fetch(state, &mesh.id, scene_lod(state));
-        } else if let Some(url) = mesh.url {
-            state.mesh_url_fallback.insert(mesh.id.clone(), url.clone());
-            state.pending_glb_urls.insert(url);
-        }
-    }
-    state.parsed_instances = serde_json::from_str(&world.instances_json).unwrap_or_default();
-    let selection: WorldSelectionRecord = serde_json::from_str(&world.selection_json).unwrap_or_default();
-    state.selection_method = selection.method.unwrap_or_else(|| "rectangle".into());
-    state.local_hover_id = selection.hovered_id;
-    state.selected_ids = selection.ids.clone().unwrap_or_default();
-    state.component_ids = selection.component_ids.clone().unwrap_or_default();
-    state.granularity = selection.granularity.or(selection.selection_mode).unwrap_or_else(|| "object".into());
-    if state.granularity == "object" {
-        state.granularity = "mesh".into();
-    }
-    state.interaction_mode = selection.interaction_mode.unwrap_or_else(|| "model".into());
-    state.gumball_target = selection.gumball_target.map(|target| [target[0] as f32, target[1] as f32, target[2] as f32]);
-    apply_hovered_component_from_selection(state, &world.selection_json);
-    state.show_edges = selection.show_edges.unwrap_or(true);
-    state.selection_targets = selection.targets.unwrap_or_default();
-    state.active_object_id = selection.active_object_id;
-    state.transform_mode = selection.transform_mode.unwrap_or_else(|| "translate".into());
-    let current_lod = scene_lod(state);
-    rebuild_instance_draws_legacy(state, current_lod);
-    state.resolved_lod_pick = Some(current_lod);
-}
-
 fn apply_runtime_draw_flags(state: &mut World3dState) {
     let granularity = state.granularity.clone();
     let component_ids: HashSet<String> = state.component_ids.iter().cloned().collect();
@@ -9645,7 +9257,7 @@ pub fn render_world_3d(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut ui_
 
 //#region 🧭️WorldOrbitViewGizmo
 /** 🧭️ The pure placement/tip-geometry/paint logic relocated to `ui_wgpu::wgpu::widgets::gizmo` (see
-`.🦑️repo/🎫️tickets/26/08/05/FRAMEWORK-BUILDER-PASSTHROUGHS-APP-COMMANDS-MACRO-WIDGET-EXTRACTION`) — this
+`.🧬semio/🦑️repo/🎫️tickets/26/08/05/FRAMEWORK-BUILDER-PASSTHROUGHS-APP-COMMANDS-MACRO-WIDGET-EXTRACTION`) — this
 region now only keeps the `World3dState`-specific hover-state plumbing (app config, not paint), calling
 through to `gizmo::orbit_view_gizmo_placement`/`gizmo::orbit_view_gizmo_tips`/`gizmo::orbit_view_gizmo_hit_test`. */
 fn update_world_orbit_view_gizmo_hover(state: &mut World3dState, x: f32, y: f32, inner: Rect) {
@@ -11487,7 +11099,15 @@ pub fn apply_reference_image_bytes(state: &mut World3dState, url: &str, bytes: &
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ui_wgpu::wgpu::{SurfaceKind, UiComponentSceneNode, UiPresence, World3dScene};
+    use ui_wgpu::wgpu::{mesh3d_write_edge, SurfaceKind, UiComponentSceneNode, UiPresence, World3dScene};
+
+    fn take_actions(input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Vec<ActionDescriptor> {
+        let mut actions = Vec::new();
+        while let Some(action) = input.take_action_step().expect("action authority live") {
+            actions.push(action.into_descriptor().expect("bounded action materializes"));
+        }
+        actions
+    }
 
     fn triangle_mesh_oracle() -> LegacyMeshOracleData {
         mesh_oracle_from_buffers(vec![-1.0, -1.0, 0.0, 1.0, -1.0, 0.0, 0.0, 1.0, 0.0], vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0], vec![0, 1, 2])
@@ -11824,7 +11444,7 @@ mod tests {
         state.component_ids.push("12".into());
         let source = face_overlay_test_mesh(400, 7, 12);
         publish_world3d_mesh_lease(&mut state, "source".into(), source).unwrap();
-        let version = state.mesh_versions["source"];
+        let version = *state.mesh_versions.get("source").expect("source mesh version");
         state.draws.push(SceneDraw3d { mesh_key: "source".into(), mesh_version: version, instances: vec![Instance3d { id: "object".into(), model: Mat4::identity(), color: [1.0; 4], selected: false, hovered: false }] }).unwrap();
 
         let mut cursor = WorldFaceOverlayMeshCursor::new("surface", 500, 7, 11).unwrap();
@@ -11883,7 +11503,7 @@ mod tests {
         state.hovered_component_mode = Some("face".into());
         let source = face_overlay_test_mesh_with_faces(750, 7, &[10, 11, 12]);
         publish_world3d_mesh_lease(&mut state, "source".into(), source).unwrap();
-        let version = state.mesh_versions["source"];
+        let version = *state.mesh_versions.get("source").expect("source mesh version");
         state.draws.push(SceneDraw3d { mesh_key: "source".into(), mesh_version: version, instances: vec![Instance3d { id: "object".into(), model: Mat4::identity(), color: [1.0; 4], selected: false, hovered: false }] }).unwrap();
         state.face_overlay_build = Some(WorldFaceOverlayMeshCursor::new("surface", 800, 7, 11).unwrap());
 
@@ -11931,7 +11551,7 @@ mod tests {
         assert!(bytes.faulted);
 
         let mut items = WorldInteractionPlan::new(1, 1);
-        let action = WorldFlatAction { kind: WorldFlatActionKind::Camera, strings: [None; 8], numbers: [0.0; 10], number_len: 0 };
+        let action = WorldFlatAction { kind: WorldFlatActionKind::Camera, strings: [None; 8], numbers: [0.0; 10] };
         for _ in 0..WORLD_INTERACTION_ITEM_CAPACITY {
             assert!(items.push_action(action));
         }
@@ -11989,7 +11609,7 @@ mod tests {
         state.interaction_revision = 7;
         let mesh = publish_oracle_mesh(mesh_oracle_from_buffers(vec![0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0], vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0], vec![0, 1, 2]));
         store_mesh(&mut state, "mesh".into(), mesh);
-        let mesh_version = state.mesh_versions["mesh"];
+        let mesh_version = *state.mesh_versions.get("mesh").expect("mesh version");
         state.draws.push(SceneDraw3d { mesh_key: "mesh".into(), mesh_version, instances: vec![Instance3d { id: "instance".into(), model: Mat4::identity(), color: [1.0; 4], selected: false, hovered: false }] });
         state.vortices.push(WorldVortexRecord { full_id: "vortex".into(), position: Some([1.0, 2.0, 3.0]), radius: Some(0.5), ..Default::default() });
         state.references.push(WorldReferenceRecord { url: Some("reference".into()), origin: Some([4.0, 5.0, 6.0]), width_world: Some(2.0), hidden: Some(false) });
@@ -12042,7 +11662,7 @@ mod tests {
         let mut plan = vortex_cursor.finish_plan(&state, 8).expect("vortex plan").expect("vortex hit");
         let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
         assert_eq!(with_world_step_context(1, |context| publish_world3d_plan_step(&mut state, &mut plan, 8, &mut input, context)).unwrap(), WorldInteractionStep::Pending);
-        let actions = input.drain_events();
+        let actions = take_actions(&mut input);
         assert_eq!(actions.len(), 1);
 
         state.interaction_objects.revision = state.interaction_revision;
@@ -12105,7 +11725,7 @@ mod tests {
         let mut plan = cursor.finish_plan(&state, 10).expect("component plan").expect("component hit");
         let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
         assert_eq!(with_world_step_context(1, |context| publish_world3d_plan_step(&mut state, &mut plan, 10, &mut input, context)).unwrap(), WorldInteractionStep::Pending);
-        assert_eq!(input.drain_events().len(), 1);
+        assert_eq!(take_actions(&mut input).len(), 1);
 
         state.interaction_objects.revision = state.interaction_revision;
         let mut replacement_model = Mat4::identity();
@@ -12135,7 +11755,7 @@ mod tests {
         let mut plan = cursor.finish_plan(&state, 11).expect("context plan").expect("context target");
         let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
         assert_eq!(with_world_step_context(1, |context| publish_world3d_plan_step(&mut state, &mut plan, 11, &mut input, context)).unwrap(), WorldInteractionStep::Pending);
-        assert_eq!(input.drain_events().len(), 1);
+        assert_eq!(take_actions(&mut input).len(), 1);
 
         let mut authority = WorldInteractionAuthority::default();
         authority.next_generation = 4;
@@ -12150,7 +11770,7 @@ mod tests {
         for generation in 1..=3 {
             assert_eq!(with_world_step_context(1, |context| step_world3d_interaction(&mut state, generation, &mut input, context)), WorldInteractionAuthorityStep::Complete);
         }
-        assert!(input.drain_events().is_empty());
+        assert!(take_actions(&mut input).is_empty());
     }
 
     #[test]
@@ -12235,7 +11855,7 @@ mod tests {
             }
             assert!(turns < 400);
         }
-        let actions = input.drain_events();
+        let actions = take_actions(&mut input);
         assert_eq!(actions.len(), 2);
         assert!(matches!(actions[0].args.as_ref().and_then(|args| args.get("targets")), Some(dsl::DslValue::Array(values)) if values.len() == WORLD_MARQUEE_RESULT_PAGE_CAPACITY));
         assert!(matches!(actions[1].args.as_ref().and_then(|args| args.get("targets")), Some(dsl::DslValue::Array(values)) if values.len() == 1));
@@ -12270,7 +11890,7 @@ mod tests {
         for claim in blockers {
             input.release_action_claim(claim).expect("release blocker");
         }
-        assert!(input.drain_events().is_empty());
+        assert!(take_actions(&mut input).is_empty());
         assert_eq!(job.results.page_len, 0);
         assert_eq!(job.gesture.len, 0);
     }
@@ -12282,7 +11902,7 @@ mod tests {
         state.interaction_revision = 2;
         let mesh = publish_oracle_mesh(triangle_mesh_oracle());
         store_mesh(&mut state, "mesh".into(), mesh);
-        let mesh_version = state.mesh_versions["mesh"];
+        let mesh_version = *state.mesh_versions.get("mesh").expect("mesh version");
         let instances = (0..instance_count).map(|index| Instance3d { id: format!("object-{index:03}"), model: Mat4::identity(), color: [1.0; 4], selected: false, hovered: false }).collect();
         state.draws.push(SceneDraw3d { mesh_key: "mesh".into(), mesh_version, instances });
         let mut registry = WorldInteractionRegistryBuildCursor::new(2);
@@ -12327,7 +11947,7 @@ mod tests {
         let viewport = render_pick_viewport(&state);
         let view_projection = state.orbit.to_camera().view_proj(1.0);
         let mesh = state.meshes.get("mesh").unwrap();
-        let projected: Vec<_> = (0..3).map(|index| ui_wgpu::wgpu::project_point(view_projection, world_mesh_vertex(mesh, index).unwrap(), viewport.w, viewport.h).unwrap()).collect();
+        let projected: Vec<_> = (0..3).map(|index| ui_wgpu::wgpu::project_point(view_projection, world_mesh_vertex(*mesh, index).unwrap(), viewport.w, viewport.h).unwrap()).collect();
         let min_x = projected.iter().map(|point| point[0]).fold(f32::INFINITY, f32::min);
         let max_x = projected.iter().map(|point| point[0]).fold(f32::NEG_INFINITY, f32::max);
         let min_y = projected.iter().map(|point| point[1]).fold(f32::INFINITY, f32::min);
@@ -12448,7 +12068,7 @@ mod tests {
             }
             assert!(turns < 128);
         }
-        let events = input.drain_events();
+        let events = take_actions(&mut input);
         assert_eq!(events.len(), 1);
         assert!(matches!(events[0].args.as_ref().and_then(|args| args.get("ids")), Some(dsl::DslValue::Array(ids)) if ids == &vec![dsl::DslValue::int(7), dsl::DslValue::int(8)]));
         assert_eq!(job.results.page_len, 0);
@@ -12579,7 +12199,7 @@ mod tests {
             assert!(turns < 32);
         }
         assert!(job.terminal_is_empty());
-        let actions = input.drain_events();
+        let actions = take_actions(&mut input);
         assert_eq!(actions.len(), 1);
         assert_eq!(actions[0].action, "translateSelection");
         assert!(turns > 8);
@@ -12616,7 +12236,7 @@ mod tests {
         for claim in blockers {
             input.release_action_claim(claim).expect("release blocker");
         }
-        assert!(input.drain_events().is_empty());
+        assert!(take_actions(&mut input).is_empty());
         assert_eq!(job.gesture.selected_len, 0);
         assert_eq!(job.gesture.selected_bytes, 0);
     }
@@ -12663,7 +12283,7 @@ mod tests {
             assert!(turns < 64);
         }
         assert!(turns > 20);
-        let actions = input.drain_events();
+        let actions = take_actions(&mut input);
         assert_eq!(actions.len(), 1);
         assert_eq!(actions[0].action, "addBrushObject");
         assert_eq!(actions[0].args.as_ref().and_then(|args| args.get("targetVortexFullId")).and_then(dsl::DslValue::as_str).map(str::len), Some(WORLD_BRUSH_COPY_CHUNK_BYTES * 2 + 1));
@@ -12692,7 +12312,7 @@ mod tests {
         assert!(!interrupted.close_step(&mut input));
         assert!(!interrupted.close_step(&mut input));
         assert!(interrupted.close_step(&mut input));
-        assert!(input.drain_events().is_empty());
+        assert!(take_actions(&mut input).is_empty());
     }
 
     fn world_intent(generation: u64, delta: f32) -> WorldInteractionIntent {
@@ -12733,13 +12353,13 @@ mod tests {
         let stale_step = with_world_step_context(1, |context| publish_world3d_plan_step(&mut state, &mut stale, 7, &mut input, context)).unwrap();
         assert_eq!(stale_step, WorldInteractionStep::Stale);
         assert_eq!(state.orbit.distance, original_distance);
-        assert!(input.drain_events().is_empty());
+        assert!(take_actions(&mut input).is_empty());
 
         let mut plan = plan_world3d_wheel(&state, 8, 20.0).expect("bounded wheel plan");
         let pending = with_world_step_context(1, |context| publish_world3d_plan_step(&mut state, &mut plan, 8, &mut input, context)).unwrap();
         assert_eq!(pending, WorldInteractionStep::Pending);
         assert_ne!(state.orbit.distance, original_distance);
-        let actions = input.drain_events();
+        let actions = take_actions(&mut input);
         assert_eq!(actions.len(), 1);
         assert_eq!(actions[0].action, "setCamera");
         let complete = with_world_step_context(1, |context| publish_world3d_plan_step(&mut state, &mut plan, 8, &mut input, context)).unwrap();
@@ -12757,7 +12377,7 @@ mod tests {
         let step = with_world_step_context(1, |context| publish_world3d_plan_step(&mut state, &mut drag, 3, &mut input, context)).unwrap();
         assert_eq!(step, WorldInteractionStep::Pending);
         assert_ne!(state.orbit.target, original_target);
-        assert_eq!(input.drain_events().into_iter().map(|action| action.action).collect::<Vec<_>>(), vec!["setCamera"]);
+        assert_eq!(take_actions(&mut input).into_iter().map(|action| action.action).collect::<Vec<_>>(), vec!["setCamera"]);
 
         state.interaction_mode = "paint".into();
         let mut begin = plan_world3d_paint_stroke(&state, 4, true, 0).expect("paint begin plan");
@@ -12767,14 +12387,14 @@ mod tests {
         let published = with_world_step_context(1, |context| publish_world3d_plan_step(&mut state, &mut begin, 4, &mut input, context)).unwrap();
         assert_eq!(published, WorldInteractionStep::Pending);
         assert!(state.paint_stroke_active);
-        assert_eq!(input.drain_events().into_iter().map(|action| action.action).collect::<Vec<_>>(), vec!["paintStrokeBegin"]);
+        assert_eq!(take_actions(&mut input).into_iter().map(|action| action.action).collect::<Vec<_>>(), vec!["paintStrokeBegin"]);
 
         let mut end = plan_world3d_paint_stroke(&state, 5, false, 0).expect("paint end plan");
         state.interaction_revision = state.interaction_revision.wrapping_add(1);
         let stale = with_world_step_context(1, |context| publish_world3d_plan_step(&mut state, &mut end, 5, &mut input, context)).unwrap();
         assert_eq!(stale, WorldInteractionStep::Stale);
         assert!(state.paint_stroke_active);
-        assert!(input.drain_events().is_empty());
+        assert!(take_actions(&mut input).is_empty());
     }
 
     fn world_pick_fixture() -> World3dState {
@@ -12782,7 +12402,7 @@ mod tests {
         let mut data = triangle_mesh_oracle();
         data.uvs = vec![0.0, 0.0, 1.0, 0.0, 0.5, 1.0];
         store_mesh(&mut state, "mesh".into(), publish_oracle_mesh(data));
-        let mesh_version = state.mesh_versions["mesh"];
+        let mesh_version = *state.mesh_versions.get("mesh").expect("mesh version");
         state.draws.push(SceneDraw3d { mesh_key: "mesh".into(), mesh_version, instances: vec![Instance3d { id: "object".into(), model: Mat4::identity(), color: [1.0; 4], selected: false, hovered: false }] });
         state
     }
@@ -12825,7 +12445,7 @@ mod tests {
         let mut state = state;
         let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
         assert_eq!(with_world_step_context(1, |context| publish_world3d_plan_step(&mut state, &mut plan, 9, &mut input, context)).unwrap(), WorldInteractionStep::Pending);
-        assert_eq!(input.drain_events().into_iter().map(|action| action.action).collect::<Vec<_>>(), vec!["paintAt"]);
+        assert_eq!(take_actions(&mut input).into_iter().map(|action| action.action).collect::<Vec<_>>(), vec!["paintAt"]);
     }
 
     #[test]
@@ -12851,7 +12471,7 @@ mod tests {
         let _ = with_world_step_context(1, |context| cursor.step(&state, 12, context));
         state.interaction_revision = state.interaction_revision.wrapping_add(1);
         assert_eq!(with_world_step_context(1, |context| cursor.step(&state, 12, context)), WorldInteractionStep::Stale);
-        assert_eq!(cursor.finish_plan(&state, 12).expect_err("stale cursor"), WorldInteractionStep::Stale);
+        assert_eq!(cursor.finish_plan(&state, 12).err().expect("stale cursor"), WorldInteractionStep::Stale);
         assert!(!cursor.close_step());
         assert!(cursor.close_step());
         assert!(cursor.terminal_is_empty());
@@ -12879,7 +12499,7 @@ mod tests {
         for claim in claims {
             input.release_action_claim(claim).expect("release retained credit");
         }
-        assert_eq!(input.drain_events().into_iter().map(|action| action.action).collect::<Vec<_>>(), vec!["setCamera"]);
+        assert_eq!(take_actions(&mut input).into_iter().map(|action| action.action).collect::<Vec<_>>(), vec!["setCamera"]);
         assert_eq!(with_world_step_context(1, |context| step_world3d_interaction(&mut state, 1, &mut input, context)), WorldInteractionAuthorityStep::Complete);
         assert_eq!(state.interaction_authority.as_ref().and_then(|authority| authority.queue.front()).map(|intent| intent.generation), Some(2));
     }
@@ -12901,7 +12521,7 @@ mod tests {
             assert!(turns < 8);
         }
         assert!(world3d_interaction_terminal_is_empty(&state));
-        assert!(input.drain_events().is_empty());
+        assert!(take_actions(&mut input).is_empty());
     }
 
     #[test]
@@ -12916,7 +12536,7 @@ mod tests {
         for _ in 0..3 {
             let _ = with_world_step_context(1, |context| step_world3d_interaction(&mut state, 1, &mut input, context));
         }
-        assert_eq!(input.drain_events().len(), 1);
+        assert_eq!(take_actions(&mut input).len(), 1);
         assert_eq!(with_world_step_context(1, |context| step_world3d_interaction(&mut state, 2, &mut input, context)), WorldInteractionAuthorityStep::Pending);
         let authority = state.interaction_authority.as_mut().expect("authority");
         assert!(authority.blocked.is_none());
@@ -12952,12 +12572,13 @@ mod tests {
     fn prepared_world_resources_are_send_and_deduplicate_uploads() {
         assert_send::<World3dBuildContext>();
         let mut resources = World3dBuildContext::new(WorldCursorWakeAuthority::new());
-        resources.ensure_mesh("mesh", 3, &[0.0, 1.0, 2.0], &[0.0, 0.0, 1.0], &[0, 1, 2]);
-        resources.ensure_mesh("mesh", 3, &[9.0], &[9.0], &[9]);
+        let mesh = publish_oracle_mesh(triangle_mesh_oracle());
+        resources.ensure_mesh("mesh", 3, mesh);
+        resources.ensure_mesh("mesh", 3, mesh);
         resources.ensure_world_plane_texture("image", &[1, 2, 3, 4], 1, 1);
         resources.ensure_world_plane_texture("image", &[9, 9, 9, 9], 1, 1);
         resources.evict_mesh("stale");
-        let mut input = ui_wgpu::wgpu::PreparedRenderInput::new(1, 2, ui_wgpu::wgpu::DrawList::default(), None, 0.0);
+        let mut input = ui_wgpu::wgpu::PreparedRenderInput::try_new(1, 2, ui_wgpu::wgpu::DrawList::default(), None, 0.0).ok().expect("prepared input admitted");
         assert_eq!(resources.append_step(&mut input).ok(), Some(false));
         assert_eq!(resources.append_step(&mut input).ok(), Some(false));
         assert_eq!(resources.append_step(&mut input).ok(), Some(false));
@@ -12965,7 +12586,8 @@ mod tests {
         assert_eq!(resources.append_step(&mut input).ok(), Some(false));
         assert_eq!(resources.append_step(&mut input).ok(), Some(true));
         assert_eq!(input.uploads.len(), 2);
-        assert_eq!(input.evictions, vec![PreparedRenderEviction::Mesh { key: "stale".into() }]);
+        assert_eq!(input.evictions.len(), 1);
+        assert_eq!(input.evictions.get(0), Some(&PreparedRenderEviction::Mesh { key: "stale".into() }));
     }
 
     #[test]
@@ -13364,12 +12986,17 @@ mod tests {
             }
             assert!(turns < 8);
         }
-        let mut current = World3dState::new("surface".into(), "controller".into());
-        sync_world3d_state_legacy(&mut current, &scene, bounds);
-        let typed_camera = typed.orbit.to_camera();
-        let current_camera = current.orbit.to_camera();
-        assert_eq!(typed_camera.position, current_camera.position);
-        assert_eq!(typed_camera.target, current_camera.target);
+        let oracle: serde_json::Value = serde_json::from_str(&scene.world_3d.as_ref().unwrap().camera_json).expect("camera fixture");
+        let vector = |key: &str| Vec3::new(oracle[key][0].as_f64().unwrap() as f32, oracle[key][1].as_f64().unwrap() as f32, oracle[key][2].as_f64().unwrap() as f32);
+        let expected = OrbitController::from_camera(&Camera3d {
+            position: vector("position"), target: vector("target"), up: vector("up"),
+            fov_y: oracle["fov"].as_f64().unwrap() as f32 * std::f32::consts::PI / 180.0, near: 0.1, far: 1000.0,
+        }).to_camera();
+        let actual = typed.orbit.to_camera();
+        assert_eq!(actual.position, expected.position);
+        assert_eq!(actual.target, expected.target);
+        assert_eq!(actual.up, expected.up);
+        assert_eq!(actual.fov_y, expected.fov_y);
         assert_eq!(typed.snapshot_lease, Some(lease));
 
         ui_wgpu::wgpu::world3d_snapshot_begin_close(lease).unwrap();
@@ -13427,7 +13054,7 @@ mod tests {
     fn opaque_quarantine_saturation_returns_the_exact_rejected_owner() {
         let mut quarantine = WorldOpaqueQuarantine::<1>::default();
         let first = WorldOpaqueOwner::ReferencePixels(WorldDynamicEntry { id: "first".into(), epoch: 1, value: (1, 1, vec![1]) });
-        quarantine.admit(first).unwrap();
+        assert!(quarantine.admit(first).is_ok());
         let second = WorldOpaqueOwner::PaintPixels(WorldDynamicEntry { id: "second".into(), epoch: 2, value: (1, 1, vec![2]) });
         let rejected = quarantine.admit(second).expect_err("quarantine returns saturated owner");
         let WorldOpaqueOwner::PaintPixels(rejected) = rejected else { panic!("exact paint owner") };
@@ -13619,8 +13246,8 @@ mod tests {
         state.pick_bounds = inner;
         let camera = state.orbit.to_camera();
         let mesh_ref = state.meshes.get("mesh-1").expect("mesh");
-        let tri = mesh_ref.indices.get(0..3).expect("triangle");
-        let centroid = mesh_vertex(mesh_ref, tri[0]).add(mesh_vertex(mesh_ref, tri[1])).add(mesh_vertex(mesh_ref, tri[2])).scale(1.0 / 3.0);
+        let tri = world_mesh_triangle(*mesh_ref, 0).expect("triangle");
+        let centroid = mesh_vertex(*mesh_ref, tri[0]).expect("first vertex").add(mesh_vertex(*mesh_ref, tri[1]).expect("second vertex")).add(mesh_vertex(*mesh_ref, tri[2]).expect("third vertex")).scale(1.0 / 3.0);
         let screen = ui_wgpu::wgpu::project_point(camera.view_proj(1.0), centroid, inner.w, inner.h).expect("face centroid projects");
         let picked = pick_component_at(&state, screen[0], screen[1], inner).expect("face pick");
         assert_eq!(picked.0, "face");
@@ -13638,9 +13265,9 @@ mod tests {
         state.bounds = inner;
         state.pick_bounds = inner;
         let camera = state.orbit.to_camera();
-        let chunk = state.meshes.get("mesh-1").and_then(|mesh| mesh.edge_positions.get(0..6)).expect("edge");
-        let a = Vec3::new(chunk[0], chunk[1], chunk[2]);
-        let b = Vec3::new(chunk[3], chunk[4], chunk[5]);
+        let edge = state.meshes.get("mesh-1").expect("mesh").edge(0).expect("edge");
+        let a = Vec3::new(edge[0][0], edge[0][1], edge[0][2]);
+        let b = Vec3::new(edge[1][0], edge[1][1], edge[1][2]);
         let mid = a.add(b).scale(0.5);
         let screen = ui_wgpu::wgpu::project_point(camera.view_proj(1.0), mid, inner.w, inner.h).expect("edge midpoint projects");
         let picked = pick_component_at(&state, screen[0], screen[1], inner).expect("edge pick");
@@ -13788,22 +13415,49 @@ mod tests {
         assert!(lane.terminal_is_empty());
     }
 
-    /// 📦️ URL-backed meshes remain fetchable instead of becoming empty procedural primitives.
+    fn publish_retained_draw_fixture(state: &mut World3dState, vector: &serde_json::Value) {
+        let mesh = vector["mesh"].as_str().unwrap();
+        let instances = vector["instances"].as_array().unwrap();
+        let ids: Vec<_> = instances.iter().map(|instance| instance["id"].as_str().unwrap()).collect();
+        begin_world3d_draw_rebuild(state, WorldDrawRebuildDescriptor {
+            generation: state.draw_generation + 1, revision: state.interaction_revision, draw_count: 1,
+            instance_count: instances.len() as u32, byte_count: draw_fixture_bytes(&[(mesh, &ids)]),
+        }).unwrap();
+        world3d_draw_rebuild_admit_draw(state, mesh, vector["version"].as_u64().unwrap(), instances.len() as u16).unwrap();
+        for instance in instances {
+            let color = std::array::from_fn(|index| instance["color"][index].as_f64().unwrap() as f32);
+            world3d_draw_rebuild_admit_instance(state, 0, instance["id"].as_str().unwrap(), Mat4::identity(), color, false, false).unwrap();
+        }
+        world3d_draw_rebuild_seal(state).unwrap();
+        for _ in 0..16 {
+            match with_world_step_context(1, |context| step_world3d_draw_rebuild(state, context)) {
+                WorldDrawRebuildStep::Complete => return,
+                WorldDrawRebuildStep::Pending => {},
+                other => panic!("draw fixture failed: {other:?}"),
+            }
+        }
+        panic!("draw fixture exceeded its bounded turn count");
+    }
+
     #[test]
-    fn rebuild_instance_draws_keeps_url_backed_mesh_pending() {
+    fn retained_draw_rebuild_keeps_url_backed_asset_authority() {
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🔣️draws.json")).unwrap();
+        let vector = &fixture["draws"][1];
         let mut state = World3dState::new("surface-1".into(), "controller-1".into());
-        state.mesh_url_fallback.insert("mesh:capsule".into(), "/mesh/capsule.glb".into());
-        state.parsed_instances = vec![WorldInstanceRecord { id: "capsule-1".into(), mesh_id: Some("mesh:capsule".into()), position: Some([0.0, 0.0, 0.0]), ..Default::default() }];
-
-        rebuild_instance_draws_legacy(&mut state, 1.0);
-
-        assert!(!state.meshes.contains_key("mesh:capsule"), "a URL-backed mesh must not be shadowed by an empty placeholder_mesh placeholder");
-        let mut owner = take_next_world3d_asset(&mut state).expect("URL-backed mesh publishes one retained asset request");
-        assert_eq!(owner.url(), "/mesh/capsule.glb");
+        let token = reserve_world3d_asset_request(&mut state, WorldAssetRequestKind::Glb, vector["url"].as_str().unwrap()).unwrap();
+        publish_retained_draw_fixture(&mut state, vector);
+        assert!(!state.meshes.contains_key(vector["mesh"].as_str().unwrap()));
+        assert!(state.placeholder_build.is_none(), "retained draws never replace an admitted asset request with a primitive");
+        let mut owner = take_next_world3d_asset(&mut state).expect("exact retained asset request");
+        assert_eq!(owner.token(), token);
+        assert_eq!(owner.url(), vector["url"].as_str().unwrap());
         owner.begin_close();
-        return_world3d_asset(&mut state, owner).expect("retained request returns to its exact surface authority");
+        return_world3d_asset(&mut state, owner).unwrap();
         while retire_cancelled_world3d_asset_step(&mut state) {}
         assert!(state.asset_io.terminal_is_empty());
+        assert!(begin_world3d_dynamic_retirement(&mut state));
+        while !with_world_step_context(1, |context| step_world3d_dynamic_retirement(&mut state, context)) {}
+        assert!(world3d_dynamic_retirement_terminal_is_empty(&state));
     }
 
     //#endregion GlbAssetTests
@@ -13849,15 +13503,26 @@ mod tests {
     }
 
     #[test]
-    fn rebuild_instance_draws_applies_environment_material_color_as_neutral_default() {
-        let mut state = World3dState::new("surface-1".into(), "controller-1".into());
-        state.environment = WorldEnvironmentRecord { material: Some(WorldEnvironmentMaterialRecord { color: Some("#ff0000".into()), ..Default::default() }), ..Default::default() };
-        state.parsed_instances = vec![WorldInstanceRecord { id: "obj-1".into(), mesh_id: Some("box".into()), position: Some([0.0, 0.0, 0.0]), ..Default::default() }];
-        rebuild_instance_draws_legacy(&mut state, 1.0);
-        let instance = &state.draws.iter().find(|draw| draw.mesh_key == "box").expect("box draw").instances[0];
-        assert!((instance.color[0] - 1.0).abs() < 1e-3);
-        assert!(instance.color[1].abs() < 1e-3);
+    fn retained_draw_rebuild_preserves_prepared_material_colors_from_the_json_oracle() {
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🔣️draws.json")).unwrap();
+        for vector in fixture["draws"].as_array().unwrap() {
+            let mut state = World3dState::new("surface-1".into(), "controller-1".into());
+            publish_retained_draw_fixture(&mut state, vector);
+            let expected = vector["instances"].as_array().unwrap();
+            assert_eq!(state.draws[0].mesh_key, vector["mesh"].as_str().unwrap());
+            assert_eq!(state.draws[0].mesh_version, vector["version"].as_u64().unwrap());
+            assert_eq!(state.draws[0].instances.len(), expected.len());
+            for (actual, expected) in state.draws[0].instances.iter().zip(expected) {
+                let color: [f32; 4] = serde_json::from_value(expected["color"].clone()).unwrap();
+                assert_eq!(actual.id, expected["id"].as_str().unwrap());
+                assert_eq!(actual.color, color);
+            }
+            assert!(begin_world3d_dynamic_retirement(&mut state));
+            while !with_world_step_context(1, |context| step_world3d_dynamic_retirement(&mut state, context)) {}
+            assert!(world3d_dynamic_retirement_terminal_is_empty(&state));
+        }
     }
+
     //#endregion EnvironmentTests
 
     //#region TerrainTests

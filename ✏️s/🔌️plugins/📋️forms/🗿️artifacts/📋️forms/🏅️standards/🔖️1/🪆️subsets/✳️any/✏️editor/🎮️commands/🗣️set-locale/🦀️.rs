@@ -12,7 +12,7 @@ pub struct SetLocale {
 }
 
 pub fn handle(payload: &SetLocale, _doc: &ArtifactView<'_, FormsSnapshot>, _cfg: &ConfigView<'_, FormsConfig>) -> Result<Emit<FormMutation, FormsConfigMutation>, Fault> {
-    Ok(Emit::config(vec![FormsConfigMutation::SetLocale { value: payload.value.clone() }]))
+    Ok(Emit::config(vec![FormsConfigMutation::SetLocale(crate::editor::forms::config::SetLocale { value: payload.value.clone() })]))
 }
 
 //#region 🧪️Tests
@@ -24,11 +24,11 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn forms_labels_resolve_native_english_and_german() {
-        let mut app = forms_app();
-        let english = render(&mut app, FORMS_PLAY_BODY_BLUEPRINT);
+        let mut app = forms_app().await;
+        let english = render(&mut app, FORMS_PLAY_BODY_BLUEPRINT).await;
         assert!(english.contains("Boolean"), "english labels: {english}");
-        dispatch(&mut app, FormsCommand::SetLocale(SetLocale { value: "de-DE".into() }));
-        let german = render(&mut app, FORMS_PLAY_BODY_BLUEPRINT);
+        dispatch(&mut app, FormsCommand::SetLocale(SetLocale { value: "de-DE".into() })).await;
+        let german = render(&mut app, FORMS_PLAY_BODY_BLUEPRINT).await;
         assert!(german.contains("Boolescher Wert"), "german labels: {german}");
     }
 }

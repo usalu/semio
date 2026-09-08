@@ -31,7 +31,7 @@ use crate::editor::note::terminology::note_play_labels;
 use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::{
     ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, AppDefinition, ArtifactEditor, ArtifactView, ConfigView, Dialect, DomainTopology, DraftView, Editor, Emit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec,
-    InteractionDefinition, InteractionRef, InteractionTopology, Label, LocalizedLabel, MergeMode, NoDraft, NoDraftMutation, SelectionMethod, SelectionMode, SelectionSpec, TopologyNode, UiNode, UtilityCategory, UtilityDefinition, WindowEngagement,
+    InteractionDefinition, InteractionRef, InteractionTopology, Label, LocalizedLabel, MergeMode, NoDraft, NoDraftMutation, SelectionMethod, SelectionMode, SelectionSpec, TopologyNode, UtilityCategory, UtilityDefinition, WindowEngagement,
     WindowMeasure, SET_ACTIVE_UTILITY_ACTION_ID,
 };
 use std::collections::HashMap;
@@ -40,7 +40,7 @@ use store::EngineHandles;
 //#region 🔖️Constants
 /// 👁️✏️ C2 §2.1: the hand-written app id is retired — the canonical surface id
 /// (`s.note.note@1/*#editor`) is now derived from `NotePlayApp::DIALECT`/`ROLE` via `surface_app_id`.
-pub const NOTE_PLAY_CONTROLLER_ID: &str = "note-play";
+pub const NOTE_PLAY_CONTROLLER_ID: &str = "s.note.note@1/*#editor";
 pub use catalogue_panel::NOTE_PLAY_BODY_CATALOGUE;
 pub use composite::{NOTE_PLAY_BODY_COMPOSITE, NOTE_PLAY_WINDOW_COMPOSITE};
 pub use document_panel::NOTE_PLAY_BODY_DOCUMENT;
@@ -55,7 +55,7 @@ pub use navigator::{NOTE_PLAY_BODY_NAVIGATOR, NOTE_PLAY_WINDOW_NAVIGATOR};
 pub fn reset_document_effect(document: &NoteSnapshot) -> semio_framework::kernel::Effect {
     let pack = <NoteSnapshot as store::ArtifactPack>::encode_pack(document);
     let envelope = store::create_document_envelope::<NoteSnapshot, NoteMutation>(NOTE_DOCUMENT_SCHEMA, "note", document.clone(), None);
-    let spr = store::print_document_spr(&envelope).expect("note document spr encode is infallible for a fresh, edit-free envelope");
+    let spr = semio_framework_plugin::resolve_ready(store::print_document_spr(&envelope)).expect("note document spr encode is infallible for a fresh, edit-free envelope");
     semio_framework::kernel::Effect::LoadDocument { pack, spr }
 }
 //#endregion 🔖️ResetDocument
@@ -265,7 +265,7 @@ impl ArtifactEditor for NotePlayApp {
         InteractionTopology { domains }
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, NoteSnapshot>, cfg: &ConfigView<'_, NoteConfig>) -> UiNode {
+    fn render(body_key: &str, doc: &ArtifactView<'_, NoteSnapshot>, cfg: &ConfigView<'_, NoteConfig>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         let document = doc.snapshot;
         let config = cfg.snapshot;
         let labels = note_play_labels(config);
@@ -275,8 +275,8 @@ impl ArtifactEditor for NotePlayApp {
             NOTE_PLAY_BODY_DOCUMENT => document_panel::render(document, labels),
             NOTE_PLAY_BODY_CATALOGUE => catalogue_panel::render(labels),
             NOTE_PLAY_BODY_PROPERTIES => inspection_panel::render(document, &config.active_utility_id, labels),
-            _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
-        }
+            _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "note diagnostic text admission failed")),
+        }.map(semio_framework_plugin::built_to_component_tree)
     }
 
     fn window_engagements(doc: &ArtifactView<'_, NoteSnapshot>, cfg: &ConfigView<'_, NoteConfig>) -> HashMap<String, WindowEngagement> {
@@ -511,21 +511,21 @@ pub(crate) mod testkit {
     }
 
     /// 🧪️ A bare app instance — no `AppActionRegistry`, so undeclared internal commands dispatch freely.
-    pub fn note_app() -> NoteApp {
-        new_app::<EditorApp<NotePlayApp>>()
+    pub async fn note_app() -> NoteApp {
+        new_app::<EditorApp<NotePlayApp>>().await
     }
 
     /// 🧪️ An app wired to the real manifest registry — enforces View/Shell kind discipline.
-    pub fn note_app_with_registry() -> NoteApp {
-        new_app_with_registry::<EditorApp<NotePlayApp>>(note_manifest_for_testkit)
+    pub async fn note_app_with_registry() -> NoteApp {
+        new_app_with_registry::<EditorApp<NotePlayApp>>(note_manifest_for_testkit).await
     }
 
-    pub fn dispatch(app: &mut NoteApp, command: NoteCommand) -> InvocationResult {
-        app.dispatch_typed(command, &meta("local")).expect("dispatch")
+    pub async fn dispatch(app: &mut NoteApp, command: NoteCommand) -> InvocationResult {
+        app.dispatch_typed(command, &meta("local")).await.expect("dispatch")
     }
 
-    pub fn render(app: &mut NoteApp, body_key: &str) -> String {
-        serde_json::to_string(&app.render(body_key, None, &ViewModel::default()).expect("render")).expect("render json")
+    pub async fn render(app: &mut NoteApp, body_key: &str) -> String {
+        semio_framework_plugin::testkit::project_and_retire_fixture_tree(app.render(body_key, None, &ViewModel::default()).await.expect("render")).expect("render json")
     }
 
     /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: picking is now the framework's
@@ -534,10 +534,11 @@ pub(crate) mod testkit {
     /// select against). `ids` are raw block ids, converted to the row-id-prefixed `InteractionTarget`
     /// id the document panel tree/`interaction_topology` both use (see `note_blocks_topology`'s doc
     /// comment).
-    pub fn select_blocks(app: &mut NoteApp, ids: &[&str]) {
+    pub async fn select_blocks(app: &mut NoteApp, ids: &[&str]) {
         let target_list: Vec<serde_json::Value> = ids.iter().map(|id| serde_json::json!({ "granularity": "block", "id": format!("note-play-block:{id}") })).collect();
         let targets = serde_json::to_string(&target_list).expect("targets json");
-        app.handle_action("interactionSelect", Some(&serde_json::json!({ "domainId": NOTE_INTERACTION_BLOCKS, "targets": targets, "merge": "replace" })), &meta("test")).expect("interactionSelect");
+        let args = semio_framework_plugin::optional_json_to_dsl(Some(serde_json::json!({ "domainId": NOTE_INTERACTION_BLOCKS, "targets": targets, "merge": "replace" })));
+        app.handle_action("interactionSelect", args.as_ref(), &meta("test")).await.expect("interactionSelect");
     }
 }
 //#endregion 🧪️Testkit
@@ -555,7 +556,6 @@ mod tests {
     /// hold.
     #[semio_framework_async_macros::async_test]
     async fn command_ids_are_unique_across_every_row() {
-        let app = NotePlayApp;
         let ids: Vec<&str> = every_command().iter().map(|command| NotePlayApp::command_id(command)).collect();
         let mut sorted = ids.clone();
         sorted.sort_unstable();
@@ -699,11 +699,11 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn delete_selection_deletes_the_blocks_picked_via_interaction_select() {
         use crate::editor::note::testkit::{dispatch as note_dispatch, note_app_with_registry, select_blocks};
-        let mut app = note_app_with_registry();
-        note_dispatch(&mut app, NoteCommand::AddBlock(add_block::AddBlock { kind: "text".into(), x: 0.0, y: 0.0 }));
+        let mut app = note_app_with_registry().await;
+        note_dispatch(&mut app, NoteCommand::AddBlock(add_block::AddBlock { kind: "text".into(), x: 0.0, y: 0.0 })).await;
         let new_id = crate::artifacts::note::schema::block_id(&app.snapshot().expect("snapshot").blocks[0]).to_string();
-        select_blocks(&mut app, &[&new_id]);
-        note_dispatch(&mut app, NoteCommand::DeleteSelection(delete_selection::DeleteSelection {}));
+        select_blocks(&mut app, &[&new_id]).await;
+        note_dispatch(&mut app, NoteCommand::DeleteSelection(delete_selection::DeleteSelection {})).await;
         assert!(app.snapshot().expect("snapshot").blocks.is_empty(), "the picked block must be deleted");
     }
     //#endregion 🔖️Interaction
@@ -711,10 +711,10 @@ mod tests {
     //#region 🔖️Locale
     #[semio_framework_async_macros::async_test]
     async fn note_labels_resolve_native_by_default() {
-        let mut app = note_app();
-        let document_json = crate::editor::note::testkit::render(&mut app, NOTE_PLAY_BODY_DOCUMENT);
+        let mut app = note_app().await;
+        let document_json = crate::editor::note::testkit::render(&mut app, NOTE_PLAY_BODY_DOCUMENT).await;
         assert!(document_json.contains("Add Text"));
-        let catalogue_json = crate::editor::note::testkit::render(&mut app, NOTE_PLAY_BODY_CATALOGUE);
+        let catalogue_json = crate::editor::note::testkit::render(&mut app, NOTE_PLAY_BODY_CATALOGUE).await;
         assert!(catalogue_json.contains("Block kinds"));
     }
     //#endregion 🔖️Locale
@@ -722,8 +722,8 @@ mod tests {
     //#region 🔖️CrossCutting
     #[semio_framework_async_macros::async_test]
     async fn undo_redo_round_trip_through_the_wrapper() {
-        let mut app = note_app();
-        testkit::assert_undo_redo_round_trip(&mut app, NoteCommand::AddBlock(add_block::AddBlock { kind: "text".into(), x: 0.0, y: 0.0 }), |app| app.snapshot().expect("snapshot").blocks.len(), 0, 1);
+        let mut app = note_app().await;
+        testkit::assert_undo_redo_round_trip(&mut app, NoteCommand::AddBlock(add_block::AddBlock { kind: "text".into(), x: 0.0, y: 0.0 }), |app| app.snapshot().expect("snapshot").blocks.len(), 0, 1).await;
     }
 
     /// 🧪️ The definitional regression proof: two independent instances start from the same document,
@@ -739,13 +739,18 @@ mod tests {
                 let projection = app.snapshot().expect("snapshot");
                 (projection.blocks.len(), projection.grid_visible)
             },
-        );
+        ).await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn ingest_operations_is_idempotent_for_note() {
-        testkit::assert_ingest_idempotent::<semio_framework_plugin::EditorApp<NotePlayApp>, f64>(NoteCommand::SetGridSpacing(set_grid_spacing::SetGridSpacing { value: 48.0 }), |app| app.snapshot().expect("snapshot").grid_spacing.unwrap_or_default());
+        testkit::assert_ingest_idempotent::<semio_framework_plugin::EditorApp<NotePlayApp>, f64>(NoteCommand::SetGridSpacing(set_grid_spacing::SetGridSpacing { value: 48.0 }), |app| app.snapshot().expect("snapshot").grid_spacing.unwrap_or_default()).await;
     }
     //#endregion 🔖️CrossCutting
 }
 //#endregion 🧪️Tests
+
+/// 🏷️ Admits Note display text into a bounded semantic label.
+pub fn ui_label(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::plugin_app_close_prelude::Label> {
+    value.as_ref().try_into().map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "note label admission failed"))
+}

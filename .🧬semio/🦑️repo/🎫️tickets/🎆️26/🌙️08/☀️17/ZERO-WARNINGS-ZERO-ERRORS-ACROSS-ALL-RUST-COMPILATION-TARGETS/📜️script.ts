@@ -2,6 +2,62 @@ import { readFileSync, writeFileSync, appendFileSync, existsSync, readdirSync } 
 import { join, resolve, relative, dirname, basename } from "node:path";
 
 const [command, name, filter] = process.argv.slice(2);
+if (command === "laws") {
+  const { runExactCargoLaws } = await import(resolve(process.cwd(), "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts"));
+  const generated = resolve(import.meta.dir, "🗑️generated");
+  const report = join(import.meta.dir, "📓️2026-09-07-verification.md");
+  const groups = [
+    {"package":"semio-s-plugin-procedural","laws":["assembly_cursor_compiler_matches_canonical_builder","assembly_cursor_compiler_matches_canonical_csr_order_and_multiplicity","checkpoint_resume_preserves_rng_trail_and_progress","checkpoint_restore_rejects_foreign_operation_and_topology","checkpoint_resume_preserves_preview_sequence","cancellation_interrupts_checkpoint_and_commit_materialization_without_progress","minimum_checkpoint_is_exactly_the_fixed_header_and_restores","checkpoint_restore_rejects_size_arithmetic_overflow"]},
+    { package: "semio-framework-plugin", laws: ["full_operation_source_rejects_generic_reducers_and_old_monolithic_shells", "spawn_task_quota_gate_faults_the_n_plus_1th_task_and_never_silently_drops_it", "local_interaction_live_pages_wait_exact_ack_and_all_three_roots", "local_interaction_live_reopened_request_rejects_old_started_cancel", "local_interaction_live_partial_admission_retains_successful_roots", "local_interaction_live_partial_error_preserves_wrapper_emission_and_retirement_counts", "sparse_live_instances_receive_successive_round_robin_turns", "runtime_instance_registry_has_fixed_capacity_collision_and_reuse", "cleanup_queue_saturation_preserves_detached_app_ownership", "cold_pair_ingress_streams_the_exact_four_mibibyte_pair_and_loads_once", "cold_pair_ingress_rechecks_live_and_rejects_hostile_pages_without_displacement", "cold_pair_ingress_keeps_the_structural_owner_across_load_cancel_and_bounded_close", "cold_pair_ingress_final_live_fence_rejects_post_await_revocation", "cold_pair_ingress_charges_aggregate_reserved_capacity_until_final_close", "cold_pair_ingress_is_an_exact_retained_native_close_participant", "cold_pair_header_requires_an_active_checkpoint_frontier_and_exact_hashes", "interactive_bridge_coalesces_preview_but_backpressures_lossless_items", "interactive_bridge_diagnostic_ring_is_item_and_byte_bounded", "spawn_with_id_hands_the_reserved_id_to_the_future_builder_before_it_ever_runs", "a_two_slice_infer_job_decodes_then_dispatches_to_the_registered_service", "infer_job_checkpoint_restore_matches_an_uninterrupted_run"] },
+    { package: "semio-s-plugin-puzzle", laws: ["spatial_capacity_plus_one_refusal_preserves_exact_old_state", "spatial_stale_owner_cannot_finish_partial_replacement", "spatial_multi_cell_oversized_replacement_and_removal_make_bounded_progress", "spatial_fixed_collections_use_the_credited_pages_and_return_identical_plus_one_owners", "overlap_checkpoint_resumes_exact_rng_and_sample_cursor", "overlap_is_deterministic_across_batch_sizes", "blocked_vortex_full_ids_and_enumeration_excludes_them", "weighted_sample_without_replacement_edge_cases"] },
+    { package: "semio-s-plugin-draw", laws: ["retained_drawing_aggregate_credit_admits_exact_4096_rejects_plus_one_with_owner_handback"] },
+    { package: "semio-s-plugin-energy", laws: ["retained_roster_is_exact_and_exhaustive", "p7c2_wire_schema_maximum_plus_one_and_exact_restore_owner", "p7c2_restore_stale_step_and_install_preserve_exact_replay_authority", "sequential_fills_first_unit", "uniform_splits_proportionally_to_capacity", "surface_incidence_matches_known_surface_normal"] },
+    { package: "semio-s-plugin-raster", laws: ["raster_asset_capacity_matches_the_json_oracle"] },
+    { package: "semio-s-plugin-architect", laws: ["architect_configuration_contract_vectors_match_the_json_oracle", "architect_presence_contract_vectors_match_the_json_oracle", "architect_semantic_panels_match_the_json_oracle"] },
+    { package: "semio-s-plugin-shooting", laws: ["shooting_configuration_contract_vectors_match_the_json_oracle", "shooting_presence_contract_vectors_match_the_json_oracle", "shooting_window_actions_match_the_json_oracle", "shooting_semantic_panels_match_the_json_oracle", "shooting_shot_field_values_match_the_json_oracle"] },
+    { package: "semio-s-plugin-imperative", laws: ["imperative_configuration_contract_vectors_match_the_json_oracle", "imperative_semantic_panels_match_the_json_oracle", "working_content_is_owned_by_each_exact_child", "render_lists_one_row_per_top_level_step", "render_compiles_the_default_document_into_read_only_text", "imperative_viewer_never_mutates", "imperative_editor_and_viewer_share_dialect", "create_step_inverse_law", "delete_step_inverse_law", "delete_step_missing_target_is_error", "reorder_steps_inverse_law", "reorder_steps_missing_target_is_error", "edit_step_params_inverse_law", "edit_step_params_missing_target_is_error", "create_step_duplicate_id_fatal_never_applies", "create_step_diff_absorb_law", "document_text_round_trip_with_applied_operation"] },
+    { package: "semio-s-plugin-animate", laws: ["presentation_configuration_contract_vectors_match_the_json_oracle", "presentation_presence_contract_vectors_match_the_json_oracle", "presentation_semantic_panels_match_the_json_oracle", "title_cards_match_the_neutral_xml_oracle", "from_dwg_builds_single_slide_deck_from_entity", "from_dwg_never_errors_on_empty_drawing"] },
+    { package: "semio-s-plugin-reasoning-mindmap", laws: ["wires_configuration_contract_vectors_match_the_json_oracle", "wires_presence_contract_vectors_match_the_json_oracle", "wires_semantic_panels_match_the_json_oracle", "renders_canvas_scene_for_the_empty_document", "renders_canvas_scene_for_the_metabolism_example"] },
+    { package: "semio-s-plugin-sequence", laws: ["sequence_semantic_panels_match_the_json_oracle", "sequence_retained_json_measure_matches_the_json_oracle", "sequence_carrier_contracts_match_the_json_oracle", "sequence_configuration_contract_vectors_match_the_json_oracle", "sequence_presence_contract_vectors_match_the_json_oracle", "render_produces_a_read_only_scene_for_the_default_document", "artifacts::sequence::standards::v1::subsets::any::schema::inferences::component::tests::inference_determinism_law", "artifacts::sequence::standards::v1::subsets::any::schema::inferences::component::tests::inference_default_law", "linear_chain_orders_by_dependency_and_depth_by_distance_from_root", "a_two_step_cycle_is_reported_as_not_cycle_free_but_stays_total", "a_dangling_edge_is_ignored", "diamond_depth_takes_the_longest_incoming_path"] },
+    { package: "semio-s-plugin-note", laws: ["note_configuration_contract_vectors_match_the_json_oracle", "note_presence_contract_vectors_match_the_json_oracle", "note_pdf14_page_contract_matches_the_json_oracle", "note_semantic_panels_match_the_json_oracle", "note_ink_canvas_payload_matches_the_json_oracle", "note_document_round_trips_assets_and_grid_settings", "root_scalar_inverse_and_absorb_laws", "asset_inverse_law_create_replace_delete", "block_lifecycle_inverse_law_create_delete_duplicate", "block_reparent_and_drag_inverse_law", "block_field_inverse_laws", "table_row_column_inverse_laws", "create_block_duplicate_id_is_fatal", "delete_block_missing_target_is_error", "delete_blocks_missing_target_is_error", "rename_block_missing_target_is_error", "change_block_locked_missing_target_is_error", "move_block_missing_target_is_error", "move_block_non_finite_is_fatal", "resize_block_missing_target_is_error", "drag_blocks_missing_target_is_error", "duplicate_block_missing_source_is_error", "insert_table_row_missing_target_is_error", "remove_table_row_missing_target_is_error", "edit_block_text_missing_target_is_error", "replace_asset_payload_missing_target_is_error", "create_asset_duplicate_id_is_fatal", "delete_asset_missing_target_is_error"] },
+    { package: "semio-s-plugin-layout", laws: ["layout_configuration_contract_vectors_match_the_json_oracle", "layout_presence_contract_vectors_match_the_json_oracle", "layout_pdf_page_collection_matches_the_json_oracle", "layout_inspection_summary_matches_the_json_oracle", "background_drawing_and_referenced_model_round_trip_through_text_and_binary", "absent_composition_slots_round_trip_as_none", "typed_document_json_matches_serde_and_every_write_is_credit_bounded", "create_page_obeys_the_inverse_and_absorb_laws", "move_frame_obeys_the_inverse_law", "rename_layout_obeys_the_inverse_law", "delete_page_obeys_the_inverse_law", "reorder_pages_obeys_the_inverse_law", "update_page_margins_obeys_the_inverse_law", "change_frame_fill_obeys_the_inverse_law", "edit_story_and_create_link_obey_the_inverse_law", "create_frame_missing_target_is_error", "delete_frame_missing_target_is_error", "move_frame_missing_target_is_error", "reorder_pages_missing_target_is_error", "rename_page_missing_target_is_error", "change_page_height_missing_target_is_error", "edit_story_missing_target_is_error", "create_page_duplicate_id_is_fatal"] },
+    { package: "semio-s-plugin-fem", laws: ["vector_layer_vectors_match_the_json_oracle", "process_owner_inventory_admits_exact_maximum_and_returns_exact_credit"] },
+    { package: "semio-s-plugin-playbook-procedural", laws: ["procedural_payload_vectors_match_the_json_oracle", "procedural_parameter_controls_match_the_json_oracle", "procedural_actor_descriptor_matches_the_json_oracle", "module_app_declares_window_kinds", "module_manifest_contributes_building_component"] },
+    { package: "semio-s-plugin-writer", laws: ["writer_configuration_contract_vectors_match_the_json_oracle", "writer_presence_contract_vectors_match_the_json_oracle", "pdf_page_text_vectors_match_the_json_oracle", "writer_into_pdf_preserves_text_and_page_size"] },
+    { package: "semio-framework-os-kernel", laws: ["space_history_verbs_match_the_language_neutral_contract", "str_eq_matches_std_partial_eq"] },
+    { package: "semio-s-plugin-mathematical", laws: ["language_neutral_mutations_match_json_oracle_and_restore_base"] },
+    { package: "semio-s-plugin-trinity", laws: ["editor::jack::config::component::contract_vectors::configuration_and_presence_contract_vectors_match_the_json_oracle", "editor::rewriting::config::component::contract_vectors::configuration_and_presence_contract_vectors_match_the_json_oracle", "editor::jack::presence::component::contract_vectors::configuration_and_presence_contract_vectors_match_the_json_oracle", "editor::rewriting::presence::component::contract_vectors::configuration_and_presence_contract_vectors_match_the_json_oracle"] },
+    { package: "semio-framework-os-infinite", laws: ["board_fixture_json_vectors_match_the_json_oracle", "typed_camera_snapshot_matches_current_camera_fixture_without_production_parsing", "retained_draw_rebuild_keeps_url_backed_asset_authority", "retained_draw_rebuild_preserves_prepared_material_colors_from_the_json_oracle", "retained_draw_rebuild_preserves_mixed_group_and_instance_fifo_then_swaps_atomically"] },
+    { package: "semio-s-plugin-playbook", laws: ["configuration_and_presence_contract_vectors_match_the_json_oracle", "render_builder_emits_playbook_list_component_scene"] },
+    { package: "semio-s-plugin-forms", laws: ["forms_configuration_contract_vectors_match_the_json_oracle", "vector_replacement_boundaries_match_the_json_oracle", "semantic_question_controls_match_the_language_neutral_vectors", "renders_blueprint_builder_cards", "large_unrelated_config_and_existing_vector_stay_under_one_bounded_slice", "vector_growth_writes_at_most_sixty_four_components_per_slice", "missing_non_array_and_malformed_targets_keep_best_effort_semantics", "scalar_option_and_object_shapes_stay_intact", "bounded_chunk_values_match_the_json_oracle"] },
+  ].filter(group => !name || name.split(",").some(part => group.package.includes(part)));
+  if (!groups.length) throw new Error("No matching native verification group");
+  let failures = 0;
+  for (const group of groups) {
+    let artifactDir = "";
+    try {
+      const receipts = await runExactCargoLaws({ cwd: process.cwd(), groups: [{ ...group, target: { kind: "lib" } }], artifactDir: join(generated, "native-laws"), cargoArgs: ["-j2"], env: { ...process.env, CARGO_INCREMENTAL: "0", RUSTC_WRAPPER: "", CARGO_TARGET_DIR: join(generated, "target"), TMPDIR: generated }, buildBudgetMs: 0, progress(event) { artifactDir = event.artifactDir; console.log(`[DEBUG] ${event.package} ${event.stage} ${event.law ?? ""}`); } });
+      appendFileSync(report, `\n### Native Verification: ${group.package}\n\n${receipts.map(receipt => `${receipt.assertions} exact native assertions passed; executable SHA-256 ${receipt.sha256}.\n\n${receipt.laws.map(law => "- " + law).join("\n")}`).join("\n")}\n`);
+    } catch (error) {
+      failures += 1;
+      appendFileSync(report, `\n### Native Verification Failure: ${group.package}\n\n${String(error)}\n`);
+      console.error(String(error));
+    } finally {
+      const build = join(artifactDir, "build.stdout");
+      if (existsSync(build)) {
+        const messages = readFileSync(build, "utf8").split("\n").flatMap(line => { try { const row = JSON.parse(line); return row.reason === "compiler-message" ? [row] : []; } catch { return []; } });
+        const errors = messages.filter(row => row.message.level === "error"), warnings = messages.filter(row => row.message.level === "warning");
+        appendFileSync(report, `\nCompiler diagnostics: ${errors.length} errors, ${warnings.length} warnings.\n\n${errors.map(row => row.message.rendered).join("\n")}\n`);
+      }
+    }
+  }
+  process.exit(failures ? 1 : 0);
+}
+if (command === "scope-packages") {
+  const { rustWarningTargetScope } = await import(resolve(process.cwd(), "📜️script.ts"));
+  console.log(JSON.stringify(rustWarningTargetScope(process.cwd(), "wasm32-wasip2").packages));
+  process.exit(0);
+}
 if (command === "scope-test") {
   const { rustWarningTargetScope } = await import(resolve(process.cwd(), "📜️script.ts"));
   const fixture = await Bun.file("🧪️tests/🦀️rust-warnings/🔣️.json").json();
@@ -59,13 +115,14 @@ if (["suggestions", "apply"].includes(command)) {
       for (const span of child.spans) {
         if (row.message.code.code === "deprecated" && span.suggested_replacement !== "try_update") continue;
         const file = resolve(span.file_name);
-        if (!file.startsWith(process.cwd() + "/") || !file.endsWith(".rs")) continue;
+        if (!file.startsWith(process.cwd() + "/") || !file.endsWith(".rs") || !existsSync(file)) continue;
         const content = readFileSync(file);
         if ((file.includes("generated") || /@generated|GENERATED-BY/.test(content.toString().slice(0, 1_000))) && !content.toString().slice(0, 100).includes("Hand-written")) continue;
         const lines = content.toString().split("\n");
         if (span.text.some((line, index) => lines[span.line_start - 1 + index] !== line.text)) continue;
         if (row.message.code.code === "unused_imports") {
           if (span.text.some(line => line.text.includes("pub use"))) continue;
+          if (/#\[cfg\(test\)\]/.test(content.toString())) continue;
           const names = [...row.message.message.matchAll(/`([^`]+)`/g)].map(match => match[1].split("::").at(-1));
           const rest = lines.filter((_, index) => index < span.line_start - 1 || index >= span.line_end).join("\n");
           const unconditionalPluginLeaf = file.includes("✏️s/🔌️plugins/") && !/#\!?\[cfg|\bmod\s+[a-zA-Z_]\w*\s*[;{]/.test(content.toString());

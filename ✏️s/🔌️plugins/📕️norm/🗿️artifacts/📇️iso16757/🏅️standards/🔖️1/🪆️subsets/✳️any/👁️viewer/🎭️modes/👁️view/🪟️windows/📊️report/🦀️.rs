@@ -9,7 +9,7 @@ use crate::artifacts::iso16757::Iso16757Snapshot;
 // 🚧️ SDK GAP: `WindowKit`/`TableWindowKit`/`TableView` are not yet in `semio_framework_plugin`'s
 // curated crate-root re-export list — only reachable through `app`, same class of gap as `Dialect`.
 use semio_framework_plugin::app::{TableView, TableWindowKit, WindowKit};
-use semio_framework_plugin::{UiNode, WindowKindDefinition};
+use semio_framework_plugin::WindowKindDefinition;
 
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = TableWindowKit::KIND_ID;

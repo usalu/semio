@@ -9,7 +9,7 @@
 //! The `serde_json::Value` bridge (`🔖️ValueBridge`) and the play app's `Puzzle2dPlaySnapshot`
 //! newtype (`🔖️PlaySnapshot`) live here too: `puzzle-plugin`'s scene-mutation helpers predate this
 //! typed projection and still mutate a bare `serde_json::Value` scratch fixture directly (out of
-//! scope for this ticket — see `.🦑️repo/🎫️tickets/…/convertpuzzle2d3d5dtotypeddslderiveengine`), so
+//! scope for this ticket — see `.🧬semio/🦑️repo/🎫️tickets/…/convertpuzzle2d3d5dtotypeddslderiveengine`), so
 //! the bridge round-trips through the typed `Puzzle2dSnapshot` (`serde_json::from_value`/
 //! `serde_json::to_value`) instead of hand-rolling per-field JSON splicing — the typed
 //! `Mutation`/`MutationDiff` impls above are the single source of truth either way.
@@ -285,7 +285,7 @@ pub fn inverse_puzzle2d_mutation(projection: &Puzzle2dSnapshot, mutation: &Puzzl
 //#region 🔖️ValueBridge
 // 🌉️ `puzzle-plugin`'s scene-mutation helpers predate this typed projection and stay on a bare
 // `serde_json::Value` scratch fixture (out of scope for this ticket — see
-// `.🦑️repo/🎫️tickets/…/convertpuzzle2d3d5dtotypeddslderiveengine`). Bridging `Puzzle2dMutation`/
+// `.🧬semio/🦑️repo/🎫️tickets/…/convertpuzzle2d3d5dtotypeddslderiveengine`). Bridging `Puzzle2dMutation`/
 // `Puzzle2dDiff` onto that `Value` boundary round-trips through the typed `Puzzle2dSnapshot`
 // (`serde_json::from_value`/`to_value`) rather than hand-splicing JSON per mutation kind — the
 // typed `Mutation<Puzzle2dSnapshot>`/`MutationDiff<Puzzle2dSnapshot>` impls stay the single source

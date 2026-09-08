@@ -1,0 +1,19 @@
+{
+  "name": "@semio-tech/fixture-generator-stdio-pdf-1-4-a",
+  "targets": {
+    "🏭️generator": {
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts generate",
+        "forwardAllArgs": true
+      }
+    },
+    "🏭️generator-manifests": {
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts manifests",
+        "forwardAllArgs": true
+      }
+    }
+  }
+}

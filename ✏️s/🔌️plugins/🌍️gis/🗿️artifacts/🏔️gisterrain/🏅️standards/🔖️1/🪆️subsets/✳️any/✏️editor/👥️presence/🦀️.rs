@@ -1,6 +1,7 @@
 //! 👥️ Gis3d presence — shareable live ephemeral state + mutations.
 
 use protocol::Mutation;
+#[cfg(test)]
 use serde::{Deserialize, Serialize};
 use store::ArtifactPack;
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -35,7 +36,7 @@ impl Default for Gis3dPresence {
 
 impl protocol::MutationDiff<Gis3dPresence> for Gis3dPresence {
     fn apply(&self, _base: &Gis3dPresence) -> protocol::MutationApplyResult<Gis3dPresence> {
-        Ok({ self.clone() })
+        Ok(self.clone())
     }
     fn absorb(&mut self, other: Self) {
         *self = other;

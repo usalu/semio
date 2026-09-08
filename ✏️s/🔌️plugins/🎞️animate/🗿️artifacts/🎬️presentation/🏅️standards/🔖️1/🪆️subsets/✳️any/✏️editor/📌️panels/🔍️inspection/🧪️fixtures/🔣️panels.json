@@ -1,0 +1,54 @@
+{
+  "cases": [
+    {
+      "locale": "en-US",
+      "tiles": "Tiles",
+      "templates": "Tile templates",
+      "figure": "Figure templates",
+      "inspection": "Inspection",
+      "summary": [
+        "Schema",
+        "Tiles"
+      ]
+    },
+    {
+      "locale": "de-DE",
+      "tiles": "Kacheln",
+      "templates": "Kachelvorlagen",
+      "figure": "Abbildungsvorlagen",
+      "inspection": "Inspektion",
+      "summary": [
+        "Schema",
+        "Kacheln"
+      ]
+    }
+  ],
+  "gridActions": [
+    {
+      "rows": 2,
+      "columns": 2
+    },
+    {
+      "rows": 3,
+      "columns": 5
+    }
+  ],
+  "figureSource": {
+    "source": {
+      "src": "/🖼️bauteilbörse.png",
+      "kind": "figure",
+      "frame": {
+        "x": 0.127,
+        "y": 0.1,
+        "width": 0.746,
+        "height": 0.75
+      },
+      "sourceAspect": 1.3638392857142858
+    }
+  },
+  "canvas": {
+    "cameraX": 0,
+    "cameraY": 0,
+    "zoom": 1
+  }
+}

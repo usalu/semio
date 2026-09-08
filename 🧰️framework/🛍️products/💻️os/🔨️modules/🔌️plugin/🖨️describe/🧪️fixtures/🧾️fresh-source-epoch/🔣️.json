@@ -1,0 +1,18 @@
+{
+  "schema": "semio.plugin.fresh-source-epoch-laws/v1",
+  "limits": { "fileBytes": 4194304, "totalBytes": 134217728, "files": 32768, "legs": 16 },
+  "files": [
+    { "path": "Cargo.lock", "text": "version = 4\n" },
+    { "path": "Cargo.toml", "text": "[workspace]\nresolver = \"2\"\n" },
+    { "path": ".cargo/config.toml", "text": "[build]\nincremental = false\n" },
+    { "path": "plugins/gis/Cargo.toml", "text": "[package]\nname = \"semio-s-plugin-gis\"\nversion = \"0.1.0\"\n" },
+    { "path": "plugins/stdio/🦀️.rs", "text": "#[path = \"../../artifacts/🦀️.rs\"] mod artifacts;\n" },
+    { "path": "artifacts/🦀️.rs", "text": "pub const CHANNEL_VERSION: u32 = 14;\n" },
+    { "path": "assets/icon.svg", "text": "<svg viewBox=\"0 0 1 1\"/>\n" }
+  ],
+  "legs": [
+    { "id": "stdio", "package": "semio-s-plugin-stdio", "args": ["--locked", "rustc", "-p", "semio-s-plugin-stdio", "--lib", "--crate-type", "cdylib", "--target", "wasm32-wasip2", "--profile", "wasm-release"], "inputs": ["Cargo.lock", "Cargo.toml", ".cargo/config.toml", "plugins/stdio/🦀️.rs", "artifacts/🦀️.rs"] },
+    { "id": "gis", "package": "semio-s-plugin-gis", "args": ["--locked", "rustc", "-p", "semio-s-plugin-gis", "--lib", "--crate-type", "cdylib", "--target", "wasm32-wasip2", "--profile", "wasm-release"], "inputs": ["Cargo.lock", "Cargo.toml", ".cargo/config.toml", "plugins/gis/Cargo.toml", "plugins/stdio/🦀️.rs", "artifacts/🦀️.rs", "assets/icon.svg"] }
+  ],
+  "cases": ["shared-epoch", "changed-before-first", "changed-between-legs", "changed-after-last", "unknown-compiler-input", "missing-input", "same-bytes-name-replacement", "linked-parent", "oversized-input", "changed-arguments", "changed-environment", "out-of-order-leg", "duplicate-leg-completion", "incomplete-finish", "cancelled", "deadline", "closed-owner"]
+}

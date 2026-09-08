@@ -8,7 +8,6 @@ use crate::artifacts::layout::{Frame, LayoutSnapshot};
 use crate::editor::layout::terminology::{layout_labels, preflight_msg, LayoutLabels};
 use crate::editor::layout::{layout_action, ui_value_map, ui_value_text};
 use semio_framework_plugin::{tree_item_desc, tree_item_with_action, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, UiFixedList, UiText, UiValue};
-use serde_json::json;
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Constants
@@ -177,25 +176,26 @@ pub fn run_layout_preflight(doc: &LayoutSnapshot, labels: &LayoutLabels) -> Vec<
 
 //#region 🔖️Render
 fn layout_tree_item(
-    id: impl Into<String>,
-    label: impl TryInto<Label>,
+    id: impl AsRef<str>,
+    label: impl Into<Label>,
     description: Option<String>,
     icon_id: Option<String>,
     action: Option<(semio_framework_plugin::ActionId, Option<UiValue>)>,
 ) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+    let label = label.into();
     let mut item = match action {
-        Some(action) => tree_item_with_action(id, label, description.clone(), action)?,
-        None => tree_item_desc(id, label, description.clone())?,
+        Some(action) => tree_item_with_action(id, label.as_str(), description.clone(), action)?,
+        None => tree_item_desc(id, label.as_str(), description.clone())?,
     };
     if let semio_framework_plugin::Component::TreeItem(props) = &mut item.component {
         if props.description.is_none() {
             props.description = match description {
-                Some(value) => Some(UiText::try_from_string(value).ok_or_else(|| PluginAssemblyError::new("ui.fixed-capacity", "layout preflight description admission failed"))?),
+                Some(value) => Some(UiText::try_from_string(value).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "layout preflight description admission failed"))?),
                 None => None,
             };
         }
         props.icon = match icon_id {
-            Some(value) => Some(UiText::try_from_string(value).ok_or_else(|| PluginAssemblyError::new("ui.fixed-capacity", "layout preflight icon admission failed"))?),
+            Some(value) => Some(UiText::try_from_string(value).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "layout preflight icon admission failed"))?),
             None => None,
         };
     }
@@ -241,7 +241,7 @@ pub fn render(doc: &LayoutSnapshot, cfg: &crate::editor::layout::config::LayoutC
             items.try_push(item).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "layout preflight issue admission failed"))?;
         }
     }
-    PanelTreeBuilder::new("layout-preflight")?.section("layout-preflight.issues", Some(labels.preflight.into()), true, items)?.build()
+    PanelTreeBuilder::new("layout-preflight")?.section("layout-preflight.issues", Some(crate::editor::layout::ui_label(labels.preflight.as_str())?), true, items)?.build()
 }
 //#endregion 🔖️Render
 
@@ -256,8 +256,8 @@ mod tests {
     async fn preflight_finds_missing_asset() {
         let issues = run_layout_preflight(&crate::artifacts::layout::schema::default_document(), LayoutLabels::labels(semio_framework_plugin::Locale::En, semio_framework_plugin::Terminology::Native));
         assert!(issues.iter().any(|issue| issue.code == "asset.missing"));
-        let mut app = layout_app();
-        let json = render_body(&mut app, LAYOUT_PLAY_BODY_PREFLIGHT);
+        let mut app = layout_app().await;
+        let json = render_body(&mut app, LAYOUT_PLAY_BODY_PREFLIGHT).await;
         assert!(json.contains("asset.missing") || json.contains("Linked asset missing"));
     }
 
@@ -304,7 +304,7 @@ mod tests {
             }],
             "printTarget":"print"
         }"#;
-        let mut doc: LayoutSnapshot = serde_json::from_str(json).expect("preflight fixture");
+        let mut doc: LayoutSnapshot = dsl::os_pack::from_json_str(json).expect("preflight fixture");
         if let Some(story) = doc.stories.iter_mut().find(|story| story.id == "story-overset") {
             story.content = "a".repeat(450);
         }

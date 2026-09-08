@@ -3,7 +3,6 @@
 //! design-full-plan.md §4). Empty today; this triad is the real, conforming lifecycle for the
 //! forward-declared slot rather than leaving the facet's collection un-authorable.
 
-use crate::artifacts::cad::diff::CadDiff;
 use crate::artifacts::cad::mutations::CadMutation;
 use crate::artifacts::cad::CadSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};

@@ -1541,7 +1541,7 @@ export type UiDropOverlaySpec = { title: Label, hint: Label, accept?: string, };
  * [`UiPresence::visible`]. Defaults to fully inert (`Normal`/`Idle`/`false`/`false`) and is omitted
  * from the wire format entirely at default (see `UiPresence::is_default`).
  * 👥️ One peer's mark on the element carrying this `UiPresence` — hover/selection dot plus
- * initials chip (contract-freeze §C7.6 of ticket `.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/
+ * initials chip (contract-freeze §C7.6 of ticket `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/
  * SHARED-PRESENCE-SESSION-COLORS-AND-UNIVERSAL-ARTIFACT-CREATION`). `label` is the actor id
  * itself (no display name is carried this far down the stack — see `PeerPresence`'s own doc
  * comment in the plugin crate); a renderer that has the full roster may substitute a friendlier

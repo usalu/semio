@@ -16,7 +16,7 @@ extern crate semio_framework_schema as schema;
 // 🧩️ `wfc_engine`'s copied-verbatim `🗺️topology`/`🎲️sample`/`🔮️oracle`/… leaves reference these two
 // by the exact same aliases `semio-framework-math` used before this wave — the legal plugin→framework
 // dependency direction, not a new coupling.
-extern crate semio_framework_geometry as geometry;
+#[cfg(test)]
 extern crate semio_framework_graph as graph_core;
 // 🧯️ `clippy::result_large_err` — every `🎮️commands/*` handler returns
 // `Result<Emit<...Mutation, ...ConfigMutation>, Fault>`, the exact signature `ArtifactApp::handle`

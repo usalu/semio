@@ -117,7 +117,7 @@ export function runCmdStatus(cmd: string, args: string[], opts: RunCmdOpts = {})
   return runCmdInternal(cmd, args, opts);
 }
 
-/** 🏃️Like [[runCmd]] but ignores failures — including a budget kill, which is the desired never-hang behavior for optional commands. */
+/** 🏃️Like [[runCmd]] but ignores failures, including timeouts from an explicitly configured budget. */
 export function tryRun(cmd: string, args: string[], opts: RunCmdOpts = {}): void {
   try {
     runCmd(cmd, args, opts);

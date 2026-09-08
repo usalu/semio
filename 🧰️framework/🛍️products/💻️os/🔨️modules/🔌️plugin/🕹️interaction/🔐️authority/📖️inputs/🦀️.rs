@@ -11,37 +11,15 @@ struct InputReadState<D, C> {
     closing: bool,
 }
 
-/// 🔒️ Publication checks use exact Store lease authority; returning roots waits for both registries.
+/// 🔒️ Frozen input roots remain retained until both Store registries accept their returns.
 pub(crate) struct LocalInteractionInputReads<D, C> {
     owned: ManuallyDrop<InputReadState<D, C>>,
-    document_generation: u64,
-    document_revision: [u8; 32],
-    config_generation: u64,
-    config_revision: [u8; 32],
 }
 
 impl<D, C> LocalInteractionInputReads<D, C> {
-    /// 📥️ Called under the app's exclusive owner with the read and fixed identity captured together.
-    pub(crate) fn new(document: SnapshotRead<D>, document_generation: u64, document_revision: [u8; 32], config: SnapshotRead<C>, config_generation: u64, config_revision: [u8; 32]) -> Self {
-        Self::from_optional(Some(document), document_generation, document_revision, Some(config), config_generation, config_revision)
-    }
-
     /// 🧯️ Failed capture still retains every successfully issued lease until exact registry return.
-    pub(crate) fn from_optional(document: Option<SnapshotRead<D>>, document_generation: u64, document_revision: [u8; 32], config: Option<SnapshotRead<C>>, config_generation: u64, config_revision: [u8; 32]) -> Self {
-        Self { owned: ManuallyDrop::new(InputReadState { document, config, returned: [None, None], closing: false }), document_generation, document_revision, config_generation, config_revision }
-    }
-
-    pub(crate) fn document_revision(&self) -> [u8; 32] {
-        self.document_revision
-    }
-    pub(crate) fn config_revision(&self) -> [u8; 32] {
-        self.config_revision
-    }
-
-    pub(crate) fn authority_is_current(&self) -> bool {
-        !self.owned.closing
-            && self.owned.document.as_ref().is_some_and(|read| read.commit_authority_matches(self.document_generation, self.document_revision))
-            && self.owned.config.as_ref().is_some_and(|read| read.commit_authority_matches(self.config_generation, self.config_revision))
+    pub(crate) fn from_optional(document: Option<SnapshotRead<D>>, config: Option<SnapshotRead<C>>) -> Self {
+        Self { owned: ManuallyDrop::new(InputReadState { document, config, returned: [None, None], closing: false }) }
     }
 
     pub(crate) fn begin_close(&mut self) {

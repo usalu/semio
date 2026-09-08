@@ -5,7 +5,9 @@ use semio_framework_value_derive::{FromValue, ToValue};
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[dsl(keyword = "reorder-nodes")]
-pub struct ReorderNodes { pub order: Vec<String> }
+pub struct ReorderNodes {
+    pub order: Vec<String>,
+}
 
 impl protocol::MutationKind<DagSnapshot, DagMutation> for ReorderNodes {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "reorder", entity: "nodes", kind: "reorder-nodes", record: "ReorderedNodes" };
@@ -15,13 +17,19 @@ impl protocol::MutationKind<DagSnapshot, DagMutation> for ReorderNodes {
     fn inverse(&self, base: &DagSnapshot) -> Vec<DagMutation> {
         vec![DagMutation::ReorderNodes(Self { order: base.nodes.iter().map(|node| node.id.clone()).collect() })]
     }
-    fn label(&self) -> String { "Reorder nodes".into() }
-    fn target(&self) -> Vec<String> { vec!["nodes".into()] }
+    fn label(&self) -> String {
+        "Reorder nodes".into()
+    }
+    fn target(&self) -> Vec<String> {
+        vec!["nodes".into()]
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
     #[test]
-    fn direct_leaf_contract() { super::super::super::dag_direct_tests::assert_leaf_contract::<ReorderNodes>(11, DagMutation::ReorderNodes, include_str!("🔣️.json")); }
+    fn direct_leaf_contract() {
+        super::super::super::dag_direct_tests::assert_leaf_contract::<ReorderNodes>(11, DagMutation::ReorderNodes, include_str!("🔣️.json"));
+    }
 }

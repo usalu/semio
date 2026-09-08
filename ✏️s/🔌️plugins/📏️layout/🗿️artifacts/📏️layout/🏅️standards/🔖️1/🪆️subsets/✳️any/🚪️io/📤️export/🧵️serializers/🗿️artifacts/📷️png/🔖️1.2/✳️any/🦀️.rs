@@ -5,6 +5,5 @@ use semio_s_plugin_stdio::artifacts::png::PngSnapshot;
 pub fn register() {}
 
 pub fn serialize(from: &LayoutSnapshot) -> Result<PngSnapshot, store::PackError> {
-    let value = serde_json::to_value(from).map_err(|e| store::PackError::Schema(e.to_string()))?;
-    serde_json::from_value(value).map_err(|e| store::PackError::Schema(e.to_string()))
+    <PngSnapshot as dsl::FromValue>::from_value(dsl::ToValue::to_value(from)).map_err(|error| store::PackError::Schema(error.to_string()))
 }

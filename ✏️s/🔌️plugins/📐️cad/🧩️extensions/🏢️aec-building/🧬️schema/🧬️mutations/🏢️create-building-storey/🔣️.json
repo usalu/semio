@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/📐️cad/🧩️extensions/🏢️aec-building/🧬️schema/🧬️mutations/🏢️create-building-storey",
+  "semanticKind": "create-building-storey",
+  "displayName": "Create Building Storey",
+  "emoji": "🏢️",
+  "aggregateVariant": "CreateBuildingStorey",
+  "payloadSchema": "🧬️.schema.json",
+  "textOpcode": null,
+  "binaryTag": null,
+  "invertibility": "plan",
+  "diffParticipation": "plan",
+  "outcomeClasses": [
+    "error",
+    "applied"
+  ],
+  "composition": "composite",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema"
+  ]
+}

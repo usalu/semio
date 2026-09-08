@@ -9,21 +9,11 @@
 
 use crate::artifacts::playbook::PlaybookStep;
 use schema::ArtifactSchema;
-// 🔬️ `Serialize`/`Deserialize` survive ONLY as a `#[cfg(test)]` differential oracle (see
-// `scene_owner_fixture_proves_identity_isolation_aba_wire_omission_and_bounded_close`'s
-// "third-party serde oracle" case in `../../🦀️.rs`, which checks `ArtifactChild::local_owner`'s
-// `#[serde(skip)]` treatment against real serde) — never a production dependency of this crate.
-// `store::ArtifactChild<S>` itself only derives `Serialize`/`Deserialize` under the same
-// `#[cfg(test)]` gate, so this struct's own derive must mirror it exactly.
-#[cfg(test)]
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Snapshot
 /// 📸️ Persisted playbook document snapshot (persistent fields of the artifact). `#[child(...)]`
 /// drives `#[derive(ArtifactSchema)]`'s slot-table emission; never hand-written.
 #[derive(Clone, Debug, PartialEq, ArtifactSchema)]
-#[cfg_attr(test, derive(Serialize, Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[artifact_schema(id = "s.playbook.playbook")]
 pub struct PlaybookSnapshot {
     #[state(artifact)]

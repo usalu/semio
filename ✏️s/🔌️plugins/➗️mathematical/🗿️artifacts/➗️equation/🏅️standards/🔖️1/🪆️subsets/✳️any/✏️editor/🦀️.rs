@@ -1109,7 +1109,6 @@ where
     M::Diff: protocol::MutationDiff<P>,
 {
     fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {
-        use protocol::{Mutation as _, MutationDiff as _};
         if !grant.permits_one() || self.cancelled {
             return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked);
         }
@@ -1383,8 +1382,8 @@ pub(crate) mod testkit {
     pub type MathApp = VcsArtifactApp<EditorApp<EquationPlayApp>>;
 
     /// 🧪️ A bare app instance — no `AppActionRegistry`, so undeclared internal commands dispatch freely.
-    pub fn math_app() -> MathApp {
-        new_app::<EditorApp<EquationPlayApp>>()
+    pub async fn math_app() -> MathApp {
+        new_app::<EditorApp<EquationPlayApp>>().await
     }
 
     /// ✏️ Adapts `create_equation_app`'s `AppDefinition` (contract §2.4) into the `App {
@@ -1396,18 +1395,18 @@ pub(crate) mod testkit {
     }
 
     /// 🧪️ An app wired to the real manifest registry — enforces View/Shell kind discipline.
-    pub fn math_app_with_registry() -> MathApp {
-        new_app_with_registry::<EditorApp<EquationPlayApp>>(equation_app_manifest_for_testkit)
+    pub async fn math_app_with_registry() -> MathApp {
+        new_app_with_registry::<EditorApp<EquationPlayApp>>(equation_app_manifest_for_testkit).await
     }
 
-    pub fn dispatch(app: &mut MathApp, command: EquationCommand) -> InvocationResult {
-        app.dispatch_typed(command, &meta("local")).expect("dispatch")
+    pub async fn dispatch(app: &mut MathApp, command: EquationCommand) -> InvocationResult {
+        app.dispatch_typed(command, &meta("local")).await.expect("dispatch")
     }
 
-    pub fn render(app: &mut MathApp, body_key: &str) -> String {
+    pub async fn render(app: &mut MathApp, body_key: &str) -> String {
         // 🌱️ `UiNode` (`semio-framework-plugin`, framework-owned) has not itself gained `ToValue` —
         // `Debug` gives every test caller here the same "does the render mention X" substring check.
-        format!("{:?}", app.render(body_key, None, &ViewModel::default()).expect("render"))
+        format!("{:?}", app.render(body_key, None, &ViewModel::default()).await.expect("render"))
     }
 }
 //#endregion 🧪️Testkit
@@ -1452,7 +1451,7 @@ mod tests {
         assert_eq!(fixture["contract"]["workItems"], 65_536);
         assert_eq!(fixture["contract"]["maximumStepMillis"], 8);
         assert_eq!(fixture["actions"], json::array(EQUATION_TOOL_IDS.iter().map(|id| Value::from(*id))));
-        assert_eq!(fixture["hostileCases"].as_array().map(<[Value]>::len), Some(14));
+        assert_eq!(fixture["hostileCases"].as_array().map(|values| values.len()), Some(14));
         let factory = EquationCommandJobFactory::new("s.mathematical.equation@1/*#editor");
         let keys = <EquationCommandJobFactory as semio_framework::ToolJobFactory>::keys(&factory);
         assert_eq!(keys.len(), EQUATION_TOOL_IDS.len());
@@ -1711,13 +1710,13 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn an_unknown_body_key_renders_a_diagnostic_instead_of_panicking() {
         use crate::editor::equation::testkit::render;
-        let mut app = math_app();
-        assert!(render(&mut app, "equation.play.nope").contains("Unknown body"));
+        let mut app = math_app().await;
+        assert!(render(&mut app, "equation.play.nope").await.contains("Unknown body"));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn command_surface_is_registry_clean() {
-        let _app = math_app_with_registry();
+        let _app = math_app_with_registry().await;
     }
     //#endregion 🔖️CrossCutting
 

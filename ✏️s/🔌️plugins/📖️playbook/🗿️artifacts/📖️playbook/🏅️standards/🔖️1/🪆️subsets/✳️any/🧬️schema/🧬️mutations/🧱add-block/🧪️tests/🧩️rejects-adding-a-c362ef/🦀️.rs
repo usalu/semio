@@ -23,13 +23,13 @@ const DIFF_ABSENT: &str = include_str!("🔺️diff/🚫️.absent");
 const OUTCOME: &str = include_str!("🎯️outcome/🔣️.json");
 
 fn mutation() -> PlaybookMutation {
-    serde_json::from_str(MUTATION).expect("mutation decodes")
+    dsl::os_pack::from_json_str(MUTATION).expect("mutation decodes")
 }
 fn before() -> PlaybookSnapshot {
-    serde_json::from_str(BEFORE).expect("before snapshot decodes")
+    dsl::os_pack::from_json_str(BEFORE).expect("before snapshot decodes")
 }
 fn expected_after() -> PlaybookSnapshot {
-    serde_json::from_str(AFTER).expect("after snapshot decodes")
+    dsl::os_pack::from_json_str(AFTER).expect("after snapshot decodes")
 }
 
 /// ▶️ A rejected `add-block` leaves the document byte-identical to the committed `after`.
@@ -69,12 +69,12 @@ async fn the_committed_diff_is_declared_absent() {
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {
-        let decoded: PlaybookSnapshot = serde_json::from_str(text).expect("snapshot decodes");
-        let reencoded = serde_json::to_value(&decoded).expect("snapshot encodes");
+        let decoded: PlaybookSnapshot = dsl::os_pack::from_json_str(text).expect("snapshot decodes");
+        let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::os_pack::to_json_string(&decoded)).expect("snapshot encodes");
         let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
         assert_eq!(reencoded, original, "add-block/rejects-adding-a-block-to-a-missing-step: committed {label} JSON is not canonical");
     }
-    let reencoded = serde_json::to_value(mutation()).expect("mutation encodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::os_pack::to_json_string(&mutation())).expect("mutation encodes");
     let original: serde_json::Value = serde_json::from_str(MUTATION).expect("mutation reparses");
     assert_eq!(reencoded, original, "add-block/rejects-adding-a-block-to-a-missing-step: committed mutation JSON is not canonical");
     assert!(original.get("index").is_none(), "an appended block omits `index` entirely rather than serializing null");

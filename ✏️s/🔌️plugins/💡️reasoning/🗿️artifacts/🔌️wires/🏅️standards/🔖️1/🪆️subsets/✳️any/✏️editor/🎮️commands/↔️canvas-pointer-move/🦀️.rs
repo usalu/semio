@@ -25,7 +25,7 @@ pub fn handle(payload: &CanvasPointerMove, doc: &ArtifactView<'_, WiresSnapshot>
     let (dx, dy) = ((payload.x - config.drag_last_x) / zoom, (payload.y - config.drag_last_y) / zoom);
     Ok(Emit {
         artifact_mutations: vec![crate::artifacts::wires::mutations::move_node(drag_node_id.clone(), cur_x + dx, cur_y + dy)],
-        config_mutations: vec![WiresConfigMutation::SetDrag { node_id: Some(drag_node_id.clone()), last_x: payload.x, last_y: payload.y }],
+        config_mutations: vec![WiresConfigMutation::SetDrag(crate::editor::wires::config::SetDrag { node_id: Some(drag_node_id.clone()), last_x: payload.x, last_y: payload.y })],
         coalesce_key: Some(format!("drag:{drag_node_id}")),
         ..Default::default()
     })

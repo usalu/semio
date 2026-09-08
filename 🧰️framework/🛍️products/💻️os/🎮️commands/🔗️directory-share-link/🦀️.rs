@@ -4,7 +4,7 @@
 //! ttlSecs }` before it reaches `DirectoryClient.command` → `POST /directory/commands`; the
 //! resulting `DirectoryEvent`s (and the invite token itself, riding the command result) arrive back
 //! over `/directory/socket/v1`, never an optimistic local mutation. See contract-freeze.md §C6 of
-//! `.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS/`.
+//! `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS/`.
 
 //#region 🔖️Command
 /// 🪪️ Canonical OS command id.

@@ -6,8 +6,8 @@ use semio_framework_plugin::plugin_app_close_prelude::*;
 use semio_framework_plugin::{ExecutionMode, Plugin, PluginApp, PluginAssemblyError};
 
 //#region 🗃️Apps
-/// 🗃️ Closed runtime app fleet for all fifteen norm-family editor/viewer pairs.
 semio_framework_dispatch_macros::dyn_enum_close! {
+    /// 🗃️ Closed runtime app fleet for all fifteen norm-family editor/viewer pairs.
     pub enum NormApps: PluginApp {
         Din4108Editor(VcsArtifactApp<EditorApp<crate::editor::din4108::Din4108PlayApp>>),
         Din4108Viewer(VcsArtifactApp<ViewerApp<crate::viewer::din4108::Din4108Viewer>>),

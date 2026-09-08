@@ -10,7 +10,8 @@
       },
       "outputs": [
         "{projectRoot}/pkg"
-      ]
+      ],
+      "cache": true
     },
     "test": {
       "executor": "nx:run-commands",

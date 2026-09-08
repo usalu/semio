@@ -12,7 +12,8 @@
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
-use super::{NativeCodecProviderSetV1, TrustedCatalogLoader, VerifiedTrustedCatalog};
+use super::{TrustedCatalogLoader, VerifiedTrustedCatalog};
+use crate::artifact_authority::native_openable_provider::NativeCodecProviderSetV1;
 use crate::artifact_authority::{AuthorityError, AuthorityLimits, AuthorityOperationControl, AuthorityProgress, OperationContext};
 use crate::inference::VerifiedGisMapArtifactBindingV1;
 use directory::os_directory::hex_lower;
@@ -101,7 +102,7 @@ pub async fn verified_gis_map_test_profile(root: &Path) -> Result<VerifiedGisMap
     let map_pack_schema_hash = native_codecs.iter().find(|codec| codec["artifactKind"] == "s.gis.gismap").ok_or_else(|| AuthorityError::Catalog("GIS receipts declare no s.gis.gismap codec".to_owned()))?["packSchemaHash"].clone();
     let editor =
         descriptor.manifest.apps.iter().find(|app| app.role == semio_framework::AppRole::Editor && app.dialect.artifact_kind == "s.gis.gismap").ok_or_else(|| AuthorityError::Catalog("GIS assembly declares no s.gis.gismap editor".to_owned()))?;
-    let window_kind = editor.window_kinds.first().ok_or_else(|| AuthorityError::Catalog("GIS Map editor declares no window kind".to_owned()))?;
+    let window_kind = editor.window_kinds.first();
     let package = serde_json::json!({ "pluginId": descriptor.manifest.plugin_id, "packageId": descriptor.package_id, "version": descriptor.manifest.version });
     let target = serde_json::json!({
         "artifactKind": "s.gis.gismap",
@@ -130,6 +131,7 @@ pub async fn verified_gis_map_test_profile(root: &Path) -> Result<VerifiedGisMap
         }],
         "packages": [{
             "pluginId": package["pluginId"], "packageId": package["packageId"], "version": package["version"], "role": "plugin", "dependencies": [],
+            "executionProtocol": { "appChannelVersion": descriptor.execution_protocol.app_channel_version },
             "component": { "path": "component.wasm", "byteLength": SYNTHETIC_COMPONENT.len(), "sha256": component_sha256, "blake3": hex_lower(component_blake3.finalize().as_bytes()) },
             "descriptor": { "path": "descriptor.semio", "byteLength": descriptor_bytes.len(), "sha256": hex_lower(&Sha256::digest(&descriptor_bytes)) },
             "browserActor": {

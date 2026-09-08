@@ -8,6 +8,9 @@
     { "verb": "start", "record": "Started" },
     { "verb": "finish", "record": "Finished" },
     { "verb": "seal", "record": "Sealed" },
+    { "verb": "stage", "record": "Staged" },
+    { "verb": "discard", "record": "Discarded" },
+    { "verb": "verify", "record": "Verified" },
     { "verb": "modify", "record": null },
     { "verb": "set-snapshot", "record": null }
   ]

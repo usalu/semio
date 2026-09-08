@@ -4,46 +4,94 @@
   "root": "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust",
   "sourceRoot": "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust",
   "projectType": "library",
-  "tags": ["lang:rust", "role:framework", "family:replication"],
+  "tags": [
+    "lang:rust",
+    "role:framework",
+    "family:replication"
+  ],
   "namedInputs": {
-    "default": ["{workspaceRoot}/🧰️framework/🔨️modules/📡️replication/**/*.rs", "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/**/*", "{projectRoot}/**/*"]
+    "default": [
+      "{workspaceRoot}/🧰️framework/🔨️modules/📡️replication/**/*.rs",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🌱️value/**/*",
+      "{projectRoot}/**/*"
+    ]
   },
   "targets": {
     "presence-peer-codec-check": {
       "executor": "nx:run-commands",
-      "options": { "cwd": "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust", "command": "bun ./📜️script.ts presence-peer-codec-check --oracle-only", "forwardAllArgs": true }
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts presence-peer-codec-check --oracle-only",
+        "forwardAllArgs": true
+      }
     },
     "presence-peer-codec-native-check": {
       "executor": "nx:run-commands",
-      "options": { "cwd": "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust", "command": "bun ./📜️script.ts presence-peer-codec-check", "forwardAllArgs": true }
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts presence-peer-codec-check",
+        "forwardAllArgs": true
+      }
     },
     "retained-record-observation-check": {
       "executor": "nx:run-commands",
-      "options": { "cwd": "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust", "command": "bun ./📜️script.ts retained-record-observation-check", "forwardAllArgs": true }
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts retained-record-observation-check",
+        "forwardAllArgs": true
+      }
     },
     "retained-verification-check": {
       "executor": "nx:run-commands",
-      "options": { "cwd": "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust", "command": "bun ./📜️script.ts retained-verification-check", "forwardAllArgs": true }
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts retained-verification-check",
+        "forwardAllArgs": true
+      }
     },
     "test-local-interaction-native": {
       "executor": "nx:run-commands",
-      "options": { "cwd": "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust", "command": "bun ./📜️script.ts test-local-interaction-native", "forwardAllArgs": true }
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-local-interaction-native",
+        "forwardAllArgs": true
+      }
     },
     "test-local-interaction-source": {
       "executor": "nx:run-commands",
-      "options": { "cwd": "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust", "command": "bun ./📜️script.ts test-local-interaction-source", "forwardAllArgs": true }
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-local-interaction-source",
+        "forwardAllArgs": true
+      }
     },
     "test-source": {
       "executor": "nx:run-commands",
-      "options": { "cwd": "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust", "command": "bun ./📜️script.ts test-source", "forwardAllArgs": true }
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-source",
+        "forwardAllArgs": true
+      }
     },
     "build": {
       "executor": "nx:run-commands",
-      "options": { "cwd": "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust", "command": "bun ./📜️script.ts build", "forwardAllArgs": true }
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts build",
+        "forwardAllArgs": true
+      },
+      "cache": true,
+      "outputs": [
+        "{projectRoot}/dist/build"
+      ]
     },
     "test": {
       "executor": "nx:run-commands",
-      "options": { "cwd": "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust", "command": "bun ./📜️script.ts test", "forwardAllArgs": true }
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test",
+        "forwardAllArgs": true
+      }
     }
   }
 }

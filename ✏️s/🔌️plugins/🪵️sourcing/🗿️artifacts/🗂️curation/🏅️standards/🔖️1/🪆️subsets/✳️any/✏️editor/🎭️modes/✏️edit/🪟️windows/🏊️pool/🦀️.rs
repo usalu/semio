@@ -1,7 +1,7 @@
 //! 🏊️ Sourcing curation app — the pool window: the full stock catalogue with filter chrome + drag source.
 
 use crate::artifacts::curation::schema::{curated_count, filtered_stock};
-use crate::artifacts::curation::{CurationSnapshot, Filters, SortDirection};
+use crate::artifacts::curation::{CurationSnapshot, SortDirection};
 use crate::editor::sourcing::config::SourcingCurationConfig;
 use crate::editor::sourcing::terminology::SourcingLabels;
 use semio_framework_plugin::app::{TableView, TableWindowKit, WindowKit};

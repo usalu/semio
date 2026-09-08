@@ -3,7 +3,6 @@
 
 use crate::artifacts::wires::diff::{diff_board_fixture, WiresDiff};
 use crate::artifacts::wires::mutations::set_node_field;
-use crate::artifacts::wires::schema::node_position;
 use crate::artifacts::wires::standards::v1::subsets::any::schema::inferences::find_board_node;
 use crate::artifacts::wires::WiresSnapshot;
 use dsl::DslValue;

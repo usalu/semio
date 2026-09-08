@@ -18,5 +18,8 @@
     "url": "https://github.com/usalu/semio.git",
     "directory": "framework/module/schema"
   },
-  "bundleKind": "library"
+  "bundleKind": "library",
+  "nx": {
+    "includedScripts": []
+  }
 }

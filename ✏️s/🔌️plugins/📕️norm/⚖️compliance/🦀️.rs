@@ -592,6 +592,7 @@ impl<F: NormFamily> NormHost<F> {
 /// op-text field. Mirrors vcs's own private `escape_text_field`/`unescape_text_field` convention
 /// exactly (same three escapes, same order) so escaping behaves identically repo-wide, even though vcs
 /// does not expose those helpers for reuse.
+#[cfg(test)]
 pub(crate) fn escape_op_text_field(value: &str) -> String {
     let mut out = String::with_capacity(value.len());
     for ch in value.chars() {

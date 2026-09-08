@@ -1051,7 +1051,7 @@ impl store::ArtifactStoreOneItemPreparationFactory<EnergyModelSnapshot, EnergyMo
 
 impl store::ArtifactStoreOneItemPreparation<EnergyModelSnapshot, EnergyModelMutation> for EnergyModelStorePreparation {
     fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {
-        use protocol::{Mutation as _, MutationDiff as _};
+        use protocol::Mutation as _;
         if !grant.permits_one() || self.cancelled {
             return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked);
         }
@@ -1407,7 +1407,7 @@ mod tests {
         assert_eq!(roster, <EnergyModelEditorCommand as protocol::OpBinary>::TOOL_JOB_IDS.iter().copied().collect::<BTreeSet<_>>());
         assert_eq!(roster, <EnergyModelCommandJobFactory as ArtifactOwnedToolJobFactory>::TOOL_IDS.iter().copied().collect::<BTreeSet<_>>());
         assert_eq!(roster, <EnergyModelCommandJobFactory as ArtifactOwnedToolJobFactory>::PUBLICATION_CONTRACTS.iter().map(|contract| contract.tool_id).collect::<BTreeSet<_>>());
-        assert_eq!(roster, <EnergyModelEditor as ArtifactEditor>::bounded_first_step_tool_proofs().iter().map(|proof| proof.tool_id).collect::<BTreeSet<_>>());
+        assert_eq!(roster, <EnergyModelEditor as ArtifactEditor>::bounded_first_step_tool_proofs().iter().map(|proof| proof.tool_id()).collect::<BTreeSet<_>>());
         let def = definition();
         let migrated = def
             .window_kinds
@@ -1471,7 +1471,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn loading_an_example_swaps_the_document_through_an_effect_and_never_a_mutation() {
         let snapshot = EnergyModelSnapshot::default();
-        let history = HistoryView::default();
+        let history = HistoryView::empty();
         let doc = ArtifactView::new(&snapshot, &history);
         for (id, _, model) in example_rows() {
             let emit = reduce(&EnergyModelEditorCommand::SetActiveExample { example_id: id.to_string() }, &doc).unwrap_or_else(|error| panic!("example {id} must load: {error:?}"));
@@ -1481,8 +1481,8 @@ mod tests {
             let loaded = <EnergyModelSnapshot as store::ArtifactPack>::decode_pack(pack).expect("the emitted pack decodes");
             assert_eq!(loaded.model, model, "example {id} loaded a different model than its own leaf declares");
         }
-        let fault = reduce(&EnergyModelEditorCommand::SetActiveExample { example_id: "nonsense".into() }, &doc).expect_err("an unknown example id is refused");
-        assert_eq!(fault.code.as_str(), "mutation.target-missing");
+        let fault = reduce(&EnergyModelEditorCommand::SetActiveExample { example_id: "nonsense".into() }, &doc).err().expect("an unknown example id is refused");
+        assert_eq!(fault.code.0.as_str(), "mutation.target-missing");
     }
 
     fn model_with_one_zone() -> crate::model::Model {
@@ -1521,8 +1521,8 @@ mod tests {
     }
 
     fn applied(snapshot: &EnergyModelSnapshot, command: &EnergyModelEditorCommand) -> crate::model::Model {
-        use protocol::{Mutation as _, MutationDiff as _};
-        let history = HistoryView::default();
+        use protocol::Mutation as _;
+        let history = HistoryView::empty();
         let doc = ArtifactView::new(snapshot, &history);
         let emit = reduce(command, &doc).expect("document verb reduces");
         let mut next = snapshot.clone();
@@ -1608,10 +1608,10 @@ mod tests {
             multiplier: 1,
         });
         let snapshot = snapshot_of(&model);
-        let history = HistoryView::default();
+        let history = HistoryView::empty();
         let doc = ArtifactView::new(&snapshot, &history);
-        let fault = reduce(&EnergyModelEditorCommand::DeleteZone { zone: 1 }, &doc).expect_err("a referenced zone is refused");
-        assert_eq!(fault.code.as_str(), "mutation.target-in-use");
+        let fault = reduce(&EnergyModelEditorCommand::DeleteZone { zone: 1 }, &doc).err().expect("a referenced zone is refused");
+        assert_eq!(fault.code.0.as_str(), "mutation.target-in-use");
     }
 
     /// 🧱️ The SI guards run BEFORE the seam, so they are observable whatever the vocabulary state.
@@ -1620,7 +1620,7 @@ mod tests {
         let mut model = model_with_one_zone();
         model.materials.push(Material { id: EntityId(1), name: "Concrete".into(), thickness_m: 0.1, conductivity_w_m_k: 1.0, density_kg_m3: 2000.0, specific_heat_j_kg_k: 900.0, thermal_absorptance: 0.9, solar_absorptance: 0.6, visible_absorptance: 0.6 });
         let snapshot = snapshot_of(&model);
-        let history = HistoryView::default();
+        let history = HistoryView::empty();
         let doc = ArtifactView::new(&snapshot, &history);
         for command in [
             EnergyModelEditorCommand::SetMaterialProperty { material: 1, property: "conductivityWMK".into(), value: -1.0 },
@@ -1628,11 +1628,11 @@ mod tests {
             EnergyModelEditorCommand::SetRunPeriod { start_month: 13, start_day: 1, end_month: 12, end_day: 31 },
             EnergyModelEditorCommand::CreateZone { name: "Void".into(), volume_m3: 0.0, multiplier: 1, conditioned: true },
         ] {
-            let fault = reduce(&command, &doc).expect_err("an out-of-range payload is refused");
-            assert_eq!(fault.code.as_str(), "mutation.invalid-payload", "{} failed for the wrong reason", command.action_id());
+            let fault = reduce(&command, &doc).err().expect("an out-of-range payload is refused");
+            assert_eq!(fault.code.0.as_str(), "mutation.invalid-payload", "{} failed for the wrong reason", command.action_id());
         }
-        let fault = reduce(&EnergyModelEditorCommand::SetMaterialProperty { material: 9, property: "conductivityWMK".into(), value: 0.04 }, &doc).expect_err("an unknown material is refused");
-        assert_eq!(fault.code.as_str(), "mutation.target-missing");
+        let fault = reduce(&EnergyModelEditorCommand::SetMaterialProperty { material: 9, property: "conductivityWMK".into(), value: 0.04 }, &doc).err().expect("an unknown material is refused");
+        assert_eq!(fault.code.0.as_str(), "mutation.target-missing");
     }
 
     //#region 🧵️DispatchLaw
@@ -1679,7 +1679,7 @@ mod tests {
             match app.handle_action(tool_id, Some(&staged), &semio_framework_plugin::testkit::meta("local")).await {
                 Ok(_) => reached += 1,
                 Err(fault) => {
-                    assert!(!fault.code.as_str().starts_with("interactive-job."), "action {tool_id} never reached the app: {} — {}", fault.code.as_str(), fault.message);
+                    assert!(!fault.code.0.as_str().starts_with("interactive-job."), "action {tool_id} never reached the app: {} — {}", fault.code.0.as_str(), fault.message);
                     reached += 1;
                 }
             }

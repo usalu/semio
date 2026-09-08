@@ -1,0 +1,4 @@
+# Direct set-info-title GraphQL payload.
+input SetInfoTitleMutationInput {
+  title: String!
+}

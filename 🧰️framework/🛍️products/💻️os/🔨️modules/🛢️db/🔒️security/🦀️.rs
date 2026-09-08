@@ -3,7 +3,7 @@
 //! `SignatureVerifier` signing bridge (`protocol_core`'s crypto traits — this crate never picks a
 //! concrete scheme), a bounded replay guard, token-bucket DoS budgets, structural field
 //! redaction, tenant isolation, and audit event emission over `Emit`. Frozen contract:
-//! `.🦑️repo/🎫️tickets/26/07/27/INTRODUCE-DB-PROTOCOL-COMMAND-LAYER-AND-VCS-SLIMMING/contract.md`
+//! `.🧬semio/🦑️repo/🎫️tickets/26/07/27/INTRODUCE-DB-PROTOCOL-COMMAND-LAYER-AND-VCS-SLIMMING/contract.md`
 //! (`## db crate family`).
 //!
 //! 🎯️ Design choice: this crate sits BELOW `db_artifact` per the dependency table, so per the

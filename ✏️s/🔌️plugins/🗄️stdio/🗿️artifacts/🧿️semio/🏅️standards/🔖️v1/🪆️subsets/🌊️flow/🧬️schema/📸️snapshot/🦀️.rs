@@ -7,9 +7,6 @@
 use crate::artifacts::semio::standards::v1::subsets::base::schema::geometry::SemioPoint2;
 use crate::artifacts::semio::standards::v1::subsets::base::schema::triples::{split_top_level, strip_brackets};
 
-#[path = "💾️binary/🦀️.rs"]
-pub mod binary;
-
 //#region 🔖️PortRef
 /// 🔌️ Addresses one named port on one node — the endpoint shape `FlowEdge` connects through.
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]

@@ -3,7 +3,7 @@
 //! text codec (`write_json_pretty`), so this hop is `IoFidelity::Exact`.
 
 use crate::artifacts::vcs::VcsSnapshot;
-use dsl::{FromValue, ToValue};
+use dsl::ToValue;
 use semio_framework::io::io_mechanism::Serializer;
 use semio_framework::io_schema::{Dialect, IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_plugin::{StandardId, SubsetId};

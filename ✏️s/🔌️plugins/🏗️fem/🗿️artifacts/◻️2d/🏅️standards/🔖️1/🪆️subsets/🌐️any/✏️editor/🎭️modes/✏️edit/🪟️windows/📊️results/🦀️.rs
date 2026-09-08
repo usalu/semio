@@ -113,7 +113,7 @@ fn von_mises_legend_layers(min: f64, max: f64) -> Vec<Value> {
 
 //#region 🔖️Render
 /// 📊️ Results window dispatcher — picks the static/modal/buckling render based on `display`.
-pub fn render(doc: &Fem2dSnapshot, display: &ResultDisplay, camera: &FemCamera) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn render(doc: &Fem2dSnapshot, display: &ResultDisplay, camera: &FemCamera) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     match display.mode {
         DisplayMode::Static => render_static(doc, display.source_id.as_deref(), camera),
         DisplayMode::Modal(mode_index) => render_modal(doc, mode_index, camera),
@@ -121,7 +121,7 @@ pub fn render(doc: &Fem2dSnapshot, display: &ResultDisplay, camera: &FemCamera) 
     }
 }
 
-fn placeholder(label: Label) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+fn placeholder(label: Label) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     built_text_node(label).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fem2d results placeholder admission failed"))
 }
 
@@ -130,7 +130,7 @@ fn placeholder(label: Label) -> semio_framework_plugin::UiAssemblyResult<semio_f
 /// nodal-averaged, marching-triangle-banded von-Mises stress contour with a color-swatch legend.
 /// `source_id` selects a `fem2d_solve_all` case/combination id, falling back to the first load case
 /// when `None`/unknown (preserves v0's default behavior).
-fn render_static(doc: &Fem2dSnapshot, source_id: Option<&str>, camera: &FemCamera) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+fn render_static(doc: &Fem2dSnapshot, source_id: Option<&str>, camera: &FemCamera) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let results = match crate::fem2d_engine::fem2d_solve_all(doc) {
         Ok(results) => results,
         Err(e) => return placeholder(Label::data(format!("Analysis error: {e}"))),
@@ -233,7 +233,7 @@ fn render_static(doc: &Fem2dSnapshot, source_id: Option<&str>, camera: &FemCamer
 /// 📊️ Modal mode-shape overlay: undeformed structure faintly plus the selected mode's deformed-shape
 /// polyline (normalized to unit peak, then scaled to `MODE_SHAPE_AMPLITUDE_RATIO` of the model's own
 /// extent — see `normalize_mode_shape`) and a frequency caption.
-fn render_modal(doc: &Fem2dSnapshot, mode_index: usize, camera: &FemCamera) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+fn render_modal(doc: &Fem2dSnapshot, mode_index: usize, camera: &FemCamera) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let (freq_hz, mut disp_map) = match crate::fem2d_engine::modal_buckling::fem2d_modal_mode_values(doc, mode_index) {
         Ok(values) => values,
         Err(e) => return placeholder(Label::data(format!("Modal analysis error: {e}"))),
@@ -254,7 +254,7 @@ fn render_modal(doc: &Fem2dSnapshot, mode_index: usize, camera: &FemCamera) -> s
 /// polyline (normalized to unit peak, then scaled to `MODE_SHAPE_AMPLITUDE_RATIO` of the model's own
 /// extent — see `normalize_mode_shape`) and a load-factor caption. `source_id` selects the reference
 /// load case, falling back to the first load case when `None`.
-fn render_buckling(doc: &Fem2dSnapshot, source_id: Option<&str>, mode_index: usize, camera: &FemCamera) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+fn render_buckling(doc: &Fem2dSnapshot, source_id: Option<&str>, mode_index: usize, camera: &FemCamera) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let Some(case_id) = source_id.map(str::to_string).or_else(|| doc.load_cases.first().map(|c| c.id.clone())) else {
         return placeholder(Label::data("No load case defined"));
     };
@@ -304,7 +304,7 @@ mod tests {
         let doc = crate::artifacts::fem2d::schema::empty_fem2d_snapshot();
         let display = ResultDisplay { source_id: None, mode: DisplayMode::Buckling(0) };
         let camera = FemCamera::default();
-        let json = dsl::json::to_string(&dsl::json::Value::Array(render(&doc, &display, &camera)));
+        let json = semio_framework_plugin::testkit::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(render(&doc, &display, &camera).expect("fixture surface admission"))).expect("fixture projection");
         assert!(json.contains("No load case defined"), "{json}");
     }
 
@@ -313,7 +313,7 @@ mod tests {
         let mut app = fem2d_app();
         load_default_example(&mut app).await;
         let snapshot = app.snapshot().expect("snapshot");
-        let node = render(&snapshot, &ResultDisplay { source_id: Some("dead".into()), mode: DisplayMode::Static }, &FemCamera::default());
+        let node = render(&snapshot, &ResultDisplay { source_id: Some("dead".into()), mode: DisplayMode::Static }, &FemCamera::default()).expect("fixture surface admission");
         let semio_framework_ui_contract::Component::Surface(props) = &node.component else { panic!("expected canvas surface") };
         let scene: Canvas2dScene = semio_framework_ui_scene::decode(props).expect("decode canvas scene");
         assert!(scene.layers_json.contains("fill"), "expected filled-path contour layers for the region's Tri3Cst elements: {}", scene.layers_json);
@@ -325,7 +325,7 @@ mod tests {
         let mut app = fem2d_app();
         load_default_example(&mut app).await;
         let snapshot = app.snapshot().expect("snapshot");
-        let node = render(&snapshot, &ResultDisplay { source_id: Some("dead".into()), mode: DisplayMode::Static }, &FemCamera::default());
+        let node = render(&snapshot, &ResultDisplay { source_id: Some("dead".into()), mode: DisplayMode::Static }, &FemCamera::default()).expect("fixture surface admission");
         let semio_framework_ui_contract::Component::Surface(props) = &node.component else { panic!("expected canvas surface") };
         let scene: Canvas2dScene = semio_framework_ui_scene::decode(props).expect("decode canvas scene");
         assert!(scene.layers_json.contains("reaction-"), "expected reaction-prefixed text label layers: {}", scene.layers_json);

@@ -79,7 +79,7 @@ impl dsl::FromValue for CapabilityToken {
 pub struct PluginInstanceId(pub String);
 
 // 🎞️ CW3 kernel cut-over: MutationId/ActorId/ArtifactId/ArtifactVersion/SchemaId moved to
-// `protocol_core` (frozen contract `.🦑️repo/🎫️tickets/26/07/27/PROTOCOL-BINARY-OP-LOG-LAYER/contract.md`),
+// `protocol_core` (frozen contract `.🧬semio/🦑️repo/🎫️tickets/26/07/27/PROTOCOL-BINARY-OP-LOG-LAYER/contract.md`),
 // re-exported here under their original names — shapes are unchanged (plain serde-transparent
 // String/u64 newtypes), so every existing reference (internal `kernel` types below, and external
 // crates like `framework/sync`/`framework/product/os/semio_hub` that import them straight from

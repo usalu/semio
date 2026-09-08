@@ -16,6 +16,7 @@ pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️.protocol.semio"
 pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.protocol.semio");
 //#endregion 📡️SemioProtocol
 
+use store::ArtifactOwnedValueRetirementFactory as _;
 use crate::artifacts::presentation::schema::mutations::PresentationMutation;
 use crate::artifacts::presentation::schema::empty_presentation_snapshot;
 use crate::artifacts::presentation::{PresentationSnapshot, PRESENTATION_DOCUMENT_SCHEMA};
@@ -1578,9 +1579,7 @@ mod tests {
     }
 
     fn close_presentation_pages(mut pages: store::OwnedSchemaDecodePages) {
-        while let Some(page) = pages.close_take_page() {
-            drop(page);
-        }
+        while pages.close_take_page().is_some() {}
         assert!(pages.terminal_is_empty());
         drop(pages);
     }
@@ -1827,7 +1826,7 @@ mod tests {
             })
             .await
             .expect("apply");
-        assert_eq!(crate::artifacts::presentation::presentation_working_scene(&store.snapshot().await.expect("projection")).1.len(), 1);
+        assert_eq!(crate::artifacts::presentation::presentation_working_scene(&store.snapshot().expect("projection")).1.len(), 1);
     }
 
     //#region 🔖️DocumentTextTests

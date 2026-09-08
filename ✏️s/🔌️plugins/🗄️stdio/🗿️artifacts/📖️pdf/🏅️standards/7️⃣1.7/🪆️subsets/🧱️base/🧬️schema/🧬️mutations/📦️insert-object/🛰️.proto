@@ -1,0 +1,8 @@
+syntax = "proto3";
+package semio.s_stdio_pdf_1_7.mutation.insert_object;
+
+// 📦️ Direct insert-object protobuf payload.
+message InsertObjectMutation {
+  bytes id = 1;
+  bytes value = 2;
+}

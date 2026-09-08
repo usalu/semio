@@ -14,6 +14,8 @@ pub type Process3dStore = ArtifactStore<Process3dSnapshot, Process3dMutation>;
 //#endregion 🔖️Store
 
 //#region 🔖️MountedRegistry
+#[cfg(test)]
+mod mounted_registry {
 const PROCESS3D_ENVELOPE_MAXIMUM_PAGES: usize = store::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_PAGES;
 const PROCESS3D_ENVELOPE_MAXIMUM_BYTES: usize = store::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_BYTES;
 const PROCESS3D_ENVELOPE_MAXIMUM_ITEMS: usize = 8_192;
@@ -462,6 +464,7 @@ mod mounted_laws {
         assert_eq!(crate::artifacts::process3d::spr::process3d_validate_atomic_publication_authority(operation, Generation(42), Generation(42)), Ok(()));
         assert!(crate::artifacts::process3d::spr::process3d_release_publication_authority(operation, Generation(42)));
     }
+}
 }
 //#endregion 🧪️MountedLaws
 

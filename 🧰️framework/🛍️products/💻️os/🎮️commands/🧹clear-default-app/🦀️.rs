@@ -2,7 +2,7 @@
 //! one `(artifact_kind, standard, subset, role)` coordinate, dispatched as
 //! `AppCommand::ClearDefaultApp`; the `OpeningResolver` then falls back to the owner surface, then
 //! the first `AppRouter` entry. See contract-freeze.md §3 of
-//! `.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET/`.
+//! `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET/`.
 
 //#region 🔖️Command
 /// 🪪️ Canonical OS command id.

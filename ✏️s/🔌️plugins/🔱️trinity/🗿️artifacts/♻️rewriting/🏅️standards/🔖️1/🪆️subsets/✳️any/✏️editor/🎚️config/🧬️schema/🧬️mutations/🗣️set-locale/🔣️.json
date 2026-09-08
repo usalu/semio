@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🧬️mutations/🗣️set-locale",
+  "semanticKind": "set-locale",
+  "displayName": "Set Locale",
+  "emoji": "🗣️",
+  "aggregateVariant": "SetLocale",
+  "payloadSchema": "🧬️.schema.json",
+  "textOpcode": "set-locale",
+  "binaryTag": 4,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "apply-only",
+  "outcomeClasses": [
+    "applied"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "text",
+    "binary",
+    "json-schema"
+  ]
+}

@@ -1,0 +1,73 @@
+{
+  "cases": [
+    {
+      "id": "unicode-and-nested-parameters",
+      "fixture": {
+        "schema": "sequence.sequence",
+        "steps": [
+          {
+            "id": "start",
+            "kind": "state.set",
+            "params": {
+              "key": "counter",
+              "value": 2
+            },
+            "x": 12.5,
+            "y": -7.25,
+            "slot": null,
+            "collapsed": false
+          },
+          {
+            "id": "ausgabe",
+            "kind": "log.print",
+            "params": {
+              "message": "Grüße, \"Sequenz\"\n下一步",
+              "settings": {
+                "enabled": true,
+                "ratio": 0.75,
+                "empty": null
+              }
+            },
+            "x": 280.0,
+            "y": 14.0,
+            "slot": null,
+            "collapsed": false
+          }
+        ],
+        "edges": [
+          {
+            "id": "next",
+            "from": "start",
+            "to": "ausgabe"
+          }
+        ]
+      },
+      "topology": {
+        "topoOrder": [
+          "start",
+          "ausgabe"
+        ],
+        "depth": {
+          "ausgabe": 1,
+          "start": 0
+        },
+        "cycleFree": true,
+        "nodeCount": 2
+      }
+    },
+    {
+      "id": "empty",
+      "fixture": {
+        "schema": "sequence.sequence",
+        "steps": [],
+        "edges": []
+      },
+      "topology": {
+        "topoOrder": [],
+        "depth": {},
+        "cycleFree": true,
+        "nodeCount": 0
+      }
+    }
+  ]
+}

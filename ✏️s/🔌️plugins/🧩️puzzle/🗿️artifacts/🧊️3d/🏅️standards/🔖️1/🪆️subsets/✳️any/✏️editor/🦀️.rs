@@ -2107,7 +2107,7 @@ fn puzzle3d_context_menu_items(envelope: &Puzzle3dScene, selection: &Puzzle3dCon
         };
     }
     if let Some(id) = selection.attraction_ids.first() {
-        return { Menu::of(registry).item(puzzle3d_context_menu_row("delete", labels.delete, "trash", "deleteAttraction", Some(json!({ "id": id.as_str() })), true)).build() };
+        return Menu::of(registry).item(puzzle3d_context_menu_row("delete", labels.delete, "trash", "deleteAttraction", Some(json!({ "id": id.as_str() })), true)).build();
     }
     if let Some(id) = selection.target_volume_ids.first() {
         let target_volume = envelope.fixture.target_volumes.iter().find(|volume| &volume.id == id);
@@ -2173,11 +2173,13 @@ fn with_puzzle3d_app_for<R>(config: &Puzzle3dConfig, f: impl FnOnce(&Puzzle3dPla
     f(&app)
 }
 
+#[cfg(test)]
 fn with_puzzle3d_app<R>(f: impl FnOnce(&Puzzle3dPlayApp) -> R) -> R {
     let app = Puzzle3dPlayApp::default();
     f(&app)
 }
 
+#[cfg(test)]
 pub(crate) fn with_puzzle3d_app_mut<R>(f: impl FnOnce(&mut Puzzle3dPlayApp) -> R) -> R {
     let mut app = Puzzle3dPlayApp::default();
     f(&mut app)
@@ -2861,10 +2863,6 @@ impl Puzzle3dKindWeightWork {
             requested: 1.0,
             ignored: false,
         }
-    }
-
-    fn section(&self) -> &'static str {
-        if self.tool_id == "setObjectKindWeight" { "objects" } else { "vortices" }
     }
 
     fn weights<'a>(&self, config: &'a Puzzle3dConfig) -> &'a HashMap<String, f64> {

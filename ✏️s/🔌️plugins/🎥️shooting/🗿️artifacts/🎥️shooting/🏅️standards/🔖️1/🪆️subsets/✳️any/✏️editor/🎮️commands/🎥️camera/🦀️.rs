@@ -51,7 +51,7 @@ pub mod save_camera {
         let saved_camera = ShootingSavedCamera { id: next_shooting_id("camera"), label, camera: config.camera.clone() };
         Ok(Emit {
             artifact_mutations: vec![ShootingMutation::CreateSavedCamera(CreateSavedCamera { saved_camera, index: Some(snapshot.saved_cameras.len()) })],
-            config_mutations: vec![ShootingConfigMutation::SetCameraDraftLabel { value: String::new() }],
+            config_mutations: vec![ShootingConfigMutation::SetCameraDraftLabel(crate::editor::shooting::config::SetCameraDraftLabel { value: String::new() })],
             ..Default::default()
         })
     }
@@ -70,7 +70,7 @@ pub mod load_saved_camera {
 
     pub fn handle(payload: &LoadSavedCamera, doc: &ArtifactView<'_, ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>, _ctx: &mut ShootingDispatchCtx) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
         match doc.snapshot.saved_cameras.iter().find(|entry| entry.id == payload.id) {
-            Some(saved) => Ok(Emit::config(vec![ShootingConfigMutation::SetCamera { camera: saved.camera.clone() }])),
+            Some(saved) => Ok(Emit::config(vec![ShootingConfigMutation::SetCamera(crate::editor::shooting::config::SetCamera { camera: saved.camera.clone() })])),
             None => Ok(Emit::default()),
         }
     }
@@ -88,7 +88,7 @@ pub mod set_camera_draft_label {
     }
 
     pub fn handle(payload: &SetCameraDraftLabel, _doc: &ArtifactView<'_, ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>, _ctx: &mut ShootingDispatchCtx) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
-        Ok(Emit::config(vec![ShootingConfigMutation::SetCameraDraftLabel { value: payload.value.clone() }]))
+        Ok(Emit::config(vec![ShootingConfigMutation::SetCameraDraftLabel(crate::editor::shooting::config::SetCameraDraftLabel { value: payload.value.clone() })]))
     }
 }
 //#endregion 🔖️SetCameraDraftLabel
@@ -105,7 +105,7 @@ pub mod set_camera {
     }
 
     pub fn handle(payload: &SetCamera, _doc: &ArtifactView<'_, ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>, _ctx: &mut ShootingDispatchCtx) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
-        Ok(Emit::config(vec![ShootingConfigMutation::SetCamera { camera: payload.camera.clone() }]))
+        Ok(Emit::config(vec![ShootingConfigMutation::SetCamera(crate::editor::shooting::config::SetCamera { camera: payload.camera.clone() })]))
     }
 }
 //#endregion 🔖️SetCamera
@@ -119,16 +119,16 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn save_and_load_camera_round_trip() {
-        let mut app = shooting_app();
-        dispatch(&mut app, ShootingCommand::SetCameraDraftLabel(set_camera_draft_label::SetCameraDraftLabel { value: "Hero".into() }));
-        let result = dispatch(&mut app, ShootingCommand::SaveCamera(save_camera::SaveCamera {}));
+        let mut app = shooting_app().await;
+        dispatch(&mut app, ShootingCommand::SetCameraDraftLabel(set_camera_draft_label::SetCameraDraftLabel { value: "Hero".into() })).await;
+        let result = dispatch(&mut app, ShootingCommand::SaveCamera(save_camera::SaveCamera {})).await;
         assert_eq!(result.mutations.len(), 1);
     }
 
     #[semio_framework_async_macros::async_test]
     async fn set_camera_never_touches_the_document() {
-        let mut app = shooting_app();
-        let result = dispatch(&mut app, ShootingCommand::SetCamera(set_camera::SetCamera { camera: ShootingCamera { position: [1.0, 2.0, 3.0], ..ShootingCamera::default() } }));
+        let mut app = shooting_app().await;
+        let result = dispatch(&mut app, ShootingCommand::SetCamera(set_camera::SetCamera { camera: ShootingCamera { position: [1.0, 2.0, 3.0], ..ShootingCamera::default() } })).await;
         assert!(result.mutations.is_empty(), "the free/live camera is config-only");
     }
 }

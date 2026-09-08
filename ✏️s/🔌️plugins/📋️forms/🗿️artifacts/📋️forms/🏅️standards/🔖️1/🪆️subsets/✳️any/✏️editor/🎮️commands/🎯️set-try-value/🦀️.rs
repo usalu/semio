@@ -186,7 +186,7 @@ pub(crate) fn cancel_pending_generations(operation: &semio_framework_plugin::App
         let Some(session) = sessions().lock().expect("forms try-value sessions lock").remove(&key) else { continue };
         let staging_id = session.staging_id;
         discard_staged_try_value(&staging_id);
-        mutations.push(FormsConfigMutation::DiscardTryValueStaging { staging_id });
+        mutations.push(FormsConfigMutation::DiscardTryValueStaging(crate::editor::forms::config::DiscardTryValueStaging { staging_id }));
     }
     mutations.extend(crate::editor::forms::commands::set_try_values::cancel_pending_bulk(operation.app_instance_id, &operation.parent_document_id));
     mutations
@@ -237,7 +237,6 @@ fn content_id(session: &TryValueSession) -> String {
 enum RewritePhase {
     Locate,
     Array,
-    Value,
     Prefix,
     Replacement,
     Suffix,
@@ -250,7 +249,6 @@ enum ReplacementMode {
     ExistingElement,
     ExistingArrayInsertion,
     FullArray,
-    MissingField,
 }
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
@@ -454,7 +452,6 @@ pub(crate) fn stage_command_input(operation: &semio_framework_plugin::AppOperati
 
 #[derive(Debug)]
 struct VectorRewrite {
-    key_token: String,
     raw: std::sync::Arc<ChunkedSource>,
     final_raw: std::sync::Arc<ChunkedSource>,
     requested_target_index: u64,
@@ -462,23 +459,12 @@ struct VectorRewrite {
     phase: RewritePhase,
     cursor: usize,
     progress: u64,
-    root_started: bool,
-    depth: usize,
     in_string: bool,
     escaped: bool,
-    string_start: usize,
-    expect_key: bool,
-    key_matches: bool,
-    await_value: bool,
-    object_has_members: bool,
     element_start: Option<usize>,
     element_last_non_whitespace: usize,
     element_depth: usize,
     element_index: u64,
-    value_start: usize,
-    value_depth: usize,
-    value_container: bool,
-    value_root_string: bool,
     replace_start: usize,
     replace_end: usize,
     mode: ReplacementMode,
@@ -494,12 +480,7 @@ struct VectorRewrite {
 
 impl VectorRewrite {
     fn new(raw: std::sync::Arc<ChunkedSource>, target_index: u64) -> Self {
-        Self::from_serialized(String::new(), raw, target_index)
-    }
-
-    fn from_serialized(key_token: String, raw: std::sync::Arc<ChunkedSource>, target_index: u64) -> Self {
         Self {
-            key_token,
             raw: raw.clone(),
             final_raw: raw,
             requested_target_index: target_index,
@@ -507,23 +488,12 @@ impl VectorRewrite {
             phase: RewritePhase::Locate,
             cursor: 0,
             progress: 0,
-            root_started: false,
-            depth: 0,
             in_string: false,
             escaped: false,
-            string_start: 0,
-            expect_key: true,
-            key_matches: false,
-            await_value: false,
-            object_has_members: false,
             element_start: None,
             element_last_non_whitespace: 0,
             element_depth: 0,
             element_index: 0,
-            value_start: 0,
-            value_depth: 0,
-            value_container: false,
-            value_root_string: false,
             replace_start: 0,
             replace_end: 0,
             mode: ReplacementMode::FullArray,
@@ -547,14 +517,13 @@ impl VectorRewrite {
     }
 
     fn restart(&self) -> Self {
-        Self::from_serialized(self.key_token.clone(), self.final_raw.clone(), self.requested_target_index)
+        Self::new(self.final_raw.clone(), self.requested_target_index)
     }
 
     fn advance(&mut self, source: &ChunkedSource) -> RewriteStep {
         let mut step = match self.phase {
             RewritePhase::Locate => self.scan_locate(source),
             RewritePhase::Array => self.scan_array(source),
-            RewritePhase::Value => self.scan_value(source),
             RewritePhase::Prefix => self.copy_prefix(source),
             RewritePhase::Replacement => self.write_replacement(),
             RewritePhase::Suffix => self.copy_suffix(source),
@@ -578,12 +547,12 @@ impl VectorRewrite {
                 self.phase = RewritePhase::Array;
                 self.cursor += 1;
             } else {
-                self.begin_build(source.len, 0, source.len, 0, ReplacementMode::FullArray, false);
+                self.begin_build(source.len, 0, source.len, 0, ReplacementMode::FullArray);
             }
             break;
         }
         if self.cursor >= source.len && matches!(self.phase, RewritePhase::Locate) {
-            self.begin_build(source.len, 0, source.len, 0, ReplacementMode::FullArray, false);
+            self.begin_build(source.len, 0, source.len, 0, ReplacementMode::FullArray);
         }
         RewriteStep { bytes: self.cursor.saturating_sub(start), ..RewriteStep::default() }
     }
@@ -611,14 +580,14 @@ impl VectorRewrite {
                     continue;
                 }
                 if byte == b']' {
-                    self.begin_build(source.len, self.cursor, self.cursor, self.element_index, ReplacementMode::ExistingArrayInsertion, false);
+                    self.begin_build(source.len, self.cursor, self.cursor, self.element_index, ReplacementMode::ExistingArrayInsertion);
                     break;
                 }
                 self.element_start = Some(self.cursor);
                 self.element_last_non_whitespace = self.cursor;
                 self.element_depth = 0;
             }
-            if !byte.is_ascii_whitespace() {
+            if !byte.is_ascii_whitespace() && (self.element_depth > 0 || !matches!(byte, b',' | b']')) {
                 self.element_last_non_whitespace = self.cursor;
             }
             match byte {
@@ -628,7 +597,7 @@ impl VectorRewrite {
                 b',' if self.element_depth == 0 => {
                     let element_start = self.element_start.take().expect("array element start");
                     if self.element_index == self.target_index {
-                        self.begin_build(source.len, element_start, self.element_last_non_whitespace + 1, self.element_index + 1, ReplacementMode::ExistingElement, false);
+                        self.begin_build(source.len, element_start, self.element_last_non_whitespace + 1, self.element_index + 1, ReplacementMode::ExistingElement);
                         break;
                     }
                     self.element_index = self.element_index.saturating_add(1);
@@ -637,9 +606,9 @@ impl VectorRewrite {
                     let element_start = self.element_start.take().expect("array element start");
                     let vector_len = self.element_index.saturating_add(1);
                     if self.element_index == self.target_index {
-                        self.begin_build(source.len, element_start, self.element_last_non_whitespace + 1, vector_len, ReplacementMode::ExistingElement, false);
+                        self.begin_build(source.len, element_start, self.element_last_non_whitespace + 1, vector_len, ReplacementMode::ExistingElement);
                     } else {
-                        self.begin_build(source.len, self.cursor, self.cursor, vector_len, ReplacementMode::ExistingArrayInsertion, false);
+                        self.begin_build(source.len, self.cursor, self.cursor, vector_len, ReplacementMode::ExistingArrayInsertion);
                     }
                     break;
                 }
@@ -648,68 +617,12 @@ impl VectorRewrite {
             self.cursor += 1;
         }
         if self.cursor >= source.len && matches!(self.phase, RewritePhase::Array) {
-            self.begin_build(source.len, 0, source.len, 0, ReplacementMode::MissingField, false);
+            self.begin_build(source.len, 0, source.len, 0, ReplacementMode::FullArray);
         }
         RewriteStep { bytes: self.cursor.saturating_sub(start), ..RewriteStep::default() }
     }
 
-    fn scan_value(&mut self, source: &ChunkedSource) -> RewriteStep {
-        let limit = self.cursor.saturating_add(MAX_TRY_VALUE_BYTES_PER_STEP).min(source.len);
-        let start = self.cursor;
-        while self.cursor < limit {
-            let byte = source.byte(self.cursor).expect("bounded source byte");
-            if self.in_string {
-                if self.escaped {
-                    self.escaped = false;
-                } else if byte == b'\\' {
-                    self.escaped = true;
-                } else if byte == b'"' {
-                    self.in_string = false;
-                    if self.value_root_string {
-                        self.cursor += 1;
-                        self.begin_build(source.len, self.value_start, self.cursor, 0, ReplacementMode::FullArray, false);
-                        break;
-                    }
-                }
-                self.cursor += 1;
-                continue;
-            }
-            match byte {
-                b'"' if self.cursor == self.value_start => {
-                    self.in_string = true;
-                    self.value_root_string = true;
-                }
-                b'{' | b'[' => {
-                    self.value_container = true;
-                    self.value_depth += 1;
-                }
-                b'}' | b']' if self.value_depth > 0 => {
-                    self.value_depth -= 1;
-                    if self.value_depth == 0 && self.value_container {
-                        self.cursor += 1;
-                        self.begin_build(source.len, self.value_start, self.cursor, 0, ReplacementMode::FullArray, false);
-                        break;
-                    }
-                }
-                b',' | b'}' if self.value_depth == 0 => {
-                    self.begin_build(source.len, self.value_start, self.cursor, 0, ReplacementMode::FullArray, false);
-                    break;
-                }
-                byte if byte.is_ascii_whitespace() && self.value_depth == 0 => {
-                    self.begin_build(source.len, self.value_start, self.cursor, 0, ReplacementMode::FullArray, false);
-                    break;
-                }
-                _ => {}
-            }
-            self.cursor += 1;
-        }
-        if self.cursor >= source.len && matches!(self.phase, RewritePhase::Value) {
-            self.begin_build(source.len, self.value_start, source.len, 0, ReplacementMode::FullArray, false);
-        }
-        RewriteStep { bytes: self.cursor.saturating_sub(start), ..RewriteStep::default() }
-    }
-
-    fn begin_build(&mut self, source_len: usize, replace_start: usize, replace_end: usize, vector_len: u64, mode: ReplacementMode, object_has_members: bool) {
+    fn begin_build(&mut self, source_len: usize, replace_start: usize, replace_end: usize, vector_len: u64, mode: ReplacementMode) {
         if !matches!(mode, ReplacementMode::ExistingElement) {
             self.target_index = self.requested_target_index.min(vector_len.saturating_add(MAX_VECTOR_COMPONENTS_PER_STEP as u64 - 1));
             self.raw = if self.target_index == self.requested_target_index { self.final_raw.clone() } else { std::sync::Arc::new(ChunkedSource::from_text("0".into())) };
@@ -727,9 +640,8 @@ impl VectorRewrite {
                 }
             }
             ReplacementMode::FullArray => "[".into(),
-            ReplacementMode::MissingField => format!("{}{}:[", if object_has_members { "," } else { "" }, self.key_token),
         };
-        self.footer = if matches!(mode, ReplacementMode::FullArray | ReplacementMode::MissingField) { "]" } else { "" };
+        self.footer = if matches!(mode, ReplacementMode::FullArray) { "]" } else { "" };
         self.write_index = if matches!(mode, ReplacementMode::ExistingArrayInsertion) { vector_len } else { self.target_index };
         if !matches!(mode, ReplacementMode::ExistingElement) {
             self.write_index = if matches!(mode, ReplacementMode::ExistingArrayInsertion) { vector_len } else { 0 };
@@ -857,7 +769,7 @@ impl ContainerRewrite {
         if option_value.len() > 512 {
             return None;
         }
-        let token = dsl::os_pack::json::to_json_string(option_value);
+        let token = dsl::os_pack::json::to_json_string(&option_value);
         (token.len() <= MAX_TRY_VALUE_BYTES_PER_STEP).then(|| {
             let mut rewrite = Self::new(ContainerEdit::Option { token, value: option_value.into(), pressed: false });
             rewrite.pressed_source = Some(pressed_json);
@@ -869,7 +781,7 @@ impl ContainerRewrite {
         if param_key.len() > 512 {
             return None;
         }
-        let key_token = dsl::os_pack::json::to_json_string(param_key);
+        let key_token = dsl::os_pack::json::to_json_string(&param_key);
         (key_token.len() <= MAX_TRY_VALUE_BYTES_PER_STEP).then(|| Self::new(ContainerEdit::Object { key_token, key: param_key.into(), raw }))
     }
 
@@ -919,7 +831,7 @@ impl ContainerRewrite {
             return step;
         }
         let mut step = match self.phase {
-            RewritePhase::Locate | RewritePhase::Array | RewritePhase::Value => self.scan(source),
+            RewritePhase::Locate | RewritePhase::Array => self.scan(source),
             RewritePhase::Prefix => self.copy_prefix(source),
             RewritePhase::Replacement => self.write_replacement(),
             RewritePhase::Suffix => self.copy_suffix(source),
@@ -1247,11 +1159,11 @@ fn stage_chunk(session: &mut TryValueSession, chunk: String) -> FormsConfigMutat
     update_digest(session, chunk.as_bytes());
     let index = session.staged_chunks;
     session.staged_chunks += 1;
-    FormsConfigMutation::StageTryValueChunk { staging_id: session.staging_id.clone(), index, chunk }
+    FormsConfigMutation::StageTryValueChunk(crate::editor::forms::config::StageTryValueChunk { staging_id: session.staging_id.clone(), index, chunk })
 }
 
 fn commit_mutation(session: &TryValueSession) -> FormsConfigMutation {
-    FormsConfigMutation::CommitTryValue { key: session.key.clone(), staging_id: session.staging_id.clone(), content_id: content_id(session), chunk_count: session.staged_chunks }
+    FormsConfigMutation::CommitTryValue(crate::editor::forms::config::CommitTryValue { key: session.key.clone(), staging_id: session.staging_id.clone(), content_id: content_id(session), chunk_count: session.staged_chunks })
 }
 
 fn finish_try_value(generation: u64, session: TryValueSession, mutations: Vec<FormsConfigMutation>) -> Emit<FormMutation, FormsConfigMutation> {
@@ -1404,9 +1316,7 @@ fn start_try_value(payload: &SetTryValue, operation: &semio_framework_plugin::Ap
         if usize::try_from(target_index).is_err() {
             return Ok(Emit::default());
         }
-        let mut rewrite = VectorRewrite::new(input.clone(), target_index);
-        rewrite.key_token = dsl::os_pack::json::to_json_string(&payload.key);
-        Some(TryValueRewrite::Vector(rewrite))
+        Some(TryValueRewrite::Vector(VectorRewrite::new(input.clone(), target_index)))
     } else if let Some(option_value) = payload.option_value.as_deref() {
         Some(TryValueRewrite::Container(
             ContainerRewrite::option(option_value, input.clone()).ok_or_else(|| Fault::new(FaultOrigin::App, FaultCode::new("forms.try-value.option-too-large"), "the option identifier exceeds the bounded Forms value limit"))?,
@@ -1561,9 +1471,9 @@ mod tests {
         semio_framework_plugin::AppOperationContext { app_instance_id: 1, parent_document_id: document_id.into(), operation_id, generation: 1, canonical_base_revision: [0; 32] }
     }
 
-    fn app_with_document_id(id: &str) -> FormsApp {
+    async fn app_with_document_id(id: &str) -> FormsApp {
         let mut app = forms_app_with_registry().await;
-        let mut snapshot = app.snapshot().await.expect("Forms snapshot");
+        let mut snapshot = app.snapshot().expect("Forms snapshot");
         snapshot.id = id.into();
         let envelope = store::create_document_envelope::<_, FormMutation>(crate::artifacts::forms::FORMS_DOCUMENT_SCHEMA, id, snapshot, None);
         let files = store::print_document_pack(&envelope).await.expect("Forms document pack");
@@ -1618,6 +1528,23 @@ mod tests {
             if step.complete {
                 return (rewrite.take_output().expect("completed container rewrite").materialize(), worst);
             }
+        }
+    }
+
+
+    #[test]
+    fn vector_replacement_boundaries_match_the_json_oracle() {
+        let vectors: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🔣️vectors.json")).expect("vector fixture");
+        for vector in vectors.as_array().expect("vector cases") {
+            let source = vector["source"].as_str().expect("source JSON");
+            let index = vector["index"].as_u64().expect("target index");
+            let replacement = vector["value"].to_string();
+            let (actual, _) = finish_rewrite(VectorRewrite::new(rope(&replacement), index), source);
+            let mut oracle = serde_json::from_str::<serde_json::Value>(source).ok().and_then(|value| value.as_array().cloned()).unwrap_or_default();
+            oracle.resize(oracle.len().max(index as usize + 1), json!(0));
+            oracle[index as usize] = vector["value"].clone();
+            assert_eq!(serde_json::from_str::<serde_json::Value>(&actual).expect("rewritten JSON"), serde_json::Value::Array(oracle), "{source}");
+            assert_eq!(serde_json::from_str::<serde_json::Value>(&actual).unwrap(), vector["expected"]);
         }
     }
 
@@ -1752,7 +1679,7 @@ mod tests {
             assert_eq!(decoded, command);
             assert!(started.elapsed() < std::time::Duration::from_millis(8), "maximum Forms public command codec envelope exceeded 8 ms");
             let started = std::time::Instant::now();
-            app.handle_action("setTryValue", Some(args), &meta("local")).await.expect("public action dispatch");
+            app.handle_action("setTryValue", Some(&crate::editor::forms::testkit::action_args(&args)), &meta("local")).await.expect("public action dispatch");
             assert!(started.elapsed() < std::time::Duration::from_millis(8), "maximum Forms public action envelope exceeded 8 ms");
         }
 
@@ -1763,7 +1690,7 @@ mod tests {
         let mut result = None;
         for args in dispatch_chunks("after-restart") {
             let started = std::time::Instant::now();
-            result = Some(app.handle_action("setTryValue", Some(&args), &meta("local")).await.expect("replayed public action dispatch"));
+            result = Some(app.handle_action("setTryValue", Some(&crate::editor::forms::testkit::action_args(&args)), &meta("local")).await.expect("replayed public action dispatch"));
             assert!(started.elapsed() < std::time::Duration::from_millis(8), "replayed Forms public action envelope exceeded 8 ms");
         }
         for _ in 0..128 {
@@ -1774,22 +1701,22 @@ mod tests {
             });
             let Some(args) = next else { break };
             let started = std::time::Instant::now();
-            result = Some(app.handle_action(SET_TRY_VALUE_STEP_ACTION_ID, Some(&args), &meta("local")).await.expect("Forms continuation action dispatch"));
+            result = Some(app.handle_action(SET_TRY_VALUE_STEP_ACTION_ID, Some(&crate::editor::forms::testkit::action_args(&args)), &meta("local")).await.expect("Forms continuation action dispatch"));
             assert!(started.elapsed() < std::time::Duration::from_millis(8), "Forms handler/job/op-codec/diff/apply envelope exceeded 8 ms");
         }
-        let config = app.test_config().await;
+        let config = crate::editor::forms::testkit::config(&app).await;
         let content_id = config.try_values.get_json("public-scalar").expect("committed scalar content id").to_string();
         assert_eq!(content_id.len(), 85);
         assert_eq!(materialize_owned_try_value(&config.try_values, "public-scalar"), Some(chunks.concat()));
         assert!(input_registry().lock().expect("forms input registry lock").blobs.is_empty());
         assert!(sessions().lock().expect("forms sessions lock").is_empty());
         assert!(active_generations().lock().expect("forms active generations lock").is_empty());
-        let serialized = serde_json::to_vec(&config).expect("serialize completed public scalar config");
+        let serialized = dsl::os_pack::json::to_json_string(&config).into_bytes();
         crate::editor::forms::config::clear_try_value_staging_for_replay();
         *input_registry().lock().expect("forms input registry lock") = FormsInputRegistry::default();
         sessions().lock().expect("forms sessions lock").clear();
         active_generations().lock().expect("forms active generations lock").clear();
-        let reopened: FormsConfig = serde_json::from_slice(&serialized).expect("cold reopen completed public scalar config");
+        let reopened: FormsConfig = dsl::os_pack::json::from_json_str(std::str::from_utf8(&serialized).expect("config UTF-8")).expect("cold reopen completed public scalar config");
         assert_eq!(reopened.try_values.get_json("public-scalar"), Some(content_id.as_str()));
         assert_eq!(materialize_owned_try_value(&reopened.try_values, "public-scalar"), Some(chunks.concat()));
         assert!(sessions().lock().expect("forms sessions lock").is_empty());
@@ -1812,20 +1739,20 @@ mod tests {
                 "inputCount": 2
             })
         };
-        first.handle_action("setTryValue", Some(&chunk("a", 0)), &meta("document-a")).await.expect("first Forms chunk A");
-        second.handle_action("setTryValue", Some(&chunk("b", 0)), &meta("document-b")).await.expect("first Forms chunk B");
+        first.handle_action("setTryValue", Some(&crate::editor::forms::testkit::action_args(&chunk("a", 0))), &meta("document-a")).await.expect("first Forms chunk A");
+        second.handle_action("setTryValue", Some(&crate::editor::forms::testkit::action_args(&chunk("b", 0))), &meta("document-b")).await.expect("first Forms chunk B");
         assert_eq!(input_registry().lock().expect("forms input registry lock").blobs.len(), 2);
-        let first_step = continuation(first.handle_action("setTryValue", Some(&chunk("a", 1)), &meta("document-a")).await.expect("second Forms chunk A")).expect("Forms continuation A");
-        let second_step = continuation(second.handle_action("setTryValue", Some(&chunk("b", 1)), &meta("document-b")).await.expect("second Forms chunk B")).expect("Forms continuation B");
-        let first_payload: SetTryValueStep = serde_json::from_value(first_step).expect("Forms checkpoint A");
-        let second_payload: SetTryValueStep = serde_json::from_value(second_step.clone()).expect("Forms checkpoint B");
+        let first_step = continuation(first.handle_action("setTryValue", Some(&crate::editor::forms::testkit::action_args(&chunk("a", 1))), &meta("document-a")).await.expect("second Forms chunk A")).expect("Forms continuation A");
+        let second_step = continuation(second.handle_action("setTryValue", Some(&crate::editor::forms::testkit::action_args(&chunk("b", 1))), &meta("document-b")).await.expect("second Forms chunk B")).expect("Forms continuation B");
+        let first_payload: SetTryValueStep = dsl::os_pack::json::from_json_str(&first_step.to_string()).expect("Forms checkpoint A");
+        let second_payload: SetTryValueStep = dsl::os_pack::json::from_json_str(&second_step.to_string()).expect("Forms checkpoint B");
         assert_eq!(first_payload.document_id, "forms-document-a");
         assert_eq!(second_payload.document_id, "forms-document-b");
 
-        first.handle_action("resetTry", Some(&serde_json::json!({})), &meta("document-a")).await.expect("cancel Forms document A");
+        first.handle_action("resetTry", Some(&crate::editor::forms::testkit::action_args(&serde_json::json!({}))), &meta("document-a")).await.expect("cancel Forms document A");
         assert!(!sessions().lock().expect("forms sessions lock").keys().any(|key| key.document_id == "forms-document-a"));
         assert!(sessions().lock().expect("forms sessions lock").keys().any(|key| key.document_id == "forms-document-b"));
-        let sibling = second.handle_action(SET_TRY_VALUE_STEP_ACTION_ID, Some(&second_step), &meta("document-b")).await.expect("continue Forms document B");
+        let sibling = second.handle_action(SET_TRY_VALUE_STEP_ACTION_ID, Some(&crate::editor::forms::testkit::action_args(&second_step)), &meta("document-b")).await.expect("continue Forms document B");
         assert!(continuation(sibling).is_some(), "cancelling one Forms document must not cancel another");
     }
 
@@ -1834,20 +1761,20 @@ mod tests {
         *input_registry().lock().expect("forms input registry lock") = FormsInputRegistry::default();
         let mut pathological = app_with_document_id("forms-pathological").await;
         let started = std::time::Instant::now();
-        let rejected = pathological.handle_action("setTryValue", Some(&serde_json::json!({ "key": "k", "valueJson": "0", "inputId": "pathological", "inputIndex": 0, "inputCount": MAX_COMMAND_INPUT_CHUNKS + 1 })), &meta("pathological")).await;
+        let rejected = pathological.handle_action("setTryValue", Some(&crate::editor::forms::testkit::action_args(&serde_json::json!({ "key": "k", "valueJson": "0", "inputId": "pathological", "inputIndex": 0, "inputCount": MAX_COMMAND_INPUT_CHUNKS + 1 }))), &meta("pathological")).await;
         assert!(started.elapsed() < std::time::Duration::from_millis(8), "pathological Forms count rejection exceeded 8 ms");
         assert_eq!(rejected.expect_err("pathological Forms count must be rejected").code.0, "forms.try-value.input-invalid");
 
         let mut abandoned = app_with_document_id("forms-abandoned").await;
-        abandoned.handle_action("setTryValue", Some(&serde_json::json!({ "key": "k", "valueJson": "0", "inputId": "abandoned", "inputIndex": 0, "inputCount": 2 })), &meta("abandoned")).await.expect("stage abandoned Forms input");
+        abandoned.handle_action("setTryValue", Some(&crate::editor::forms::testkit::action_args(&serde_json::json!({ "key": "k", "valueJson": "0", "inputId": "abandoned", "inputIndex": 0, "inputCount": 2 }))), &meta("abandoned")).await.expect("stage abandoned Forms input");
         input_registry().lock().expect("forms input registry lock").tick = MAX_COMMAND_INPUT_IDLE_ACTIONS + 2;
         let mut expiry_driver = app_with_document_id("forms-expiry-driver").await;
         expiry_driver
-            .handle_action("setTryValue", Some(&serde_json::json!({ "key": "k", "valueJson": "0", "inputId": "fresh", "inputIndex": 0, "inputCount": 2 })), &meta("expiry-driver"))
+            .handle_action("setTryValue", Some(&crate::editor::forms::testkit::action_args(&serde_json::json!({ "key": "k", "valueJson": "0", "inputId": "fresh", "inputIndex": 0, "inputCount": 2 }))), &meta("expiry-driver"))
             .await
             .expect("expire abandoned Forms input through public dispatch");
         assert!(!input_registry().lock().expect("forms input registry lock").blobs.keys().any(|key| key.input_id == "abandoned"));
-        expiry_driver.handle_action("resetTry", Some(&serde_json::json!({})), &meta("expiry-driver")).await.expect("cancel incomplete Forms input");
+        expiry_driver.handle_action("resetTry", Some(&crate::editor::forms::testkit::action_args(&serde_json::json!({}))), &meta("expiry-driver")).await.expect("cancel incomplete Forms input");
         assert!(!input_registry().lock().expect("forms input registry lock").blobs.keys().any(|key| key.document_id == "forms-expiry-driver"));
 
         *input_registry().lock().expect("forms input registry lock") = FormsInputRegistry::default();
@@ -1855,14 +1782,14 @@ mod tests {
         for index in 0..MAX_LIVE_TRY_VALUE_SESSIONS {
             let mut app = app_with_document_id(&format!("forms-admission-{index}")).await;
             let started = std::time::Instant::now();
-            app.handle_action("setTryValue", Some(&serde_json::json!({ "key": "k", "valueJson": "0", "inputId": "input", "inputIndex": 0, "inputCount": 2 })), &meta("admission")).await.expect("admit bounded Forms input");
+            app.handle_action("setTryValue", Some(&crate::editor::forms::testkit::action_args(&serde_json::json!({ "key": "k", "valueJson": "0", "inputId": "input", "inputIndex": 0, "inputCount": 2 }))), &meta("admission")).await.expect("admit bounded Forms input");
             assert!(started.elapsed() < std::time::Duration::from_millis(8), "Forms admitted action envelope exceeded 8 ms");
             admitted.push(app);
         }
         let mut sixty_fifth = app_with_document_id("forms-admission-65").await;
         let started = std::time::Instant::now();
         let busy =
-            sixty_fifth.handle_action("setTryValue", Some(&serde_json::json!({ "key": "k", "valueJson": "0", "inputId": "input", "inputIndex": 0, "inputCount": 2 })), &meta("admission")).await.expect_err("the 65th Forms public input must be Busy");
+            sixty_fifth.handle_action("setTryValue", Some(&crate::editor::forms::testkit::action_args(&serde_json::json!({ "key": "k", "valueJson": "0", "inputId": "input", "inputIndex": 0, "inputCount": 2 }))), &meta("admission")).await.expect_err("the 65th Forms public input must be Busy");
         assert!(started.elapsed() < std::time::Duration::from_millis(8), "Forms 65th Busy envelope exceeded 8 ms");
         assert_eq!(busy.code.0, "forms.try-value.busy");
         assert_eq!(input_registry().lock().expect("forms input registry lock").blobs.len(), MAX_LIVE_TRY_VALUE_SESSIONS);

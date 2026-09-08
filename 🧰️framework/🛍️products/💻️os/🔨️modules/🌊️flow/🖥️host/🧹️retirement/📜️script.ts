@@ -12,12 +12,41 @@ const text = fixture.text.text.repeat(fixture.text.repeat); const preview = fixt
 const owners = [text, "{}", "mesh", preview, "pending", "geometry", "output", "label", preview, "label", text];
 assert.equal(owners.reduce((sum, owner) => sum + Buffer.byteLength(owner), 0), fixture.expected.releasedBytes);
 assert(fixture.text.reservedCapacity > Buffer.byteLength(text));
+const dagText = fixture.dag.text.repeat(fixture.dag.repeat);
+assert.equal(Buffer.byteLength(dagText), fixture.dag.minimumUtf8Bytes);
 assert.equal(stableStringify({ label: text }), JSON.stringify({ label: text }));
 for (const grant of fixture.grants) {
   let total = 0;
   for (const owner of owners) { let left = Buffer.byteLength(owner); while (left) { const released = Math.min(grant, left); total += released; left -= released; } }
   assert.equal(total, fixture.expected.releasedBytes);
 }
-for (const mutant of [{ ...fixture, extra: true }, { ...fixture, grants: [16384] }, { ...fixture, expected: { ...fixture.expected, zeroGrant: "progress" } }]) assert(!validate(mutant));
-console.log("[DEBUG] Flow session-retirement source fixtures=1 hostileRejections=3 bytes=42405 grants=1,64,4096 oracle=fast-json-stable-stringify runtimeClaims=0");
+for (const mutant of [{ ...fixture, extra: true }, { ...fixture, grants: [16384] }, { ...fixture, dag: { ...fixture.dag, minimumUtf8Bytes: 1600 } }, { ...fixture, scene: { retirementCapacity: 1025 } }, { ...fixture, expected: { ...fixture.expected, zeroGrant: "progress" } }]) assert(!validate(mutant));
+console.log("[DEBUG] Flow session-retirement source fixtures=1 hostileRejections=5 bytes=42405 dagBytes=4800 sceneCapacity=1024 sceneCommands=128 grants=1,64,4096 oracle=fast-json-stable-stringify runtimeClaims=0");
 //#endregion 🔣️SessionOwnership
+
+//#region 🧹️BridgeSessionClose
+const sessionClose = await Bun.file(new URL("../../🕸️wasm/🧪️fixtures/🧹️session-close/🔣️.json", import.meta.url)).json();
+const sessionCloseSchema = await Bun.file(new URL("../../🕸️wasm/🧪️fixtures/🧹️session-close/🧬️.schema.json", import.meta.url)).json();
+const validateClose = new Ajv({ strict: true, allErrors: true }).compile(sessionCloseSchema);
+assert(validateClose(sessionClose), JSON.stringify(validateClose.errors));
+const expected = Object.fromEntries(Object.entries(sessionCloseSchema.properties).map(([key, value]) => [key, (value as { const: unknown }).const]));
+assert.equal(stableStringify(sessionClose), stableStringify(expected));
+for (const mutant of [
+  { ...sessionClose, extra: true },
+  { ...sessionClose, browser: { ...sessionClose.browser, terminalBeforeClose: true } },
+  { ...sessionClose, close: { ...sessionClose.close, retainedBeforePoll: 0 } },
+  { ...sessionClose, ordering: ["session-closed", "session-released", "domain-retired"] },
+]) assert(!validateClose(mutant));
+console.log("[DEBUG] Flow retained-session close fixture=1 hostileRejections=4 oracle=fast-json-stable-stringify runtimeClaims=0");
+//#endregion 🧹️BridgeSessionClose
+
+//#region 🧑‍🤝‍🧑️BrowserRuntimeLifetime
+const runtimeLifetime = await Bun.file(new URL("../../🕸️wasm/🧪️fixtures/🧑‍🤝‍🧑️browser-runtime/🔣️.json", import.meta.url)).json();
+const runtimeLifetimeSchema = await Bun.file(new URL("../../🕸️wasm/🧪️fixtures/🧑‍🤝‍🧑️browser-runtime/🧬️.schema.json", import.meta.url)).json();
+const validateRuntime = new Ajv({ strict: true, allErrors: true }).compile(runtimeLifetimeSchema);
+assert(validateRuntime(runtimeLifetime), JSON.stringify(validateRuntime.errors));
+const runtimeExpected = Object.fromEntries(Object.entries(runtimeLifetimeSchema.properties).map(([key, value]) => [key, (value as { const: unknown }).const]));
+assert.equal(stableStringify(runtimeLifetime), stableStringify(runtimeExpected));
+for (const mutant of [{ ...runtimeLifetime, initialSessions: 1 }, { ...runtimeLifetime, extra: true }, { ...runtimeLifetime, afterCloseA: { ...runtimeLifetime.afterCloseA, globalCloseCalls: 1 } }, { ...runtimeLifetime, receipt: { ...runtimeLifetime.receipt, completion: "control-admitted" } }, { ...runtimeLifetime, openFailure: { ...runtimeLifetime.openFailure, uncertainTransport: { ...runtimeLifetime.openFailure.uncertainTransport, terminal: false } } }]) assert(!validateRuntime(mutant));
+console.log("[DEBUG] Flow browser runtime lifetime fixture=1 hostileRejections=5 oracle=fast-json-stable-stringify runtimeClaims=0");
+//#endregion 🧑‍🤝‍🧑️BrowserRuntimeLifetime

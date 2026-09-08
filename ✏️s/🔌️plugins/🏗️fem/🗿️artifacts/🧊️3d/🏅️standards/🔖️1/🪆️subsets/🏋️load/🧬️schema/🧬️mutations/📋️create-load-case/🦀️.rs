@@ -1,7 +1,6 @@
 //! 🌱️ Fem3d mutation — `CreateLoadCase` payload + `MutationKind` impl.
 
 use crate::artifacts::fem3d::{Fem3dSnapshot, FemLoadCase};
-use crate::artifacts::fem3d::diff::{Fem3dDiff, Fem3dLoadCasesDelta};
 use crate::artifacts::fem3d::mutations::Fem3dMutation;
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};

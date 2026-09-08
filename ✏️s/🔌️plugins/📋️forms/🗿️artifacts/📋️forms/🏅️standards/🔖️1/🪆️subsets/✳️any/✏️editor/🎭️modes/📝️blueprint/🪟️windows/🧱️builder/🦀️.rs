@@ -3,7 +3,7 @@
 use crate::artifacts::forms::FormsSnapshot;
 use crate::editor::forms::config::FormsConfig;
 use crate::editor::forms::terminology::FormsLabels;
-use semio_framework_plugin::{BlockPaletteEntry, LocalizedLabel, SurfaceKind, UiNode, WindowKindDefinition, WindowOptions};
+use semio_framework_plugin::{BlockPaletteEntry, LocalizedLabel, SurfaceKind, WindowKindDefinition, WindowOptions};
 
 //#region 🔖️Constants
 pub const FORMS_PLAY_WINDOW_BLUEPRINT: &str = "forms-blueprint";
@@ -34,19 +34,14 @@ pub fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-fn forms_playbook_builder_config() -> crate::playbook::PlaybookBuilderConfig {
-    crate::playbook::PlaybookBuilderConfig { action_namespace: "forms-blueprint", controller_id: crate::editor::forms::FORMS_PLAY_APP_ID, labels: crate::playbook::PLAYBOOK_BUILDER_LABELS_EN }
-}
-
 /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: `ArtifactEditor::render` carries no
 /// `InteractionView` (a known SDK gap — matches `gis2d`'s and `note`'s inspection panel precedent), so
 /// this block-list surface's own selected-card highlight (`render_playbook_builder`'s `selected_id`)
 /// can no longer be driven from live framework selection — it always renders with none highlighted now.
-pub fn render(spec: &FormsSnapshot, config: &FormsConfig, labels: &FormsLabels) -> UiNode {
+pub fn render(spec: &FormsSnapshot, config: &FormsConfig, labels: &FormsLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let contributions = crate::editor::forms::parse_contributions(config);
     let palette: Vec<BlockPaletteEntry> = crate::editor::forms::catalogue_kinds(&contributions, labels).into_iter().map(|(kind, label, icon_id)| BlockPaletteEntry { block_kind: kind, label, icon_id }).collect();
-    let builder_config = forms_playbook_builder_config();
-    crate::playbook::render_playbook_builder(FORMS_PLAY_SURFACE_BLUEPRINT, &crate::artifacts::forms::mutations::as_playbook_spec(spec), &palette, None, &builder_config)
+    semio_framework_plugin::scene_surface(FORMS_PLAY_SURFACE_BLUEPRINT, semio_framework_ui_contract::SurfaceKind::BlockList, &crate::playbook::build_playbook_list_scene(&crate::artifacts::forms::mutations::as_playbook_spec(spec), &palette, None))
 }
 //#endregion 🔖️Render
 
@@ -54,19 +49,18 @@ pub fn render(spec: &FormsSnapshot, config: &FormsConfig, labels: &FormsLabels) 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::artifacts::forms::forms_steps;
-    use crate::editor::forms::testkit::{forms_app, render as render_body};
-    use crate::editor::forms::FORMS_PLAY_BODY_BLUEPRINT as BODY_BLUEPRINT;
 
     #[semio_framework_async_macros::async_test]
     async fn renders_blueprint_builder_cards() {
-        let mut app = forms_app();
-        let first_question_id = forms_steps(&app.snapshot().expect("projection"))[0].blocks[0].id.clone();
-        let json = render_body(&mut app, BODY_BLUEPRINT);
-        assert!(json.contains(r#""componentKind":"block-list""#));
-        assert!(json.contains(r#""surfaceId":"forms.play.blueprint""#));
-        assert!(json.contains("\"blockList\""));
-        assert!(json.contains(&first_question_id));
+        let spec = FormsSnapshot::default();
+        let config = FormsConfig::default();
+        let labels = crate::editor::forms::terminology::forms_play_labels(&config);
+        let node = render(&spec, &config, labels).expect("blueprint surface");
+        let semio_framework_ui_contract::Component::Surface(props) = node.component else { panic!("blueprint must render a semantic surface") };
+        let scene: semio_framework_ui_scene::BlockListScene = semio_framework_ui_scene::decode(&props).expect("block-list payload");
+        let expected = crate::artifacts::forms::mutations::as_playbook_spec(&spec);
+        assert_eq!(serde_json::from_str::<serde_json::Value>(&scene.steps_json).unwrap(), serde_json::to_value(&expected.steps).unwrap());
+        assert!(scene.selected_id.is_none());
     }
 
     #[semio_framework_async_macros::async_test]

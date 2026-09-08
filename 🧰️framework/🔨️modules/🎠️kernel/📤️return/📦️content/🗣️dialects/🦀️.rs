@@ -14,7 +14,16 @@ async fn return_content_existing_dialect_invocation_remains_exact_app_frame() {
     let fixture = fixture();
     let row = &fixture["invocation"];
     let bytes = |name: &str| serde_json::from_value::<Vec<u8>>(row[name].clone()).unwrap();
-    let frame = AppFrame::Invocation { in_reply_to: row["inReplyTo"].as_u64().unwrap(), output: bytes("output"), diagnostics: bytes("diagnostics"), ui_scope: bytes("uiScope"), history_patch: bytes("historyPatch"), messages: bytes("messages") };
+    let frame = AppFrame::Invocation {
+        in_reply_to: row["inReplyTo"].as_u64().unwrap(),
+        output: bytes("output"),
+        diagnostics: bytes("diagnostics"),
+        ui_scope: bytes("uiScope"),
+        history_patch: bytes("historyPatch"),
+        messages: bytes("messages"),
+        mutations: bytes("mutations"),
+        inverse_group: bytes("inverseGroup"),
+    };
     let encoded = encode_app_frame(&frame).await;
     assert_eq!(encoded, unhex(row["appFrameHex"].as_str().unwrap()));
     assert_eq!(decode_app_frame(&encoded).await.unwrap(), frame);

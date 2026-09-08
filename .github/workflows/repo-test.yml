@@ -47,23 +47,23 @@ jobs:
       - uses: oven-sh/setup-bun@v2
       - run: bun install --frozen-lockfile
       - name: 🩺️ toolchains present
-        run: bun ./🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📜️script.ts doctor
+        run: bun nx run @semio-tech/repo-test-domain:test-doctor --
       - name: 🔍️ discovery
-        run: bun ./🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📜️script.ts discover
+        run: bun nx run @semio-tech/repo-test-domain:test-discover --
       - name: 🧾️ protocol, taxonomy, runtime↔manifest↔test equality, oracle qualification, fixture provenance
-        run: bun ./🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📜️script.ts contract
+        run: bun nx run @semio-tech/repo-test-domain:test-contract --
       - name: 🔬️ probe registry and qualification status
-        run: bun ./🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📜️script.ts probe
+        run: bun nx run @semio-tech/repo-test-domain:test-probe --
       - name: 🧫️ fixture digests and provenance
-        run: bun ./🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📜️script.ts fixture verify
+        run: bun nx run @semio-tech/repo-test-domain:test-fixture-verify --
       - name: 🧫️ fixture licence, class and reproducibility audit
-        run: bun ./🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📜️script.ts fixture audit
+        run: bun nx run @semio-tech/repo-test-domain:test-fixture-audit --
       - name: 🔒️ dependency classification and production reachability
-        run: bun ./🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📜️script.ts dependency
+        run: bun nx run @semio-tech/repo-test-domain:test-dependency --
       - name: 🧹️ clean and gc are dry and refuse to leave the cache root
         run: |
-          bun ./🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📜️script.ts clean --dry
-          bun ./🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📜️script.ts gc
+          bun nx run @semio-tech/repo-test-domain:test-clean -- --dry
+          bun nx run @semio-tech/repo-test-domain:test-gc --
 
   # ─────────────────────────────────────────────────────────────────────────────
   # 🏭️ What production dispatch actually offers, per SUBSET. The contract job holds the manifest
@@ -85,7 +85,7 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
       - run: bun install --frozen-lockfile
       - name: 🏭️ production mutation bridge
-        run: bun ./🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📜️script.ts inventory --artifact ${{ matrix.artifact }} --standard ${{ matrix.standard }} --subset ${{ matrix.subset }}
+        run: bun nx run @semio-tech/repo-test-domain:test-inventory -- --artifact ${{ matrix.artifact }} --standard ${{ matrix.standard }} --subset ${{ matrix.subset }}
 
   # ─────────────────────────────────────────────────────────────────────────────
   # ⚖️ The changed-subset lane. Sharded by SUBSET, never by artifact.
@@ -104,7 +104,7 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
       - run: bun install --frozen-lockfile
       - name: ⚖️ oracle + subject + comparison pipeline
-        run: bun ./🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📜️script.ts parity ${{ matrix.level }} --subset ${{ matrix.subset }}
+        run: bun nx run @semio-tech/repo-test-domain:test-parity -- ${{ matrix.level }} --subset ${{ matrix.subset }}
       - name: 📦️ preserve failure evidence
         if: failure()
         uses: actions/upload-artifact@v4
@@ -126,13 +126,13 @@ jobs:
       - uses: oven-sh/setup-bun@v2
       - run: bun install --frozen-lockfile
       - name: 📊️ sixteen dimensions, keyed by the full coordinate
-        run: bun ./🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📜️script.ts matrix
+        run: bun nx run @semio-tech/repo-test-domain:test-matrix --
       - name: 🚦️ release gates
         # 🚦️Advisory until the pilot's production bridge builds — see the ticket's status. The gate is
         # RUN on every change so the distance to release is always visible, and the day it is made
         # blocking is a one-line change here rather than a new mechanism.
         continue-on-error: true
-        run: bun ./🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📜️script.ts matrix --enforce
+        run: bun nx run @semio-tech/repo-test-domain:test-matrix -- --enforce
 
   # ─────────────────────────────────────────────────────────────────────────────
   # 🌙️ Nightly: the long suite, the platform matrix and fixture reproduction.
@@ -151,16 +151,16 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
       - run: bun install --frozen-lockfile
       - name: ⚖️ long suite for this subset on this platform
-        run: bun ./🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📜️script.ts parity long --subset ${{ matrix.subset }} --platform ${{ matrix.os }}
+        run: bun nx run @semio-tech/repo-test-domain:test-parity -- long --subset ${{ matrix.subset }} --platform ${{ matrix.os }}
       - name: 🧫️ fixture reproduction sample
         # 🧫️Reproduction re-runs each recorded generator and compares bytes. It is expected to REPORT
         # on this corpus rather than pass: OCCT stamps an incrementing translator counter and a
         # wall-clock timestamp into every STEP export, which is why every bundle records
         # `reproducible: false` and why no external canonicalizer is qualified yet.
         continue-on-error: true
-        run: bun ./🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📜️script.ts fixture reproduce --subset ${{ matrix.subset }}
+        run: bun nx run @semio-tech/repo-test-domain:test-fixture-reproduce -- --subset ${{ matrix.subset }}
       - name: 🧹️ cache integrity and gc dry run
-        run: bun ./🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📜️script.ts gc
+        run: bun nx run @semio-tech/repo-test-domain:test-gc --
 
   # ─────────────────────────────────────────────────────────────────────────────
   # 🗓️ The exhaustive lane: every mutation × outcome × fixture-family, sharded to the leaf.
@@ -179,7 +179,7 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
       - run: bun install --frozen-lockfile
       - name: ⚖️ exhaustive suite for one fixture family
-        run: bun ./🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📜️script.ts parity exhaustive --subset ${{ matrix.subset }} --fixture-family ${{ matrix.family }}
+        run: bun nx run @semio-tech/repo-test-domain:test-parity -- exhaustive --subset ${{ matrix.subset }} --fixture-family ${{ matrix.family }}
       - name: 📦️ preserve failure evidence
         if: failure()
         uses: actions/upload-artifact@v4

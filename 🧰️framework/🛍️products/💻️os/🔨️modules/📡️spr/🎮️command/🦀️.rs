@@ -4,7 +4,7 @@
 //! (with two defaulted trait methods and a `reconcile` return-type change, both called out inline)
 //! from `vcs/rs/lib.rs`'s `🔖️Mutation`/`🔖️CollectionDiff`/`🔖️CollectionMutation` regions and
 //! `framework/core`. Frozen contract:
-//! `.🦑️repo/🎫️tickets/26/07/27/PROTOCOL-BINARY-OP-LOG-LAYER/contract.md` `## Amendment` §`protocol_command`.
+//! `.🧬semio/🦑️repo/🎫️tickets/26/07/27/PROTOCOL-BINARY-OP-LOG-LAYER/contract.md` `## Amendment` §`protocol_command`.
 //!
 //! Op payloads stay schema-opaque here exactly like `protocol_history`: this crate never parses or
 //! interprets an `Op`'s fields, only threads it through the trait seams a technology implements.
@@ -121,6 +121,7 @@ pub const APPROVED_VERBS: &[(&str, &str)] = &[
     ("create", "Created"),
     ("delete", "Deleted"),
     ("disconnect", "Disconnected"),
+    ("discard", "Discarded"),
     ("drag", "Dragged"),
     ("duplicate", "Duplicated"),
     ("edit", "Edited"),
@@ -144,6 +145,7 @@ pub const APPROVED_VERBS: &[(&str, &str)] = &[
     ("seal", "Sealed"),
     ("set", "Set"),
     ("split", "Split"),
+    ("stage", "Staged"),
     ("start", "Started"),
     ("switch", "Switched"),
     ("toggle", "Toggled"),
@@ -151,6 +153,7 @@ pub const APPROVED_VERBS: &[(&str, &str)] = &[
     ("unflatten", "Unflattened"),
     ("ungroup", "Ungrouped"),
     ("update", "Updated"),
+    ("verify", "Verified"),
 ];
 
 /// @emoji 🔤️ `const`-context string equality (stable `&str: PartialEq` isn't usable in a `const`
@@ -160,12 +163,12 @@ pub const fn str_eq(a: &str, b: &str) -> bool {
     if a.len() != b.len() {
         return false;
     }
-    let mut i = 0;
-    while i < a.len() {
+    let mut i = a.len();
+    while i > 0 {
+        i -= 1;
         if a[i] != b[i] {
             return false;
         }
-        i += 1;
     }
     true
 }
@@ -1185,9 +1188,22 @@ mod tests {
     //#region 🧪️SemanticsLaws
     #[test]
     fn str_eq_matches_std_partial_eq() {
-        assert!(str_eq("rename-piece", "rename-piece"));
-        assert!(!str_eq("rename-piece", "rename-part"));
-        assert!(!str_eq("short", "shorter"));
+        const _: () = {
+            let mut index = 0;
+            while index < 10000 {
+                assert!(!str_eq("✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📋️program/🧩️requirements/🦠️operation/create-a", "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📋️program/🧩️requirements/🦠️operation/create-b"));
+                index += 1;
+            }
+        };
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️tests/🔤️string-equality/🔣️.json")).expect("language-neutral equality vectors");
+        for row in fixture["cases"].as_array().expect("equality cases") {
+            let left = row["left"].as_str().expect("left string");
+            let right = row["right"].as_str().expect("right string");
+            let actual = str_eq(left, right);
+            assert_eq!(actual, row["equal"].as_bool().expect("expected equality"));
+            assert_eq!(actual, left == right);
+            assert_eq!(actual, row["left"] == row["right"], "independent Serde value equality");
+        }
     }
 
     #[test]

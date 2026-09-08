@@ -8,7 +8,9 @@
 
 use crate::artifacts::forms::schema::{default_value_for_question, dsl_to_value, is_extension_question_kind, json_string_value};
 use crate::artifacts::forms::{forms_steps, FormQuestion, FormsSnapshot};
-use semio_framework_plugin::{Label, LocalizedLabel, SurfaceKind, UiFieldNode, UiNode, UiPresence, UiStackNode, UiTextNode, WindowKindDefinition, WindowOptions};
+use semio_framework_plugin::{LocalizedLabel, SurfaceKind, UiAssemblyResult, WindowKindDefinition, WindowOptions};
+use semio_framework_ui_contract as ui;
+use ui::{Buildable, HasBase, HasChildren};
 
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = "forms-view-try";
@@ -38,29 +40,23 @@ pub fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-fn ui_text_emphasized(value: impl Into<Label>) -> UiNode {
-    UiNode::Text(UiTextNode { value: value.into(), emphasize: Some(true), data_attributes: None, presence: UiPresence::default(), menu: None })
+fn admit<T, E>(value: Result<T, E>) -> UiAssemblyResult<T> {
+    value.map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "forms viewer admission failed"))
 }
 
-fn read_only_field(question: &FormQuestion, value_text: String) -> UiNode {
-    UiNode::Field(UiFieldNode {
-        id: format!("forms-view-try.{}", question.id),
-        label: Label::data(question.label.clone()),
-        description: question.description.clone(),
-        required: None,
-        error: None,
-        child: Box::new(semio_framework_plugin::ui_text(Label::data(value_text))),
-        presence: UiPresence::default(),
-        menu: None,
-    })
+fn text(value: &str, emphasize: bool) -> UiAssemblyResult<ui::BuiltNode> {
+    admit(ui::text(admit(ui::Label::try_from(value))?).emphasize(emphasize).try_build())
 }
 
-/// 👁️ One question's typed default rendered as plain, non-interactive text — the read-only twin of
-/// the editor Try window's per-kind input widgets. Extension question kinds (a host-side contribution
-/// the editor resolves through the sibling editor surface's own contribution plumbing) fall back to a
-/// plain "kind" label here rather than resolving any contribution, since a viewer declares no config
-/// lane to carry `contributions_json`.
-fn render_view_question(question: &FormQuestion) -> UiNode {
+fn read_only_field(question: &FormQuestion, value_text: String) -> UiAssemblyResult<ui::BuiltNode> {
+    let mut field = admit(ui::field(admit(ui::Label::try_from(question.label.as_str()))?).try_id(format!("forms-view-try.{}", question.id)))?;
+    if let Some(description) = &question.description {
+        field = field.description(ui::UiText::try_from_str(description).ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "forms viewer description admission failed"))?);
+    }
+    admit(admit(field.try_child(text(&value_text, false)?))?.try_build())
+}
+
+fn render_view_question(question: &FormQuestion) -> UiAssemblyResult<ui::BuiltNode> {
     if is_extension_question_kind(&question.kind) {
         return read_only_field(question, format!("({})", question.kind));
     }
@@ -68,25 +64,18 @@ fn render_view_question(question: &FormQuestion) -> UiNode {
     read_only_field(question, json_string_value(&value))
 }
 
-/// 👁️ Pure `FormsSnapshot -> UiNode` read: every step's questions rendered flat, in document order,
-/// each showing its typed default value as plain text. No step-by-step wizard state (no `Config`),
-/// no answer entry, no navigation — see this file's own doc comment.
-pub fn render(document: &FormsSnapshot) -> UiNode {
+pub fn render(document: &FormsSnapshot) -> UiAssemblyResult<ui::BuiltNode> {
     let steps = forms_steps(document);
-    if steps.is_empty() {
-        return semio_framework_plugin::ui_text(Label::data("No steps in this form."));
-    }
-    let mut children = vec![ui_text_emphasized(Label::data(document.title.clone().unwrap_or_else(|| "Form".into())))];
+    if steps.is_empty() { return text("No steps in this form.", false); }
+    let mut column = admit(ui::column().try_child(text(document.title.as_deref().unwrap_or("Form"), true)?))?;
     for step in &steps {
-        children.push(ui_text_emphasized(Label::data(step.title.clone())));
-        if let Some(description) = &step.description {
-            children.push(semio_framework_plugin::ui_text(Label::data(description.clone())));
-        }
-        for question in &step.blocks {
-            children.push(render_view_question(question));
-        }
+        let mut section = admit(ui::column().try_id(format!("forms-view-try.step.{}", step.id)))?;
+        section = admit(section.try_child(text(&step.title, true)?))?;
+        if let Some(description) = &step.description { section = admit(section.try_child(text(description, false)?))?; }
+        for question in &step.blocks { section = admit(section.try_child(render_view_question(question)?))?; }
+        column = admit(column.try_child(section))?;
     }
-    UiNode::Stack(UiStackNode { direction: "vertical".into(), gap: None, padding: None, id: None, presence: UiPresence::default(), activate: None, drop_action: None, drop_overlay: None, children, menu: None })
+    admit(column.try_build())
 }
 //#endregion 🔖️Render
 
@@ -106,16 +95,16 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn render_produces_a_node_for_the_default_document() {
         let document = crate::artifacts::forms::schema::building_component_spec();
-        let node = render(&document);
-        let json = dsl::os_pack::json::to_json_string(&node);
-        assert!(json.contains("\"stack\""));
+        let node = render(&document).unwrap();
+        let json = serde_json::to_string(&node).unwrap();
+        assert!(json.contains("\"container\""));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn render_falls_back_to_a_placeholder_for_an_empty_document() {
         let document = crate::artifacts::forms::schema::empty_forms_snapshot();
-        let node = render(&document);
-        let json = dsl::os_pack::json::to_json_string(&node);
+        let node = render(&document).unwrap();
+        let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains("No steps"));
     }
 }

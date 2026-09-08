@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Set Report Table",
+  "type": "object",
+  "properties": {
+    "table": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "table"
+  ],
+  "additionalProperties": false
+}

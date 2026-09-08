@@ -1,0 +1,66 @@
+{
+  "base": {
+    "fixtureSlug": "hexagonal-mushroom-column",
+    "params": {
+      "height": 6,
+      "radius": 0.5,
+      "sides": 6
+    },
+    "questionId": "q",
+    "controllerId": "forms-play",
+    "surface": "try",
+    "interactive": true
+  },
+  "cases": [
+    {
+      "mutation": {
+        "mutation": "setPayload",
+        "payload": {
+          "fixtureSlug": "hexagonal-mushroom-column",
+          "params": {
+            "height": 2,
+            "radius": 0.75,
+            "sides": 8
+          },
+          "questionId": "q",
+          "controllerId": "forms-play",
+          "surface": "try",
+          "interactive": false
+        }
+      },
+      "expected": {
+        "fixtureSlug": "hexagonal-mushroom-column",
+        "params": {
+          "height": 2,
+          "radius": 0.75,
+          "sides": 8
+        },
+        "questionId": "q",
+        "controllerId": "forms-play",
+        "surface": "try",
+        "interactive": false
+      }
+    },
+    {
+      "mutation": {
+        "mutation": "setPayload",
+        "payload": {
+          "fixtureSlug": "ä",
+          "params": null,
+          "questionId": "q",
+          "controllerId": "forms-play",
+          "surface": "try",
+          "interactive": true
+        }
+      },
+      "expected": {
+        "fixtureSlug": "ä",
+        "params": null,
+        "questionId": "q",
+        "controllerId": "forms-play",
+        "surface": "try",
+        "interactive": true
+      }
+    }
+  ]
+}

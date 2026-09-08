@@ -1,7 +1,7 @@
 //! 🧬️ Flow editor reactive features over the owned A1 byte/message ABI.
 
 use semio_framework::abi::{
-    AbiBytes, AbiControl, AbiCursorStep, AbiError, AbiErrorCode, AbiEvent, AbiEventCode, AbiHandle, AbiHandleTable, AbiMessage, AbiMessageBytes, AbiOperation, AbiPage, AbiPageReader, AbiPort, AbiPortPoll, AbiPortRejection, AbiReply, AbiReplyLedger,
+    AbiBytes, AbiControl, AbiCursorStep, AbiError, AbiErrorCode, AbiEvent, AbiEventCode, AbiHandle, AbiHandleTable, AbiMessage, AbiMessageBytes, AbiPage, AbiPageReader, AbiPort, AbiPortPoll, AbiPortRejection, AbiReply, AbiReplyLedger,
     AbiRequest, AbiRequestId, AbiStatus, AbiStatusCode, AbiWorkBudget, ABI_MAX_BODY_BYTES, ABI_MAX_IN_FLIGHT_HANDLES, ABI_MAX_IN_FLIGHT_REQUESTS, ABI_MAX_MESSAGE_BYTES, ABI_MAX_TRANSFER_BYTES,
 };
 use std::cell::RefCell;
@@ -31,6 +31,7 @@ pub const FLOW_EVENT_PREVIEW: u16 = 2_653;
 pub const FLOW_EVENT_SURFACE_STATUS: u16 = 2_654;
 pub const FLOW_EVENT_OUTPUT: u16 = 2_655;
 pub const FLOW_EVENT_TERMINAL: u16 = 2_656;
+pub const FLOW_EVENT_SESSION_TERMINAL: u16 = 2_657;
 
 pub const FLOW_MAX_REQUEST_BYTES: usize = ABI_MAX_BODY_BYTES;
 pub const FLOW_MAX_INLINE_REPLY_BYTES: usize = ABI_MAX_MESSAGE_BYTES;
@@ -93,6 +94,9 @@ pub trait FlowDomain: Sized + 'static {
     fn bind_session(&mut self, _: AbiHandle) {}
 
     fn start_feature(domain: Rc<RefCell<Self>>, admission: FlowFeatureAdmission, operation: u16, payload: Vec<u8>) -> Result<Box<dyn FlowFeature>, FlowFailure>;
+    fn begin_close(&mut self);
+    fn close_step(&mut self, budget: AbiWorkBudget) -> Result<bool, FlowFailure>;
+    fn terminal_is_empty(&self) -> bool;
 }
 
 //#endregion 🧬️Contract
@@ -211,7 +215,11 @@ impl FlowPayloadWriter {
 
 struct FlowSession<D> {
     domain: Rc<RefCell<D>>,
+    open_request: AbiRequestId,
+    open_generation: u32,
     closed: bool,
+    domain_close_started: bool,
+    domain_terminal: bool,
 }
 
 struct FlowOperation {
@@ -287,17 +295,7 @@ impl<D: FlowDomain> FlowBridge<D> {
             return;
         }
         self.closing = true;
-        for entry in self.requests.iter().flatten() {
-            if let Ok(FlowResource::Operation(operation)) = self.resources.get_mut(entry.operation) {
-                if operation.feature.cancel(bridge_control_budget()).is_ok() {
-                    operation.cancelled = true;
-                    if let Some(reader) = operation.reader.as_mut() {
-                        reader.cancel();
-                    }
-                }
-            }
-        }
-        for handle in std::mem::take(&mut self.sessions) {
+        for handle in self.sessions.clone() {
             let _ = self.close_session(handle);
         }
     }
@@ -351,7 +349,7 @@ impl<D: FlowDomain> FlowBridge<D> {
         self.preflight_outbound(1).map_err(|code| AbiPortRejection { code, message: returned() })?;
         self.request_ledger.admit(request.request_id, request.generation).map_err(|code| AbiPortRejection { code, message: returned() })?;
         let domain = Rc::new(RefCell::new((self.factory)()));
-        let session = Rc::new(RefCell::new(FlowSession { domain: domain.clone(), closed: false }));
+        let session = Rc::new(RefCell::new(FlowSession { domain: domain.clone(), open_request: request.request_id, open_generation: request.generation, closed: false, domain_close_started: false, domain_terminal: false }));
         let handle = self.resources.open(FlowResource::Session(session)).map_err(|(code, _)| AbiPortRejection { code, message: returned() })?;
         domain.borrow_mut().bind_session(handle);
         self.active_resources += 1;
@@ -433,6 +431,17 @@ impl<D: FlowDomain> FlowBridge<D> {
         let Some(handle) = self.work.pop_front() else {
             return Ok(());
         };
+        if matches!(self.resources.get(handle)?, FlowResource::Session(_)) {
+            let retired = self.advance_session_close(handle, budget);
+            if !matches!(retired, Ok(true)) { self.work.push_back(handle); }
+            return retired.map(|_| ());
+        }
+        let result = self.advance_operation(handle, budget);
+        if result.is_err() && self.resources.get(handle).is_ok() && !self.work.contains(&handle) { self.work.push_back(handle); }
+        result
+    }
+
+    fn advance_operation(&mut self, handle: AbiHandle, budget: AbiWorkBudget) -> Result<(), AbiErrorCode> {
         self.preflight_outbound(2)?;
         let mut retain = true;
         let mut event: Option<(AbiRequestId, u32, u16, AbiStatus, Vec<u8>, bool)> = None;
@@ -447,20 +456,25 @@ impl<D: FlowDomain> FlowBridge<D> {
             let FlowResource::Operation(operation) = self.resources.get_mut(handle)? else {
                 return Err(AbiErrorCode::UnknownHandle);
             };
-            if let Some(retained_page) = operation.retained_page.as_ref() {
-                if !operation.retained_page_emitted {
-                    page = Some(retained_page.clone());
-                    operation.retained_page_emitted = true;
+            if session_closed && !operation.cancelled {
+                operation.feature.cancel(budget).map_err(|failure| failure.code)?;
+                operation.cancelled = true;
+            }
+            if operation.cancelled {
+                if let Some(page) = operation.retained_page.take() {
+                    if operation.reader.is_some() { operation.retained_page = Some(page); return Err(AbiErrorCode::Busy); }
+                    operation.reader = Some(AbiPageReader::try_new(handle, page.bytes.into_vec()).map_err(|rejected| rejected.code)?);
+                    operation.retained_page_emitted = false;
                 }
-            } else if operation.cancelled || session_closed {
-                let feature_closed = operation.feature.close_step(budget).map_err(|failure| failure.code)?;
                 if let Some(reader) = operation.reader.as_mut() {
-                    let _ = reader.close_step(budget);
+                    reader.cancel();
                     if !reader.terminal_is_empty() {
+                        reader.close_step(budget)?;
                         self.work.push_back(handle);
                         return Ok(());
                     }
                 }
+                let feature_closed = operation.feature.close_step(budget).map_err(|failure| failure.code)?;
                 if !feature_closed {
                     self.work.push_back(handle);
                     return Ok(());
@@ -468,6 +482,11 @@ impl<D: FlowDomain> FlowBridge<D> {
                 event = Some(terminal_event(operation.request_id, operation.generation, handle, AbiStatusCode::Cancelled, AbiErrorCode::Cancelled));
                 reply = Some(failure_reply(operation.request_id, operation.generation, AbiStatusCode::Cancelled, AbiErrorCode::Cancelled, "cancelled"));
                 retain = false;
+            } else if let Some(retained_page) = operation.retained_page.as_ref() {
+                if !operation.retained_page_emitted {
+                    page = Some(retained_page.clone());
+                    operation.retained_page_emitted = true;
+                }
             } else if let Some(reader) = operation.reader.as_mut() {
                 match reader.read_step(budget)? {
                     AbiCursorStep::PageComplete(_) => page = reader.page().cloned(),
@@ -557,6 +576,12 @@ impl<D: FlowDomain> FlowBridge<D> {
     }
 
     fn close_session(&mut self, handle: AbiHandle) -> Result<(), AbiErrorCode> {
+        let FlowResource::Session(session) = self.resources.get(handle)? else {
+            return Err(AbiErrorCode::UnknownHandle);
+        };
+        if session.borrow().closed { return Err(AbiErrorCode::Closed); }
+        session.borrow_mut().closed = true;
+        self.work.push_back(handle);
         for slot in 0..self.requests.len() {
             let Some(entry) = self.requests[slot] else {
                 continue;
@@ -568,19 +593,51 @@ impl<D: FlowDomain> FlowBridge<D> {
                 };
                 if operation.feature.cancel(bridge_control_budget()).is_ok() {
                     operation.cancelled = true;
+                    if let Some(reader) = operation.reader.as_mut() { reader.cancel(); }
                 }
             }
         }
-        let FlowResource::Session(session) = self.resources.close(handle)? else {
-            return Err(AbiErrorCode::UnknownHandle);
-        };
-        session.borrow_mut().closed = true;
-        self.sessions.retain(|candidate| *candidate != handle);
-        self.active_resources -= 1;
         Ok(())
     }
 
+    fn advance_session_close(&mut self, handle: AbiHandle, budget: AbiWorkBudget) -> Result<bool, AbiErrorCode> {
+        if self.requests.iter().flatten().any(|entry| matches!(self.resources.get(entry.operation), Ok(FlowResource::Operation(operation)) if operation.session_handle == handle)) {
+            return Ok(false);
+        }
+        let FlowResource::Session(session) = self.resources.get(handle)? else {
+            return Err(AbiErrorCode::UnknownHandle);
+        };
+        let (origin, generation) = {
+            let mut session = session.borrow_mut();
+            if !session.closed { return Err(AbiErrorCode::Busy); }
+            if !session.domain_close_started {
+                session.domain.borrow_mut().begin_close();
+                session.domain_close_started = true;
+            }
+            if !session.domain_terminal {
+                {
+                    let mut domain = session.domain.borrow_mut();
+                    if !domain.close_step(budget).map_err(|failure| failure.code)? { return Ok(false); }
+                    if !domain.terminal_is_empty() { return Err(AbiErrorCode::Busy); }
+                }
+                session.domain_terminal = true;
+            }
+            (session.open_request, session.open_generation)
+        };
+        let mut body = FlowPayloadWriter::default(); body.handle(handle);
+        match self.push_event(origin, generation, FLOW_EVENT_SESSION_TERMINAL, AbiStatus::OK, body.finish(), false) {
+            Ok(()) => {},
+            Err(AbiErrorCode::Busy | AbiErrorCode::LimitExceeded) => return Ok(false),
+            Err(code) => return Err(code),
+        }
+        self.resources.close(handle)?;
+        self.sessions.retain(|candidate| *candidate != handle);
+        self.active_resources -= 1;
+        Ok(true)
+    }
+
     fn push_event(&mut self, origin: AbiRequestId, generation: u32, code: u16, status: AbiStatus, bytes: Vec<u8>, replaceable: bool) -> Result<(), AbiErrorCode> {
+        self.preflight_outbound(1)?;
         if replaceable {
             if let Some((slot, old)) = self.events.iter().enumerate().find_map(|(slot, entry)| entry.filter(|entry| entry.origin == origin && entry.generation == generation && entry.code == code).map(|entry| (slot, entry))) {
                 self.outbound.retain(|message| !matches!(message, AbiMessage::Event(event) if event.request_id == old.acknowledgement));
@@ -667,7 +724,7 @@ fn request_slot(request_id: AbiRequestId) -> usize {
     (request_id.0 % FLOW_MAX_REQUESTS as u64) as usize
 }
 
-fn validate_budget(budget: AbiWorkBudget) -> Result<(), AbiErrorCode> {
+pub(super) fn validate_budget(budget: AbiWorkBudget) -> Result<(), AbiErrorCode> {
     if budget.cancelled {
         Err(AbiErrorCode::Cancelled)
     } else if budget.interrupted {
@@ -692,14 +749,20 @@ fn bridge_control_budget() -> AbiWorkBudget {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use semio_framework::abi::AbiOperation;
 
     #[derive(Default)]
-    struct MockDomain;
+    struct MockDomain {
+        close_calls: usize,
+        close_steps: usize,
+        unproven: bool,
+    }
 
     struct MockFeature {
         payload: Option<Vec<u8>>,
         phase: u8,
         cancelled: bool,
+        close_failed: bool,
     }
 
     impl FlowFeature for MockFeature {
@@ -708,6 +771,7 @@ mod tests {
                 return FlowFeatureStep::Failed(FlowFailure::new(AbiErrorCode::Cancelled, "cancelled"));
             }
             self.phase += 1;
+            if self.phase == 1 && self.payload.as_deref() == Some(&[7]) { return FlowFeatureStep::RetainedPage(vec![7; 129]); }
             match self.phase {
                 1 => FlowFeatureStep::Progress { completed: 1, total: 1 },
                 2 => FlowFeatureStep::Checkpoint(vec![1]),
@@ -720,12 +784,29 @@ mod tests {
             self.cancelled = true;
             Ok(())
         }
+
+        fn close_step(&mut self, _: AbiWorkBudget) -> Result<bool, FlowFailure> {
+            if self.payload.as_deref() == Some(&[8]) && !self.close_failed {
+                self.close_failed = true;
+                return Err(FlowFailure::new(AbiErrorCode::Busy, "retained close retry"));
+            }
+            Ok(true)
+        }
     }
 
     impl FlowDomain for MockDomain {
         fn start_feature(_: Rc<RefCell<Self>>, _: FlowFeatureAdmission, _: u16, payload: Vec<u8>) -> Result<Box<dyn FlowFeature>, FlowFailure> {
-            Ok(Box::new(MockFeature { payload: Some(payload), phase: 0, cancelled: false }))
+            Ok(Box::new(MockFeature { payload: Some(payload), phase: 0, cancelled: false, close_failed: false }))
         }
+
+        fn begin_close(&mut self) { self.close_calls += 1; }
+
+        fn close_step(&mut self, _: AbiWorkBudget) -> Result<bool, FlowFailure> {
+            self.close_steps += 1;
+            Ok(self.close_calls == 1 && self.close_steps >= 3)
+        }
+
+        fn terminal_is_empty(&self) -> bool { self.close_calls == 1 && self.close_steps >= 3 && !self.unproven }
     }
 
     fn budget() -> AbiWorkBudget {
@@ -836,7 +917,194 @@ mod tests {
         assert!(bridge.try_send(AbiMessage::Control(AbiControl::Close { handle: session }), budget()).is_err());
         bridge.begin_close();
         bridge.begin_close();
+        for _ in 0..3 {
+            if let AbiPortPoll::Message(AbiMessage::Event(event)) = bridge.poll(budget()).unwrap() { acknowledge_event(&mut bridge, &event); }
+        }
         assert!(bridge.terminal_is_empty());
+    }
+
+    #[test]
+    fn session_close_retains_domain_until_child_and_exact_terminal_owners_retire() {
+        let text = include_str!("🧪️fixtures/🧹️session-close/🔣️.json");
+        let fixture = crate::os_pack::json::parse(text).unwrap();
+        let independent: serde_json::Value = serde_json::from_str(text).unwrap();
+        let close = fixture.get("close").unwrap();
+        let steps = close.get("domainSteps").unwrap().as_u64().unwrap() as usize;
+        assert_eq!(steps as u64, independent["close"]["domainSteps"].as_u64().unwrap());
+        for credit in close.get("byteCredits").unwrap().as_array().unwrap() {
+            let credit = credit.as_u64().unwrap() as usize;
+            let mut bridge = FlowBridge::new(MockDomain::default);
+            let session = open(&mut bridge, 1, 1);
+            let FlowResource::Session(owner) = bridge.resources.get(session).unwrap() else { panic!("session owner") };
+            let domain = owner.borrow().domain.clone();
+            let mut payload = FlowPayloadWriter::default(); payload.handle(session);
+            bridge.try_send(request(2_501, 2, 1, payload.finish()), budget()).unwrap();
+            let AbiMessage::Event(admitted) = poll_message(&mut bridge) else { panic!("admission") };
+            acknowledge_event(&mut bridge, &admitted);
+            bridge.try_send(AbiMessage::Control(AbiControl::Close { handle: session }), budget()).unwrap();
+            assert_eq!(bridge.active_resources, 2);
+            assert_eq!(domain.borrow().close_calls, 0);
+            assert_eq!(bridge.try_send(AbiMessage::Control(AbiControl::Close { handle: session }), budget()).unwrap_err().code, AbiErrorCode::Closed);
+            let mut payload = FlowPayloadWriter::default(); payload.handle(session);
+            assert_eq!(bridge.try_send(request(2_501, 3, 1, payload.finish()), budget()).unwrap_err().code, AbiErrorCode::Closed);
+            let mut ordering = vec!["session-closed"];
+            bridge.begin_close(); bridge.begin_close();
+            let AbiMessage::Event(terminal) = poll_message(&mut bridge) else { panic!("terminal") };
+            assert_eq!(terminal.event.get(), FLOW_EVENT_TERMINAL);
+            assert_eq!(bridge.active_resources, 1);
+            assert_eq!(domain.borrow().close_calls, 0);
+            ordering.push("operation-retired");
+            assert!(matches!(poll_message(&mut bridge), AbiMessage::Reply(_)));
+            for kind in fixture.get("rejectedPolls").unwrap().as_array().unwrap() {
+                let mut rejected = AbiWorkBudget::credits(credit);
+                match kind.as_str().unwrap() {
+                    "zero-credit" => rejected.byte_credit = 0,
+                    "interrupted" => rejected.interrupted = true,
+                    "expired" => { rejected.now_ms = 8; rejected.deadline_ms = Some(8); }
+                    _ => panic!("unknown close budget"),
+                }
+                assert!(bridge.poll(rejected).is_err());
+                assert_eq!(bridge.active_resources, 1);
+                assert_eq!(domain.borrow().close_calls, 0);
+            }
+            let mut session_receipt = None;
+            for step in 0..steps {
+                match bridge.poll(AbiWorkBudget::credits(credit)).unwrap() {
+                    AbiPortPoll::Pending if step + 1 < steps => {},
+                    AbiPortPoll::Message(AbiMessage::Event(event)) if step + 1 == steps => {
+                        assert_eq!(event.event.get(), FLOW_EVENT_SESSION_TERMINAL);
+                        session_receipt = Some(event);
+                    },
+                    _ => panic!("session receipt must follow domain terminal"),
+                }
+                assert_eq!(domain.borrow().close_calls, 1);
+                if step == 0 { ordering.push("domain-close-started"); }
+                if step + 1 < steps { assert_eq!(bridge.active_resources, 1); }
+            }
+            assert!(domain.borrow().terminal_is_empty()); ordering.push("domain-retired");
+            assert_eq!(bridge.active_resources, 0); ordering.push("session-released");
+            assert_eq!(serde_json::to_value(&ordering).unwrap(), independent["ordering"]);
+            assert!(!bridge.terminal_is_empty());
+            acknowledge_event(&mut bridge, &terminal);
+            assert!(!bridge.terminal_is_empty());
+            acknowledge_event(&mut bridge, &session_receipt.unwrap());
+            assert!(bridge.terminal_is_empty());
+            assert!(bridge.resources.get(session).is_err());
+        }
+    }
+
+    #[test]
+    fn session_close_never_releases_an_unproven_terminal_domain() {
+        let mut bridge = FlowBridge::new(MockDomain::default);
+        let session = open(&mut bridge, 1, 1);
+        let FlowResource::Session(owner) = bridge.resources.get(session).unwrap() else { panic!("session owner") };
+        let domain = owner.borrow().domain.clone();
+        domain.borrow_mut().unproven = true;
+        bridge.begin_close();
+        for _ in 0..2 { bridge.poll(budget()).unwrap(); }
+        assert_eq!(bridge.poll(budget()).unwrap_err(), AbiErrorCode::Busy);
+        assert_eq!(bridge.active_resources, 1);
+        assert_eq!(domain.borrow().close_calls, 1);
+        assert!(!bridge.terminal_is_empty());
+        domain.borrow_mut().unproven = false;
+        let AbiPortPoll::Message(AbiMessage::Event(receipt)) = bridge.poll(budget()).unwrap() else { panic!("terminal session receipt") };
+        assert_eq!(receipt.event.get(), FLOW_EVENT_SESSION_TERMINAL);
+        assert_eq!(bridge.active_resources, 0);
+        assert!(!bridge.terminal_is_empty());
+        acknowledge_event(&mut bridge, &receipt);
+        assert!(bridge.terminal_is_empty());
+    }
+
+    #[test]
+    fn session_close_requeues_the_exact_operation_after_a_retained_feature_fault() {
+        let mut bridge = FlowBridge::new(MockDomain::default);
+        let session = open(&mut bridge, 1, 1);
+        let mut payload = FlowPayloadWriter::default(); payload.handle(session); payload.u8(8);
+        bridge.try_send(request(2_501, 2, 1, payload.finish()), budget()).unwrap();
+        let AbiMessage::Event(admitted) = poll_message(&mut bridge) else { panic!("admission") };
+        acknowledge_event(&mut bridge, &admitted);
+        let operation = FlowPayloadReader::new(admitted.bytes.as_slice()).handle().unwrap();
+        bridge.begin_close();
+        assert_eq!(bridge.poll(budget()).unwrap_err(), AbiErrorCode::Busy);
+        assert!(bridge.work.contains(&operation));
+        assert_eq!(bridge.active_resources, 2);
+        assert!(!bridge.terminal_is_empty());
+        for _ in 0..16 {
+            if let AbiPortPoll::Message(AbiMessage::Event(event)) = bridge.poll(budget()).unwrap() { acknowledge_event(&mut bridge, &event); }
+            if bridge.terminal_is_empty() { break; }
+        }
+        assert!(bridge.terminal_is_empty());
+        assert_eq!(bridge.active_resources, 0);
+    }
+
+    #[test]
+    fn session_close_cancels_an_unacknowledged_page_and_retires_its_exact_bytes() {
+        let mut bridge = FlowBridge::new(MockDomain::default);
+        let session = open(&mut bridge, 1, 1);
+        let mut payload = FlowPayloadWriter::default(); payload.handle(session); payload.u8(7);
+        bridge.try_send(request(2_501, 2, 1, payload.finish()), budget()).unwrap();
+        for expected in [FLOW_EVENT_ADMITTED, FLOW_EVENT_OUTPUT] {
+            let AbiMessage::Event(event) = poll_message(&mut bridge) else { panic!("page event") };
+            assert_eq!(event.event.get(), expected); acknowledge_event(&mut bridge, &event);
+        }
+        let AbiMessage::Page(page) = poll_message(&mut bridge) else { panic!("retained page") };
+        assert_eq!(page.bytes.len(), 129);
+        bridge.try_send(AbiMessage::Control(AbiControl::Close { handle: session }), budget()).unwrap();
+        bridge.begin_close();
+        let mut turns = 0;
+        while !bridge.terminal_is_empty() && turns < 4096 {
+            turns += 1;
+            match bridge.poll(AbiWorkBudget::credits(1)).unwrap() {
+                AbiPortPoll::Message(AbiMessage::Event(event)) => acknowledge_event(&mut bridge, &event),
+                AbiPortPoll::Message(AbiMessage::Page(_)) => panic!("cancelled page was republished"),
+                _ => {},
+            }
+        }
+        assert!(bridge.terminal_is_empty());
+        assert!(turns >= page.bytes.len());
+        assert_eq!(bridge.active_resources, 0);
+    }
+
+    #[test]
+    fn session_close_receipt_retries_a_colliding_event_slot_and_preserves_sibling() {
+        let text = include_str!("🧪️fixtures/🧑‍🤝‍🧑️browser-runtime/🔣️.json");
+        let fixture = crate::os_pack::json::parse(text).unwrap();
+        let independent: serde_json::Value = serde_json::from_str(text).unwrap();
+        let code = fixture.get("receipt").unwrap().get("event").unwrap().as_u64().unwrap() as u16;
+        assert_eq!(u64::from(code), independent["receipt"]["event"].as_u64().unwrap());
+        let mut bridge = FlowBridge::new(MockDomain::default);
+        let session = open(&mut bridge, 1, 1);
+        let sibling = open(&mut bridge, 2, 1);
+        let FlowResource::Session(owner) = bridge.resources.get(session).unwrap() else { panic!("session") };
+        let domain = owner.borrow().domain.clone();
+        bridge.push_event(AbiRequestId(65), 1, FLOW_EVENT_PROGRESS, AbiStatus::OK, Vec::new(), false).unwrap();
+        let AbiMessage::Event(collision) = poll_message(&mut bridge) else { panic!("collision") };
+        bridge.try_send(AbiMessage::Control(AbiControl::Close { handle: session }), budget()).unwrap();
+        for _ in 0..4 { assert!(matches!(bridge.poll(budget()).unwrap(), AbiPortPoll::Pending)); }
+        assert!(domain.borrow().terminal_is_empty());
+        assert_eq!(domain.borrow().close_calls, 1);
+        assert_eq!(bridge.active_resources, 2);
+        acknowledge_event(&mut bridge, &collision);
+        let AbiMessage::Event(receipt) = poll_message(&mut bridge) else { panic!("session receipt") };
+        assert_eq!(receipt.event.get(), code);
+        assert_eq!(receipt.request_id.0 ^ (u64::from(receipt.sequence) << 32), 1);
+        assert_eq!(FlowPayloadReader::new(receipt.bytes.as_slice()).handle().unwrap(), session);
+        assert_eq!(bridge.active_resources, 1);
+        assert!(bridge.resources.get(session).is_err());
+        assert!(bridge.resources.get(sibling).is_ok());
+        let mut wrong = success_reply(receipt.request_id, receipt.generation + 1, Vec::new());
+        assert!(bridge.try_send(AbiMessage::Reply(wrong.clone()), budget()).is_err());
+        wrong.generation = receipt.generation;
+        bridge.try_send(AbiMessage::Reply(wrong), budget()).unwrap();
+        let mut payload = FlowPayloadWriter::default(); payload.handle(sibling);
+        bridge.try_send(request(2_501, 3, 1, payload.finish()), budget()).unwrap();
+        bridge.begin_close();
+        for _ in 0..64 {
+            if let AbiPortPoll::Message(AbiMessage::Event(event)) = bridge.poll(budget()).unwrap() { acknowledge_event(&mut bridge, &event); }
+            if bridge.terminal_is_empty() { break; }
+        }
+        assert!(bridge.terminal_is_empty());
+        println!("[DEBUG] Flow session receipt retained a terminal domain across event-slot backpressure and preserved its live sibling");
     }
 
     #[test]

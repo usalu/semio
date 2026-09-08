@@ -1,0 +1,18 @@
+[
+  {
+    "payload": {
+      "storeyId": "ground",
+      "levelIndex": 0,
+      "storeyName": "Ground"
+    },
+    "label": "Level 0: Ground"
+  },
+  {
+    "payload": {
+      "storeyId": "basement",
+      "levelIndex": -1,
+      "storeyName": "Untergeschoss"
+    },
+    "label": "Level -1: Untergeschoss"
+  }
+]

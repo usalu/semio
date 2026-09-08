@@ -1,0 +1,117 @@
+{
+  "format": "semio.db.capability-completion/v1",
+  "publication": [
+    {
+      "name": "before-poll-success",
+      "publication": "before-poll",
+      "outcome": "success",
+      "firstReady": true,
+      "wakes": 0
+    },
+    {
+      "name": "before-poll-fault",
+      "publication": "before-poll",
+      "outcome": "fault",
+      "firstReady": true,
+      "wakes": 0
+    },
+    {
+      "name": "before-registration-success",
+      "publication": "before-registration",
+      "outcome": "success",
+      "firstReady": true,
+      "wakes": 0
+    },
+    {
+      "name": "before-registration-fault",
+      "publication": "before-registration",
+      "outcome": "fault",
+      "firstReady": true,
+      "wakes": 0
+    },
+    {
+      "name": "after-pending-success",
+      "publication": "after-pending",
+      "outcome": "success",
+      "firstReady": false,
+      "wakes": 1
+    },
+    {
+      "name": "after-pending-fault",
+      "publication": "after-pending",
+      "outcome": "fault",
+      "firstReady": false,
+      "wakes": 1
+    }
+  ],
+  "retirement": [
+    {
+      "name": "consumed-before-wake-success",
+      "outcome": "success",
+      "terminalBeforePublisherWake": true,
+      "wakes": 0
+    },
+    {
+      "name": "consumed-before-wake-fault",
+      "outcome": "fault",
+      "terminalBeforePublisherWake": true,
+      "wakes": 0
+    }
+  ],
+  "driveOwnership": [
+    {
+      "name": "paused-Handoff",
+      "phase": "Handoff",
+      "closeBlocked": true,
+      "admissionRetained": true,
+      "storageRetained": true,
+      "finalReleases": 1
+    },
+    {
+      "name": "paused-RetainWork",
+      "phase": "RetainWork",
+      "closeBlocked": true,
+      "admissionRetained": true,
+      "storageRetained": true,
+      "finalReleases": 1
+    },
+    {
+      "name": "paused-Poll",
+      "phase": "Poll",
+      "closeBlocked": true,
+      "admissionRetained": true,
+      "storageRetained": true,
+      "finalReleases": 1
+    }
+  ],
+  "leaseCompletion": [
+    {
+      "name": "synchronous-successors",
+      "publication": "synchronous",
+      "admissionDuringPublication": false,
+      "lateSubmissions": 0,
+      "retirementSubmissions": 0
+    },
+    {
+      "name": "consumed-under-active-publisher",
+      "publication": "active-publisher",
+      "admissionDuringPublication": true,
+      "lateSubmissions": 0,
+      "retirementSubmissions": 0
+    },
+    {
+      "name": "consumed-after-finalizer-check",
+      "publication": "after-finalizer-check",
+      "admissionDuringPublication": true,
+      "lateSubmissions": 0,
+      "retirementSubmissions": 1
+    },
+    {
+      "name": "consumed-after-finalizer-check-refused",
+      "publication": "after-finalizer-check-refused",
+      "admissionDuringPublication": true,
+      "lateSubmissions": 0,
+      "retirementSubmissions": 1
+    }
+  ]
+}

@@ -234,7 +234,7 @@ mod tests {
                 { "id": "e1", "source": "a", "target": "b", "edgeKind": "wires.owns" }
             ]
         });
-        assert!(h.parse_fixture_v1(&fixture));
+        assert!(h.parse_fixture_json(&fixture.to_string()));
         assert_eq!(h.port_mode, GraphPortMode::Normal);
         assert!(h.handles.is_empty());
         assert_eq!(h.edges.len(), 1);
@@ -365,7 +365,7 @@ mod tests {
             ],
             "edges": []
         });
-        assert!(h.parse_fixture_v1(&fixture));
+        assert!(h.parse_fixture_json(&fixture.to_string()));
         let _ = h.drain_events_json();
         let hp_a = handle_position_on_circle(Point::new(0.0, 0.0), 40.0, 0.0);
         let hp_b = handle_position_on_circle(Point::new(280.0, 0.0), 40.0, std::f64::consts::PI);
@@ -409,7 +409,7 @@ mod tests {
             ],
             "edges": []
         });
-        assert!(h.parse_fixture_v1(&fixture));
+        assert!(h.parse_fixture_json(&fixture.to_string()));
         let _ = h.drain_events_json();
         h.set_selection_ids(&["a".into()]);
         let inside_a = h.world_to_screen(Point::new(0.0, 0.0));
@@ -462,7 +462,7 @@ mod tests {
             ],
             "edges": []
         });
-        assert!(h.parse_fixture_v1(&fixture));
+        assert!(h.parse_fixture_json(&fixture.to_string()));
         let _ = h.drain_events_json();
         let hp_a = handle_position_on_circle(Point::new(0.0, 0.0), 40.0, 0.0);
         let hp_b = handle_position_on_circle(Point::new(280.0, 0.0), 40.0, std::f64::consts::PI);

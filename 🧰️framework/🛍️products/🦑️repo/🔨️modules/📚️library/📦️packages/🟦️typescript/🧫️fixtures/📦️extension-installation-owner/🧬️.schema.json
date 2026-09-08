@@ -1,0 +1,30 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "cases"
+  ],
+  "properties": {
+    "schema": {
+      "const": "semio.extension.cargo-installation-owner/v1"
+    },
+    "cases": {
+      "const": [
+        {
+          "manifest": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/🧮️math/📦️packages/🦀️rust/Cargo.toml",
+          "directoryName": "🧮️math"
+        },
+        {
+          "manifest": "✏️s/🔌️plugins/🏭️process/🧩️extensions/🪵️wood/📦️packages/🦀️rust/Cargo.toml",
+          "directoryName": "🪵️wood"
+        },
+        {
+          "manifest": "✏️s/🔌️plugins/📐️cad/🧩️extensions/🏢️aec-building/📦️packages/🦀️rust/Cargo.toml",
+          "directoryName": "🏢️aec-building"
+        }
+      ]
+    }
+  }
+}

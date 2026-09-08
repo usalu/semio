@@ -4915,7 +4915,7 @@ pub use crate::os_semio as semio_format;
 //#region 🔖️Pack
 //#region 🔖️Pack
 /// @emoji 📦️ Binary counterpart of `🔖️Text` above — see the wave-1 design at
-/// `.🦑️repo/🎫️tickets/26/07/27/PACK-BINARY-DOCUMENT-LAYER-ACROSS-ALL-APPS/` for the full container-format
+/// `.🧬semio/🦑️repo/🎫️tickets/26/07/27/PACK-BINARY-DOCUMENT-LAYER-ACROSS-ALL-APPS/` for the full container-format
 /// contract. `pack`'s own `EncodeOptions`/`DecodeOptions`/`VerificationLevel` are re-exported under
 /// a `Pack`-prefixed name (not a plain re-export — `dsl_derive`'s emitted `ArtifactPack` impl and
 /// every downstream caller spell them `crate::os_store::PackEncodeOptions`/`crate::os_store::PackDecodeOptions`/
@@ -19854,7 +19854,7 @@ pub mod test_support {
     }
 
     /// @emoji 🧭️ Non-panicking twin of [`assert_dsl_round_trip`] for a repo-wide fixture-law SWEEP
-    /// (W6: `.🦑️repo/🎫️tickets/.../DSL-FIXTURE-LAW-SWEEP`): checks BOTH laws directly against real
+    /// (W6: `.🧬semio/🦑️repo/🎫️tickets/.../DSL-FIXTURE-LAW-SWEEP`): checks BOTH laws directly against real
     /// shipped `📚️examples/**` fixture TEXT (not a hand-built in-memory value), which is exactly what
     /// a single per-app round-trip test built on its own simpler hardcoded example can miss — a
     /// printer/parser asymmetry only a real fixture's actual formatting (comment placement, field

@@ -3,7 +3,7 @@
 use crate::editor::wires::terminology::WiresLabels;
 use crate::editor::wires::{ui_value_map, ui_value_text, wires_action};
 use dsl::DslValue;
-use semio_framework_plugin::{tree_item_with_action, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, UiFixedList, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL};
+use semio_framework_plugin::{tree_item_with_action, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, UiFixedList, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL};
 
 //#region 🔖️Constants
 pub const WIRES_PLAY_BODY_CATALOGUE: &str = "reasoning.wires.catalogue";
@@ -46,7 +46,7 @@ fn kind_catalog_items(namespace: &PanelTreeBuilder, kind: &str, entries: &[DslVa
             "relationship-kinds" => wires_action("addRelationship", Some(args))?,
             _ => wires_action("addNode", Some(args))?,
         };
-        let item = tree_item_with_action(namespace.item_id(kind, &format!("{index}.{kind_id}"))?, Label::data(catalog_kind_label(entry)), Some(kind_id.into()), action)?;
+        let item = tree_item_with_action(namespace.item_id(kind, &format!("{index}.{kind_id}"))?, crate::editor::wires::ui_label(catalog_kind_label(entry))?, Some(kind_id.into()), action)?;
         items.try_push(item).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "wires catalogue item admission failed"))?;
     }
     Ok(items)
@@ -59,8 +59,8 @@ pub fn render(wires: &DslValue, labels: &WiresLabels) -> semio_framework_plugin:
     let identity_items = kind_catalog_items(&namespace, "identity-kinds", &identity_entries)?;
     let relationship_items = kind_catalog_items(&namespace, "relationship-kinds", &relationship_entries)?;
     namespace
-        .section_or_placeholder("wires-play-kinds.identity-kinds", Some(labels.identity_kinds.into()), true, identity_items, Label::data("(none)"))?
-        .section_or_placeholder("wires-play-kinds.relationship-kinds", Some(labels.relationship_kinds.into()), true, relationship_items, Label::data("(none)"))?
+        .section_or_placeholder("wires-play-kinds.identity-kinds", Some(crate::editor::wires::ui_label(labels.identity_kinds.as_str())?), true, identity_items, crate::editor::wires::ui_label("(none)")?)?
+        .section_or_placeholder("wires-play-kinds.relationship-kinds", Some(crate::editor::wires::ui_label(labels.relationship_kinds.as_str())?), true, relationship_items, crate::editor::wires::ui_label("(none)")?)?
         .build()
 }
 //#endregion 🔖️Render
@@ -73,8 +73,8 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn catalogue_lists_identity_and_relationship_kinds() {
-        let mut app = metabolism_app();
-        let json = render_body(&mut app, WIRES_PLAY_BODY_CATALOGUE);
+        let mut app = metabolism_app().await;
+        let json = render_body(&mut app, WIRES_PLAY_BODY_CATALOGUE).await;
         assert!(json.contains("Identity kinds"));
         assert!(json.contains("Relationship kinds"));
     }

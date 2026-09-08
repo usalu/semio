@@ -28,13 +28,13 @@ const DIFF: &str = include_str!("🔺️diff/🔣️.json");
 const OUTCOME: &str = include_str!("🎯️outcome/🔣️.json");
 
 fn before() -> RewritingSnapshot {
-    serde_json::from_str(BEFORE).expect("before snapshot decodes")
+    pack::from_json_str(BEFORE).expect("before snapshot decodes")
 }
 fn expected_after() -> RewritingSnapshot {
-    serde_json::from_str(AFTER).expect("after snapshot decodes")
+    pack::from_json_str(AFTER).expect("after snapshot decodes")
 }
 fn mutation() -> RewriteRuleMutation {
-    serde_json::from_str(MUTATION).expect("mutation decodes")
+    pack::from_json_str(MUTATION).expect("mutation decodes")
 }
 
 /// ▶️ `change-parameter-binding` carries `before` to exactly the committed `after` by upserting ONE key
@@ -78,12 +78,12 @@ async fn inverse_restores_before() {
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {
-        let decoded: RewritingSnapshot = serde_json::from_str(text).expect("snapshot decodes");
-        let reencoded = serde_json::to_value(&decoded).expect("snapshot encodes");
+        let decoded: RewritingSnapshot = pack::from_json_str(text).expect("snapshot decodes");
+        let reencoded = serde_json::from_str::<serde_json::Value>(&pack::to_json_string(&decoded)).expect("snapshot encodes");
         let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
         assert_eq!(reencoded, original, "change-parameter-binding/retitles-the-caption-binding: committed {label} JSON is not canonical");
     }
-    let reencoded = serde_json::to_value(mutation()).expect("mutation encodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&pack::to_json_string(&mutation())).expect("mutation encodes");
     let original: serde_json::Value = serde_json::from_str(MUTATION).expect("mutation reparses");
     assert_eq!(reencoded, original, "change-parameter-binding/retitles-the-caption-binding: committed mutation JSON is not canonical");
 }
@@ -108,10 +108,10 @@ async fn declared_outcome_holds() {
 async fn produces_committed_diff() {
     let base = before();
     let outcome = <RewriteRuleMutation as protocol::Mutation<RewritingSnapshot>>::diff(&mutation(), &base);
-    let produced = serde_json::to_value(outcome.diff()).expect("produced diff encodes");
+    let produced = serde_json::from_str::<serde_json::Value>(&pack::to_json_string(outcome.diff())).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
     assert_eq!(produced, committed, "change-parameter-binding/retitles-the-caption-binding: produced diff differs from the committed 🔺️diff/🔣️.json");
-    let typed: RewritingDiff = serde_json::from_str(DIFF).expect("committed diff decodes into RewritingDiff");
+    let typed: RewritingDiff = pack::from_json_str(DIFF).expect("committed diff decodes into RewritingDiff");
     let bindings = typed.parameter_bindings.as_ref().expect("change-parameter-binding's delta carries a parameter_bindings map");
     assert_eq!(bindings.len(), 1, "a single-key upsert must appear in the delta as exactly one entry, got {bindings:?}");
     assert_eq!(bindings.get("caption"), Some(&Some(PropertyValue::String("Capsule Tower".into()))), "the delta maps the addressed key to Some(new value)");
@@ -125,8 +125,8 @@ async fn produces_committed_diff() {
 /// `change-parameter-binding` never touches — must be present as `null`.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical() {
-    let decoded: RewritingDiff = serde_json::from_str(DIFF).expect("committed diff decodes");
-    let reencoded = serde_json::to_value(&decoded).expect("diff re-encodes");
+    let decoded: RewritingDiff = pack::from_json_str(DIFF).expect("committed diff decodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&pack::to_json_string(&decoded)).expect("diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
     assert_eq!(reencoded, original, "change-parameter-binding/retitles-the-caption-binding: committed diff JSON is not canonical");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
@@ -138,7 +138,7 @@ async fn committed_diff_is_canonical() {
 /// complete description of the `change-parameter-binding` change, not a summary of it.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
-    let decoded: RewritingDiff = serde_json::from_str(DIFF).expect("committed diff decodes");
+    let decoded: RewritingDiff = pack::from_json_str(DIFF).expect("committed diff decodes");
     let produced = <RewritingDiff as protocol::MutationDiff<RewritingSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "change-parameter-binding/retitles-the-caption-binding: committed diff did not carry before to after");
 }

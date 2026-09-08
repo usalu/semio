@@ -8,7 +8,8 @@
         "cwd": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts generate",
         "forwardAllArgs": true
-      }
+      },
+      "cache": true
     },
     "preview-generated": {
       "executor": "nx:run-commands",

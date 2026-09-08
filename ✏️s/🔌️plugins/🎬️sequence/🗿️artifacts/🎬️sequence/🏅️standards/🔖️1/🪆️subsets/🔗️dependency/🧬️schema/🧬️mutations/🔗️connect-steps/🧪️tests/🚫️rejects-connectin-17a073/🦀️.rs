@@ -24,17 +24,17 @@ const DIFF_ABSENT: &str = include_str!("🔺️diff/🚫️.absent");
 const OUTCOME: &str = include_str!("🎯️outcome/🔣️.json");
 
 fn mutation() -> SequenceMutation {
-    serde_json::from_str(MUTATION).expect("mutation decodes")
+    dsl::os_pack::from_json_str(MUTATION).expect("mutation decodes")
 }
 fn expected_after() -> SequenceSnapshot {
-    serde_json::from_str(AFTER).expect("after snapshot decodes")
+    dsl::os_pack::from_json_str(AFTER).expect("after snapshot decodes")
 }
 
 /// 🌱 The committed `⬅️before`, with its composed `content` child resolved to a scene holding the one
 /// step the payload names as BOTH endpoints, and no edges at all — so neither endpoint lookup nor
 /// the edge-id collision check can be the guard that rejects.
 fn before() -> SequenceSnapshot {
-    let snapshot: SequenceSnapshot = serde_json::from_str(BEFORE).expect("before snapshot decodes");
+    let mut snapshot: SequenceSnapshot = dsl::os_pack::from_json_str(BEFORE).expect("before snapshot decodes");
     let SequenceMutation::ConnectSteps(payload) = mutation() else {
         panic!("rejects-connecting-a-step-to-itself's committed mutation must be a connect-steps");
     };
@@ -79,12 +79,12 @@ async fn the_committed_diff_is_declared_absent() {
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {
-        let decoded: SequenceSnapshot = serde_json::from_str(text).expect("snapshot decodes");
-        let reencoded = serde_json::to_value(&decoded).expect("snapshot encodes");
+        let decoded: SequenceSnapshot = dsl::os_pack::from_json_str(text).expect("snapshot decodes");
+        let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::os_pack::to_json_string(&decoded)).expect("snapshot encodes");
         let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
         assert_eq!(reencoded, original, "connect-steps/rejects-connecting-a-step-to-itself: committed {label} JSON is not canonical");
     }
-    let reencoded = serde_json::to_value(mutation()).expect("mutation encodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::os_pack::to_json_string(&mutation())).expect("mutation encodes");
     let original: serde_json::Value = serde_json::from_str(MUTATION).expect("mutation reparses");
     assert_eq!(reencoded, original, "connect-steps/rejects-connecting-a-step-to-itself: committed mutation JSON is not canonical");
     assert_eq!(original.get("from"), original.get("to"), "this case exists to exercise the self-loop guard, so both endpoints must be the same id");

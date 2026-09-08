@@ -35,7 +35,7 @@ use semio_framework_plugin::app::InteractionView;
 // `AppDefinition`, not the old `App { definition, examples }` — there is no `.example(...)`/
 // `.workflow(...)` on this builder (see `🔖️Manifest` below for what got dropped, not silently).
 use semio_framework_plugin::{
-    ActionArgDef, ActionArgOption, ActionDescriptor, ActionKind, AppIo, AppOperationContext, ArtifactEditor, ArtifactOwnedToolJobFactory, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView,
+    ActionArgDef, ActionArgOption, ActionKind, AppIo, AppOperationContext, ArtifactEditor, ArtifactOwnedToolJobFactory, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView,
     ComponentTree, ConfigView, Dialect, DraftView, Editor, EditorApp, Effect, Emit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec,
     InteractionDefinition, InteractionRef, Label, LocalizedLabel, Media, MediaError, MediaPayload, MergeMode, NoDraft, NoDraftMutation, SelectionMethod, SelectionMode, SelectionSpec,
 };
@@ -43,16 +43,49 @@ use std::collections::HashSet;
 use store::EngineHandles;
 
 //#region 🔖️Constants
-pub const PRESENTATION_PLAY_APP_ID: &str = "animate-presentation-play";
+pub const PRESENTATION_PLAY_APP_ID: &str = "s.animate.presentation@1/*#editor";
 pub use artifact::PRESENTATION_PLAY_BODY_DOCUMENT;
 pub use catalogue::PRESENTATION_PLAY_BODY_CATALOGUE;
 pub use inspection::PRESENTATION_PLAY_BODY_DETAILS;
 pub use tile_editor::PRESENTATION_PLAY_BODY_MAIN;
 
-/// 🎯️ An `ActionDescriptor` addressed at this app — the single factory every taxonomy node's chrome
-/// (`📌️panels/*`) builds its `on_change`/item actions with.
-pub fn animate_presentation_action(action: &str, args: Option<dsl::DslValue>) -> ActionDescriptor {
-    ActionDescriptor { controller_id: PRESENTATION_PLAY_APP_ID.into(), action: action.into(), args }
+/// 🎯️ Binds catalogue actions to the canonical presentation editor.
+pub fn animate_presentation_action(action: &str, args: Option<semio_framework_plugin::UiValue>) -> semio_framework_plugin::UiAssemblyResult<(semio_framework_plugin::ActionId, Option<semio_framework_plugin::UiValue>)> {
+    semio_framework_plugin::ActionFactory::new(PRESENTATION_PLAY_APP_ID).action(action, args)
+}
+
+/// 🏷️ Admits a semantic presentation label.
+pub fn ui_label(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_ui_contract::Label> {
+    semio_framework_ui_contract::Label::try_from(value.as_ref()).map_err(|_| ui_capacity_error())
+}
+
+/// 📝️ Admits a fixed presentation UI string.
+pub fn ui_text(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_ui_contract::UiText> {
+    semio_framework_ui_contract::UiText::try_from_str(value.as_ref()).ok_or_else(ui_capacity_error)
+}
+
+/// 🧱️ Finalizes a presentation UI node with explicit identity.
+pub fn ui_node<B: semio_framework_ui_contract::HasBase + semio_framework_ui_contract::Buildable>(builder: B, id: &str) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+    builder.try_id(id).map_err(|_| ui_capacity_error())?.try_build().map_err(|_| ui_capacity_error())
+}
+
+/// 👶️ Admits a complete collection of presentation UI children.
+pub fn ui_children<B: semio_framework_ui_contract::HasChildren>(builder: B, children: impl IntoIterator<Item = semio_framework_plugin::BuiltNode>) -> semio_framework_plugin::UiAssemblyResult<B> {
+    builder.try_children(children).map_err(|_| ui_capacity_error())
+}
+
+/// 🗺️ Admits structured presentation action arguments.
+pub fn ui_map(values: impl IntoIterator<Item = (&'static str, semio_framework_plugin::UiValue)>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiValue> {
+    let mut builder = semio_framework_plugin::UiMapBuilder::try_new().ok_or_else(ui_capacity_error)?;
+    for (key, value) in values {
+        builder.push(key.to_string(), value).map_err(|_| ui_capacity_error())?;
+    }
+    Ok(semio_framework_plugin::UiValue::Map(builder.finish()))
+}
+
+/// 🚧️ Reports fixed-capacity UI admission failure.
+pub fn ui_capacity_error() -> semio_framework_plugin::PluginAssemblyError {
+    semio_framework_plugin::PluginAssemblyError::new("animate.ui.capacity", "presentation UI admission failed")
 }
 //#endregion 🔖️Constants
 
@@ -375,7 +408,8 @@ fn animate_presentation_config_edit_bytes(edit: &protocol::Edit<PresentationConf
 impl store::ArtifactStoreOneItemPreparationFactory<PresentationConfig, PresentationConfigMutation> for AnimatePresentationConfigPreparationFactory {
     fn preflight(&self, mutation: &PresentationConfigMutation, description: Option<&str>, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
         let mutation_bytes = match mutation {
-            PresentationConfigMutation::SetEngagementInput { value } | PresentationConfigMutation::SetLocale { value } => value.len(),
+            PresentationConfigMutation::SetEngagementInput(payload) => payload.value.len(),
+            PresentationConfigMutation::SetLocale(payload) => payload.value.len(),
         };
         if lane != store::HistoryLane::Document || mutation_bytes > ANIMATE_PRESENTATION_CONFIG_VALUE_BYTES || description.is_some_and(|value| value.len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES) {
             return Err("Animate Presentation config preparation rejected its lane or byte envelope".into());
@@ -385,7 +419,8 @@ impl store::ArtifactStoreOneItemPreparationFactory<PresentationConfig, Presentat
 
     fn begin(&self, request: store::ArtifactStoreOneItemPreparationRequest<PresentationConfig, PresentationConfigMutation>) -> Result<Box<dyn store::ArtifactStoreOneItemPreparation<PresentationConfig, PresentationConfigMutation>>, store::ArtifactStoreOneItemPreparationRequest<PresentationConfig, PresentationConfigMutation>> {
         let mutation_bytes = match &request.mutation {
-            PresentationConfigMutation::SetEngagementInput { value } | PresentationConfigMutation::SetLocale { value } => value.len(),
+            PresentationConfigMutation::SetEngagementInput(payload) => payload.value.len(),
+            PresentationConfigMutation::SetLocale(payload) => payload.value.len(),
         };
         if request.lane != store::HistoryLane::Document || mutation_bytes > ANIMATE_PRESENTATION_CONFIG_VALUE_BYTES || request.description.as_ref().is_some_and(|value| value.len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES) || request.operation != request.authority.operation() || request.generation != request.authority.generation() || request.base_revision != request.authority.base_revision() || request.authority.actor().len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES {
             return Err(request);
@@ -408,13 +443,13 @@ impl store::ArtifactStoreOneItemPreparation<PresentationConfig, PresentationConf
             let mutation = self.mutation.take().ok_or_else(|| "Animate Presentation config preparation lost its mutation owner".to_string())?;
             let mut post = base.clone();
             let inverse = match &mutation {
-                PresentationConfigMutation::SetEngagementInput { value } => {
+                PresentationConfigMutation::SetEngagementInput(crate::editor::animate::config::SetEngagementInput { value }) => {
                     post.engagement_input = value.clone();
-                    PresentationConfigMutation::SetEngagementInput { value: base.engagement_input.clone() }
+                    PresentationConfigMutation::SetEngagementInput(crate::editor::animate::config::SetEngagementInput { value: base.engagement_input.clone() })
                 }
-                PresentationConfigMutation::SetLocale { value } => {
+                PresentationConfigMutation::SetLocale(crate::editor::animate::config::SetLocale { value }) => {
                     post.locale = value.clone();
-                    PresentationConfigMutation::SetLocale { value: base.locale.clone() }
+                    PresentationConfigMutation::SetLocale(crate::editor::animate::config::SetLocale { value: base.locale.clone() })
                 }
             };
             self.candidate = Some((post, inverse, mutation));
@@ -553,15 +588,15 @@ impl ArtifactEditor for AnimatePresentationPlayApp {
         Some(crate::artifacts::presentation::spr::presentation_envelope_decode_owner_bundle())
     }
 
-    async fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
+    fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
         Some(crate::editor::animate::config::schema::app_schema_descriptor())
     }
 
-    async fn initial_snapshot() -> PresentationSnapshot {
+    fn initial_snapshot() -> PresentationSnapshot {
         default_presentation_snapshot()
     }
 
-    async fn io() -> Option<AppIo> {
+    fn io() -> Option<AppIo> {
         Some(presentation_io())
     }
 
@@ -573,7 +608,7 @@ impl ArtifactEditor for AnimatePresentationPlayApp {
     /// schema's single shared `source` means tiles, not `source`, are the natural insertion point).
     /// Never mutates anything directly: the caller applies the returned `Tiles(Add)` through the
     /// ordinary, undoable document store.
-    async fn import_media(port: &str, media: &Media, doc: &ArtifactView<'_, PresentationSnapshot>) -> Result<Emit<PresentationMutation, PresentationConfigMutation, Self::DraftMutation>, MediaError> {
+    fn import_media(port: &str, media: &Media, doc: &ArtifactView<'_, PresentationSnapshot>) -> Result<Emit<PresentationMutation, PresentationConfigMutation, Self::DraftMutation>, MediaError> {
         if port != "frames:in" {
             return Err(MediaError::NotImplemented);
         }
@@ -588,11 +623,11 @@ impl ArtifactEditor for AnimatePresentationPlayApp {
 
     /// 🏷️ The manifest action id each command was declared under — supplied wholesale by
     /// `app_commands!`'s generated `command_id()`.
-    async fn command_id(command: &PresentationCommand) -> &'static str {
+    fn command_id(command: &PresentationCommand) -> &'static str {
         command.command_id()
     }
 
-    async fn handle(
+    fn handle(
         command: &PresentationCommand,
         doc: &ArtifactView<'_, PresentationSnapshot>,
         cfg: &ConfigView<'_, PresentationConfig>,
@@ -601,10 +636,7 @@ impl ArtifactEditor for AnimatePresentationPlayApp {
         _engines: &EngineHandles,
     ) -> Result<Emit<PresentationMutation, PresentationConfigMutation, Self::DraftMutation>, Fault> {
         let mut ctx = PresentationDispatchCtx { selected_ids: interaction.selection(PRESENTATION_INTERACTION_DOMAIN).ids.clone() };
-        match command {
-            PresentationCommand::ExportVideoFromDeck(payload) => export_video_from_deck::handle_async(payload).await,
-            _ => command.dispatch(doc, cfg, &mut ctx),
-        }
+        command.dispatch(doc, cfg, &mut ctx)
     }
 
     /// 🕹️ `render(body_key, doc, cfg)` is never given an `InteractionView` (ticket
@@ -613,17 +645,17 @@ impl ArtifactEditor for AnimatePresentationPlayApp {
     /// `config.selected_ids` are gone from `inspection::render`; the client renders the tile-selected
     /// canvas highlight itself from the framework's own interaction state now (matches `🖍️draw`'s
     /// canvas render, same reason).
-    async fn render(body_key: &str, doc: &ArtifactView<'_, PresentationSnapshot>, cfg: &ConfigView<'_, PresentationConfig>) -> ComponentTree {
+    fn render(body_key: &str, doc: &ArtifactView<'_, PresentationSnapshot>, cfg: &ConfigView<'_, PresentationConfig>) -> semio_framework_plugin::UiAssemblyResult<ComponentTree> {
         let deck = doc.snapshot;
         let config = cfg.snapshot;
         let labels = animate_presentation_labels(config);
-        semio_framework_plugin::built_to_component_tree(match body_key {
+        (match body_key {
             PRESENTATION_PLAY_BODY_MAIN => tile_editor::render(deck),
             PRESENTATION_PLAY_BODY_DOCUMENT => artifact::render(deck, labels),
             PRESENTATION_PLAY_BODY_CATALOGUE => catalogue::render(deck, labels),
             PRESENTATION_PLAY_BODY_DETAILS => inspection::render(deck, labels),
-            _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))),
-        })
+            _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| ui_capacity_error()),
+        }).map(semio_framework_plugin::built_to_component_tree)
     }
 }
 //#endregion 🔖️AnimatePresentationPlayApp
@@ -796,7 +828,7 @@ mod tests {
         let factory = AnimatePresentationConfigPreparationFactory;
         for case in fixture["boundaryCases"].as_array().expect("boundary cases") {
             let value = "x".repeat(case["bytes"].as_u64().expect("byte count") as usize);
-            let mutation = PresentationConfigMutation::SetEngagementInput { value };
+            let mutation = PresentationConfigMutation::SetEngagementInput(crate::editor::animate::config::SetEngagementInput { value });
             let encoded = serde_json::to_vec(&mutation).expect("third-party JSON encode");
             let decoded: PresentationConfigMutation = serde_json::from_slice(&encoded).expect("third-party JSON decode");
             assert_eq!(decoded, mutation);
@@ -810,7 +842,7 @@ mod tests {
         use store::ArtifactStoreOneItemPreparation as _;
         let value = "x".repeat(ANIMATE_PRESENTATION_CONFIG_VALUE_BYTES);
         let mut preparation = AnimatePresentationConfigPreparation {
-            base: None, mutation: Some(PresentationConfigMutation::SetEngagementInput { value }), description: None, authority: None, candidate: None, sealed_candidate: None, serialized_bytes: None, prepared: None,
+            base: None, mutation: Some(PresentationConfigMutation::SetEngagementInput(crate::editor::animate::config::SetEngagementInput { value })), description: None, authority: None, candidate: None, sealed_candidate: None, serialized_bytes: None, prepared: None,
             checkpoint: store::ArtifactStoreOneItemCheckpoint::default(), cancelled: false, closing: false,
         };
         let grant = store::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: 4_096 };
@@ -841,11 +873,11 @@ mod tests {
     async fn undo_redo_round_trip_through_the_wrapper() {
         let mut app = presentation_app().await;
         app.dispatch_typed(PresentationCommand::SeedGrid(seed_grid::SeedGrid { rows: 2, columns: 2 }), &meta("local")).await.expect("seed grid");
-        assert_eq!(crate::artifacts::presentation::presentation_working_scene(&app.snapshot().await.expect("projection")).1.len(), 4);
+        assert_eq!(crate::artifacts::presentation::presentation_working_scene(&app.snapshot().expect("projection")).1.len(), 4);
         app.handle_action("undo", None, &meta("local")).await.expect("undo");
-        assert!(crate::artifacts::presentation::presentation_working_scene(&app.snapshot().await.expect("projection")).1.is_empty());
+        assert!(crate::artifacts::presentation::presentation_working_scene(&app.snapshot().expect("projection")).1.is_empty());
         app.handle_action("redo", None, &meta("local")).await.expect("redo");
-        assert_eq!(crate::artifacts::presentation::presentation_working_scene(&app.snapshot().await.expect("projection")).1.len(), 4);
+        assert_eq!(crate::artifacts::presentation::presentation_working_scene(&app.snapshot().expect("projection")).1.len(), 4);
     }
 
     #[semio_framework_async_macros::async_test]
@@ -914,15 +946,15 @@ mod tests {
         instance_b.attach_backbone(store::Backbones::Memory(backbone_b)).await.expect("attach b");
 
         instance_a.dispatch_typed(PresentationCommand::AddTile(add_tile::AddTile { crop: Some(crate::artifacts::presentation::FigureTileFrame { x: 0.0, y: 0.0, width: 0.3, height: 0.3 }) }), &meta("actor-a")).await.expect("a adds tile");
-        let (mut source, _) = crate::artifacts::presentation::presentation_working_scene(&instance_b.snapshot().await.expect("projection"));
+        let (mut source, _) = crate::artifacts::presentation::presentation_working_scene(&instance_b.snapshot().expect("projection"));
         source.kind = "video".into();
         instance_b.dispatch_typed(PresentationCommand::SetSource(set_source::SetSource { source }), &meta("actor-b")).await.expect("b sets source kind");
 
         instance_a.handle_action("commitCheckpoint", None, &meta("actor-a")).await.expect("pump a");
         instance_b.handle_action("commitCheckpoint", None, &meta("actor-b")).await.expect("pump b");
 
-        let (source_a, tiles_a) = crate::artifacts::presentation::presentation_working_scene(&instance_a.snapshot().await.expect("projection"));
-        let (source_b, tiles_b) = crate::artifacts::presentation::presentation_working_scene(&instance_b.snapshot().await.expect("projection"));
+        let (source_a, tiles_a) = crate::artifacts::presentation::presentation_working_scene(&instance_a.snapshot().expect("projection"));
+        let (source_b, tiles_b) = crate::artifacts::presentation::presentation_working_scene(&instance_b.snapshot().expect("projection"));
         assert_eq!(tiles_a.len(), 1, "instance A keeps its own tile");
         assert_eq!(tiles_b.len(), 1, "instance B converges on A's tile");
         assert_eq!(source_a.kind, "video", "instance A converges on B's source edit");
@@ -932,7 +964,7 @@ mod tests {
     //#region 🔖️PortTests
     #[semio_framework_async_macros::async_test]
     async fn presentation_io_declares_frames_in_and_document_ports() {
-        let ports = AnimatePresentationPlayApp::io().await.expect("io").all_ports().await;
+        let ports = AnimatePresentationPlayApp::io().expect("io").all_ports().await;
         assert!(ports.iter().any(|port| port.id == "document:in"));
         assert!(ports.iter().any(|port| port.id == "document:out"));
         assert!(ports.iter().any(|port| port.id == "frames:in"));
@@ -942,11 +974,11 @@ mod tests {
     async fn import_media_frames_in_inserts_a_new_tile() {
         use semio_framework_plugin::{Media, MediaClass, MediaForm, MediaPayload, MediaType};
         let mut app = testkit::presentation_app_with_registry().await;
-        let before = crate::artifacts::presentation::presentation_working_scene(&app.snapshot().await.expect("projection")).1.len();
+        let before = crate::artifacts::presentation::presentation_working_scene(&app.snapshot().expect("projection")).1.len();
         let frame_json = dsl::os_pack::json::to_string(&dsl::os_pack::json::object([("name".to_string(), dsl::os_pack::json::Value::from("hero-frame")), ("src".to_string(), dsl::os_pack::json::Value::from("/frames/hero.png"))]));
         let media = Media { media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Raster }, payload: MediaPayload::Structured { schema: "2d.image".into(), json: frame_json } };
-        app.import_media("frames:in", &media, &meta("local")).await.expect("import frames:in");
-        let (_, after_tiles) = crate::artifacts::presentation::presentation_working_scene(&app.snapshot().await.expect("projection"));
+        app.import_media("frames:in", media, &meta("local")).await.expect("import frames:in");
+        let (_, after_tiles) = crate::artifacts::presentation::presentation_working_scene(&app.snapshot().expect("projection"));
         assert_eq!(after_tiles.len(), before + 1);
         assert_eq!(after_tiles.last().expect("imported tile").name, "hero-frame");
     }
@@ -958,9 +990,9 @@ mod tests {
         for _ in 0..2 {
             let frame_json = dsl::os_pack::json::to_string(&dsl::os_pack::json::object([("name".to_string(), dsl::os_pack::json::Value::from("frame"))]));
             let media = Media { media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Raster }, payload: MediaPayload::Structured { schema: "2d.image".into(), json: frame_json } };
-            app.import_media("frames:in", &media, &meta("local")).await.expect("import frames:in");
+            app.import_media("frames:in", media, &meta("local")).await.expect("import frames:in");
         }
-        let (_, tiles) = crate::artifacts::presentation::presentation_working_scene(&app.snapshot().await.expect("projection"));
+        let (_, tiles) = crate::artifacts::presentation::presentation_working_scene(&app.snapshot().expect("projection"));
         assert_eq!(tiles.len(), 2);
         assert_ne!(tiles[0].crop, tiles[1].crop, "repeated imports land in distinct cells");
     }
@@ -970,7 +1002,7 @@ mod tests {
         use semio_framework_plugin::{Media, MediaClass, MediaForm, MediaPayload, MediaType};
         let mut app = testkit::presentation_app_with_registry().await;
         let media = Media { media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Raster }, payload: MediaPayload::Structured { schema: "2d.image".into(), json: "{}".into() } };
-        assert!(app.import_media("not-a-port", &media, &meta("local")).await.is_err());
+        assert!(app.import_media("not-a-port", media, &meta("local")).await.is_err());
     }
 
     #[semio_framework_async_macros::async_test]

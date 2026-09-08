@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Replace Config",
+  "type": "object",
+  "properties": {
+    "config": {
+      "type": "object",
+      "properties": {
+        "beforePaneCamera": {
+          "type": "object",
+          "properties": {
+            "x": {
+              "type": "number"
+            },
+            "y": {
+              "type": "number"
+            },
+            "zoom": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "x",
+            "y",
+            "zoom"
+          ],
+          "additionalProperties": false
+        },
+        "reorganizeEpoch": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "lodModeByWindow": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "locale": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "beforePaneCamera",
+        "reorganizeEpoch",
+        "lodModeByWindow",
+        "locale"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "config"
+  ],
+  "additionalProperties": false
+}

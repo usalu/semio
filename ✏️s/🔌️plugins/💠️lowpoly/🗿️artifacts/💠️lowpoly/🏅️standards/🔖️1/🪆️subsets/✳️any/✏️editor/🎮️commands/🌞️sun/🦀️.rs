@@ -6,6 +6,7 @@ use crate::artifacts::lowpoly::LowpolySnapshot;
 use crate::editor::lowpoly::config::{lowpoly_sun_config, LowpolyConfig, LowpolyConfigMutation};
 use crate::editor::lowpoly::session::LowpolyScratch;
 use semio_framework_plugin::{apply_world3d_sun_action, ArtifactView, ConfigView, Emit, Fault};
+#[cfg(test)]
 use serde::{Deserialize, Serialize};
 
 /// 🌞️ Reuses the framework's shared sun toggle/slider logic (`apply_world3d_sun_action`), threading it

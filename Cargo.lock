@@ -6001,6 +6001,7 @@ dependencies = [
 name = "semio-s-plugin-animate"
 version = "0.1.0"
 dependencies = [
+ "roxmltree 0.20.0",
  "semio-framework",
  "semio-framework-async",
  "semio-framework-async-macros",
@@ -6034,6 +6035,8 @@ dependencies = [
  "semio-framework-os-kernel",
  "semio-framework-plugin",
  "semio-framework-schema",
+ "semio-framework-ui-contract",
+ "semio-framework-ui-scene",
  "semio-framework-value-derive",
  "semio-s-plugin-stdio",
  "serde",
@@ -6092,6 +6095,8 @@ dependencies = [
  "semio-framework-plugin",
  "semio-framework-value-derive",
  "semio-s-plugin-cad",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]
@@ -6185,6 +6190,7 @@ dependencies = [
  "semio-framework-plugin",
  "semio-framework-schema",
  "semio-framework-ui-contract",
+ "semio-framework-ui-scene",
  "semio-framework-value-derive",
  "semio-s-plugin-draw-fsm",
  "semio-s-plugin-stdio",
@@ -6248,6 +6254,7 @@ dependencies = [
  "semio-framework-ui-scene",
  "semio-framework-value-derive",
  "semio-s-plugin-stdio",
+ "serde_json",
 ]
 
 [[package]]
@@ -6396,6 +6403,8 @@ dependencies = [
  "semio-framework-os-kernel",
  "semio-framework-plugin",
  "semio-framework-schema",
+ "semio-framework-ui-contract",
+ "semio-framework-ui-scene",
  "semio-framework-value-derive",
  "semio-s-plugin-stdio",
  "serde",
@@ -6408,14 +6417,18 @@ version = "0.1.0"
 dependencies = [
  "geo",
  "semio-framework",
+ "semio-framework-actor",
  "semio-framework-async-macros",
  "semio-framework-dispatch-macros",
  "semio-framework-hash",
  "semio-framework-job",
  "semio-framework-os-kernel",
  "semio-framework-plugin",
+ "semio-framework-plugin-host",
  "semio-framework-schema",
  "semio-framework-surface",
+ "semio-framework-ui-contract",
+ "semio-framework-ui-scene",
  "semio-framework-value-derive",
  "semio-s-plugin-stdio",
  "serde",
@@ -6432,8 +6445,11 @@ dependencies = [
  "semio-framework-job",
  "semio-framework-os-kernel",
  "semio-framework-os-kernel-neural-engine",
+ "semio-framework-pack",
  "semio-framework-plugin",
  "semio-framework-schema",
+ "semio-framework-ui-contract",
+ "semio-framework-ui-scene",
  "semio-framework-value-derive",
  "semio-s-imperative",
  "semio-s-imperative-extension-sdk",
@@ -6516,6 +6532,7 @@ dependencies = [
  "semio-framework-os-kernel",
  "semio-framework-plugin",
  "semio-framework-schema",
+ "semio-framework-ui-contract",
  "semio-framework-ui-render",
  "semio-framework-value-derive",
  "semio-s-plugin-stdio",
@@ -6564,6 +6581,8 @@ dependencies = [
  "semio-framework-ui-scene",
  "semio-framework-value-derive",
  "semio-s-plugin-stdio",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]
@@ -6598,6 +6617,8 @@ dependencies = [
  "semio-framework-os-kernel",
  "semio-framework-plugin",
  "semio-framework-schema",
+ "semio-framework-ui-contract",
+ "semio-framework-ui-scene",
  "semio-framework-value-derive",
  "semio-s-plugin-stdio",
  "serde",
@@ -6617,6 +6638,8 @@ dependencies = [
  "semio-framework-plugin",
  "semio-framework-schema",
  "semio-framework-ui",
+ "semio-framework-ui-contract",
+ "semio-framework-ui-scene",
  "semio-framework-value-derive",
  "semio-s-plugin-stdio",
  "serde",
@@ -6634,6 +6657,7 @@ dependencies = [
  "semio-framework-os-kernel",
  "semio-framework-pack",
  "semio-framework-plugin",
+ "semio-framework-ui-contract",
  "semio-framework-value-derive",
  "serde_json",
 ]
@@ -6769,6 +6793,7 @@ dependencies = [
  "semio-framework-schema",
  "semio-framework-value-derive",
  "semio-s-plugin-stdio",
+ "serde_json",
 ]
 
 [[package]]
@@ -6783,6 +6808,8 @@ dependencies = [
  "semio-framework-os-kernel",
  "semio-framework-plugin",
  "semio-framework-schema",
+ "semio-framework-ui-contract",
+ "semio-framework-ui-scene",
  "semio-framework-value-derive",
  "semio-s-plugin-stdio",
  "serde",
@@ -6829,6 +6856,8 @@ dependencies = [
  "semio-framework-os-kernel-neural-engine",
  "semio-framework-plugin",
  "semio-framework-schema",
+ "semio-framework-ui-contract",
+ "semio-framework-ui-scene",
  "semio-framework-value-derive",
  "semio-s-imperative",
  "semio-s-plugin-imperative-control",
@@ -6852,6 +6881,8 @@ dependencies = [
  "semio-framework-os-kernel",
  "semio-framework-plugin",
  "semio-framework-schema",
+ "semio-framework-ui-contract",
+ "semio-framework-ui-scene",
  "semio-framework-value-derive",
  "semio-s-plugin-stdio",
  "serde",
@@ -6965,6 +6996,7 @@ dependencies = [
  "semio-framework",
  "semio-framework-async-macros",
  "semio-framework-dispatch-macros",
+ "semio-framework-editor",
  "semio-framework-geometry",
  "semio-framework-graph",
  "semio-framework-job",
@@ -6974,6 +7006,7 @@ dependencies = [
  "semio-framework-pack",
  "semio-framework-plugin",
  "semio-framework-schema",
+ "semio-framework-ui-contract",
  "semio-framework-value-derive",
  "semio-s-plugin-stdio",
  "serde",
@@ -7024,9 +7057,11 @@ dependencies = [
  "semio-framework-async-macros",
  "semio-framework-dispatch-macros",
  "semio-framework-editor",
+ "semio-framework-job",
  "semio-framework-os-kernel",
  "semio-framework-plugin",
  "semio-framework-schema",
+ "semio-framework-ui-contract",
  "semio-framework-value-derive",
  "semio-s-plugin-stdio",
  "semio-s-plugin-trinity",

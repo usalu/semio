@@ -28,14 +28,40 @@ use crate::editor::architect::presence::{ArchitectPresence, ArchitectPresenceMut
 // re-export list (see the identical note in the sibling viewer surface's root `🦀️.rs`).
 use semio_framework_plugin::app::{Dialect, InteractionView};
 use semio_framework_plugin::{
-    ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, ArtifactEditor, ArtifactView, ConfigView, DraftView, Editor, Emit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef,
-    Label, LocalizedLabel, MergeMode, NoDraft, NoDraftMutation, SelectionMethod, SelectionMode, SelectionSpec, UiNode,
+    ActionArgDef, ActionArgOption, ActionDefinition, ActionKind, ArtifactEditor, ArtifactView, ConfigView, DraftView, Editor, Emit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef,
+    Label, LocalizedLabel, MergeMode, NoDraft, NoDraftMutation, SelectionMethod, SelectionMode, SelectionSpec,
 };
 use dsl::DslValue as Value;
 use store::EngineHandles;
 
 //#region 🔖️Constants
-pub const ARCHITECT_APP_ID: &str = "architect";
+pub const ARCHITECT_APP_ID: &str = "s.architect.program@1/*#editor";
+
+/// 🏷️ Admits a semantic architect label.
+pub fn ui_label(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_ui_contract::Label> {
+    semio_framework_ui_contract::Label::try_from(value.as_ref()).map_err(|_| ui_capacity_error())
+}
+
+/// 📝️ Admits a fixed architect UI string.
+pub fn ui_text(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_ui_contract::UiText> {
+    semio_framework_ui_contract::UiText::try_from_str(value.as_ref()).ok_or_else(ui_capacity_error)
+}
+
+/// 🧱️ Finalizes a architect UI node with explicit identity.
+pub fn ui_node<B: semio_framework_ui_contract::HasBase + semio_framework_ui_contract::Buildable>(builder: B, id: &str) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+    builder.try_id(id).map_err(|_| ui_capacity_error())?.try_build().map_err(|_| ui_capacity_error())
+}
+
+/// 👶️ Admits a complete collection of architect UI children.
+pub fn ui_children<B: semio_framework_ui_contract::HasChildren>(builder: B, children: impl IntoIterator<Item = semio_framework_plugin::BuiltNode>) -> semio_framework_plugin::UiAssemblyResult<B> {
+    builder.try_children(children).map_err(|_| ui_capacity_error())
+}
+
+/// 🚧️ Reports fixed-capacity UI admission failure.
+pub fn ui_capacity_error() -> semio_framework_plugin::PluginAssemblyError {
+    semio_framework_plugin::PluginAssemblyError::new("architect.ui.capacity", "architect UI admission failed")
+}
+
 
 /// 🎯️ An `ActionDescriptor` addressed at this app — the single factory every taxonomy node's chrome
 /// (`📌️panels/*`, `🪟️windows/*`) builds its item/on-change actions with.
@@ -109,7 +135,7 @@ pub const ARCHITECT_INTERACTION_GRANULARITY_ENTITY: &str = "entity";
 pub fn reset_document_effect(document: &ProgramSnapshot) -> semio_framework_plugin::Effect {
     let pack = <ProgramSnapshot as store::ArtifactPack>::encode_pack(document);
     let envelope = store::create_document_envelope::<ProgramSnapshot, ProgramMutation>(ARCHITECT_PROGRAM_SCHEMA, ARCHITECT_APP_ID, document.clone(), None);
-    let spr = store::print_document_spr(&envelope).expect("architect program document spr encode is infallible for a fresh, edit-free envelope");
+    let spr = semio_framework_plugin::resolve_ready(store::print_document_spr(&envelope)).expect("architect program document spr encode is infallible for a fresh, edit-free envelope");
     semio_framework_plugin::Effect::LoadDocument { pack, spr }
 }
 //#endregion 🔖️ResetDocument
@@ -143,7 +169,7 @@ pub mod behavior {
     use std::collections::VecDeque;
 
     /// 🔀 Absolute path to the `🧬️mutations` facet's per-register leaves, kept as one alias so the
-    /// semantic-mutations-overhaul rename (`.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL`)
+    /// semantic-mutations-overhaul rename (`.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL`)
     /// only needs updating here if `🦀️.rs`'s directory wiring ever changes.
     use crate::artifacts::program::schema::mutations as leaves;
 
@@ -507,7 +533,7 @@ pub mod behavior {
             kind,
             title: report.title.clone(),
             audience: Vec::new(),
-            sections: report.sections.iter()?.map(|s| s.heading.clone()).collect(),
+            sections: report.sections.iter().map(|s| s.heading.clone()).collect(),
             generated_at: Some(report.generated_at.clone()),
             generated_by: None,
             analysis_ids: Vec::new(),
@@ -573,7 +599,7 @@ pub mod behavior {
     fn csv_snapshot_to_rows(snapshot: &stdio_csv::CsvSnapshot) -> Result<Vec<RegisterCsvRow>, PluginError> {
         let mut records = snapshot.records.iter();
         let header = records.next().ok_or_else(|| PluginError::Csv("empty delimited file".into()))?;
-        let header_values: Vec<&str> = header.fields.iter()?.map(|f| f.value.as_str()).collect();
+        let header_values: Vec<&str> = header.fields.iter().map(|f| f.value.as_str()).collect();
         if header_values != ["register", "id", "name", "status", "priority", "tags", "source"] {
             return Err(PluginError::Csv(format!("unexpected header: {}", header_values.join(","))));
         }
@@ -582,7 +608,7 @@ pub mod behavior {
             if record.fields.len() == 1 && record.fields[0].value.trim().is_empty() {
                 continue;
             }
-            let values: Vec<String> = record.fields.iter()?.map(|f| f.value.clone()).collect();
+            let values: Vec<String> = record.fields.iter().map(|f| f.value.clone()).collect();
             rows.push(RegisterCsvRow::from_columns(&values)?);
         }
         Ok(rows)
@@ -1255,8 +1281,8 @@ impl ArtifactEditor for ArchitectPlayApp {
             document_panel::ARCHITECT_BODY_DOCUMENT => document_panel::render(program, config),
             catalogue_panel::ARCHITECT_BODY_CATALOGUE => catalogue_panel::render(),
             inspection_panel::ARCHITECT_BODY_INSPECTION => inspection_panel::render(program, config),
-            _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
-        }
+            _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| ui_capacity_error()),
+        }.map(semio_framework_plugin::built_to_component_tree)
     }
 }
 //#endregion 🔖️ArchitectPlayApp
@@ -1395,8 +1421,8 @@ pub(crate) mod testkit {
     /// `PluginBuilder::editor::<ArchitectPlayApp>` builds it.
     pub type ArchitectApp = VcsArtifactApp<EditorApp<ArchitectPlayApp>>;
 
-    pub fn new_app() -> ArchitectApp {
-        sdk_new_app::<EditorApp<ArchitectPlayApp>>()
+    pub async fn new_app() -> ArchitectApp {
+        sdk_new_app::<EditorApp<ArchitectPlayApp>>().await
     }
 
     /// 🚧️ SDK GAP (w0-f-report Gap 3): `new_app_with_registry`/`assert_declared_actions_bridge_to_commands`
@@ -1408,16 +1434,16 @@ pub(crate) mod testkit {
     }
 
     /// 🧬️ A wrapper carrying the real registry so kind discipline (View-emits-operations rejection) runs.
-    pub fn app_with_registry() -> ArchitectApp {
-        new_app_with_registry::<EditorApp<ArchitectPlayApp>>(architect_app_manifest_for_testkit)
+    pub async fn app_with_registry() -> ArchitectApp {
+        new_app_with_registry::<EditorApp<ArchitectPlayApp>>(architect_app_manifest_for_testkit).await
     }
 
-    pub fn dispatch(app: &mut ArchitectApp, command: ArchitectCommand) -> InvocationResult {
-        app.dispatch_typed(command, &meta("local")).expect("dispatch")
+    pub async fn dispatch(app: &mut ArchitectApp, command: ArchitectCommand) -> InvocationResult {
+        app.dispatch_typed(command, &meta("local")).await.expect("dispatch")
     }
 
-    pub fn render(app: &mut ArchitectApp, body_key: &str) -> String {
-        serde_json::to_string(&app.render(body_key, None, &ViewModel::default()).expect("render")).expect("render json")
+    pub async fn render(app: &mut ArchitectApp, body_key: &str) -> String {
+        semio_framework_plugin::testkit::project_and_retire_fixture_tree(app.render(body_key, None, &ViewModel::default()).await.expect("render")).expect("retire app render")
     }
 
     /// 🔀️ Drives a typed `ArchitectCommand` straight through `ArchitectCommand::dispatch` — mirrors
@@ -1451,9 +1477,14 @@ pub(crate) mod testkit {
         next
     }
 
-    pub fn render_direct(body_key: &str, program: &ProgramSnapshot, config: &ArchitectConfig) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+    pub fn project_render(node: semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode>) -> String {
+        semio_framework_plugin::testkit::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node.expect("render"))).expect("retire semantic tree")
+    }
+
+    pub fn render_direct(body_key: &str, program: &ProgramSnapshot, config: &ArchitectConfig) -> String {
         let history = HistoryView::empty();
-        ArchitectPlayApp::render(body_key, &ArtifactView::new(program, &history), &ConfigView { snapshot: config })
+        let tree = ArchitectPlayApp::render(body_key, &ArtifactView::new(program, &history), &ConfigView { snapshot: config }).expect("editor render");
+        semio_framework_plugin::testkit::project_and_retire_fixture_tree(tree).expect("retire editor tree")
     }
 }
 //#endregion 🧪️Testkit
@@ -1543,7 +1574,7 @@ mod tests {
     /// `command_id`.
     #[semio_framework_async_macros::async_test]
     async fn command_from_action_covers_every_declared_action_and_rejects_unknown_ones() {
-        semio_framework_plugin::testkit::assert_declared_actions_bridge_to_commands::<semio_framework_plugin::EditorApp<ArchitectPlayApp>>(testkit::architect_app_manifest_for_testkit);
+        semio_framework_plugin::testkit::assert_declared_actions_bridge_to_commands::<semio_framework_plugin::EditorApp<ArchitectPlayApp>>(testkit::architect_app_manifest_for_testkit).await;
         assert!(ArchitectPlayApp::command_from_action("notARealAction", None).is_err());
     }
 
@@ -1577,8 +1608,8 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn an_unknown_body_key_falls_back_to_a_text_node() {
-        let mut app = testkit::new_app();
-        assert!(testkit::render(&mut app, "architect.nope").contains("Unknown body"));
+        let mut app = testkit::new_app().await;
+        assert!(testkit::render(&mut app, "architect.nope").await.contains("Unknown body"));
     }
     //#endregion 🔖️Manifest
 
@@ -1586,7 +1617,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn adjacency_matrix_renders_triangle_strip() {
         let program = sample_plugin();
-        let json = serde_json::to_string(&testkit::render_direct(adjacency_window::ARCHITECT_BODY_ADJACENCY, &program, &ArchitectPlayApp::initial_config())).expect("json");
+        let json = testkit::render_direct(adjacency_window::ARCHITECT_BODY_ADJACENCY, &program, &ArchitectPlayApp::initial_config());
         assert!(json.contains('▲'));
         assert!(json.contains("Reception"));
     }
@@ -1594,8 +1625,13 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn graph_body_emits_node_graph_scene() {
         let program = sample_plugin();
-        let json = serde_json::to_string(&testkit::render_direct(graph_window::ARCHITECT_BODY_GRAPH, &program, &ArchitectPlayApp::initial_config())).expect("json");
-        assert!(json.contains("node-graph"));
+        let history = semio_framework_plugin::HistoryView::empty();
+        let cfg = ArchitectPlayApp::initial_config();
+        let tree = ArchitectPlayApp::render(graph_window::ARCHITECT_BODY_GRAPH, &ArtifactView::new(&program, &history), &ConfigView { snapshot: &cfg }).expect("graph render");
+        let semio_framework_plugin::Component::Surface(props) = &tree.root.component else { panic!("graph surface") };
+        let scene: semio_framework_plugin::NodeGraphScene = semio_framework_ui_scene::decode(props).expect("packed graph");
+        assert_eq!(scene.nodes.len(), program.elements.len());
+        semio_framework_plugin::testkit::project_and_retire_fixture_tree(tree).expect("retire graph tree");
     }
 
     #[semio_framework_async_macros::async_test]
@@ -1658,7 +1694,7 @@ mod tests {
         let initial = ArchitectPlayApp::initial_config();
         let emit = testkit::drive_with_config(&ArchitectCommand::RunReport(run_report::RunReport { report_kind: "executiveSummary".into() }), &program, &initial);
         let config = testkit::config_after(&emit, &initial);
-        let json = serde_json::to_string(&testkit::render_direct(report_window::ARCHITECT_BODY_REPORT, &program, &config)).expect("json");
+        let json = testkit::render_direct(report_window::ARCHITECT_BODY_REPORT, &program, &config);
         assert!(json.contains("Overview"));
         assert!(json.contains("architect-report.section"));
     }
@@ -1685,13 +1721,13 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn undo_redo_round_trips_through_the_wrapper() {
-        let mut app = testkit::new_app();
+        let mut app = testkit::new_app().await;
         let before = app.snapshot().expect("projection").elements.len();
-        testkit::dispatch(&mut app, ArchitectCommand::AddElement(add_element::AddElement { name: "Ward".into() }));
+        testkit::dispatch(&mut app, ArchitectCommand::AddElement(add_element::AddElement { name: "Ward".into() })).await;
         assert_eq!(app.snapshot().expect("projection").elements.len(), before + 1);
-        app.handle_action("undo", None, &semio_framework_plugin::testkit::meta("local")).expect("undo");
+        app.handle_action("undo", None, &semio_framework_plugin::testkit::meta("local")).await.expect("undo");
         assert_eq!(app.snapshot().expect("projection").elements.len(), before);
-        app.handle_action("redo", None, &semio_framework_plugin::testkit::meta("local")).expect("redo");
+        app.handle_action("redo", None, &semio_framework_plugin::testkit::meta("local")).await.expect("redo");
         assert_eq!(app.snapshot().expect("projection").elements.len(), before + 1);
     }
 
@@ -1705,8 +1741,8 @@ mod tests {
     /// is the remaining view action closest in shape (config-only, no document mutation).
     #[semio_framework_async_macros::async_test]
     async fn view_actions_never_emit_artifact_mutations_under_the_real_registry() {
-        let mut app = testkit::app_with_registry();
-        let result = testkit::dispatch(&mut app, ArchitectCommand::SelectRegister(select_register::SelectRegister { register_id: "risks".into() }));
+        let mut app = testkit::app_with_registry().await;
+        let result = testkit::dispatch(&mut app, ArchitectCommand::SelectRegister(select_register::SelectRegister { register_id: "risks".into() })).await;
         assert!(result.mutations.is_empty(), "selectRegister is a view action and must never reach document operations under kind discipline");
     }
 
@@ -1717,11 +1753,11 @@ mod tests {
     /// the SAME element row renders `"selected":true` (mirrors `note`'s `select_blocks` proof).
     #[semio_framework_async_macros::async_test]
     async fn interaction_select_stamps_the_picked_element_as_selected_in_the_document_panel() {
-        let mut app = testkit::app_with_registry();
+        let mut app = testkit::app_with_registry().await;
         let element_id = app.snapshot().expect("snapshot").elements[0].header.id.to_string();
         let targets = serde_json::to_string(&[serde_json::json!({ "granularity": ARCHITECT_INTERACTION_GRANULARITY_ENTITY, "id": element_id })]).expect("targets json");
-        app.handle_action("interactionSelect", Some(&json!({ "domainId": ARCHITECT_INTERACTION_PROGRAM, "targets": targets, "merge": "replace" })), &semio_framework_plugin::testkit::meta("test")).expect("interactionSelect");
-        let rendered = testkit::render(&mut app, document_panel::ARCHITECT_BODY_DOCUMENT);
+        app.handle_action("interactionSelect", Some(&json!({ "domainId": ARCHITECT_INTERACTION_PROGRAM, "targets": targets, "merge": "replace" })), &semio_framework_plugin::testkit::meta("test")).await.expect("interactionSelect");
+        let rendered = testkit::render(&mut app, document_panel::ARCHITECT_BODY_DOCUMENT).await;
         assert!(rendered.contains(&element_id), "the rendered tree must still list the picked element");
         assert!(rendered.contains("\"selected\":true"), "the picked element must be stamped selected by the framework wrapper");
     }

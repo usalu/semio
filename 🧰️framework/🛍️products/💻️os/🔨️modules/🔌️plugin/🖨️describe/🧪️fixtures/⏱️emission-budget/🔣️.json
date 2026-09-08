@@ -1,0 +1,40 @@
+{
+  "format": "semio.descriptor.emission-budget/v1",
+  "cases": [
+    {
+      "name": "unlimited",
+      "budgetMs": 0,
+      "elapsedMs": 1000,
+      "expired": false,
+      "remainingMs": 0
+    },
+    {
+      "name": "before-limit",
+      "budgetMs": 5,
+      "elapsedMs": 4,
+      "expired": false,
+      "remainingMs": 1
+    },
+    {
+      "name": "at-limit",
+      "budgetMs": 5,
+      "elapsedMs": 5,
+      "expired": false,
+      "remainingMs": 1
+    },
+    {
+      "name": "after-limit",
+      "budgetMs": 5,
+      "elapsedMs": 6,
+      "expired": true,
+      "remainingMs": 1
+    },
+    {
+      "name": "already-exhausted",
+      "budgetMs": -1,
+      "elapsedMs": 0,
+      "expired": true,
+      "remainingMs": 1
+    }
+  ]
+}

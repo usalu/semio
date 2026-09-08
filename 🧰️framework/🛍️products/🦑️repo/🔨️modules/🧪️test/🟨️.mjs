@@ -87,14 +87,14 @@ function inputsFor(workspaceRoot, vocabulary, ownerRel, caseRel, adapters) {
 }
 
 /** 🎚️ One generated target routed through the testing domain's own router. */
-function target(domain, command, inputs, cacheable = true) {
+function target(domain, command, inputs, cacheable = true, scope) {
   return {
     executor: "nx:run-commands",
-    options: { cwd: domain, command: `bun ./📜️script.ts ${command}`, forwardAllArgs: false },
+    options: { cwd: domain, command: `bun ./📜️script.ts ${command}`, forwardAllArgs: false, env: { SEMIO_TEST_OUTPUT_SCOPE: scope } },
     inputs,
     // 📤️Only the durable products of a run are cache outputs. The work directory holds each case's
     // mutable fixture copies, which are large, regenerated on every run and meaningless to restore.
-    outputs: ["results", "reports", "diffs"].map((child) => `{workspaceRoot}/.🧬semio/🦑️repo/⚡️cache/tests/${child}`),
+    outputs: ["results", "reports", "diffs"].map((child) => `{workspaceRoot}/.🧬semio/🦑️repo/⚡️cache/tests/tasks/${scope}/${child}`),
     cache: cacheable,
   };
 }
@@ -132,6 +132,7 @@ async function testCaseProjects(configFiles, _options, context) {
     const inputs = inputsFor(workspaceRoot, vocabulary, ownerRel, caseRel, adapters);
     const domain = vocabulary.testDomainPath;
     const select = `--owner ${JSON.stringify(ownerRel)} --case ${caseSlug}`;
+    const scoped = (phase, command, cacheable = true) => target(domain, command, [...inputs, { env: "SEMIO_TEST_LEVEL" }, { env: "SEMIO_TEST_BUDGET_MS" }], cacheable, `${name}/${phase}`);
 
     results.push([
       configFile,
@@ -143,13 +144,13 @@ async function testCaseProjects(configFiles, _options, context) {
             projectType: "application",
             tags: ["type:test", `owner:${ownerRel}`, ...adapters.map((adapter) => `impl:${basename(adapter)}`)],
             targets: {
-              lint: target(domain, `contract ${select}`, inputs),
-              "test-contract": target(domain, `contract ${select}`, inputs),
-              "test-oracle": target(domain, `oracle ${select}`, inputs),
-              "test-subject": target(domain, `subject ${select}`, inputs),
-              "test-parity": target(domain, `parity ${select}`, inputs),
-              test: target(domain, `run ${select}`, inputs),
-              ...Object.fromEntries(LEVELS.map((level) => [`test-${level}`, target(domain, `run ${level} ${select}`, inputs, level !== "exhaustive")])),
+              lint: scoped("lint", `contract ${select}`),
+              "test-contract": scoped("test-contract", `contract ${select}`),
+              "test-oracle": scoped("test-oracle", `oracle ${select}`),
+              "test-subject": scoped("test-subject", `subject ${select}`),
+              "test-parity": scoped("test-parity", `parity ${select}`),
+              test: scoped("test", `run ${select}`),
+              ...Object.fromEntries(LEVELS.map((level) => [`test-${level}`, scoped(`test-${level}`, `run ${level} ${select}`, level !== "exhaustive")])),
             },
           },
         },

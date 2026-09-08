@@ -10,6 +10,12 @@ use crate::editor::note::config::NoteConfig;
 // invocations, so a doc comment here is dead and clippy/rustc flag it as unused.)
 semio_framework_plugin::app_labels! {
     pub struct NotePlayLabels {
+        inspection: native_en "Inspection", native_de "Inspektion", reuse_en "Inspection", reuse_de "Inspektion";
+        summary_schema: native_en "Schema", native_de "Schema", reuse_en "Schema", reuse_de "Schema";
+        summary_blocks: native_en "Blocks", native_de "Blöcke", reuse_en "Blocks", reuse_de "Blöcke";
+        summary_utility: native_en "Utility", native_de "Werkzeug", reuse_en "Utility", reuse_de "Werkzeug";
+        summary_snap: native_en "Snap", native_de "Fangen", reuse_en "Snap", reuse_de "Fangen";
+        summary_off: native_en "off", native_de "aus", reuse_en "off", reuse_de "aus";
         document: native_en "Document", native_de "Dokument", reuse_en "Document", reuse_de "Dokument";
         catalogue_title: native_en "Block kinds", native_de "Blockarten", reuse_en "Block kinds", reuse_de "Blockarten";
         catalogue_text: native_en "text — rich text block", native_de "Text — reicher Textblock", reuse_en "text — rich text block", reuse_de "Text — reicher Textblock";

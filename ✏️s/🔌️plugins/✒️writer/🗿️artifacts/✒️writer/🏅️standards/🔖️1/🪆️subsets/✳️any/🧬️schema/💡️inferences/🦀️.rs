@@ -8,7 +8,7 @@ use crate::artifacts::writer::WriterSnapshot;
 use schema::ArtifactSchema;
 use semio_framework_plugin::ArtifactInferrer;
 use serde::{Deserialize, Serialize};
-use serde_json::{json, Value};
+use serde_json::json;
 use trinity::core::{example_graph, lint};
 
 use super::outline::WriterOutline;
@@ -18,8 +18,9 @@ use super::outline::WriterOutline;
 /// `💡️inferences/` (currently: `outline`, backed by the `🧾outline/` slug dir) — writer is a
 /// plain-text document with no structured fields, so its "outline" is derived straight from the
 /// `text` field: markdown-style `#` headings plus real word/line counts.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema, dsl::ToValue, dsl::FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.writer.writer.inference")]
 pub struct WriterInference {
     #[derived]
@@ -94,7 +95,7 @@ pub fn language_tokens_json(document: &WriterSnapshot) -> Option<String> {
     eprintln!("[DEBUG] writer.schema.inferences language_tokens_json language_id={} text_len={}", document.language_id, text.len());
     if let Some(spec) = dsl::language(&document.language_id) {
         let session = dsl::lsp::LanguageSession::open(spec, text.clone());
-        return serde_json::to_string(&session.semantic_tokens_lsp()).ok();
+        return Some(dsl::os_pack::json::to_json_string(&session.semantic_tokens_lsp()));
     }
     if dsl::idiom(&document.language_id).is_some() {
         let tokens = crate::artifacts::writer::schema::tokenize_language(&text, &document.language_id);
@@ -107,8 +108,8 @@ pub fn language_diagnostics_json(document: &WriterSnapshot, lint_signal: u32) ->
     let text = crate::artifacts::writer::writer_text(document);
     if document.language_id == "jack" {
         let graph = example_graph();
-        let diagnostics: Vec<Value> = lint(&graph, &text).into_iter().map(|diag| json!({ "start": diag.start, "end": diag.end, "severity": diag.severity, "message": diag.message })).collect();
-        return serde_json::to_string(&diagnostics).ok();
+        let diagnostics: Vec<dsl::JsonValue> = lint(&graph, &text).into_iter().map(|diag| dsl::json!({ "start": diag.start, "end": diag.end, "severity": diag.severity, "message": diag.message })).collect();
+        return Some(dsl::os_pack::json::to_json_string(&diagnostics));
     }
     if let Some(hooks) = dsl::idiom(&document.language_id) {
         if let Err(err) = (hooks.canonicalize)(&text) {

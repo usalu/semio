@@ -133,15 +133,15 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn renders_text_editor_scene() {
-        let mut app = new_app();
-        assert!(render_body(&mut app, WRITER_PLAY_BODY_MAIN).contains("text-editor"));
+        let mut app = new_app().await;
+        assert!(render_body(&mut app, WRITER_PLAY_BODY_MAIN).await.contains("text-editor"));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn scene_emits_placeholders_selectable_spans_and_newline_gates_for_jack() {
-        let mut app = new_app();
-        let node = app.render(WRITER_PLAY_BODY_MAIN, Some(&crate::artifacts::writer::dsl::jack_example_json()), &semio_framework_plugin::ViewModel::default()).expect("render");
-        let json = serde_json::to_string(&node).unwrap();
+        let mut app = new_app().await;
+        let node = app.render(WRITER_PLAY_BODY_MAIN, Some(&crate::artifacts::writer::dsl::jack_example_json()), &semio_framework_plugin::ViewModel::default()).await.expect("render");
+        let json = semio_framework_plugin::testkit::project_and_retire_fixture_tree(node).expect("render JSON");
         assert!(json.contains("placeholdersJson"));
         assert!(json.contains("selectableSpansJson"));
         assert!(json.contains("newlineGatesJson"));
@@ -149,8 +149,8 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn window_measures_expose_font_line_height_tab_and_toggle() {
-        let mut app = new_app();
-        let measures = main_window_measures(&mut app);
+        let mut app = new_app().await;
+        let measures = main_window_measures(&mut app).await;
         assert_eq!(measures.len(), 4);
         assert!(measures.iter().any(|m| matches!(m, WindowMeasure::Toggle { id, .. } if id == "writer-line-numbers-measure")));
     }

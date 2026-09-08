@@ -9,6 +9,7 @@
 //! `DepHash` caching over `AssemblySolve`/`AssemblyContradiction`/`AssemblyEntropy` is sound.
 
 use crate::artifacts::assembly::schema::snapshot::AssemblySnapshot;
+#[cfg(test)]
 use semio_framework_job::InteractiveJob as _;
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -71,6 +72,7 @@ pub enum AssemblyInferenceStage {
     Complete,
 }
 
+#[cfg(test)]
 #[derive(semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
 struct AssemblyInferencePreview {
     sequence: u64,
@@ -1045,7 +1047,7 @@ mod tests {
             units_since_preview += 1;
             match step_job(&mut job, root_cancel_token(), &mut sequence) {
                 StepOutcome::PreviewReady(bytes) => {
-                    let preview: AssemblyInferencePreview = serde_json::from_slice(&bytes).expect("preview");
+                    let preview: AssemblyInferencePreview = dsl::os_pack::from_json_str(std::str::from_utf8(&bytes).expect("UTF-8 preview")).expect("preview");
                     assert_eq!(preview.stage, AssemblyInferenceStage::Weights);
                     assert!(units_since_preview <= PARENT_PREVIEW_UNIT_INTERVAL as usize);
                     if previews == 0 {

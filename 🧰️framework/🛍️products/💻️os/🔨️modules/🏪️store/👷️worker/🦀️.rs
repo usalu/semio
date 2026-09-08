@@ -11,6 +11,7 @@ use wasm_bindgen::prelude::*;
 struct DocumentEntry {
     cmd_tx: ArtifactMailboxSender,
     document_key: crate::os_store::sync::ArtifactDocumentKey,
+    client_instance_id: String,
 }
 
 fn install_worker_panic_hook() {
@@ -41,7 +42,11 @@ impl BackboneWorkerHost {
         let _ = self.pool.pump(0);
         let request = backbone_worker_wire::decode_request(bytes).map_err(|error| JsValue::from_str(&error))?;
         match request {
-            BackboneWorkerRequest::Open { document_id, schema, bindings, watch_external, actor } => {
+            BackboneWorkerRequest::Open { document_id, client_instance_id, schema, bindings, watch_external, actor } => {
+                let Some(client_instance_id) = client_instance_id else { return Ok(()) };
+                if self.documents.get(&document_id).is_some_and(|entry| entry.client_instance_id == client_instance_id) {
+                    return Ok(());
+                }
                 let config = crate::os_store::sync::ArtifactActorConfig { document_id: document_id.clone(), schema, bindings, watch_external: watch_external.unwrap_or(true), actor };
                 if let Some(previous) = self.documents.remove(&document_id) {
                     self.host.close_key(&previous.document_key);
@@ -49,12 +54,12 @@ impl BackboneWorkerHost {
                 let channels = self.host.open(config).await;
                 let mut events = self.host.subscribe_key(&channels.document_key).await;
                 let cmd_tx = channels.cmd_tx.clone();
-                self.documents.insert(document_id.clone(), DocumentEntry { cmd_tx, document_key: channels.document_key });
+                self.documents.insert(document_id.clone(), DocumentEntry { cmd_tx, document_key: channels.document_key, client_instance_id: client_instance_id.clone() });
                 semio_framework_async::browser::spawn_local(async move {
                     loop {
                         match events.recv().await {
                             Ok(event) => {
-                                let response = BackboneWorkerResponse::Event { document_id: document_id.clone(), event };
+                                let response = BackboneWorkerResponse::Event { document_id: document_id.clone(), client_instance_id: client_instance_id.clone(), event };
                                 if let Ok(bytes) = backbone_worker_wire::encode_response(&response) {
                                     post_worker_message_bytes(&bytes);
                                 }
@@ -64,15 +69,20 @@ impl BackboneWorkerHost {
                     }
                 });
             }
-            BackboneWorkerRequest::Close { document_id } => {
+            BackboneWorkerRequest::Close { document_id, client_instance_id } => {
+                if self.documents.get(&document_id).is_none_or(|entry| Some(entry.client_instance_id.as_str()) != client_instance_id.as_deref()) {
+                    return Ok(());
+                }
                 if let Some(entry) = self.documents.remove(&document_id) {
                     self.host.send_key(&entry.document_key, ArtifactActorMsg::Detach).await;
                     self.host.close_key(&entry.document_key);
                 }
             }
-            BackboneWorkerRequest::Send { document_id, message } => {
+            BackboneWorkerRequest::Send { document_id, client_instance_id, message } => {
                 if let Some(entry) = self.documents.get(&document_id) {
-                    let _ = entry.cmd_tx.send(*message);
+                    if Some(entry.client_instance_id.as_str()) == client_instance_id.as_deref() {
+                        let _ = entry.cmd_tx.send(*message);
+                    }
                 }
             }
         }

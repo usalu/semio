@@ -1,0 +1,5 @@
+# 📐️ Direct set-trim-box GraphQL payload.
+input SetTrimBoxMutationInput {
+  pageIndex: Int!
+  trimBox: [Float!]!
+}

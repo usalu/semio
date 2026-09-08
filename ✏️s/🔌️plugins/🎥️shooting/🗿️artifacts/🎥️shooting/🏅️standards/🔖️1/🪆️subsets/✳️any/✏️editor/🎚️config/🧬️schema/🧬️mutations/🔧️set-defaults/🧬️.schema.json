@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Set Defaults",
+  "type": "object",
+  "properties": {
+    "shotFormat": {
+      "type": "string"
+    },
+    "shotShape": {
+      "type": "string"
+    },
+    "assetFormat": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "shotFormat",
+    "shotShape",
+    "assetFormat"
+  ],
+  "additionalProperties": false
+}

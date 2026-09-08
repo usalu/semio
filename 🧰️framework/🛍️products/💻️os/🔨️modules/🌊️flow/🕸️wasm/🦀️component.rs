@@ -35,7 +35,7 @@ struct FlowSurface {
 }
 
 struct FlowDomainAdapter {
-    host: FlowHost,
+    host: FlowDomainHost,
     vcs: Option<FlowRetainedVcs>,
     surface: Option<FlowSurface>,
     width: u32,
@@ -45,8 +45,32 @@ struct FlowDomainAdapter {
 
 impl Default for FlowDomainAdapter {
     fn default() -> Self {
-        Self { host: FlowHost::default(), vcs: None, surface: None, width: 1, height: 1, dpr: 1.0 }
+        Self { host: FlowDomainHost::Open(FlowHost::default()), vcs: None, surface: None, width: 1, height: 1, dpr: 1.0 }
     }
+}
+
+enum FlowDomainHost {
+    Open(FlowHost),
+    Closing(FlowHostRetirement),
+    Closed,
+}
+
+impl std::ops::Deref for FlowDomainHost {
+    type Target = FlowHost;
+    fn deref(&self) -> &Self::Target {
+        match self { Self::Open(host) => host, _ => panic!("closed Flow domain host") }
+    }
+}
+
+impl std::ops::DerefMut for FlowDomainHost {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        match self { Self::Open(host) => host, _ => panic!("closed Flow domain host") }
+    }
+}
+
+fn flow_vcs_grant(budget: AbiWorkBudget) -> FlowVcsGrant {
+    let maximum_deadline = budget.now_ms.saturating_add(protocol::FLOW_DEADLINE_MILLISECONDS);
+    FlowVcsGrant { items: 1, bytes: budget.byte_credit, outputs: 1, events: 1, controls: 1, fuel: 1, now_milliseconds: budget.now_ms, deadline_milliseconds: budget.deadline_ms.unwrap_or(maximum_deadline).min(maximum_deadline), interrupted: budget.interrupted || budget.cancelled }
 }
 
 #[derive(Clone, Copy)]
@@ -665,6 +689,43 @@ impl FlowDomain for FlowDomainAdapter {
         let action = flow_action(operation, &arguments).ok_or_else(|| abi_failure(AbiErrorCode::UnknownOperation))?;
         Ok(Box::new(FlowProgramFeature { domain, arguments, action, cancelled: false }))
     }
+
+    fn begin_close(&mut self) {
+        let previous = std::mem::replace(&mut self.host, FlowDomainHost::Closed);
+        self.host = match previous {
+            FlowDomainHost::Open(host) => FlowDomainHost::Closing(FlowHostRetirement::new(host)),
+            retained => retained,
+        };
+        if let Some(vcs) = self.vcs.as_mut() { vcs.begin_close(); }
+        self.surface = None;
+    }
+
+    fn close_step(&mut self, budget: AbiWorkBudget) -> Result<bool, FlowFailure> {
+        protocol::validate_budget(budget).map_err(abi_code_failure)?;
+        if let Some(vcs) = self.vcs.as_mut() {
+            match vcs.close_retired_step(flow_vcs_grant(budget)) {
+                Ok(true) if vcs.terminal_is_empty() => self.vcs = None,
+                Ok(_) | Err(FlowVcsFault::ClosePending) => {},
+                Err(fault) => return Err(flow_vcs_failure(fault)),
+            }
+            return Ok(false);
+        }
+        match &mut self.host {
+            FlowDomainHost::Open(_) => return Err(abi_failure(AbiErrorCode::Busy)),
+            FlowDomainHost::Closing(host) => {
+                let complete = host.close_page(1, budget.byte_credit).map_err(|fault| FlowFailure::new(match fault { FlowHostRetirementFault::NoCredit => AbiErrorCode::NoCredit, FlowHostRetirementFault::Failed => AbiErrorCode::Busy }, format!("Flow host retirement: {fault:?}")))?;
+                if !complete { return Ok(false); }
+                if !host.terminal_nonopaque_is_empty() { return Err(abi_failure(AbiErrorCode::Busy)); }
+                self.host = FlowDomainHost::Closed;
+            }
+            FlowDomainHost::Closed => {},
+        }
+        Ok(self.terminal_is_empty())
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.vcs.is_none() && self.surface.is_none() && matches!(self.host, FlowDomainHost::Closed)
+    }
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -708,17 +769,7 @@ impl FlowVcsFeature {
     }
 
     fn grant(&self, budget: AbiWorkBudget) -> FlowVcsGrant {
-        FlowVcsGrant {
-            items: 1,
-            bytes: budget.byte_credit,
-            outputs: 1,
-            events: 1,
-            controls: 1,
-            fuel: 1,
-            now_milliseconds: budget.now_ms,
-            deadline_milliseconds: budget.deadline_ms.unwrap_or_else(|| budget.now_ms.saturating_add(protocol::FLOW_DEADLINE_MILLISECONDS)),
-            interrupted: budget.interrupted || budget.cancelled,
-        }
+        flow_vcs_grant(budget)
     }
 
     fn close_cursor_step(&mut self, budget: AbiWorkBudget) -> Result<bool, FlowFailure> {
@@ -5580,7 +5631,6 @@ pub unsafe extern "C" fn flow_bridge_poll(pointer: *mut u8, capacity: usize, byt
 #[unsafe(no_mangle)]
 pub extern "C" fn flow_bridge_begin_close() {
     if !flow_bridge_clock_ready() { return; }
-    RETAINED.with(|retained| retained.borrow_mut().take());
     BRIDGE.with(|bridge| bridge.borrow_mut().begin_close());
 }
 
@@ -5624,6 +5674,109 @@ mod domain_laws {
         bridge
             .try_send(AbiMessage::Reply(semio_framework::abi::AbiReply { request_id: event.request_id, generation: event.generation, status: semio_framework::abi::AbiStatus::OK, bytes: semio_framework::abi::AbiBytes::default() }), bridge_budget())
             .unwrap();
+    }
+
+    fn close_bridge(bridge: &mut FlowBridge<FlowDomainAdapter>) {
+        let fixture: Value = serde_json::from_str(include_str!("🧪️fixtures/🧹️session-close/🔣️.json")).unwrap();
+        bridge.begin_close();
+        for _ in 0..fixture["close"]["maximumTurns"].as_u64().unwrap() {
+            match bridge.poll(bridge_budget()).unwrap() {
+                AbiPortPoll::Message(AbiMessage::Event(event)) => acknowledge_bridge_event(bridge, &event),
+                AbiPortPoll::Closed => { assert!(bridge.terminal_is_empty()); return; }
+                _ => {},
+            }
+        }
+        panic!("retained Flow domain did not close within fixture bound");
+    }
+
+    #[test]
+    fn compiled_session_close_retires_the_real_vcs_and_host_before_terminal_empty() {
+        let fixture = crate::os_pack::json::parse(include_str!("🧪️fixtures/🧹️session-close/🔣️.json")).unwrap();
+        let mut bridge = FlowBridge::new(FlowDomainAdapter::default);
+        bridge.try_send(bridge_request(protocol::FLOW_OPERATION_OPEN, 1, 1, Vec::new()), bridge_budget()).unwrap();
+        let AbiMessage::Reply(reply) = bridge_poll(&mut bridge) else { panic!("session reply") };
+        let session = FlowPayloadReader::new(reply.bytes.as_slice()).handle().unwrap();
+        bridge.try_send(AbiMessage::Control(semio_framework::abi::AbiControl::Close { handle: session }), bridge_budget()).unwrap();
+        assert_eq!(bridge.terminal_is_empty(), fixture.get("browser").unwrap().get("terminalBeforeClose").unwrap().as_bool().unwrap());
+        close_bridge(&mut bridge);
+        assert_eq!(bridge.terminal_is_empty(), fixture.get("browser").unwrap().get("terminalAfterClose").unwrap().as_bool().unwrap());
+        println!("[DEBUG] Flow native compiled session close: real VCS and host retired, terminal-empty=true");
+    }
+
+    #[test]
+    fn compiled_session_close_receipt_preserves_a_real_sibling_until_global_close() {
+        let fixture: Value = serde_json::from_str(include_str!("🧪️fixtures/🧑‍🤝‍🧑️browser-runtime/🔣️.json")).unwrap();
+        let mut bridge = FlowBridge::new(FlowDomainAdapter::default);
+        let mut sessions = Vec::new();
+        for request in 1..=2 {
+            bridge.try_send(bridge_request(protocol::FLOW_OPERATION_OPEN, request, 1, Vec::new()), bridge_budget()).unwrap();
+            let AbiMessage::Reply(reply) = bridge_poll(&mut bridge) else { panic!("real session reply") };
+            sessions.push(FlowPayloadReader::new(reply.bytes.as_slice()).handle().unwrap());
+        }
+        bridge.try_send(AbiMessage::Control(semio_framework::abi::AbiControl::Close { handle: sessions[0] }), bridge_budget()).unwrap();
+        let AbiMessage::Event(receipt) = bridge_poll(&mut bridge) else { panic!("real session close receipt") };
+        assert_eq!(u64::from(receipt.event.get()), fixture["receipt"]["event"].as_u64().unwrap());
+        assert_eq!(receipt.request_id.0 ^ (u64::from(receipt.sequence) << 32), 1);
+        assert_eq!(FlowPayloadReader::new(receipt.bytes.as_slice()).handle().unwrap(), sessions[0]);
+        assert!(!bridge.terminal_is_empty());
+        acknowledge_bridge_event(&mut bridge, &receipt);
+        let mut payload = FlowPayloadWriter::default(); payload.handle(sessions[1]);
+        bridge.try_send(bridge_request(2_518, 3, 1, payload.finish()), bridge_budget()).unwrap();
+        let mut completed = false;
+        for _ in 0..64 {
+            match bridge_poll(&mut bridge) {
+                AbiMessage::Event(event) => acknowledge_bridge_event(&mut bridge, &event),
+                AbiMessage::Reply(reply) => {
+                    assert_eq!(reply.request_id.0, 3);
+                    assert_eq!(reply.status, semio_framework::abi::AbiStatus::OK);
+                    let independent: Value = serde_json::from_slice(reply.bytes.as_slice()).unwrap();
+                    let own = crate::os_pack::json::parse(std::str::from_utf8(reply.bytes.as_slice()).unwrap()).unwrap();
+                    assert_eq!(crate::os_pack::json::to_string(&own), independent.to_string());
+                    completed = true; break;
+                },
+                _ => panic!("unexpected sibling payload"),
+            }
+        }
+        assert!(completed);
+        assert!(!bridge.terminal_is_empty());
+        close_bridge(&mut bridge);
+        println!("[DEBUG] Flow real adapter session A retired with its exact receipt; sibling B completed selection before global terminal close");
+    }
+
+    #[test]
+    fn linear_memory_close_preserves_the_exact_retained_event_until_delivery_and_ack() {
+        std::thread::spawn(|| {
+            let mut bytes = vec![0; 4096];
+            BRIDGE.with(|bridge| bridge.borrow_mut().try_send(bridge_request(protocol::FLOW_OPERATION_OPEN, 1, 1, Vec::new()), bridge_budget()).unwrap());
+            let length = unsafe { flow_bridge_poll(bytes.as_mut_ptr(), bytes.len(), 4096, 0, 8) };
+            assert!(length > 0);
+            let AbiMessage::Reply(reply) = decode_abi_message(&bytes[..length as usize]).unwrap() else { panic!("open reply") };
+            let session = FlowPayloadReader::new(reply.bytes.as_slice()).handle().unwrap();
+            let mut payload = FlowPayloadWriter::default(); payload.handle(session);
+            BRIDGE.with(|bridge| bridge.borrow_mut().try_send(bridge_request(2_518, 2, 1, payload.finish()), bridge_budget()).unwrap());
+            let needed = unsafe { flow_bridge_poll(bytes.as_mut_ptr(), 1, 4096, 0, 8) };
+            assert!(needed > 1);
+            let expected = RETAINED.with(|retained| retained.borrow().as_ref().unwrap().bytes.clone());
+            flow_bridge_begin_close();
+            assert_eq!(flow_bridge_terminal_is_empty(), 0);
+            RETAINED.with(|retained| assert_eq!(retained.borrow().as_ref().unwrap().bytes, expected));
+            let delivered = unsafe { flow_bridge_poll(bytes.as_mut_ptr(), bytes.len(), 4096, 0, 8) };
+            assert_eq!(delivered, needed);
+            assert_eq!(&bytes[..delivered as usize], expected);
+            let AbiMessage::Event(event) = decode_abi_message(&expected).unwrap() else { panic!("retained event") };
+            BRIDGE.with(|bridge| acknowledge_bridge_event(&mut bridge.borrow_mut(), &event));
+            for _ in 0..4096 {
+                if flow_bridge_terminal_is_empty() == 1 { break; }
+                let length = unsafe { flow_bridge_poll(bytes.as_mut_ptr(), bytes.len(), 4096, 0, 8) };
+                if length > 0 {
+                    if let AbiMessage::Event(event) = decode_abi_message(&bytes[..length as usize]).unwrap() {
+                        BRIDGE.with(|bridge| acknowledge_bridge_event(&mut bridge.borrow_mut(), &event));
+                    }
+                }
+            }
+            assert_eq!(flow_bridge_terminal_is_empty(), 1);
+            println!("[DEBUG] Flow linear-memory close: retained event delivered once and acknowledged before terminal-empty");
+        }).join().unwrap();
     }
 
     fn text_payload(value: &str) -> Vec<u8> {
@@ -5822,7 +5975,8 @@ mod domain_laws {
             }
         }
         bridge.try_send(AbiMessage::Control(semio_framework::abi::AbiControl::Close { handle: session }), bridge_budget()).unwrap();
-        bridge.begin_close();
+        assert!(!bridge.terminal_is_empty());
+        close_bridge(&mut bridge);
         assert!(bridge.terminal_is_empty());
     }
 

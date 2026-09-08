@@ -2,7 +2,7 @@
 //! other `db_*` crate into the stable, contract-frozen `Database`/`ArtifactHandle` API
 //! (`Database::{open, open_at, create_document, document, catalog, health, shutdown}`;
 //! `ArtifactHandle::{submit, query, subscribe, frontier, preview, history, snapshot_now}`).
-//! Frozen contract: `.🦑️repo/🎫️tickets/26/07/27/INTRODUCE-DB-PROTOCOL-COMMAND-LAYER-AND-VCS-SLIMMING/contract.md`
+//! Frozen contract: `.🧬semio/🦑️repo/🎫️tickets/26/07/27/INTRODUCE-DB-PROTOCOL-COMMAND-LAYER-AND-VCS-SLIMMING/contract.md`
 //! (`## db crate family`, `db_engine` row + "Stable API" block).
 //!
 //! 🎯️ Design choice (compatibility surface): `db_artifact` (a concurrent sibling session) commits
@@ -60,6 +60,9 @@ const DATABASE_CAPABILITY_OPEN_TOTAL_ITEMS: u64 = DATABASE_CAPABILITY_OPEN_ITEMS
 const DATABASE_CAPABILITY_OPEN_TOTAL_BYTES: u64 = DATABASE_CAPABILITY_OPEN_BYTES * DATABASE_CAPABILITY_OPEN_SLOTS as u64;
 const DATABASE_CAPABILITY_OPEN_RETRY_MS: u64 = 1;
 const DATABASE_CAPABILITY_OPEN_RETRY_LIMIT: u8 = 8;
+const DATABASE_CAPABILITY_OPEN_ACTIVE: u8 = 1;
+const DATABASE_CAPABILITY_OPEN_QUEUED: u8 = 2;
+const DATABASE_CAPABILITY_OPEN_CLOSED: u8 = 4;
 
 #[derive(Clone, Copy)]
 struct DatabaseCapabilityOpenAdmissionSlot {
@@ -339,7 +342,8 @@ struct DatabaseCapabilityOpenState {
     waker: Mutex<Option<std::task::Waker>>,
     retry_armed: std::sync::atomic::AtomicBool,
     retry_generation: std::sync::atomic::AtomicU64,
-    scheduled: std::sync::atomic::AtomicBool,
+    lease: std::sync::atomic::AtomicU8,
+    completion_consumed: std::sync::atomic::AtomicBool,
     polling: std::sync::atomic::AtomicBool,
     wake_requested: std::sync::atomic::AtomicBool,
     cancelled: std::sync::atomic::AtomicBool,
@@ -349,9 +353,72 @@ struct DatabaseCapabilityOpenState {
     phase: std::sync::atomic::AtomicU8,
     progress: std::sync::atomic::AtomicU8,
     #[cfg(test)]
+    controlled_submit_refusal: Mutex<Option<semio_framework_async::WorkerSubmitErrorKind>>,
+    #[cfg(test)]
+    controlled_lease_release_hook: Mutex<Option<Box<dyn FnOnce() + Send>>>,
+    #[cfg(test)]
+    controlled_owner_transfer_hook: Mutex<Option<Box<dyn FnOnce(usize) + Send>>>,
+    #[cfg(test)]
+    controlled_publication_before_waker_hook: Mutex<Option<Box<dyn FnOnce() + Send>>>,
+    #[cfg(test)]
+    controlled_completion_before_wake_hook: Mutex<Option<Box<dyn FnOnce() + Send>>>,
+    #[cfg(test)]
     poll_publication_hook: Mutex<Option<Box<dyn FnOnce() + Send>>>,
     #[cfg(test)]
     controlled_submit_hook: Mutex<Option<Arc<dyn Fn(semio_framework_async::Job) -> Result<(), semio_framework_async::Job> + Send + Sync>>>,
+}
+
+struct DatabaseCapabilityOpenLease {
+    state: Arc<DatabaseCapabilityOpenState>,
+    held: bool,
+    finalize: bool,
+}
+
+impl DatabaseCapabilityOpenLease {
+    fn retire(&mut self) {
+        self.state.lease.store(DATABASE_CAPABILITY_OPEN_CLOSED, std::sync::atomic::Ordering::Release);
+        self.held = false;
+        self.state.admission.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take();
+        self.state.finished.store(true, std::sync::atomic::Ordering::Release);
+        let mut registry = database_capability_open_registry().lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        if registry.get(self.state.slot).and_then(Option::as_ref).is_some_and(|state| state.generation == self.state.generation) {
+            registry[self.state.slot] = None;
+        }
+    }
+
+    fn submit_exact(mut self, job: semio_framework_async::Job, attempt: u8) {
+        self.state.lease.store(DATABASE_CAPABILITY_OPEN_QUEUED, std::sync::atomic::Ordering::Release);
+        self.held = false;
+        self.state.submit_exact(job, attempt);
+    }
+}
+
+impl Drop for DatabaseCapabilityOpenLease {
+    fn drop(&mut self) {
+        use std::sync::atomic::Ordering;
+        if !self.held {
+            return;
+        }
+        if self.state.abandoned.load(Ordering::Acquire) {
+            let mut completion = self.state.completion.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+            if let Some(result) = completion.take() {
+                *self.state.terminal_completion.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(result);
+            }
+        }
+        if self.finalize && self.state.completion_consumed.load(Ordering::Acquire) && self.state.roots_are_empty() {
+            self.retire();
+            return;
+        }
+        #[cfg(test)]
+        if let Some(hook) = self.state.controlled_lease_release_hook.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take() {
+            hook();
+        }
+        let previous = self.state.lease.fetch_and(!DATABASE_CAPABILITY_OPEN_ACTIVE, Ordering::AcqRel);
+        self.held = false;
+        if previous & DATABASE_CAPABILITY_OPEN_QUEUED != 0 {
+            self.state.submit_drive_job();
+        }
+    }
 }
 
 struct DatabaseCapabilityOpenWake {
@@ -384,6 +451,40 @@ impl std::task::Wake for DatabaseCapabilityOpenWake {
 }
 
 impl DatabaseCapabilityOpenState {
+    fn try_lease(self: &Arc<Self>, expected: u8, finalize: bool) -> Option<DatabaseCapabilityOpenLease> {
+        self.lease.compare_exchange(expected, DATABASE_CAPABILITY_OPEN_ACTIVE, std::sync::atomic::Ordering::AcqRel, std::sync::atomic::Ordering::Acquire).ok()?;
+        Some(DatabaseCapabilityOpenLease { state: self.clone(), held: true, finalize })
+    }
+
+    fn request_drive(self: &Arc<Self>) {
+        use std::sync::atomic::Ordering;
+        let mut observed = self.lease.load(Ordering::Acquire);
+        loop {
+            if observed & (DATABASE_CAPABILITY_OPEN_CLOSED | DATABASE_CAPABILITY_OPEN_QUEUED) != 0 {
+                return;
+            }
+            match self.lease.compare_exchange_weak(observed, observed | DATABASE_CAPABILITY_OPEN_QUEUED, Ordering::AcqRel, Ordering::Acquire) {
+                Ok(_) => {
+                    if observed == 0 {
+                        self.submit_drive_job();
+                    }
+                    return;
+                }
+                Err(current) => observed = current,
+            }
+        }
+    }
+
+    fn cancel(self: &Arc<Self>) {
+        self.cancelled.store(true, std::sync::atomic::Ordering::Release);
+        self.set_progress(DatabaseCapabilityOpenProgress::Cancelled);
+        if let Some(_lease) = self.try_lease(0, false) {
+            self.stage_terminal(DbError::Closed, DatabaseCapabilityOpenProgress::Cancelled);
+        } else {
+            self.request_drive();
+        }
+    }
+
     fn phase(&self) -> DatabaseCapabilityOpenPhase {
         DatabaseCapabilityOpenPhase::from_u8(self.phase.load(std::sync::atomic::Ordering::Acquire))
     }
@@ -415,35 +516,20 @@ impl DatabaseCapabilityOpenState {
         } else {
             *completion = Some(result);
             drop(completion);
+            #[cfg(test)]
+            if let Some(hook) = self.controlled_completion_before_wake_hook.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take() {
+                hook();
+            }
             self.wake_waiter();
         }
     }
 
     fn schedule(self: &Arc<Self>) {
-        use std::sync::atomic::Ordering;
-        if self.finished.load(Ordering::Acquire) || self.scheduled.compare_exchange(false, true, Ordering::AcqRel, Ordering::Acquire).is_err() {
-            return;
-        }
-        if !self.is_current() {
-            self.scheduled.store(false, Ordering::Release);
-            self.stage_terminal(DbError::Unavailable("database capability-open generation became stale".to_string()), DatabaseCapabilityOpenProgress::Fault);
-            return;
-        }
-        if self.cancelled.load(Ordering::Acquire) {
-            self.scheduled.store(false, Ordering::Release);
-            self.stage_terminal(DbError::Closed, DatabaseCapabilityOpenProgress::Cancelled);
-            return;
-        }
-        self.set_progress(DatabaseCapabilityOpenProgress::Scheduled);
-        self.submit_drive_job();
+        self.request_drive();
     }
 
     fn schedule_cleanup(self: &Arc<Self>) {
-        use std::sync::atomic::Ordering;
-        if self.finished.load(Ordering::Acquire) || self.scheduled.compare_exchange(false, true, Ordering::AcqRel, Ordering::Acquire).is_err() {
-            return;
-        }
-        self.submit_drive_job();
+        self.request_drive();
     }
 
     fn submit_drive_job(self: &Arc<Self>) {
@@ -451,7 +537,9 @@ impl DatabaseCapabilityOpenState {
         let generation = self.generation;
         let job: semio_framework_async::Job = Box::new(move || state.drive_one(generation));
         #[cfg(test)]
-        let job = if let Some(submit) = self.controlled_submit_hook.lock().unwrap_or_else(std::sync::PoisonError::into_inner).clone() {
+        let submit = self.controlled_submit_hook.lock().unwrap_or_else(std::sync::PoisonError::into_inner).clone();
+        #[cfg(test)]
+        let job = if let Some(submit) = submit {
             match submit(job) {
                 Ok(()) => return,
                 Err(job) => job,
@@ -463,21 +551,32 @@ impl DatabaseCapabilityOpenState {
     }
 
     fn submit_exact(self: &Arc<Self>, job: semio_framework_async::Job, attempt: u8) {
-        match self.pool.try_submit(Lane::Io, job) {
-            Ok(()) => {}
-            Err(error) => {
-                self.scheduled.store(false, std::sync::atomic::Ordering::Release);
-                match error.kind() {
-                    semio_framework_async::WorkerSubmitErrorKind::Contended | semio_framework_async::WorkerSubmitErrorKind::Saturated if attempt < DATABASE_CAPABILITY_OPEN_RETRY_LIMIT => {
-                        *self.retry_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some((error.into_job(), attempt + 1));
-                        self.arm_retry();
-                    }
-                    kind => {
-                        *self.terminal_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some((kind, error.into_job()));
-                        self.set_phase(DatabaseCapabilityOpenPhase::RetainWork);
-                        self.complete(Err(DbError::Unavailable(format!("database capability-open WorkerPool submission failed: {kind:?}"))), DatabaseCapabilityOpenProgress::Fault);
-                    }
-                }
+        #[cfg(test)]
+        if let Some(kind) = self.controlled_submit_refusal.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take() {
+            self.handle_submit_refusal(kind, job, attempt);
+            return;
+        }
+        if let Err(error) = self.pool.try_submit(Lane::Io, job) {
+            self.handle_submit_refusal(error.kind(), error.into_job(), attempt);
+        }
+    }
+
+    fn handle_submit_refusal(self: &Arc<Self>, kind: semio_framework_async::WorkerSubmitErrorKind, job: semio_framework_async::Job, attempt: u8) {
+        let mut lease = self.try_lease(DATABASE_CAPABILITY_OPEN_QUEUED, true).expect("exact capability refusal owns the queued turn");
+        if self.completion_consumed.load(std::sync::atomic::Ordering::Acquire) && self.roots_are_empty() {
+            drop(job);
+            lease.retire();
+            return;
+        }
+        match kind {
+            semio_framework_async::WorkerSubmitErrorKind::Contended | semio_framework_async::WorkerSubmitErrorKind::Saturated if attempt < DATABASE_CAPABILITY_OPEN_RETRY_LIMIT => {
+                *self.retry_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some((job, attempt + 1));
+                self.arm_retry();
+            }
+            kind => {
+                *self.terminal_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some((kind, job));
+                self.set_phase(DatabaseCapabilityOpenPhase::RetainWork);
+                self.complete(Err(DbError::Unavailable(format!("database capability-open WorkerPool submission failed: {kind:?}"))), DatabaseCapabilityOpenProgress::Fault);
             }
         }
     }
@@ -514,23 +613,38 @@ impl DatabaseCapabilityOpenState {
             });
             return;
         }
+        self.retry_submission_at(generation);
+    }
+
+    fn retry_submission_at(self: &Arc<Self>, generation: u64) {
         let state = self.clone();
-        self.pool.callback_at(self.pool.now_ms().saturating_add(DATABASE_CAPABILITY_OPEN_RETRY_MS), move || {
-            if generation != state.retry_generation.load(Ordering::Acquire) {
-                return;
+        self.pool.callback_at(self.pool.now_ms().saturating_add(DATABASE_CAPABILITY_OPEN_RETRY_MS), move || state.retry_submission_once(generation));
+    }
+
+    fn retry_submission_once(self: &Arc<Self>, generation: u64) {
+        use std::sync::atomic::Ordering;
+        if generation != self.retry_generation.load(Ordering::Acquire) || !self.retry_armed.load(Ordering::Acquire) {
+            return;
+        }
+        let Some(lease) = self.try_lease(0, true) else {
+            if !self.finished.load(Ordering::Acquire) {
+                self.retry_submission_at(generation);
             }
-            state.retry_armed.store(false, Ordering::Release);
-            let retry = state.retry_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take();
-            if let Some((job, attempt)) = retry {
-                if state.cancelled.load(Ordering::Acquire) || !state.is_current() {
-                    *state.terminal_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some((semio_framework_async::WorkerSubmitErrorKind::Saturated, job));
-                    state.stage_terminal(DbError::Closed, DatabaseCapabilityOpenProgress::Cancelled);
-                } else {
-                    state.scheduled.store(true, Ordering::Release);
-                    state.submit_exact(job, attempt);
-                }
+            return;
+        };
+        if generation != self.retry_generation.load(Ordering::Acquire) || !self.retry_armed.load(Ordering::Acquire) {
+            return;
+        }
+        self.retry_armed.store(false, Ordering::Release);
+        let retry = self.retry_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take();
+        if let Some((job, attempt)) = retry {
+            if self.cancelled.load(Ordering::Acquire) || !self.is_current() {
+                *self.terminal_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some((semio_framework_async::WorkerSubmitErrorKind::Saturated, job));
+                self.stage_terminal(DbError::Closed, DatabaseCapabilityOpenProgress::Cancelled);
+            } else {
+                lease.submit_exact(job, attempt);
             }
-        });
+        }
     }
 
     fn drive_one(self: Arc<Self>, generation: u64) {
@@ -538,7 +652,7 @@ impl DatabaseCapabilityOpenState {
         if generation != self.generation {
             return;
         }
-        self.scheduled.store(false, Ordering::Release);
+        let Some(_lease) = self.try_lease(DATABASE_CAPABILITY_OPEN_QUEUED, true) else { return };
         if !self.is_current() && self.terminal_error.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_none() && self.phase() != DatabaseCapabilityOpenPhase::Terminal {
             self.stage_terminal(DbError::Unavailable("database capability-open generation became stale".to_string()), DatabaseCapabilityOpenProgress::Fault);
             return;
@@ -553,6 +667,10 @@ impl DatabaseCapabilityOpenState {
                     self.stage_terminal(DbError::Unavailable("database capability-open handoff owner missing".to_string()), DatabaseCapabilityOpenProgress::Fault);
                     return;
                 };
+                #[cfg(test)]
+                if let Some(hook) = self.controlled_owner_transfer_hook.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take() {
+                    hook(work.storage_identity);
+                }
                 *self.poll_work.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(work);
                 self.set_phase(DatabaseCapabilityOpenPhase::Poll);
                 self.schedule();
@@ -561,6 +679,10 @@ impl DatabaseCapabilityOpenState {
             DatabaseCapabilityOpenPhase::RetainWork => {
                 let work = self.work.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take().or_else(|| self.poll_work.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take());
                 if let Some(work) = work {
+                    #[cfg(test)]
+                    if let Some(hook) = self.controlled_owner_transfer_hook.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take() {
+                        hook(work.storage_identity);
+                    }
                     *self.terminal_work.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(work);
                 }
                 self.set_phase(DatabaseCapabilityOpenPhase::DrainWork);
@@ -641,6 +763,10 @@ impl DatabaseCapabilityOpenState {
             self.stage_terminal(DbError::Unavailable("database capability-open poll owner missing".to_string()), DatabaseCapabilityOpenProgress::Fault);
             return;
         };
+        #[cfg(test)]
+        if let Some(hook) = self.controlled_owner_transfer_hook.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take() {
+            hook(work.storage_identity);
+        }
         self.polling.store(true, Ordering::Release);
         self.set_progress(DatabaseCapabilityOpenProgress::Polling);
         let wake = std::task::Waker::from(Arc::new(DatabaseCapabilityOpenWake { state: Arc::downgrade(self), generation }));
@@ -753,6 +879,9 @@ impl DatabaseCapabilityOpenState {
     fn close_step(self: &Arc<Self>) -> DatabaseCapabilityOpenCloseStep {
         use std::sync::atomic::Ordering;
         self.cancelled.store(true, Ordering::Release);
+        let Some(mut lease) = self.try_lease(0, false) else {
+            return if self.terminal_is_empty() { DatabaseCapabilityOpenCloseStep::Complete } else { DatabaseCapabilityOpenCloseStep::Blocked };
+        };
         if let Some((_, job)) = self.terminal_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take() {
             drop(job);
             return DatabaseCapabilityOpenCloseStep::Progress;
@@ -770,7 +899,7 @@ impl DatabaseCapabilityOpenState {
             }
             return DatabaseCapabilityOpenCloseStep::Blocked;
         }
-        if self.scheduled.load(Ordering::Acquire) || self.polling.load(Ordering::Acquire) {
+        if self.polling.load(Ordering::Acquire) {
             return DatabaseCapabilityOpenCloseStep::Blocked;
         }
         if let Some(work) = self.work.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take() {
@@ -818,16 +947,12 @@ impl DatabaseCapabilityOpenState {
         if self.waker.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take().is_some() {
             return DatabaseCapabilityOpenCloseStep::Progress;
         }
-        if self.admission.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take().is_some() {
-            self.finished.store(true, Ordering::Release);
-            let mut registry = database_capability_open_registry().lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-            if registry.get(self.slot).and_then(Option::as_ref).is_some_and(|state| state.generation == self.generation) {
-                registry[self.slot] = None;
-            }
+        if self.admission.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_some() {
+            lease.retire();
             return DatabaseCapabilityOpenCloseStep::Progress;
         }
         if self.roots_are_empty() {
-            self.finished.store(true, Ordering::Release);
+            lease.retire();
             DatabaseCapabilityOpenCloseStep::Complete
         } else {
             DatabaseCapabilityOpenCloseStep::Blocked
@@ -838,15 +963,13 @@ impl DatabaseCapabilityOpenState {
         self.finished.load(std::sync::atomic::Ordering::Acquire) && self.admission.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_none() && self.roots_are_empty()
     }
 
-    fn release_success(&self) {
-        if !self.roots_are_empty() || self.scheduled.load(std::sync::atomic::Ordering::Acquire) || self.polling.load(std::sync::atomic::Ordering::Acquire) {
+    fn release_success(self: &Arc<Self>) {
+        let Some(mut lease) = self.try_lease(0, false) else {
+            self.request_drive();
             return;
-        }
-        self.admission.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take();
-        self.finished.store(true, std::sync::atomic::Ordering::Release);
-        let mut registry = database_capability_open_registry().lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-        if registry.get(self.slot).and_then(Option::as_ref).is_some_and(|state| state.generation == self.generation) {
-            registry[self.slot] = None;
+        };
+        if self.completion_consumed.load(std::sync::atomic::Ordering::Acquire) && self.roots_are_empty() {
+            lease.retire();
         }
     }
 
@@ -874,6 +997,18 @@ pub struct DatabaseCapabilityOpenFuture {
 }
 
 impl DatabaseCapabilityOpenFuture {
+    fn take_completion(&mut self) -> Option<Result<DatabaseCapabilityOpenResult, DbError>> {
+        let result = self.state.completion.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take()?;
+        self.state.waker.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take();
+        self.resolved = true;
+        self.state.completion_consumed.store(true, std::sync::atomic::Ordering::Release);
+        if result.is_err() {
+            self.state.abandoned.store(true, std::sync::atomic::Ordering::Release);
+        }
+        self.state.release_success();
+        Some(result)
+    }
+
     pub fn try_submit(pool: Arc<WorkerPool>, storage: Arc<db_storage::DbBackend>) -> Result<Self, DatabaseCapabilityOpenRejected> {
         Self::try_prepare(pool, storage, true)
     }
@@ -919,7 +1054,8 @@ impl DatabaseCapabilityOpenFuture {
             waker: Mutex::new(None),
             retry_armed: std::sync::atomic::AtomicBool::new(false),
             retry_generation: std::sync::atomic::AtomicU64::new(1),
-            scheduled: std::sync::atomic::AtomicBool::new(false),
+            lease: std::sync::atomic::AtomicU8::new(0),
+            completion_consumed: std::sync::atomic::AtomicBool::new(false),
             polling: std::sync::atomic::AtomicBool::new(false),
             wake_requested: std::sync::atomic::AtomicBool::new(false),
             cancelled: std::sync::atomic::AtomicBool::new(false),
@@ -928,6 +1064,16 @@ impl DatabaseCapabilityOpenFuture {
             terminal_checked_out: std::sync::atomic::AtomicBool::new(false),
             phase: std::sync::atomic::AtomicU8::new(DatabaseCapabilityOpenPhase::Handoff as u8),
             progress: std::sync::atomic::AtomicU8::new(DatabaseCapabilityOpenProgress::Admitted as u8),
+            #[cfg(test)]
+            controlled_submit_refusal: Mutex::new(None),
+            #[cfg(test)]
+            controlled_lease_release_hook: Mutex::new(None),
+            #[cfg(test)]
+            controlled_owner_transfer_hook: Mutex::new(None),
+            #[cfg(test)]
+            controlled_publication_before_waker_hook: Mutex::new(None),
+            #[cfg(test)]
+            controlled_completion_before_wake_hook: Mutex::new(None),
             #[cfg(test)]
             poll_publication_hook: Mutex::new(None),
             #[cfg(test)]
@@ -957,10 +1103,7 @@ impl DatabaseCapabilityOpenFuture {
     }
 
     pub fn cancel(&self) {
-        self.state.cancelled.store(true, std::sync::atomic::Ordering::Release);
-        if !self.state.scheduled.load(std::sync::atomic::Ordering::Acquire) && !self.state.polling.load(std::sync::atomic::Ordering::Acquire) {
-            self.state.stage_terminal(DbError::Closed, DatabaseCapabilityOpenProgress::Cancelled);
-        }
+        self.state.cancel();
     }
 
     #[cfg(test)]
@@ -980,17 +1123,15 @@ impl Future for DatabaseCapabilityOpenFuture {
     type Output = Result<DatabaseCapabilityOpenResult, DbError>;
 
     fn poll(mut self: std::pin::Pin<&mut Self>, context: &mut std::task::Context<'_>) -> std::task::Poll<Self::Output> {
-        let result = self.state.completion.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take();
-        if let Some(result) = result {
-            self.resolved = true;
-            if result.is_err() {
-                self.state.abandoned.store(true, std::sync::atomic::Ordering::Release);
-            }
-            self.state.release_success();
+        if let Some(result) = self.take_completion() {
             return std::task::Poll::Ready(result);
         }
+        #[cfg(test)]
+        if let Some(hook) = self.state.controlled_publication_before_waker_hook.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take() {
+            hook();
+        }
         *self.state.waker.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(context.waker().clone());
-        std::task::Poll::Pending
+        self.take_completion().map_or(std::task::Poll::Pending, std::task::Poll::Ready)
     }
 }
 
@@ -1000,16 +1141,11 @@ impl Drop for DatabaseCapabilityOpenFuture {
         if self.resolved {
             return;
         }
-        let mut completion = self.state.completion.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-        self.state.abandoned.store(true, Ordering::Release);
-        self.state.cancelled.store(true, Ordering::Release);
-        if let Some(result) = completion.take() {
-            *self.state.terminal_completion.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(result);
+        {
+            let _completion = self.state.completion.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+            self.state.abandoned.store(true, Ordering::Release);
         }
-        drop(completion);
-        if !self.state.scheduled.load(Ordering::Acquire) && !self.state.polling.load(Ordering::Acquire) {
-            self.state.stage_terminal(DbError::Closed, DatabaseCapabilityOpenProgress::Cancelled);
-        }
+        self.state.cancel();
     }
 }
 
@@ -1045,7 +1181,8 @@ impl DatabaseCapabilityOpenTerminalHandle {
 
     pub fn resume(self) -> Result<DatabaseCapabilityOpenFuture, Self> {
         use std::sync::atomic::Ordering;
-        if self.state.scheduled.load(Ordering::Acquire) || self.state.polling.load(Ordering::Acquire) || self.state.finished.load(Ordering::Acquire) {
+        let Some(lease) = self.state.try_lease(0, false) else { return Err(self) };
+        if self.state.polling.load(Ordering::Acquire) || self.state.finished.load(Ordering::Acquire) {
             return Err(self);
         }
         let mut job = self.state.terminal_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take().map(|(_, job)| (job, 0));
@@ -1068,11 +1205,11 @@ impl DatabaseCapabilityOpenTerminalHandle {
             self.state.terminal_error.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take();
             self.state.terminal_completion.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take();
             self.state.set_phase(if self.state.poll_work.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_some() { DatabaseCapabilityOpenPhase::Poll } else { DatabaseCapabilityOpenPhase::Handoff });
+            self.state.completion_consumed.store(false, Ordering::Release);
             self.state.abandoned.store(false, Ordering::Release);
             self.state.cancelled.store(false, Ordering::Release);
             self.state.terminal_checked_out.store(false, Ordering::Release);
-            self.state.scheduled.store(true, Ordering::Release);
-            self.state.submit_exact(job, attempt);
+            lease.submit_exact(job, attempt);
             return Ok(DatabaseCapabilityOpenFuture { state: self.state.clone(), resolved: false });
         } else if let Some(work) = work {
             *self.state.poll_work.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(work);
@@ -1089,6 +1226,7 @@ impl DatabaseCapabilityOpenTerminalHandle {
         } else {
             return Err(self);
         }
+        self.state.completion_consumed.store(false, Ordering::Release);
         self.state.abandoned.store(false, Ordering::Release);
         self.state.cancelled.store(false, Ordering::Release);
         self.state.terminal_checked_out.store(false, Ordering::Release);
@@ -1111,6 +1249,7 @@ impl DatabaseCapabilityOpenTerminalResult {
     }
 
     pub fn take(mut self) -> Option<Result<DatabaseCapabilityOpenResult, DbError>> {
+        let _lease = self.state.try_lease(0, false)?;
         let result = self.state.terminal_result.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take();
         if result.is_some() {
             self.checked_out = false;
@@ -1121,7 +1260,8 @@ impl DatabaseCapabilityOpenTerminalResult {
 
     pub fn resume(mut self) -> Result<DatabaseCapabilityOpenFuture, Self> {
         use std::sync::atomic::Ordering;
-        if self.state.scheduled.load(Ordering::Acquire) || self.state.polling.load(Ordering::Acquire) || self.state.finished.load(Ordering::Acquire) || self.state.completion.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_some() {
+        let Some(_lease) = self.state.try_lease(0, false) else { return Err(self) };
+        if self.state.polling.load(Ordering::Acquire) || self.state.finished.load(Ordering::Acquire) || self.state.completion.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_some() {
             return Err(self);
         }
         let Some(result) = self.state.terminal_result.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take() else {
@@ -1129,12 +1269,18 @@ impl DatabaseCapabilityOpenTerminalResult {
         };
         *self.state.completion.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(result);
         self.state.set_phase(DatabaseCapabilityOpenPhase::Terminal);
+        self.state.abandoned.store(false, Ordering::Release);
+        self.state.cancelled.store(false, Ordering::Release);
+        self.state.completion_consumed.store(false, Ordering::Release);
         self.checked_out = false;
         self.state.terminal_result_checked_out.store(false, Ordering::Release);
         Ok(DatabaseCapabilityOpenFuture { state: self.state.clone(), resolved: false })
     }
 
     pub fn close_step(&mut self) -> DatabaseCapabilityOpenCloseStep {
+        let Some(_lease) = self.state.try_lease(0, false) else {
+            return if self.terminal_is_empty() { DatabaseCapabilityOpenCloseStep::Complete } else { DatabaseCapabilityOpenCloseStep::Blocked };
+        };
         if let Some(result) = self.state.terminal_result.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take() {
             drop(result);
             self.checked_out = false;
@@ -1194,6 +1340,9 @@ const DATABASE_CATALOG_READ_BYTES: u64 = 64 * 1024;
 const DATABASE_CATALOG_READ_TOTAL_ITEMS: u64 = DATABASE_CATALOG_READ_ITEMS * DATABASE_CATALOG_READ_SLOTS as u64;
 const DATABASE_CATALOG_READ_TOTAL_BYTES: u64 = DATABASE_CATALOG_READ_BYTES * DATABASE_CATALOG_READ_SLOTS as u64;
 const DATABASE_CATALOG_READ_RETRY_LIMIT: u8 = 8;
+const DATABASE_CATALOG_READ_ACTIVE: u8 = 1;
+const DATABASE_CATALOG_READ_QUEUED: u8 = 2;
+const DATABASE_CATALOG_READ_CLOSED: u8 = 4;
 
 #[derive(Clone, Copy)]
 struct DatabaseCatalogReadAdmissionSlot {
@@ -1252,8 +1401,7 @@ impl DatabaseCatalogReadAdmissionState {
     }
 }
 
-static DATABASE_CATALOG_READ_ADMISSION: Mutex<DatabaseCatalogReadAdmissionState> =
-    Mutex::new(DatabaseCatalogReadAdmissionState { slots: [EMPTY_DATABASE_CATALOG_READ_SLOT; DATABASE_CATALOG_READ_SLOTS], items: 0, bytes: 0, next_generation: 1 });
+static DATABASE_CATALOG_READ_ADMISSION: Mutex<DatabaseCatalogReadAdmissionState> = Mutex::new(DatabaseCatalogReadAdmissionState { slots: [EMPTY_DATABASE_CATALOG_READ_SLOT; DATABASE_CATALOG_READ_SLOTS], items: 0, bytes: 0, next_generation: 1 });
 
 struct DatabaseCatalogReadAdmission {
     slot: usize,
@@ -1474,6 +1622,7 @@ type DatabaseCatalogReadBackendFuture = std::pin::Pin<Box<dyn Future<Output = Da
 
 struct DatabaseCatalogReadWork {
     future: Option<DatabaseCatalogReadBackendFuture>,
+    pollable: bool,
     #[cfg(test)]
     storage_identity: usize,
 }
@@ -1488,16 +1637,26 @@ impl DatabaseCatalogReadWork {
         });
         Self {
             future: Some(future),
+            pollable: true,
             #[cfg(test)]
             storage_identity,
         }
     }
 
     fn poll(&mut self, context: &mut std::task::Context<'_>) -> std::task::Poll<DatabaseCatalogReadResult> {
-        self.future.as_mut().map_or(std::task::Poll::Pending, |future| future.as_mut().poll(context))
+        let output = self.future.as_mut().map_or(std::task::Poll::Pending, |future| future.as_mut().poll(context));
+        if output.is_ready() {
+            self.pollable = false;
+        }
+        output
+    }
+
+    fn can_poll(&self) -> bool {
+        self.pollable && self.future.is_some()
     }
 
     fn close_step(&mut self) -> bool {
+        self.pollable = false;
         self.future.take().is_some()
     }
 
@@ -1507,7 +1666,7 @@ impl DatabaseCatalogReadWork {
 
     #[cfg(test)]
     fn controlled(future: DatabaseCatalogReadBackendFuture, storage_identity: usize) -> Self {
-        Self { future: Some(future), storage_identity }
+        Self { future: Some(future), pollable: true, storage_identity }
     }
 }
 
@@ -1554,10 +1713,12 @@ struct DatabaseCatalogReadState {
     terminal_result: Mutex<Option<Result<DatabaseCatalogReadResult, DbError>>>,
     terminal_completion: Mutex<Option<Result<DatabaseCatalogReadResult, DbError>>>,
     retry_job: Mutex<Option<(semio_framework_async::Job, u8)>>,
-    terminal_job: Mutex<Option<semio_framework_async::Job>>,
+    terminal_job: Mutex<Option<(semio_framework_async::WorkerSubmitErrorKind, semio_framework_async::Job)>>,
     waker: Mutex<Option<std::task::Waker>>,
     retry_armed: std::sync::atomic::AtomicBool,
-    scheduled: std::sync::atomic::AtomicBool,
+    lease: std::sync::atomic::AtomicU8,
+    completion_consumed: std::sync::atomic::AtomicBool,
+    retry_generation: std::sync::atomic::AtomicU64,
     polling: std::sync::atomic::AtomicBool,
     wake_requested: std::sync::atomic::AtomicBool,
     cancelled: std::sync::atomic::AtomicBool,
@@ -1568,11 +1729,76 @@ struct DatabaseCatalogReadState {
     phase: std::sync::atomic::AtomicU8,
     progress: std::sync::atomic::AtomicU8,
     #[cfg(test)]
+    controlled_retry_callback_hook: Mutex<Option<Arc<dyn Fn(semio_framework_async::Job) -> Result<(), semio_framework_async::Job> + Send + Sync>>>,
+    #[cfg(test)]
+    controlled_submit_refusal: Mutex<Option<semio_framework_async::WorkerSubmitErrorKind>>,
+    #[cfg(test)]
+    controlled_owner_transfer_hook: Mutex<Option<Box<dyn FnOnce(usize) + Send>>>,
+    #[cfg(test)]
+    controlled_completion_before_wake_hook: Mutex<Option<Box<dyn FnOnce() + Send>>>,
+    #[cfg(test)]
+    controlled_lease_release_hook: Mutex<Option<Box<dyn FnOnce() + Send>>>,
+    #[cfg(test)]
     controlled_submit_hook: Mutex<Option<Arc<dyn Fn(semio_framework_async::Job) -> Result<(), semio_framework_async::Job> + Send + Sync>>>,
     #[cfg(test)]
     controlled_publication_before_waker_hook: Mutex<Option<Box<dyn FnOnce() + Send>>>,
     #[cfg(test)]
     poll_worker_thread: std::sync::atomic::AtomicBool,
+}
+
+struct DatabaseCatalogReadLease {
+    state: Arc<DatabaseCatalogReadState>,
+    held: bool,
+    finalize: bool,
+}
+
+impl DatabaseCatalogReadLease {
+    fn retire(&mut self) {
+        self.state.lease.store(DATABASE_CATALOG_READ_CLOSED, std::sync::atomic::Ordering::Release);
+        self.held = false;
+        self.state.admission.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take();
+        self.state.finished.store(true, std::sync::atomic::Ordering::Release);
+        let mut registry = database_catalog_read_registry().lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        if registry.get(self.state.slot).and_then(Option::as_ref).is_some_and(|state| state.generation == self.state.generation) {
+            registry[self.state.slot] = None;
+        }
+    }
+
+    fn submit_exact(mut self, job: semio_framework_async::Job, attempt: u8) {
+        self.state.lease.store(DATABASE_CATALOG_READ_QUEUED, std::sync::atomic::Ordering::Release);
+        self.held = false;
+        self.state.submit_exact(job, attempt);
+    }
+}
+
+impl Drop for DatabaseCatalogReadLease {
+    fn drop(&mut self) {
+        use std::sync::atomic::Ordering;
+        if !self.held {
+            return;
+        }
+        if self.state.abandoned.load(Ordering::Acquire) {
+            let mut completion = self.state.completion.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+            if let Some(result) = completion.take() {
+                *self.state.terminal_completion.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(result);
+            }
+        }
+        if self.finalize && self.state.completion_consumed.load(Ordering::Acquire) && self.state.roots_are_empty() {
+            self.retire();
+            return;
+        }
+        #[cfg(test)]
+        if let Some(hook) = self.state.controlled_lease_release_hook.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take() {
+            hook();
+        }
+        let retained = self.state.has_retained_submission();
+        let mask = if retained { !(DATABASE_CATALOG_READ_ACTIVE | DATABASE_CATALOG_READ_QUEUED) } else { !DATABASE_CATALOG_READ_ACTIVE };
+        let previous = self.state.lease.fetch_and(mask, Ordering::AcqRel);
+        self.held = false;
+        if !retained && previous & DATABASE_CATALOG_READ_QUEUED != 0 {
+            self.state.submit_drive_job();
+        }
+    }
 }
 
 struct DatabaseCatalogReadWake {
@@ -1603,6 +1829,52 @@ impl std::task::Wake for DatabaseCatalogReadWake {
 }
 
 impl DatabaseCatalogReadState {
+    fn try_lease(self: &Arc<Self>, expected: u8, finalize: bool) -> Option<DatabaseCatalogReadLease> {
+        self.lease.compare_exchange(expected, DATABASE_CATALOG_READ_ACTIVE, std::sync::atomic::Ordering::AcqRel, std::sync::atomic::Ordering::Acquire).ok()?;
+        Some(DatabaseCatalogReadLease { state: self.clone(), held: true, finalize })
+    }
+
+    fn has_retained_submission(&self) -> bool {
+        let retry = self.retry_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_some();
+        retry || self.terminal_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_some()
+    }
+
+    fn request_drive(self: &Arc<Self>) {
+        use std::sync::atomic::Ordering;
+        let mut observed = self.lease.load(Ordering::Acquire);
+        loop {
+            if observed & (DATABASE_CATALOG_READ_CLOSED | DATABASE_CATALOG_READ_QUEUED) != 0 || self.has_retained_submission() {
+                return;
+            }
+            match self.lease.compare_exchange_weak(observed, observed | DATABASE_CATALOG_READ_QUEUED, Ordering::AcqRel, Ordering::Acquire) {
+                Ok(_) => {
+                    if observed == 0 {
+                        self.submit_drive_job();
+                    }
+                    return;
+                }
+                Err(current) => observed = current,
+            }
+        }
+    }
+
+    fn cancel(self: &Arc<Self>) {
+        self.cancelled.store(true, std::sync::atomic::Ordering::Release);
+        self.set_progress(DatabaseCatalogReadProgress::Cancelled);
+        if let Some(_lease) = self.try_lease(0, false) {
+            if self.has_retained_submission() {
+                return;
+            }
+            if self.phase() != DatabaseCatalogReadPhase::Terminal && self.terminal_error.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_none() {
+                self.stage_terminal(DbError::Closed, DatabaseCatalogReadProgress::Cancelled);
+            } else {
+                self.request_drive();
+            }
+        } else {
+            self.request_drive();
+        }
+    }
+
     fn phase(&self) -> DatabaseCatalogReadPhase {
         DatabaseCatalogReadPhase::from_u8(self.phase.load(std::sync::atomic::Ordering::Acquire))
     }
@@ -1620,38 +1892,25 @@ impl DatabaseCatalogReadState {
     }
 
     fn schedule(self: &Arc<Self>) {
-        use std::sync::atomic::Ordering;
-        if self.finished.load(Ordering::Acquire) || self.scheduled.compare_exchange(false, true, Ordering::AcqRel, Ordering::Acquire).is_err() {
-            return;
-        }
-        if !self.is_current() {
-            self.scheduled.store(false, Ordering::Release);
-            self.stage_terminal(DbError::Unavailable("database catalog-read generation stale".to_string()), DatabaseCatalogReadProgress::Fault);
-            return;
-        }
-        if self.cancelled.load(Ordering::Acquire) {
-            self.scheduled.store(false, Ordering::Release);
-            self.stage_terminal(DbError::Closed, DatabaseCatalogReadProgress::Cancelled);
-            return;
-        }
-        self.set_progress(DatabaseCatalogReadProgress::Scheduled);
-        self.submit_drive_job();
+        self.request_drive();
     }
 
     fn schedule_cleanup(self: &Arc<Self>) {
-        use std::sync::atomic::Ordering;
-        if self.finished.load(Ordering::Acquire) || self.scheduled.compare_exchange(false, true, Ordering::AcqRel, Ordering::Acquire).is_err() {
-            return;
-        }
-        self.submit_drive_job();
+        self.request_drive();
     }
 
     fn submit_drive_job(self: &Arc<Self>) {
         let state = self.clone();
         let generation = self.generation;
         let job: semio_framework_async::Job = Box::new(move || state.drive_one(generation));
+        self.submit_exact(job, 0);
+    }
+
+    fn submit_exact(self: &Arc<Self>, job: semio_framework_async::Job, attempt: u8) {
         #[cfg(test)]
-        let job = if let Some(submit) = self.controlled_submit_hook.lock().unwrap_or_else(std::sync::PoisonError::into_inner).clone() {
+        let submit = self.controlled_submit_hook.lock().unwrap_or_else(std::sync::PoisonError::into_inner).clone();
+        #[cfg(test)]
+        let job = if let Some(submit) = submit {
             match submit(job) {
                 Ok(()) => return,
                 Err(job) => job,
@@ -1659,47 +1918,98 @@ impl DatabaseCatalogReadState {
         } else {
             job
         };
-        self.submit_exact(job, 0);
+        #[cfg(test)]
+        let refusal = self.controlled_submit_refusal.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take();
+        #[cfg(test)]
+        if let Some(kind) = refusal {
+            self.handle_submit_refusal(kind, job, attempt);
+            return;
+        }
+        if let Err(error) = self.pool.try_submit(Lane::Io, job) {
+            self.handle_submit_refusal(error.kind(), error.into_job(), attempt);
+        }
     }
 
-    fn submit_exact(self: &Arc<Self>, job: semio_framework_async::Job, attempt: u8) {
-        match self.pool.try_submit(Lane::Io, job) {
-            Ok(()) => {}
-            Err(error) => {
-                self.scheduled.store(false, std::sync::atomic::Ordering::Release);
-                if matches!(error.kind(), semio_framework_async::WorkerSubmitErrorKind::Contended | semio_framework_async::WorkerSubmitErrorKind::Saturated) && attempt < DATABASE_CATALOG_READ_RETRY_LIMIT {
-                    *self.retry_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some((error.into_job(), attempt + 1));
-                    self.arm_retry();
-                } else {
-                    *self.terminal_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(error.into_job());
-                    self.stage_terminal(DbError::Unavailable("database catalog-read WorkerPool submission failed".to_string()), DatabaseCatalogReadProgress::Fault);
-                }
-            }
+    fn handle_submit_refusal(self: &Arc<Self>, kind: semio_framework_async::WorkerSubmitErrorKind, job: semio_framework_async::Job, attempt: u8) {
+        let mut lease = self.try_lease(DATABASE_CATALOG_READ_QUEUED, true).expect("exact catalog refusal owns the queued turn");
+        if self.completion_consumed.load(std::sync::atomic::Ordering::Acquire) && self.roots_are_empty() {
+            drop(job);
+            lease.retire();
+            return;
+        }
+        if matches!(kind, semio_framework_async::WorkerSubmitErrorKind::Contended | semio_framework_async::WorkerSubmitErrorKind::Saturated) && attempt < DATABASE_CATALOG_READ_RETRY_LIMIT {
+            *self.retry_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some((job, attempt + 1));
+            self.arm_retry();
+        } else {
+            *self.terminal_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some((kind, job));
+            self.set_phase(DatabaseCatalogReadPhase::RetainWork);
+            self.set_progress(DatabaseCatalogReadProgress::Fault);
+            self.publish_public_completion(Err(DbError::Unavailable(format!("database catalog-read WorkerPool submission failed: {kind:?}"))));
         }
     }
 
     fn arm_retry(self: &Arc<Self>) {
         use std::sync::atomic::Ordering;
-        if self.retry_armed.compare_exchange(false, true, Ordering::AcqRel, Ordering::Acquire).is_err() {
+        if self.retry_armed.swap(true, Ordering::AcqRel) {
             return;
         }
+        let Some(generation) = self.retry_generation.load(Ordering::Acquire).checked_add(1) else {
+            self.retry_armed.store(false, Ordering::Release);
+            self.set_progress(DatabaseCatalogReadProgress::Fault);
+            self.publish_public_completion(Err(DbError::LimitExceeded("database catalog-read retry generation")));
+            return;
+        };
+        self.retry_generation.store(generation, Ordering::Release);
+        self.retry_submission_at(generation);
+    }
+
+    fn retry_submission_at(self: &Arc<Self>, generation: u64) {
         let state = self.clone();
-        self.pool.callback_at(self.pool.now_ms().saturating_add(1), move || {
-            state.retry_armed.store(false, Ordering::Release);
-            let retry = state.retry_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take();
-            if let Some((job, attempt)) = retry {
-                if !state.is_current() {
-                    *state.terminal_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(job);
-                    state.stage_terminal(DbError::Unavailable("database catalog-read retry generation stale".to_string()), DatabaseCatalogReadProgress::Fault);
-                } else if state.cancelled.load(Ordering::Acquire) {
-                    *state.terminal_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(job);
-                    state.stage_terminal(DbError::Closed, DatabaseCatalogReadProgress::Cancelled);
-                } else {
-                    state.scheduled.store(true, Ordering::Release);
-                    state.submit_exact(job, attempt);
-                }
+        self.schedule_retry_callback(Box::new(move || state.retry_submission_once(generation)));
+    }
+
+    fn retry_submission_once(self: &Arc<Self>, generation: u64) {
+        use std::sync::atomic::Ordering;
+        if generation != self.retry_generation.load(Ordering::Acquire) || !self.retry_armed.load(Ordering::Acquire) {
+            return;
+        }
+        let Some(lease) = self.try_lease(0, true) else {
+            if !self.finished.load(Ordering::Acquire) {
+                self.retry_submission_at(generation);
             }
-        });
+            return;
+        };
+        if generation != self.retry_generation.load(Ordering::Acquire) || !self.retry_armed.load(Ordering::Acquire) {
+            return;
+        }
+        self.retry_armed.store(false, Ordering::Release);
+        let retry = self.retry_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take();
+        if let Some((job, attempt)) = retry {
+            let stale = !self.is_current();
+            if self.cancelled.load(Ordering::Acquire) || stale {
+                *self.terminal_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some((semio_framework_async::WorkerSubmitErrorKind::Saturated, job));
+                self.set_phase(DatabaseCatalogReadPhase::RetainWork);
+                self.set_progress(if stale { DatabaseCatalogReadProgress::Fault } else { DatabaseCatalogReadProgress::Cancelled });
+                self.publish_public_completion(Err(if stale { DbError::Unavailable("database catalog-read retry generation stale".into()) } else { DbError::Closed }));
+            } else {
+                lease.submit_exact(job, attempt);
+            }
+        }
+    }
+
+    fn schedule_retry_callback(self: &Arc<Self>, job: semio_framework_async::Job) {
+        #[cfg(test)]
+        let callback = self.controlled_retry_callback_hook.lock().unwrap_or_else(std::sync::PoisonError::into_inner).clone();
+        #[cfg(test)]
+        let job = if let Some(callback) = callback {
+            match callback(job) {
+                Ok(()) => return,
+                Err(job) => job,
+            }
+        } else {
+            job
+        };
+        self.pool.callback_at(self.pool.now_ms().saturating_add(1), job);
     }
 
     fn drive_one(self: Arc<Self>, generation: u64) {
@@ -1707,12 +2017,12 @@ impl DatabaseCatalogReadState {
         if generation != self.generation {
             return;
         }
-        self.scheduled.store(false, Ordering::Release);
-        if !self.is_current() && self.phase() != DatabaseCatalogReadPhase::Terminal {
+        let Some(_lease) = self.try_lease(DATABASE_CATALOG_READ_QUEUED, true) else { return };
+        if !self.is_current() && self.terminal_error.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_none() && self.phase() != DatabaseCatalogReadPhase::Terminal {
             self.stage_terminal(DbError::Unavailable("database catalog-read generation stale".to_string()), DatabaseCatalogReadProgress::Fault);
             return;
         }
-        if self.cancelled.load(Ordering::Acquire) && self.phase() != DatabaseCatalogReadPhase::Terminal {
+        if self.cancelled.load(Ordering::Acquire) && self.terminal_error.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_none() && self.phase() != DatabaseCatalogReadPhase::Terminal {
             self.stage_terminal(DbError::Closed, DatabaseCatalogReadProgress::Cancelled);
             return;
         }
@@ -1722,6 +2032,10 @@ impl DatabaseCatalogReadState {
                     self.stage_terminal(DbError::Unavailable("database catalog-read handoff owner missing".to_string()), DatabaseCatalogReadProgress::Fault);
                     return;
                 };
+                #[cfg(test)]
+                if let Some(hook) = self.controlled_owner_transfer_hook.lock().unwrap().take() {
+                    hook(work.storage_identity);
+                }
                 *self.poll_work.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(work);
                 self.set_phase(DatabaseCatalogReadPhase::Poll);
                 self.schedule();
@@ -1730,6 +2044,10 @@ impl DatabaseCatalogReadState {
             DatabaseCatalogReadPhase::RetainWork => {
                 let work = self.work.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take().or_else(|| self.poll_work.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take());
                 if let Some(work) = work {
+                    #[cfg(test)]
+                    if let Some(hook) = self.controlled_owner_transfer_hook.lock().unwrap().take() {
+                        hook(work.storage_identity);
+                    }
                     *self.terminal_work.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(work);
                 }
                 self.set_phase(DatabaseCatalogReadPhase::DrainWork);
@@ -1780,6 +2098,10 @@ impl DatabaseCatalogReadState {
             self.stage_terminal(DbError::Unavailable("database catalog-read poll owner missing".to_string()), DatabaseCatalogReadProgress::Fault);
             return;
         };
+        #[cfg(test)]
+        if let Some(hook) = self.controlled_owner_transfer_hook.lock().unwrap().take() {
+            hook(work.storage_identity);
+        }
         self.polling.store(true, Ordering::Release);
         self.set_progress(DatabaseCatalogReadProgress::Polling);
         let wake = std::task::Waker::from(Arc::new(DatabaseCatalogReadWake { state: Arc::downgrade(self), generation }));
@@ -1817,6 +2139,7 @@ impl DatabaseCatalogReadState {
                 self.release_terminal_poll();
             }
             Err(_) => {
+                work.pollable = false;
                 *self.poll_work.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(work);
                 self.publish_terminal(DbError::Unavailable("database catalog-read backend poll panicked".to_string()), DatabaseCatalogReadProgress::Fault);
                 self.release_terminal_poll();
@@ -1876,8 +2199,20 @@ impl DatabaseCatalogReadState {
     }
 
     fn publish_public_completion(&self, result: Result<DatabaseCatalogReadResult, DbError>) {
-        *self.completion.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(result);
-        if let Some(waker) = self.waker.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take() {
+        let mut completion = self.completion.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        if self.abandoned.load(std::sync::atomic::Ordering::Acquire) {
+            drop(completion);
+            *self.terminal_completion.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(result);
+            return;
+        }
+        *completion = Some(result);
+        drop(completion);
+        #[cfg(test)]
+        if let Some(hook) = self.controlled_completion_before_wake_hook.lock().unwrap().take() {
+            hook();
+        }
+        let waker = self.waker.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take();
+        if let Some(waker) = waker {
             waker.wake();
         }
     }
@@ -1890,6 +2225,7 @@ impl DatabaseCatalogReadState {
             && self.completion.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_none()
             && self.terminal_work.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_none()
             && self.terminal_result.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_none()
+            && !self.terminal_result_checked_out.load(std::sync::atomic::Ordering::Acquire)
             && self.terminal_completion.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_none()
             && self.retry_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_none()
             && self.terminal_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_none()
@@ -1898,13 +2234,34 @@ impl DatabaseCatalogReadState {
 
     fn close_step(self: &Arc<Self>) -> DatabaseCatalogReadCloseStep {
         use std::sync::atomic::Ordering;
-        if self.scheduled.load(Ordering::Acquire) || self.polling.load(Ordering::Acquire) || self.retry_armed.load(Ordering::Acquire) {
-            return DatabaseCatalogReadCloseStep::Blocked;
-        }
-        if self.retry_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take().is_some() || self.terminal_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take().is_some() {
+        self.cancelled.store(true, Ordering::Release);
+        let Some(mut lease) = self.try_lease(0, false) else {
+            return if self.terminal_is_empty() { DatabaseCatalogReadCloseStep::Complete } else { DatabaseCatalogReadCloseStep::Blocked };
+        };
+        if let Some((_, job)) = self.terminal_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take() {
+            drop(job);
             return DatabaseCatalogReadCloseStep::Progress;
         }
-        if let Some(work) = self.work.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take().or_else(|| self.poll_work.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take()) {
+        if let Some((job, _)) = self.retry_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take() {
+            drop(job);
+            return DatabaseCatalogReadCloseStep::Progress;
+        }
+        if self.retry_armed.load(Ordering::Acquire) {
+            let current = self.retry_generation.load(Ordering::Acquire);
+            if let Some(next) = current.checked_add(1) {
+                self.retry_generation.store(next, Ordering::Release);
+            }
+            self.retry_armed.store(false, Ordering::Release);
+            return DatabaseCatalogReadCloseStep::Progress;
+        }
+        if self.polling.load(Ordering::Acquire) {
+            return DatabaseCatalogReadCloseStep::Blocked;
+        }
+        if let Some(work) = self.work.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take() {
+            *self.terminal_work.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(work);
+            return DatabaseCatalogReadCloseStep::Progress;
+        }
+        if let Some(work) = self.poll_work.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take() {
             *self.terminal_work.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(work);
             return DatabaseCatalogReadCloseStep::Progress;
         }
@@ -1923,14 +2280,19 @@ impl DatabaseCatalogReadState {
         if self.terminal_result_checked_out.load(Ordering::Acquire) {
             return DatabaseCatalogReadCloseStep::Blocked;
         }
-        if self.terminal_result.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take().is_some()
-            || self.terminal_completion.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take().is_some()
-            || self.terminal_error.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take().is_some()
-        {
+        if let Some(result) = self.terminal_result.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take() {
+            drop(result);
+            return DatabaseCatalogReadCloseStep::Progress;
+        }
+        if let Some(result) = self.terminal_completion.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take() {
+            drop(result);
             return DatabaseCatalogReadCloseStep::Progress;
         }
         if let Some(result) = self.staged_result.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take() {
             *self.terminal_result.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(Ok(result));
+            return DatabaseCatalogReadCloseStep::Progress;
+        }
+        if self.terminal_error.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take().is_some() {
             return DatabaseCatalogReadCloseStep::Progress;
         }
         if let Some(result) = self.completion.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take() {
@@ -1940,16 +2302,12 @@ impl DatabaseCatalogReadState {
         if self.waker.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take().is_some() {
             return DatabaseCatalogReadCloseStep::Progress;
         }
-        if self.admission.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take().is_some() {
-            self.finished.store(true, Ordering::Release);
-            let mut registry = database_catalog_read_registry().lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-            if registry.get(self.slot).and_then(Option::as_ref).is_some_and(|state| state.generation == self.generation) {
-                registry[self.slot] = None;
-            }
+        if self.admission.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_some() {
+            lease.retire();
             return DatabaseCatalogReadCloseStep::Progress;
         }
         if self.roots_are_empty() {
-            self.finished.store(true, Ordering::Release);
+            lease.retire();
             DatabaseCatalogReadCloseStep::Complete
         } else {
             DatabaseCatalogReadCloseStep::Blocked
@@ -1960,15 +2318,13 @@ impl DatabaseCatalogReadState {
         self.finished.load(std::sync::atomic::Ordering::Acquire) && self.admission.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_none() && self.roots_are_empty()
     }
 
-    fn release_success(&self) {
-        if !self.roots_are_empty() || self.scheduled.load(std::sync::atomic::Ordering::Acquire) || self.polling.load(std::sync::atomic::Ordering::Acquire) {
+    fn release_success(self: &Arc<Self>) {
+        let Some(mut lease) = self.try_lease(0, false) else {
+            self.request_drive();
             return;
-        }
-        self.admission.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take();
-        self.finished.store(true, std::sync::atomic::Ordering::Release);
-        let mut registry = database_catalog_read_registry().lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-        if registry.get(self.slot).and_then(Option::as_ref).is_some_and(|state| state.generation == self.generation) {
-            registry[self.slot] = None;
+        };
+        if self.completion_consumed.load(std::sync::atomic::Ordering::Acquire) && self.roots_are_empty() {
+            lease.retire();
         }
     }
 }
@@ -1979,6 +2335,18 @@ pub struct DatabaseCatalogReadFuture {
 }
 
 impl DatabaseCatalogReadFuture {
+    fn take_completion(&mut self) -> Option<Result<DatabaseCatalogReadResult, DbError>> {
+        let result = self.state.completion.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take()?;
+        self.state.waker.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take();
+        self.resolved = true;
+        self.state.completion_consumed.store(true, std::sync::atomic::Ordering::Release);
+        if result.is_err() {
+            self.state.abandoned.store(true, std::sync::atomic::Ordering::Release);
+        }
+        self.state.release_success();
+        Some(result)
+    }
+
     pub fn try_submit(pool: Arc<WorkerPool>, storage: Arc<db_storage::DbBackend>, key: DatabaseCatalogRootKey) -> Result<Self, DatabaseCatalogReadRejected> {
         Self::try_prepare(pool, storage, key, true)
     }
@@ -2019,7 +2387,9 @@ impl DatabaseCatalogReadFuture {
             terminal_job: Mutex::new(None),
             waker: Mutex::new(None),
             retry_armed: std::sync::atomic::AtomicBool::new(false),
-            scheduled: std::sync::atomic::AtomicBool::new(false),
+            lease: std::sync::atomic::AtomicU8::new(0),
+            completion_consumed: std::sync::atomic::AtomicBool::new(false),
+            retry_generation: std::sync::atomic::AtomicU64::new(0),
             polling: std::sync::atomic::AtomicBool::new(false),
             wake_requested: std::sync::atomic::AtomicBool::new(false),
             cancelled: std::sync::atomic::AtomicBool::new(false),
@@ -2029,6 +2399,16 @@ impl DatabaseCatalogReadFuture {
             terminal_result_checked_out: std::sync::atomic::AtomicBool::new(false),
             phase: std::sync::atomic::AtomicU8::new(DatabaseCatalogReadPhase::Handoff as u8),
             progress: std::sync::atomic::AtomicU8::new(DatabaseCatalogReadProgress::Admitted as u8),
+            #[cfg(test)]
+            controlled_retry_callback_hook: Mutex::new(None),
+            #[cfg(test)]
+            controlled_submit_refusal: Mutex::new(None),
+            #[cfg(test)]
+            controlled_owner_transfer_hook: Mutex::new(None),
+            #[cfg(test)]
+            controlled_completion_before_wake_hook: Mutex::new(None),
+            #[cfg(test)]
+            controlled_lease_release_hook: Mutex::new(None),
             #[cfg(test)]
             controlled_submit_hook: Mutex::new(None),
             #[cfg(test)]
@@ -2060,10 +2440,7 @@ impl DatabaseCatalogReadFuture {
     }
 
     pub fn cancel(&self) {
-        self.state.cancelled.store(true, std::sync::atomic::Ordering::Release);
-        if !self.state.scheduled.load(std::sync::atomic::Ordering::Acquire) && !self.state.polling.load(std::sync::atomic::Ordering::Acquire) {
-            self.state.stage_terminal(DbError::Closed, DatabaseCatalogReadProgress::Cancelled);
-        }
+        self.state.cancel();
     }
 }
 
@@ -2071,10 +2448,7 @@ impl Future for DatabaseCatalogReadFuture {
     type Output = Result<DatabaseCatalogReadResult, DbError>;
 
     fn poll(mut self: std::pin::Pin<&mut Self>, context: &mut std::task::Context<'_>) -> std::task::Poll<Self::Output> {
-        let result = self.state.completion.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take();
-        if let Some(result) = result {
-            self.resolved = true;
-            self.state.release_success();
+        if let Some(result) = self.take_completion() {
             return std::task::Poll::Ready(result);
         }
         #[cfg(test)]
@@ -2082,31 +2456,21 @@ impl Future for DatabaseCatalogReadFuture {
             hook();
         }
         *self.state.waker.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(context.waker().clone());
-        let result = self.state.completion.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take();
-        if let Some(result) = result {
-            self.state.waker.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take();
-            self.resolved = true;
-            self.state.release_success();
-            return std::task::Poll::Ready(result);
-        }
-        std::task::Poll::Pending
+        self.take_completion().map_or(std::task::Poll::Pending, std::task::Poll::Ready)
     }
 }
 
 impl Drop for DatabaseCatalogReadFuture {
     fn drop(&mut self) {
+        use std::sync::atomic::Ordering;
         if self.resolved {
             return;
         }
-        self.state.abandoned.store(true, std::sync::atomic::Ordering::Release);
-        self.state.cancelled.store(true, std::sync::atomic::Ordering::Release);
-        let completion = { self.state.completion.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take() };
-        if let Some(result) = completion {
-            *self.state.terminal_completion.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(result);
+        {
+            let _completion = self.state.completion.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+            self.state.abandoned.store(true, Ordering::Release);
         }
-        if !self.state.scheduled.load(std::sync::atomic::Ordering::Acquire) && !self.state.polling.load(std::sync::atomic::Ordering::Acquire) {
-            self.state.stage_terminal(DbError::Closed, DatabaseCatalogReadProgress::Cancelled);
-        }
+        self.state.cancel();
     }
 }
 
@@ -2125,6 +2489,7 @@ impl DatabaseCatalogReadTerminalHandle {
 
     pub fn take_result(&self) -> Option<DatabaseCatalogReadTerminalResult> {
         use std::sync::atomic::Ordering;
+        let _lease = self.state.try_lease(0, false)?;
         if self.state.terminal_result_checked_out.compare_exchange(false, true, Ordering::AcqRel, Ordering::Acquire).is_err() {
             return None;
         }
@@ -2137,29 +2502,57 @@ impl DatabaseCatalogReadTerminalHandle {
 
     pub fn resume(self) -> Result<DatabaseCatalogReadFuture, Self> {
         use std::sync::atomic::Ordering;
-        if self.state.scheduled.load(Ordering::Acquire) || self.state.polling.load(Ordering::Acquire) || self.state.finished.load(Ordering::Acquire) {
+        let Some(lease) = self.state.try_lease(0, false) else { return Err(self) };
+        if self.state.finished.load(Ordering::Acquire) || self.state.terminal_result_checked_out.load(Ordering::Acquire) {
             return Err(self);
         }
-        self.state.cancelled.store(false, Ordering::Release);
-        self.state.abandoned.store(false, Ordering::Release);
-        let terminal_error = self.state.terminal_error.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take();
-        let retry_job = { self.state.retry_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take() };
-        if let Some((job, attempt)) = retry_job {
-            self.state.scheduled.store(true, Ordering::Release);
-            self.state.submit_exact(job, attempt);
-        } else {
-            let terminal_work = { self.state.terminal_work.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take() };
-            if let Some(work) = terminal_work {
-                *self.state.poll_work.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(work);
-                self.state.set_phase(DatabaseCatalogReadPhase::Poll);
-                self.state.schedule();
-            } else {
-                self.state.cancelled.store(true, Ordering::Release);
-                self.state.abandoned.store(true, Ordering::Release);
-                *self.state.terminal_error.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = terminal_error;
-                return Err(self);
-            }
+        let work_live = self.state.work.lock().unwrap_or_else(std::sync::PoisonError::into_inner).as_ref().is_some_and(DatabaseCatalogReadWork::can_poll);
+        let poll_live = self.state.poll_work.lock().unwrap_or_else(std::sync::PoisonError::into_inner).as_ref().is_some_and(DatabaseCatalogReadWork::can_poll);
+        let terminal_live = self.state.terminal_work.lock().unwrap_or_else(std::sync::PoisonError::into_inner).as_ref().is_some_and(DatabaseCatalogReadWork::can_poll);
+        let result_staged = self.state.staged_result.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_some() || self.state.terminal_result.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_some();
+        if result_staged {
+            return Err(self);
         }
+        if work_live || poll_live || terminal_live {
+            let Some(next) = self.state.retry_generation.load(Ordering::Acquire).checked_add(1) else { return Err(self) };
+            self.state.retry_generation.store(next, Ordering::Release);
+            self.state.retry_armed.store(false, Ordering::Release);
+            let mut job = self.state.terminal_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take().map(|(_, job)| (job, 0));
+            if job.is_none() {
+                job = self.state.retry_job.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take();
+            }
+            if terminal_live {
+                *self.state.poll_work.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = self.state.terminal_work.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take();
+            }
+            self.state.terminal_error.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take();
+            self.state.completion.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take();
+            self.state.terminal_completion.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take();
+            self.state.set_phase(if work_live { DatabaseCatalogReadPhase::Handoff } else { DatabaseCatalogReadPhase::Poll });
+            self.state.completion_consumed.store(false, Ordering::Release);
+            self.state.abandoned.store(false, Ordering::Release);
+            self.state.cancelled.store(false, Ordering::Release);
+            self.state.terminal_checked_out.store(false, Ordering::Release);
+            if let Some((job, attempt)) = job {
+                lease.submit_exact(job, attempt);
+            } else {
+                self.state.schedule();
+            }
+            return Ok(DatabaseCatalogReadFuture { state: self.state.clone(), resolved: false });
+        }
+        if self.state.work.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_some()
+            || self.state.poll_work.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_some()
+            || self.state.terminal_work.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_some()
+            || self.state.has_retained_submission()
+            || self.state.completion.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_some()
+        {
+            return Err(self);
+        }
+        let Some(result) = self.state.terminal_completion.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take() else { return Err(self) };
+        *self.state.completion.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(result);
+        self.state.set_phase(DatabaseCatalogReadPhase::Terminal);
+        self.state.completion_consumed.store(false, Ordering::Release);
+        self.state.abandoned.store(false, Ordering::Release);
+        self.state.cancelled.store(false, Ordering::Release);
         self.state.terminal_checked_out.store(false, Ordering::Release);
         Ok(DatabaseCatalogReadFuture { state: self.state.clone(), resolved: false })
     }
@@ -2178,6 +2571,7 @@ pub struct DatabaseCatalogReadTerminalResult {
 
 impl DatabaseCatalogReadTerminalResult {
     pub fn take(mut self) -> Option<Result<DatabaseCatalogReadResult, DbError>> {
+        let _lease = self.state.try_lease(0, false)?;
         let result = self.state.terminal_result.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take();
         if result.is_some() {
             self.checked_out = false;
@@ -2188,18 +2582,29 @@ impl DatabaseCatalogReadTerminalResult {
 
     pub fn resume(mut self) -> Result<DatabaseCatalogReadFuture, Self> {
         use std::sync::atomic::Ordering;
-        if self.state.scheduled.load(Ordering::Acquire) || self.state.polling.load(Ordering::Acquire) || self.state.finished.load(Ordering::Acquire) || self.state.completion.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_some() {
+        let Some(_lease) = self.state.try_lease(0, false) else { return Err(self) };
+        if self.state.polling.load(Ordering::Acquire) || self.state.finished.load(Ordering::Acquire) || self.state.completion.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_some() {
             return Err(self);
         }
-        let Some(result) = self.state.terminal_result.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take() else { return Err(self) };
+        let Some(result) = self.state.terminal_result.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take() else {
+            return Err(self);
+        };
         *self.state.completion.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(result);
+        self.state.set_phase(DatabaseCatalogReadPhase::Terminal);
+        self.state.abandoned.store(false, Ordering::Release);
+        self.state.cancelled.store(false, Ordering::Release);
+        self.state.completion_consumed.store(false, Ordering::Release);
         self.checked_out = false;
         self.state.terminal_result_checked_out.store(false, Ordering::Release);
         Ok(DatabaseCatalogReadFuture { state: self.state.clone(), resolved: false })
     }
 
     pub fn close_step(&mut self) -> DatabaseCatalogReadCloseStep {
-        if self.state.terminal_result.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take().is_some() {
+        let Some(_lease) = self.state.try_lease(0, false) else {
+            return if self.terminal_is_empty() { DatabaseCatalogReadCloseStep::Complete } else { DatabaseCatalogReadCloseStep::Blocked };
+        };
+        if let Some(result) = self.state.terminal_result.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take() {
+            drop(result);
             self.checked_out = false;
             self.state.terminal_result_checked_out.store(false, std::sync::atomic::Ordering::Release);
             DatabaseCatalogReadCloseStep::Progress
@@ -3181,8 +3586,7 @@ impl DatabaseCatalogBootstrapState {
 
     fn publish_one(self: &Arc<Self>) {
         if !self.is_current() && self.terminal_error.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_none() {
-            *self.staged_actual.lock().unwrap_or_else(std::sync::PoisonError::into_inner) =
-                Some(Err(DbError::StaleGeneration { expected: GenerationId(self.generation), actual: GenerationId(self.observed_generation()) }));
+            *self.staged_actual.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(Err(DbError::StaleGeneration { expected: GenerationId(self.generation), actual: GenerationId(self.observed_generation()) }));
             self.set_progress(DatabaseCatalogBootstrapProgress::Fault);
         }
         let storage = self.storage.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take();
@@ -5300,8 +5704,7 @@ const DATABASE_CREATE_CATALOG_MAX_ID_BYTES: usize = db_storage::DbIoText::maximu
 const DATABASE_CREATE_CATALOG_MAX_PAGES: usize = db_storage::DB_IO_OPERATION_PAGES;
 const DATABASE_CREATE_CATALOG_COPY_BYTES: usize = 256;
 const DATABASE_CREATE_CATALOG_ITEMS: u64 = (DATABASE_CREATE_CATALOG_MAX_ENTRIES * 4 + DATABASE_CREATE_CATALOG_MAX_PAGES + 64) as u64;
-const DATABASE_CREATE_CATALOG_BYTES: u64 =
-    (DATABASE_CREATE_CATALOG_MAX_ENTRIES * 2 * (DATABASE_CREATE_CATALOG_MAX_ID_BYTES + size_of::<CatalogEntry>()) + DATABASE_CREATE_CATALOG_MAX_PAGES * db_storage::DB_IO_PAGE_BYTES + 128 * 1024) as u64;
+const DATABASE_CREATE_CATALOG_BYTES: u64 = (DATABASE_CREATE_CATALOG_MAX_ENTRIES * 2 * (DATABASE_CREATE_CATALOG_MAX_ID_BYTES + size_of::<CatalogEntry>()) + DATABASE_CREATE_CATALOG_MAX_PAGES * db_storage::DB_IO_PAGE_BYTES + 128 * 1024) as u64;
 const DATABASE_CREATE_CATALOG_TOTAL_ITEMS: u64 = DATABASE_CREATE_CATALOG_ITEMS * DATABASE_CREATE_CATALOG_SLOTS as u64;
 const DATABASE_CREATE_CATALOG_TOTAL_BYTES: u64 = DATABASE_CREATE_CATALOG_BYTES * DATABASE_CREATE_CATALOG_SLOTS as u64;
 const DATABASE_CREATE_CATALOG_RETRY_LIMIT: u8 = 8;
@@ -5657,7 +6060,9 @@ impl DatabaseCreateCatalogRejectedClose {
             return true;
         }
         let mut owner = self.owner.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-        if let Some(owner) = owner.as_mut() { owner.close_one(); }
+        if let Some(owner) = owner.as_mut() {
+            owner.close_one();
+        }
         if owner.as_ref().is_some_and(DatabaseCreateCatalogRejectedOwner::terminal_is_empty) {
             owner.take();
         }
@@ -7988,9 +8393,7 @@ impl DatabaseOpenAtRejected {
                 };
                 match result {
                     Ok(()) => Ok(cause),
-                    Err(error) => {
-                        Err(Self::Database { cause, cleanup_error: Some(error), storage })
-                    }
+                    Err(error) => Err(Self::Database { cause, cleanup_error: Some(error), storage }),
                 }
             }
         }
@@ -9332,6 +9735,10 @@ struct ArtifactHistoryState {
     abandoned: std::sync::atomic::AtomicBool,
     finished: std::sync::atomic::AtomicBool,
     progress: std::sync::atomic::AtomicU8,
+    #[cfg(test)]
+    controlled_completion_hook: Mutex<Option<Box<dyn FnOnce(ArtifactHistoryOutcome, HistoryProgress) + Send>>>,
+    #[cfg(test)]
+    controlled_publication_before_waker_hook: Mutex<Option<semio_framework_async::Job>>,
 }
 
 pub struct HistoryFuture {
@@ -9413,7 +9820,8 @@ impl ArtifactHistoryState {
     }
 
     fn wake_waiter(&self) {
-        if let Some(waker) = self.waker.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take() {
+        let waker = self.waker.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take();
+        if let Some(waker) = waker {
             waker.wake();
         }
     }
@@ -9515,6 +9923,14 @@ impl ArtifactHistoryState {
 
     fn complete(&self, result: ArtifactHistoryOutcome, progress: HistoryProgress) {
         self.set_progress(progress);
+        #[cfg(test)]
+        {
+            let hook = self.controlled_completion_hook.lock().unwrap().take();
+            if let Some(hook) = hook {
+                hook(result, progress);
+                return;
+            }
+        }
         let mut completion = self.completion.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
         if self.abandoned.load(std::sync::atomic::Ordering::Acquire) {
             drop(completion);
@@ -9766,7 +10182,26 @@ impl ArtifactHistoryState {
 }
 
 impl HistoryFuture {
+    fn take_completion(&mut self) -> Option<ArtifactHistoryOutcome> {
+        let result = self.state.completion.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take();
+        if result.is_some() {
+            self.state.waker.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take();
+            self.resolved = true;
+            self.state.finish_if_terminal_empty();
+        }
+        result
+    }
+
     fn submit(handle: &ArtifactHandle) -> Self {
+        let future = Self::prepare(handle);
+        let ready = future.state.work.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_some();
+        if ready {
+            future.state.schedule();
+        }
+        future
+    }
+
+    fn prepare(handle: &ArtifactHandle) -> Self {
         let (admission, construction_fault, rejected_error, generation) = match ArtifactHistoryAdmission::try_claim() {
             Ok(admission) => {
                 let generation = admission.generation;
@@ -9803,13 +10238,15 @@ impl HistoryFuture {
             abandoned: std::sync::atomic::AtomicBool::new(false),
             finished: std::sync::atomic::AtomicBool::new(false),
             progress: std::sync::atomic::AtomicU8::new(if generation == 0 { HistoryProgress::Fault as u8 } else { HistoryProgress::Admitted as u8 }),
+            #[cfg(test)]
+            controlled_completion_hook: Mutex::new(None),
+            #[cfg(test)]
+            controlled_publication_before_waker_hook: Mutex::new(None),
         });
         register_artifact_history(&state);
         let construction_error = state.terminal_construction.lock().unwrap_or_else(std::sync::PoisonError::into_inner).as_mut().and_then(db_artifact::HistoryReplayReservationConstructionFault::take_error);
         if let Some(error) = rejected_error.or(construction_error) {
             *state.completion.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(Err(error));
-        } else {
-            state.schedule();
         }
         Self { state, resolved: false }
     }
@@ -9944,14 +10381,18 @@ impl Future for HistoryFuture {
     type Output = ArtifactHistoryOutcome;
 
     fn poll(mut self: std::pin::Pin<&mut Self>, context: &mut std::task::Context<'_>) -> std::task::Poll<Self::Output> {
-        let result = self.state.completion.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take();
-        if let Some(result) = result {
-            self.resolved = true;
-            self.state.finish_if_terminal_empty();
+        if let Some(result) = self.take_completion() {
             return std::task::Poll::Ready(result);
         }
+        #[cfg(test)]
+        {
+            let hook = self.state.controlled_publication_before_waker_hook.lock().unwrap().take();
+            if let Some(hook) = hook {
+                hook();
+            }
+        }
         *self.state.waker.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(context.waker().clone());
-        std::task::Poll::Pending
+        self.take_completion().map_or(std::task::Poll::Pending, std::task::Poll::Ready)
     }
 }
 
@@ -10308,11 +10749,7 @@ impl ArtifactHandle {
     /// 📍️ Captures the exact committed frontier and tip identity in one serialized turn.
     pub async fn checkpoint_publication_snapshot(&self) -> Result<CheckpointPublicationSnapshot, DbError> {
         let snapshot = self.authority.checkpoint_publication_snapshot().await?;
-        Ok(CheckpointPublicationSnapshot {
-            authority_generation: self.authority.generation().0,
-            frontier: to_engine_frontier(&snapshot.frontier, self.document.clone()),
-            head_edit_id: snapshot.head_edit_id,
-        })
+        Ok(CheckpointPublicationSnapshot { authority_generation: self.authority.generation().0, frontier: to_engine_frontier(&snapshot.frontier, self.document.clone()), head_edit_id: snapshot.head_edit_id })
     }
 
     /// @emoji 🌫️ The frozen `preview` — see `subscribe`'s doc; same deferral reason.
@@ -10350,7 +10787,7 @@ impl ArtifactHandle {
 mod tests {
     use super::*;
     use crate::vcs_integration::{HashMutation, HashProjection};
-    use db_storage::WalStorage as _;
+    use db_storage::{PayloadStorage as _, WalStorage as _};
     use protocol::{OpBinary, OpText};
     use store::ArtifactPack;
 
@@ -11230,6 +11667,323 @@ mod tests {
         assert!(state.admission.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_none());
     }
 
+    #[semio_framework_async_macros::async_test]
+    async fn database_capability_open_paused_transfer_blocks_public_close() {
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/📬️capability-completion/🔣️.json")).unwrap();
+        for row in fixture["driveOwnership"].as_array().unwrap() {
+            let storage = Arc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap()));
+            let pointer = Arc::as_ptr(&storage) as usize;
+            let storage_weak = Arc::downgrade(&storage);
+            let probe = DatabaseCapabilityOpenFuture::try_prepare(test_worker_pool(), storage, false).unwrap();
+            let state = probe.state.clone();
+            let phase = match row["phase"].as_str().unwrap() {
+                "Handoff" => DatabaseCapabilityOpenPhase::Handoff,
+                "RetainWork" => DatabaseCapabilityOpenPhase::RetainWork,
+                "Poll" => DatabaseCapabilityOpenPhase::Poll,
+                _ => unreachable!(),
+            };
+            if phase == DatabaseCapabilityOpenPhase::Poll {
+                *state.poll_work.lock().unwrap() = state.work.lock().unwrap().take();
+            }
+            state.set_phase(phase);
+            let submitted = control_capability_submissions(&state);
+            state.schedule();
+            let initial = submitted.lock().unwrap().pop().unwrap();
+            let submissions = Arc::new(std::sync::atomic::AtomicUsize::new(0));
+            let count = submissions.clone();
+            *state.controlled_submit_hook.lock().unwrap() = Some(Arc::new(move |job| {
+                count.fetch_add(1, std::sync::atomic::Ordering::AcqRel);
+                Err(job)
+            }));
+            *state.controlled_submit_refusal.lock().unwrap() = Some(semio_framework_async::WorkerSubmitErrorKind::Shutdown);
+            let (claimed, observed) = std::sync::mpsc::sync_channel(1);
+            let (release, released) = std::sync::mpsc::sync_channel(1);
+            *state.controlled_owner_transfer_hook.lock().unwrap() = Some(Box::new(move |identity| {
+                claimed.send(identity).unwrap();
+                released.recv_timeout(std::time::Duration::from_secs(5)).expect("transfer release deadline");
+            }));
+            let driver = std::thread::spawn(initial);
+            let claimed_pointer = observed.recv_timeout(std::time::Duration::from_secs(5)).expect("transfer claim deadline");
+            state.schedule();
+            state.schedule();
+            let submissions_while_active = submissions.load(std::sync::atomic::Ordering::Acquire);
+            drop(probe);
+            let terminal = take_database_capability_open_terminal(state.generation).unwrap();
+            let terminal = match terminal.resume() {
+                Err(terminal) => terminal,
+                Ok(resumed) => {
+                    drop(resumed);
+                    panic!("active transfer must return the unchanged terminal cursor");
+                }
+            };
+            let first = terminal.close_step();
+            for _ in 0..64 {
+                if terminal.close_step() == DatabaseCapabilityOpenCloseStep::Complete {
+                    break;
+                }
+            }
+            let retained = state.admission.lock().unwrap().is_some() && database_capability_open_registry().lock().unwrap()[state.slot].as_ref().is_some_and(|entry| Arc::ptr_eq(entry, &state));
+            let exact_storage = claimed_pointer == pointer && storage_weak.upgrade().is_some_and(|storage| Arc::as_ptr(&storage) as usize == pointer);
+            release.send(()).unwrap();
+            driver.join().unwrap();
+            *state.controlled_submit_hook.lock().unwrap() = None;
+            for _ in 0..64 {
+                if terminal.close_step() == DatabaseCapabilityOpenCloseStep::Complete {
+                    break;
+                }
+            }
+            let empty = terminal.terminal_is_empty() && database_capability_open_registry().lock().unwrap()[state.slot].is_none();
+            eprintln!("[DEBUG] capability-drive-ownership: {} first={first:?} admission-retained={retained} exact-storage={exact_storage} final-empty={empty}", row["name"]);
+            assert_eq!(first == DatabaseCapabilityOpenCloseStep::Blocked, row["closeBlocked"].as_bool().unwrap(), "a live stack-local transfer must exclude public cleanup");
+            assert_eq!(retained, row["admissionRetained"].as_bool().unwrap(), "live drive cannot release its admission or registry identity");
+            assert_eq!(exact_storage, row["storageRetained"].as_bool().unwrap());
+            assert!(empty, "ownership hand-back must converge after the drive returns");
+            assert_eq!(submissions_while_active, 0, "active transfer must defer all successor submissions");
+            assert_eq!(submissions.load(std::sync::atomic::Ordering::Acquire), 1, "two requests and cancellation share one exact successor");
+            assert!(storage_weak.upgrade().is_none(), "exact storage owner must be released after cleanup");
+        }
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn database_capability_open_lease_successors_and_active_publication_retire_once() {
+        use std::sync::atomic::Ordering;
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/📬️capability-completion/🔣️.json")).unwrap();
+        for row in fixture["leaseCompletion"].as_array().unwrap() {
+            let storage = Arc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap()));
+            let pointer = Arc::as_ptr(&storage) as usize;
+            let mut probe = DatabaseCapabilityOpenFuture::try_prepare(test_worker_pool(), storage, false).unwrap();
+            let state = probe.state.clone();
+            let count = Arc::new(std::sync::atomic::AtomicUsize::new(0));
+            let wake = Arc::new(ControlledCatalogPublicWake(std::sync::atomic::AtomicUsize::new(0)));
+            let waker = std::task::Waker::from(wake);
+            let mut context = std::task::Context::from_waker(&waker);
+            assert!(std::pin::Pin::new(&mut probe).poll(&mut context).is_pending());
+            let active = row["publication"] != "synchronous";
+            let after_check = row["publication"].as_str().unwrap().starts_with("after-finalizer-check");
+            let refuse_finalizer = row["publication"] == "after-finalizer-check-refused";
+            let mut publisher = None;
+            let mut release_publisher = None;
+            if active {
+                let submitted = control_capability_submissions(&state);
+                state.schedule();
+                for _ in 0..32 {
+                    if state.phase() == DatabaseCapabilityOpenPhase::Publish {
+                        break;
+                    }
+                    let job = submitted.lock().unwrap().pop().unwrap();
+                    job();
+                }
+                assert_eq!(state.phase(), DatabaseCapabilityOpenPhase::Publish);
+                let publish = submitted.lock().unwrap().pop().unwrap();
+                assert!(submitted.lock().unwrap().pop().is_none());
+                let (published, observed) = std::sync::mpsc::sync_channel(1);
+                let (release, released) = std::sync::mpsc::sync_channel(1);
+                let hook: Box<dyn FnOnce() + Send> = Box::new(move || {
+                    published.send(()).unwrap();
+                    released.recv_timeout(std::time::Duration::from_secs(5)).expect("active publisher release deadline");
+                });
+                if after_check {
+                    *state.controlled_lease_release_hook.lock().unwrap() = Some(hook);
+                } else {
+                    *state.controlled_completion_before_wake_hook.lock().unwrap() = Some(hook);
+                }
+                publisher = Some(std::thread::spawn(publish));
+                release_publisher = Some(release);
+                observed.recv_timeout(std::time::Duration::from_secs(5)).expect("active completion deadline");
+                if refuse_finalizer {
+                    *state.controlled_submit_refusal.lock().unwrap() = Some(semio_framework_async::WorkerSubmitErrorKind::Shutdown);
+                }
+                let late_count = count.clone();
+                *state.controlled_submit_hook.lock().unwrap() = Some(Arc::new(move |job| {
+                    late_count.fetch_add(1, Ordering::AcqRel);
+                    if refuse_finalizer {
+                        return Err(job);
+                    }
+                    job();
+                    Ok(())
+                }));
+                if !after_check {
+                    state.schedule();
+                    state.schedule();
+                }
+            } else {
+                let submitted_count = count.clone();
+                *state.controlled_submit_hook.lock().unwrap() = Some(Arc::new(move |job| {
+                    assert!(submitted_count.fetch_add(1, Ordering::AcqRel) < 32, "synchronous phase budget");
+                    job();
+                    Ok(())
+                }));
+                state.schedule();
+            }
+            let completed = std::pin::Pin::new(&mut probe).poll(&mut context);
+            let retained = state.admission.lock().unwrap().is_some();
+            let before_retirement = count.load(Ordering::Acquire);
+            if let Some(release) = release_publisher {
+                release.send(()).unwrap();
+            }
+            if let Some(publisher) = publisher {
+                publisher.join().unwrap();
+            }
+            let std::task::Poll::Ready(Ok(result)) = completed else { panic!("leased completion must remain consumable") };
+            assert_eq!(Arc::as_ptr(&result.into_parts().0) as usize, pointer);
+            assert_eq!(retained, row["admissionDuringPublication"].as_bool().unwrap());
+            let retirement_submissions = count.load(Ordering::Acquire) - before_retirement;
+            eprintln!("[DEBUG] capability-finalizer-handoff: {} admission-retained={retained} retirement-submissions={retirement_submissions} terminal-empty={}", row["name"], state.terminal_is_empty());
+            assert_eq!(retirement_submissions, row["retirementSubmissions"].as_u64().unwrap() as usize);
+            assert!(state.terminal_is_empty());
+            assert!(state.controlled_submit_refusal.lock().unwrap().is_none());
+            assert!(state.terminal_job.lock().unwrap().is_none());
+            assert!(state.completion.lock().unwrap().is_none());
+            assert!(database_capability_open_registry().lock().unwrap()[state.slot].is_none());
+            assert_eq!(state.lease.load(Ordering::Acquire), DATABASE_CAPABILITY_OPEN_CLOSED);
+            let before_late = count.load(Ordering::Acquire);
+            state.schedule();
+            state.schedule_cleanup();
+            assert_eq!(count.load(Ordering::Acquire) - before_late, row["lateSubmissions"].as_u64().unwrap() as usize);
+            if active {
+                assert_eq!(before_late, row["retirementSubmissions"].as_u64().unwrap() as usize, "a consumed completion transfers only its required retirement successor");
+            } else {
+                assert!(before_late > 1, "real successors must have reentered the submitter");
+            }
+            eprintln!("[DEBUG] capability-lease-completion: {} admission-during-publication={retained} closed=true late-submissions=0", row["name"]);
+        }
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn database_capability_open_completion_interleavings_preserve_result_and_wake() {
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/📬️capability-completion/🔣️.json")).unwrap();
+        for row in fixture["publication"].as_array().unwrap() {
+            let storage = Arc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap()));
+            let pointer = Arc::as_ptr(&storage) as usize;
+            let mut probe = DatabaseCapabilityOpenFuture::try_prepare(test_worker_pool(), storage, false).unwrap();
+            let state = probe.state.clone();
+            let wake = Arc::new(ControlledCatalogPublicWake(std::sync::atomic::AtomicUsize::new(0)));
+            let waker = std::task::Waker::from(wake.clone());
+            let mut context = std::task::Context::from_waker(&waker);
+            let mut work = state.work.lock().unwrap().take().unwrap();
+            let std::task::Poll::Ready(result) = work.poll(&mut context) else { panic!("scalar capability must be ready") };
+            assert!(work.close_step() && work.terminal_is_empty());
+            drop(work);
+            let fault = row["outcome"] == "fault";
+            let result = if fault {
+                drop(result);
+                Err(DbError::Unavailable("fixture-publication-fault".into()))
+            } else {
+                Ok(result)
+            };
+            let publish_state = state.clone();
+            let publish = move || publish_state.complete(result, if fault { DatabaseCapabilityOpenProgress::Fault } else { DatabaseCapabilityOpenProgress::Completed });
+            let publication = row["publication"].as_str().unwrap();
+            let mut deferred = None;
+            match publication {
+                "before-poll" => publish(),
+                "before-registration" => *state.controlled_publication_before_waker_hook.lock().unwrap() = Some(Box::new(publish)),
+                "after-pending" => deferred = Some(publish),
+                _ => unreachable!(),
+            }
+            let first = std::pin::Pin::new(&mut probe).poll(&mut context);
+            let first_ready = first.is_ready();
+            if let Some(publish) = deferred {
+                publish();
+            }
+            let completed = match first {
+                std::task::Poll::Ready(result) => result,
+                std::task::Poll::Pending => match std::pin::Pin::new(&mut probe).poll(&mut context) {
+                    std::task::Poll::Ready(result) => result,
+                    _ => panic!("published completion must be consumable"),
+                },
+            };
+            match completed {
+                Ok(result) => {
+                    assert!(!fault);
+                    let (storage, capabilities) = result.into_parts();
+                    assert_eq!(Arc::as_ptr(&storage) as usize, pointer);
+                    assert!(!capabilities.durable);
+                }
+                Err(error) => {
+                    assert!(fault);
+                    assert_eq!(error, DbError::Unavailable("fixture-publication-fault".into()));
+                }
+            }
+            let abandoned = state.abandoned.load(std::sync::atomic::Ordering::Acquire);
+            let waiter_empty = state.waker.lock().unwrap().is_none();
+            for _ in 0..32 {
+                if state.terminal_is_empty() {
+                    break;
+                }
+                let _ = state.close_step();
+            }
+            assert!(state.terminal_is_empty(), "fixture cleanup must return exact admission");
+            assert!(database_capability_open_registry().lock().unwrap()[state.slot].is_none(), "exact capability registry slot must be released");
+            eprintln!("[DEBUG] capability-completion: {} first-ready={first_ready} wakes={} waiter-empty={waiter_empty} abandoned={abandoned}", row["name"], wake.0.load(std::sync::atomic::Ordering::Acquire));
+            assert_eq!(first_ready, row["firstReady"].as_bool().unwrap(), "completion in check-to-registration window must be observed in the same poll");
+            assert_eq!(wake.0.load(std::sync::atomic::Ordering::Acquire) as u64, row["wakes"].as_u64().unwrap());
+            assert!(waiter_empty, "Ready must retire its transient waiter");
+            assert_eq!(abandoned, fault, "fault bookkeeping must match the fast Ready path");
+        }
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn database_capability_open_consumed_completion_retires_before_publisher_wake() {
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/📬️capability-completion/🔣️.json")).unwrap();
+        for row in fixture["retirement"].as_array().unwrap() {
+            let storage = Arc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap()));
+            let pointer = Arc::as_ptr(&storage) as usize;
+            let mut probe = DatabaseCapabilityOpenFuture::try_prepare(test_worker_pool(), storage, false).unwrap();
+            let state = probe.state.clone();
+            let wake = Arc::new(ControlledCatalogPublicWake(std::sync::atomic::AtomicUsize::new(0)));
+            let waker = std::task::Waker::from(wake.clone());
+            let mut context = std::task::Context::from_waker(&waker);
+            let mut work = state.work.lock().unwrap().take().unwrap();
+            let std::task::Poll::Ready(result) = work.poll(&mut context) else { panic!("scalar capability must be ready") };
+            assert!(work.close_step() && work.terminal_is_empty());
+            drop(work);
+            assert!(std::pin::Pin::new(&mut probe).poll(&mut context).is_pending());
+            let fault = row["outcome"] == "fault";
+            let result = if fault {
+                drop(result);
+                Err(DbError::Unavailable("fixture-publication-fault".into()))
+            } else {
+                Ok(result)
+            };
+            let (published, observed) = std::sync::mpsc::sync_channel(1);
+            let (release, released) = std::sync::mpsc::sync_channel(1);
+            *state.controlled_completion_before_wake_hook.lock().unwrap() = Some(Box::new(move || {
+                published.send(()).unwrap();
+                released.recv_timeout(std::time::Duration::from_secs(5)).expect("publisher release deadline");
+            }));
+            let publisher_state = state.clone();
+            let publisher = std::thread::spawn(move || publisher_state.complete(result, if fault { DatabaseCapabilityOpenProgress::Fault } else { DatabaseCapabilityOpenProgress::Completed }));
+            observed.recv_timeout(std::time::Duration::from_secs(5)).expect("physical publication deadline");
+            let completed = std::pin::Pin::new(&mut probe).poll(&mut context);
+            let terminal_before_wake = state.terminal_is_empty() && database_capability_open_registry().lock().unwrap()[state.slot].is_none();
+            release.send(()).unwrap();
+            publisher.join().unwrap();
+            let std::task::Poll::Ready(result) = completed else { panic!("visible publication must return Ready") };
+            match result {
+                Ok(result) => {
+                    assert!(!fault);
+                    assert_eq!(Arc::as_ptr(&result.into_parts().0) as usize, pointer);
+                }
+                Err(error) => {
+                    assert!(fault);
+                    assert_eq!(error, DbError::Unavailable("fixture-publication-fault".into()));
+                }
+            }
+            for _ in 0..32 {
+                if state.terminal_is_empty() {
+                    break;
+                }
+                let _ = state.close_step();
+            }
+            assert!(state.terminal_is_empty(), "fixture cleanup must return exact admission");
+            assert!(database_capability_open_registry().lock().unwrap()[state.slot].is_none(), "exact capability registry slot must be released");
+            eprintln!("[DEBUG] capability-completion: {} terminal-before-wake={terminal_before_wake} wakes={}", row["name"], wake.0.load(std::sync::atomic::Ordering::Acquire));
+            assert_eq!(terminal_before_wake, row["terminalBeforePublisherWake"].as_bool().unwrap(), "Ready must not strand admission behind an already-consumed completion");
+            assert_eq!(wake.0.load(std::sync::atomic::Ordering::Acquire) as u64, row["wakes"].as_u64().unwrap());
+        }
+    }
+
     #[test]
     fn database_capability_open_fixed_admission_cap_plus_one_and_generation_aba() {
         let mut state = DatabaseCapabilityOpenAdmissionState::empty();
@@ -11270,11 +12024,43 @@ mod tests {
         assert_eq!(capabilities.max_durability, DurabilityClass::Memory);
     }
 
+    fn control_capability_submissions(state: &Arc<DatabaseCapabilityOpenState>) -> Arc<Mutex<ControlledCapabilitySubmitQueue>> {
+        let submitted = Arc::new(Mutex::new(ControlledCapabilitySubmitQueue::new()));
+        let queue = submitted.clone();
+        *state.controlled_submit_hook.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(Arc::new(move |job| queue.lock().unwrap_or_else(std::sync::PoisonError::into_inner).push(job)));
+        submitted
+    }
+
+    fn drain_controlled_capability_terminal(terminal: &DatabaseCapabilityOpenTerminalHandle, submitted: &Mutex<ControlledCapabilitySubmitQueue>) {
+        for _ in 0..64 {
+            let job = submitted.lock().unwrap_or_else(std::sync::PoisonError::into_inner).pop();
+            if let Some(job) = job {
+                let before = terminal.state.retained_owner_count();
+                job();
+                let after = terminal.state.retained_owner_count();
+                assert!(before.saturating_sub(after) <= 1, "one actor grant releases at most one capability-open owner");
+            }
+            let before = terminal.state.retained_owner_count();
+            let step = terminal.close_step();
+            let after = terminal.state.retained_owner_count();
+            assert!(before.saturating_sub(after) <= 1, "one public close grant releases at most one capability-open owner");
+            assert!(after <= before, "public close cannot create a new retained owner");
+            if step == DatabaseCapabilityOpenCloseStep::Complete {
+                break;
+            }
+        }
+        assert!(terminal.terminal_is_empty(), "bounded controlled cleanup must converge");
+        assert!(submitted.lock().unwrap_or_else(std::sync::PoisonError::into_inner).pop().is_none(), "cleanup cannot strand a successor");
+        assert!(terminal.state.admission.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_none());
+        assert!(database_capability_open_registry().lock().unwrap_or_else(std::sync::PoisonError::into_inner)[terminal.state.slot].is_none());
+    }
+
     #[semio_framework_async_macros::async_test]
     async fn database_capability_open_cancel_and_stale_generation_retain_exact_owner_for_public_close() {
         let storage = Arc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap()));
         let pointer = Arc::as_ptr(&storage) as usize;
         let probe = DatabaseCapabilityOpenFuture::try_prepare(test_worker_pool(), storage, false).expect("fixed capability-open preparation");
+        let submitted = control_capability_submissions(&probe.state);
         let generation = probe.generation();
         assert_eq!(probe.retained_storage_identity(), Some(pointer));
         probe.cancel();
@@ -11282,30 +12068,21 @@ mod tests {
         assert_eq!(probe.retained_storage_identity(), Some(pointer));
         drop(probe);
         let terminal = take_database_capability_open_terminal(generation).expect("cancelled capability-open terminal authority");
-        let mut previous = terminal.state.retained_owner_count();
-        loop {
-            match terminal.close_step() {
-                DatabaseCapabilityOpenCloseStep::Progress => {
-                    let current = terminal.state.retained_owner_count();
-                    assert!(previous.saturating_sub(current) <= 1, "one close grant releases at most one capability-open owner");
-                    assert!(current <= previous);
-                    previous = current;
-                }
-                DatabaseCapabilityOpenCloseStep::Blocked => std::thread::yield_now(),
-                DatabaseCapabilityOpenCloseStep::Complete => break,
-            }
-        }
-        assert!(terminal.terminal_is_empty());
+        drain_controlled_capability_terminal(&terminal, &submitted);
+        eprintln!("[DEBUG] capability-cleanup: cancellation exact-storage=true actor/public-grants<=1 registry-empty=true");
 
         let stale_storage = Arc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap()));
         let stale_pointer = Arc::as_ptr(&stale_storage) as usize;
         let stale = DatabaseCapabilityOpenFuture::try_prepare(test_worker_pool(), stale_storage, false).expect("fixed stale capability-open preparation");
+        let submitted = control_capability_submissions(&stale.state);
         let stale_generation = stale.generation();
+        stale.state.schedule();
+        let initial = submitted.lock().unwrap_or_else(std::sync::PoisonError::into_inner).pop().unwrap();
         {
             let mut admission = DATABASE_CAPABILITY_OPEN_ADMISSION.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
             admission.slots[stale.state.slot].generation = stale_generation.checked_add(1).expect("fixture generation");
         }
-        stale.state.clone().drive_one(stale_generation);
+        initial();
         assert_eq!(stale.progress(), DatabaseCapabilityOpenProgress::Fault);
         assert_eq!(stale.retained_storage_identity(), Some(stale_pointer));
         {
@@ -11314,9 +12091,8 @@ mod tests {
         }
         drop(stale);
         let terminal = take_database_capability_open_terminal(stale_generation).expect("stale capability-open terminal authority");
-        while !terminal.terminal_is_empty() {
-            assert_ne!(terminal.close_step(), DatabaseCapabilityOpenCloseStep::Complete);
-        }
+        drain_controlled_capability_terminal(&terminal, &submitted);
+        eprintln!("[DEBUG] capability-cleanup: stale-generation exact-storage=true actor/public-grants<=1 registry-empty=true");
     }
 
     #[semio_framework_async_macros::async_test]
@@ -11436,7 +12212,9 @@ mod tests {
             let state = probe.state.clone();
             probe.resolved = true;
             state.abandoned.store(true, std::sync::atomic::Ordering::Release);
-            state.scheduled.store(true, std::sync::atomic::Ordering::Release);
+            let submitted = control_capability_submissions(&state);
+            state.schedule();
+            let initial = submitted.lock().unwrap().pop().unwrap();
             if stale {
                 let slot = state.slot;
                 let generation = state.generation;
@@ -11450,7 +12228,7 @@ mod tests {
                     DatabaseCapabilityOpenFuture { state: cancel_state, resolved: true }.cancel();
                 }));
             }
-            state.poll_backend_once(state.generation);
+            initial();
             assert_eq!(polls.load(std::sync::atomic::Ordering::Acquire), 1);
             assert_eq!(state.phase(), DatabaseCapabilityOpenPhase::RetainWork);
             assert!(state.staged_result.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_some());
@@ -11458,10 +12236,13 @@ mod tests {
             if stale {
                 DATABASE_CAPABILITY_OPEN_ADMISSION.lock().unwrap_or_else(std::sync::PoisonError::into_inner).slots[state.slot].generation = state.generation;
             }
-            state.scheduled.store(false, std::sync::atomic::Ordering::Release);
-            while state.terminal_result.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_none() {
-                assert_ne!(state.close_step(), DatabaseCapabilityOpenCloseStep::Complete);
+            for _ in 0..32 {
+                let job = submitted.lock().unwrap().pop();
+                let Some(job) = job else { break };
+                job();
             }
+            assert!(submitted.lock().unwrap().pop().is_none());
+            assert!(state.terminal_result.lock().unwrap().is_some());
             let terminal = take_database_capability_open_terminal(state.generation).expect("post-Ready terminal authority");
             let checked_out = terminal.take_result().expect("post-Ready result checkout");
             drop(checked_out);
@@ -11541,6 +12322,381 @@ mod tests {
         state.retry_armed.store(false, std::sync::atomic::Ordering::Release);
         while !state.terminal_is_empty() {
             let _ = state.close_step();
+        }
+    }
+
+    fn control_catalog_read_submissions(state: &Arc<DatabaseCatalogReadState>) -> Arc<Mutex<ControlledCapabilitySubmitQueue>> {
+        let queue = Arc::new(Mutex::new(ControlledCapabilitySubmitQueue::new()));
+        let captured = queue.clone();
+        *state.controlled_submit_hook.lock().unwrap() = Some(Arc::new(move |job| captured.lock().unwrap().push(job)));
+        queue
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn database_catalog_read_paused_transfers_exclude_successors_and_public_cleanup() {
+        use std::sync::atomic::Ordering;
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/📖️catalog-read-ownership/🔣️.json")).unwrap();
+        for row in fixture["transfers"].as_array().unwrap() {
+            let storage = Arc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap()));
+            let pointer = Arc::as_ptr(&storage) as usize;
+            let storage_weak = Arc::downgrade(&storage);
+            let probe = DatabaseCatalogReadFuture::try_prepare(test_worker_pool(), storage, DatabaseCatalogRootKey::root(), false).unwrap();
+            let state = probe.state.clone();
+            let phase = match row["phase"].as_str().unwrap() {
+                "Handoff" => DatabaseCatalogReadPhase::Handoff,
+                "RetainWork" => DatabaseCatalogReadPhase::RetainWork,
+                "Poll" => DatabaseCatalogReadPhase::Poll,
+                _ => unreachable!(),
+            };
+            if phase == DatabaseCatalogReadPhase::Poll {
+                *state.poll_work.lock().unwrap() = state.work.lock().unwrap().take();
+            }
+            state.set_phase(phase);
+            let queue = control_catalog_read_submissions(&state);
+            state.schedule();
+            let initial = queue.lock().unwrap().pop().unwrap();
+            let submissions = Arc::new(std::sync::atomic::AtomicUsize::new(0));
+            let count = submissions.clone();
+            let captured = queue.clone();
+            *state.controlled_submit_hook.lock().unwrap() = Some(Arc::new(move |job| {
+                count.fetch_add(1, Ordering::AcqRel);
+                captured.lock().unwrap().push(job)
+            }));
+            let (claimed, observed) = std::sync::mpsc::sync_channel(1);
+            let (release, released) = std::sync::mpsc::sync_channel(1);
+            *state.controlled_owner_transfer_hook.lock().unwrap() = Some(Box::new(move |identity| {
+                claimed.send(identity).unwrap();
+                released.recv_timeout(std::time::Duration::from_secs(5)).expect("catalog transfer release deadline");
+            }));
+            let driver = std::thread::spawn(initial);
+            let claimed_pointer = observed.recv_timeout(std::time::Duration::from_secs(5)).expect("catalog transfer claim deadline");
+            state.schedule();
+            state.schedule();
+            probe.cancel();
+            let submissions_while_active = submissions.load(Ordering::Acquire);
+            drop(probe);
+            let terminal = take_database_catalog_read_terminal(state.generation).unwrap();
+            let (terminal, resume_blocked) = match terminal.resume() {
+                Err(terminal) => (terminal, true),
+                Ok(resumed) => {
+                    drop(resumed);
+                    (take_database_catalog_read_terminal(state.generation).unwrap(), false)
+                }
+            };
+            let first = terminal.close_step();
+            for _ in 0..64 {
+                if terminal.close_step() == DatabaseCatalogReadCloseStep::Complete {
+                    break;
+                }
+            }
+            let retained = state.admission.lock().unwrap().is_some() && database_catalog_read_registry().lock().unwrap()[state.slot].as_ref().is_some_and(|entry| Arc::ptr_eq(entry, &state));
+            let exact_storage = claimed_pointer == pointer && storage_weak.upgrade().is_some_and(|storage| Arc::as_ptr(&storage) as usize == pointer);
+            release.send(()).unwrap();
+            driver.join().unwrap();
+            for _ in 0..64 {
+                let job = queue.lock().unwrap().pop();
+                if let Some(job) = job {
+                    job();
+                }
+                if terminal.close_step() == DatabaseCatalogReadCloseStep::Complete {
+                    break;
+                }
+            }
+            let empty = terminal.terminal_is_empty() && database_catalog_read_registry().lock().unwrap()[state.slot].is_none();
+            eprintln!("[DEBUG] catalog-read-transfer: {} first={first:?} resume-blocked={resume_blocked} submissions-active={submissions_while_active} admission-retained={retained} exact-storage={exact_storage} final-empty={empty}", row["name"]);
+            assert_eq!(submissions_while_active, row["submissionsWhileActive"].as_u64().unwrap() as usize, "active transfer must defer successor submission");
+            assert!(resume_blocked);
+            assert_eq!(first == DatabaseCatalogReadCloseStep::Blocked, row["closeBlocked"].as_bool().unwrap());
+            assert_eq!(retained, row["admissionRetained"].as_bool().unwrap());
+            assert_eq!(exact_storage, row["storageRetained"].as_bool().unwrap());
+            assert_eq!(empty, row["finalEmpty"].as_bool().unwrap());
+            assert!(queue.lock().unwrap().pop().is_none());
+            assert!(storage_weak.upgrade().is_none());
+        }
+    }
+
+    async fn catalog_read_fixture_probe(fixture: &serde_json::Value, outcome: &str) -> (DatabaseCatalogReadFuture, usize, Option<u64>) {
+        let storage = Arc::new(db_storage::DbBackend::Memory(db_storage::MemoryStorage::new(db_storage::db_io_test_pool()).await.unwrap()));
+        let pointer = Arc::as_ptr(&storage) as usize;
+        let probe = DatabaseCatalogReadFuture::try_prepare(test_worker_pool(), storage.clone(), DatabaseCatalogRootKey::root(), false).unwrap();
+        let bytes: Vec<u8> = fixture["root"]["bytes"].as_array().unwrap().iter().map(|value| value.as_u64().unwrap() as u8).collect();
+        let (root, operation) = if outcome == "pages" {
+            let pages = db_storage::db_io_copy_pages(&bytes).unwrap().await.unwrap();
+            let operation = pages.operation();
+            (Ok(Some((pages, EpochFence { epoch: fixture["root"]["epoch"].as_u64().unwrap() }))), Some(operation))
+        } else {
+            (Err(DbError::Unavailable("fixture-root-fault".into())), None)
+        };
+        let result = DatabaseCatalogReadResult { storage, key: DatabaseCatalogRootKey::root(), root };
+        *probe.state.work.lock().unwrap() = Some(DatabaseCatalogReadWork::controlled(Box::pin(async move { result }), pointer));
+        (probe, pointer, operation)
+    }
+
+    fn assert_catalog_read_fixture_result(fixture: &serde_json::Value, result: DatabaseCatalogReadResult, pointer: usize, operation: Option<u64>) {
+        let (storage, key, root) = result.into_parts();
+        assert_eq!(Arc::as_ptr(&storage) as usize, pointer);
+        assert_eq!(key, DatabaseCatalogRootKey::root());
+        match operation {
+            Some(operation) => {
+                let bytes: Vec<u8> = fixture["root"]["bytes"].as_array().unwrap().iter().map(|value| value.as_u64().unwrap() as u8).collect();
+                let (mut pages, fence) = root.unwrap().unwrap();
+                assert_eq!(pages.operation(), operation);
+                assert_eq!(pages.page(0).unwrap(), bytes.as_slice());
+                assert_eq!(fence.epoch, fixture["root"]["epoch"].as_u64().unwrap());
+                for _ in 0..128 {
+                    if pages.terminal_is_empty() {
+                        break;
+                    }
+                    pages.close_step().unwrap();
+                }
+                assert!(pages.terminal_is_empty());
+            }
+            None => assert!(matches!(root, Err(DbError::Unavailable(ref message)) if message == "fixture-root-fault")),
+        }
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn database_catalog_read_retry_and_terminal_resume_preserve_exact_root() {
+        use std::sync::atomic::Ordering;
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/📖️catalog-read-ownership/🔣️.json")).unwrap();
+        for row in fixture["recovery"].as_array().unwrap() {
+            let (probe, pointer, operation) = catalog_read_fixture_probe(&fixture, row["outcome"].as_str().unwrap()).await;
+            let state = probe.state.clone();
+            let queue = control_catalog_read_submissions(&state);
+            let mut terminal = None;
+            let resumed;
+            if row["path"] == "retry" {
+                let callbacks = Arc::new(Mutex::new(ControlledCapabilitySubmitQueue::new()));
+                let captured = callbacks.clone();
+                *state.controlled_retry_callback_hook.lock().unwrap() = Some(Arc::new(move |job| captured.lock().unwrap().push(job)));
+                *state.controlled_submit_hook.lock().unwrap() = Some(Arc::new(Err));
+                *state.controlled_submit_refusal.lock().unwrap() = Some(semio_framework_async::WorkerSubmitErrorKind::Saturated);
+                state.schedule();
+                let old_callback = callbacks.lock().unwrap().pop().expect("first exact retry callback");
+                assert!(state.retry_job.lock().unwrap().is_some());
+                let captured = queue.clone();
+                *state.controlled_submit_hook.lock().unwrap() = Some(Arc::new(move |job| captured.lock().unwrap().push(job)));
+                drop(probe);
+                let cursor = take_database_catalog_read_terminal(state.generation).unwrap();
+                assert!(queue.lock().unwrap().pop().is_none(), "retained retry is the sole successor owner during cancellation");
+                *state.controlled_submit_hook.lock().unwrap() = Some(Arc::new(Err));
+                *state.controlled_submit_refusal.lock().unwrap() = Some(semio_framework_async::WorkerSubmitErrorKind::Saturated);
+                resumed = match cursor.resume() {
+                    Ok(resumed) => resumed,
+                    Err(_) => panic!("exact retained retry must resume"),
+                };
+                let next_callback = callbacks.lock().unwrap().pop().expect("replacement exact retry callback");
+                let captured = queue.clone();
+                *state.controlled_submit_hook.lock().unwrap() = Some(Arc::new(move |job| captured.lock().unwrap().push(job)));
+                old_callback();
+                let stale_submissions = queue.lock().unwrap().len;
+                assert_eq!(stale_submissions, row["staleRetrySubmissions"].as_u64().unwrap() as usize);
+                assert!(state.retry_job.lock().unwrap().is_some(), "old callback cannot steal the replacement retry");
+                assert!(state.work.lock().unwrap().is_some());
+                next_callback();
+                for _ in 0..64 {
+                    let job = queue.lock().unwrap().pop();
+                    let Some(job) = job else { break };
+                    job();
+                }
+            } else {
+                state.schedule();
+                let target = if row["path"] == "terminal-completion" { DatabaseCatalogReadPhase::Publish } else { DatabaseCatalogReadPhase::RetainWork };
+                for _ in 0..32 {
+                    if state.phase() == target {
+                        break;
+                    }
+                    let job = queue.lock().unwrap().pop().unwrap();
+                    job();
+                }
+                assert_eq!(state.phase(), target);
+                if row["path"] == "terminal-completion" {
+                    let publish = queue.lock().unwrap().pop().unwrap();
+                    let (published, observed) = std::sync::mpsc::sync_channel(1);
+                    let (release, released) = std::sync::mpsc::sync_channel(1);
+                    *state.controlled_completion_before_wake_hook.lock().unwrap() = Some(Box::new(move || {
+                        published.send(()).unwrap();
+                        released.recv_timeout(std::time::Duration::from_secs(5)).expect("catalog recovery publisher release deadline");
+                    }));
+                    let publisher = std::thread::spawn(publish);
+                    observed.recv_timeout(std::time::Duration::from_secs(5)).expect("catalog recovery publication deadline");
+                    drop(probe);
+                    release.send(()).unwrap();
+                    publisher.join().unwrap();
+                } else if row["path"] == "spent-work" {
+                    let retain = queue.lock().unwrap().pop().unwrap();
+                    let count = Arc::new(std::sync::atomic::AtomicUsize::new(0));
+                    let captured = queue.clone();
+                    *state.controlled_submit_hook.lock().unwrap() = Some(Arc::new(move |job| if count.fetch_add(1, Ordering::AcqRel) == 0 { Err(job) } else { captured.lock().unwrap().push(job) }));
+                    *state.controlled_submit_refusal.lock().unwrap() = Some(semio_framework_async::WorkerSubmitErrorKind::Shutdown);
+                    retain();
+                    assert!(state.terminal_work.lock().unwrap().is_some(), "Ready work is retained before its close grant");
+                    assert!(state.terminal_job.lock().unwrap().is_some());
+                    drop(probe);
+                    assert!(queue.lock().unwrap().pop().is_none(), "refused cleanup retains the sole exact successor");
+                } else {
+                    probe.cancel();
+                    drop(probe);
+                }
+                for _ in 0..64 {
+                    let job = queue.lock().unwrap().pop();
+                    let Some(job) = job else { break };
+                    job();
+                }
+                assert!(queue.lock().unwrap().pop().is_none(), "catalog recovery cleanup must converge");
+                let cursor = take_database_catalog_read_terminal(state.generation).unwrap();
+                let cursor = if row["path"] == "spent-work" {
+                    match cursor.resume() {
+                        Err(cursor) => cursor,
+                        Ok(resumed) => {
+                            drop(resumed);
+                            panic!("terminal work that already returned Ready must never be repolled");
+                        }
+                    }
+                } else {
+                    cursor
+                };
+                if row["path"] == "spent-work" {
+                    for _ in 0..64 {
+                        if state.terminal_result.lock().unwrap().is_some() {
+                            break;
+                        }
+                        cursor.close_step();
+                    }
+                }
+                if row["path"] == "terminal-completion" {
+                    resumed = match cursor.resume() {
+                        Ok(resumed) => resumed,
+                        Err(_) => panic!("exact terminal completion must resume"),
+                    };
+                } else {
+                    let checkout = cursor.take_result().expect("exact root result checkout");
+                    for _ in 0..64 {
+                        if cursor.close_step() == DatabaseCatalogReadCloseStep::Blocked {
+                            break;
+                        }
+                    }
+                    assert_eq!(state.admission.lock().unwrap().is_some(), row["checkoutBlocksRetirement"].as_bool().unwrap());
+                    assert_eq!(cursor.close_step(), DatabaseCatalogReadCloseStep::Blocked);
+                    drop(checkout);
+                    resumed = match cursor.take_result().expect("root result checkout handback").resume() {
+                        Ok(resumed) => resumed,
+                        Err(_) => panic!("exact shallow root result must resume"),
+                    };
+                    terminal = Some(cursor);
+                }
+            }
+            let mut resumed = resumed;
+            let wake = Arc::new(ControlledCatalogPublicWake(std::sync::atomic::AtomicUsize::new(0)));
+            let waker = std::task::Waker::from(wake);
+            let mut context = std::task::Context::from_waker(&waker);
+            let std::task::Poll::Ready(Ok(result)) = std::pin::Pin::new(&mut resumed).poll(&mut context) else { panic!("resumed catalog root must be delivered exactly once") };
+            assert_catalog_read_fixture_result(&fixture, result, pointer, operation);
+            if let Some(cursor) = terminal {
+                for _ in 0..64 {
+                    if cursor.close_step() == DatabaseCatalogReadCloseStep::Complete {
+                        break;
+                    }
+                }
+            }
+            let empty = state.terminal_is_empty() && database_catalog_read_registry().lock().unwrap()[state.slot].is_none();
+            eprintln!("[DEBUG] catalog-read-recovery: {} exact-storage-key-root=true terminal-empty={empty}", row["name"]);
+            assert_eq!(empty, row["terminalEmpty"].as_bool().unwrap());
+            assert!(!state.retry_armed.load(Ordering::Acquire));
+            assert!(!state.terminal_result_checked_out.load(Ordering::Acquire));
+        }
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn database_catalog_read_consumed_publication_preserves_exact_root_and_retires() {
+        use std::sync::atomic::Ordering;
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/📖️catalog-read-ownership/🔣️.json")).unwrap();
+        for row in fixture["completion"].as_array().unwrap() {
+            let (mut probe, pointer, operation) = catalog_read_fixture_probe(&fixture, row["outcome"].as_str().unwrap()).await;
+            let state = probe.state.clone();
+            let wake = Arc::new(ControlledCatalogPublicWake(std::sync::atomic::AtomicUsize::new(0)));
+            let waker = std::task::Waker::from(wake);
+            let mut context = std::task::Context::from_waker(&waker);
+            assert!(std::pin::Pin::new(&mut probe).poll(&mut context).is_pending());
+            let count = Arc::new(std::sync::atomic::AtomicUsize::new(0));
+            let active = row["publication"] != "synchronous";
+            let after_check = row["publication"] == "after-finalizer-check" || row["publication"] == "refused-finalizer";
+            let refused = row["publication"] == "refused-finalizer";
+            let mut publisher = None;
+            let mut release_publisher = None;
+            if active {
+                let queue = control_catalog_read_submissions(&state);
+                state.schedule();
+                for _ in 0..32 {
+                    if state.phase() == DatabaseCatalogReadPhase::Publish {
+                        break;
+                    }
+                    let job = queue.lock().unwrap().pop().expect("catalog pipeline successor");
+                    job();
+                }
+                assert_eq!(state.phase(), DatabaseCatalogReadPhase::Publish);
+                let publish = queue.lock().unwrap().pop().unwrap();
+                assert!(queue.lock().unwrap().pop().is_none());
+                let (published, observed) = std::sync::mpsc::sync_channel(1);
+                let (release, released) = std::sync::mpsc::sync_channel(1);
+                let hook: Box<dyn FnOnce() + Send> = Box::new(move || {
+                    published.send(()).unwrap();
+                    released.recv_timeout(std::time::Duration::from_secs(5)).expect("catalog publisher release deadline");
+                });
+                if after_check {
+                    *state.controlled_lease_release_hook.lock().unwrap() = Some(hook);
+                } else {
+                    *state.controlled_completion_before_wake_hook.lock().unwrap() = Some(hook);
+                }
+                publisher = Some(std::thread::spawn(publish));
+                release_publisher = Some(release);
+                observed.recv_timeout(std::time::Duration::from_secs(5)).expect("catalog publication deadline");
+                if refused {
+                    *state.controlled_submit_refusal.lock().unwrap() = Some(semio_framework_async::WorkerSubmitErrorKind::Shutdown);
+                }
+                let late_count = count.clone();
+                *state.controlled_submit_hook.lock().unwrap() = Some(Arc::new(move |job| {
+                    assert!(late_count.fetch_add(1, Ordering::AcqRel) < 32, "catalog retirement phase budget");
+                    if refused {
+                        return Err(job);
+                    }
+                    job();
+                    Ok(())
+                }));
+            } else {
+                let submitted = count.clone();
+                *state.controlled_submit_hook.lock().unwrap() = Some(Arc::new(move |job| {
+                    assert!(submitted.fetch_add(1, Ordering::AcqRel) < 32, "catalog synchronous phase budget");
+                    job();
+                    Ok(())
+                }));
+                state.schedule();
+            }
+            let completed = std::pin::Pin::new(&mut probe).poll(&mut context);
+            let retained = state.admission.lock().unwrap().is_some();
+            let before_retirement = count.load(Ordering::Acquire);
+            if let Some(release) = release_publisher {
+                release.send(()).unwrap();
+            }
+            if let Some(publisher) = publisher {
+                publisher.join().unwrap();
+            }
+            let std::task::Poll::Ready(Ok(result)) = completed else { panic!("catalog result must remain consumable") };
+            assert_catalog_read_fixture_result(&fixture, result, pointer, operation);
+            let retirement_submissions = count.load(Ordering::Acquire) - before_retirement;
+            let empty = state.terminal_is_empty();
+            eprintln!("[DEBUG] catalog-read-publication: {} exact-storage-key-root=true admission-retained={retained} retirement-submissions={retirement_submissions} terminal-empty={empty}", row["name"]);
+            assert_eq!(retained, row["admissionDuringPublication"].as_bool().unwrap());
+            assert_eq!(retirement_submissions, row["retirementSubmissions"].as_u64().unwrap() as usize);
+            assert_eq!(empty, row["terminalEmpty"].as_bool().unwrap());
+            assert!(state.controlled_submit_refusal.lock().unwrap().is_none());
+            assert!(state.terminal_job.lock().unwrap().is_none());
+            assert!(state.completion.lock().unwrap().is_none());
+            assert!(database_catalog_read_registry().lock().unwrap()[state.slot].is_none());
+            let before_late = count.load(Ordering::Acquire);
+            state.schedule();
+            state.schedule_cleanup();
+            assert_eq!(count.load(Ordering::Acquire) - before_late, row["lateSubmissions"].as_u64().unwrap() as usize);
         }
     }
 
@@ -11652,7 +12808,8 @@ mod tests {
         close.schedule();
         assert_eq!(queue.lock().unwrap_or_else(std::sync::PoisonError::into_inner).len, 1);
 
-        queue.lock().unwrap_or_else(std::sync::PoisonError::into_inner).pop().expect("rejected storage close grant")();
+        let storage_grant = queue.lock().unwrap_or_else(std::sync::PoisonError::into_inner).pop().expect("rejected storage close grant");
+        storage_grant();
         assert!(storage_weak.upgrade().is_none(), "first mounted close grant releases only the exact storage owner");
         {
             let owner = close.owner.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
@@ -11663,7 +12820,8 @@ mod tests {
         assert!(!close.terminal_is_empty());
         assert_eq!(queue.lock().unwrap_or_else(std::sync::PoisonError::into_inner).len, 1, "unfinished key close is retained as the next governed grant");
 
-        queue.lock().unwrap_or_else(std::sync::PoisonError::into_inner).pop().expect("rejected key close grant")();
+        let key_grant = queue.lock().unwrap_or_else(std::sync::PoisonError::into_inner).pop().expect("rejected key close grant");
+        key_grant();
         assert!(close.terminal_is_empty(), "second mounted close grant releases the exact key and reaches terminal empty");
         assert_eq!(queue.lock().unwrap_or_else(std::sync::PoisonError::into_inner).len, 0);
     }
@@ -11684,27 +12842,36 @@ mod tests {
             let (probe, _, _, pointer) = controlled_catalog_read_probe(ControlledCatalogReadPoll::Pending).await;
             let state = probe.state.clone();
             let generation = state.generation;
-            let queue = Arc::new(Mutex::new(ControlledCapabilitySubmitQueue::new()));
-            let queue_hook = queue.clone();
-            *state.controlled_submit_hook.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(Arc::new(move |job| queue_hook.lock().unwrap_or_else(std::sync::PoisonError::into_inner).push(job)));
+            let queue = control_catalog_read_submissions(&state);
+            state.schedule();
+            let initial = queue.lock().unwrap().pop().unwrap();
             if stale {
-                DATABASE_CATALOG_READ_ADMISSION.lock().unwrap_or_else(std::sync::PoisonError::into_inner).slots[state.slot].generation = generation.checked_add(1).expect("stale catalog generation");
+                DATABASE_CATALOG_READ_ADMISSION.lock().unwrap().slots[state.slot].generation = generation.checked_add(1).unwrap();
             } else {
                 probe.cancel();
             }
             drop(probe);
+            initial();
             if stale {
-                DATABASE_CATALOG_READ_ADMISSION.lock().unwrap_or_else(std::sync::PoisonError::into_inner).slots[state.slot].generation = generation;
-                state.stage_terminal(DbError::Unavailable("stale catalog fixture".to_string()), DatabaseCatalogReadProgress::Fault);
+                DATABASE_CATALOG_READ_ADMISSION.lock().unwrap().slots[state.slot].generation = generation;
             }
-            assert_eq!(state.work.lock().unwrap_or_else(std::sync::PoisonError::into_inner).as_ref().map(|work| work.storage_identity), Some(pointer));
-            loop {
-                let Some(job) = queue.lock().unwrap_or_else(std::sync::PoisonError::into_inner).pop() else { break };
-                job();
+            let owners =
+                [state.work.lock().unwrap().as_ref().map(|work| work.storage_identity), state.poll_work.lock().unwrap().as_ref().map(|work| work.storage_identity), state.terminal_work.lock().unwrap().as_ref().map(|work| work.storage_identity)];
+            assert_eq!(owners.into_iter().flatten().collect::<Vec<_>>(), vec![pointer], "one exact storage owner remains after interruption");
+            let terminal = take_database_catalog_read_terminal(generation).unwrap();
+            for _ in 0..64 {
+                let job = queue.lock().unwrap().pop();
+                if let Some(job) = job {
+                    job();
+                }
+                if terminal.close_step() == DatabaseCatalogReadCloseStep::Complete {
+                    break;
+                }
             }
-            while !state.terminal_is_empty() {
-                let _ = state.close_step();
-            }
+            assert!(queue.lock().unwrap().pop().is_none());
+            assert!(terminal.terminal_is_empty());
+            assert!(database_catalog_read_registry().lock().unwrap()[state.slot].is_none());
+            eprintln!("[DEBUG] catalog-read-interruption: stale={stale} exact-storage=true bounded-close=true registry-empty=true");
         }
     }
 
@@ -13731,6 +14898,138 @@ mod tests {
         assert!(runner.contains("Self::start_turn(engine, envelope.payload)"));
         assert!(runner.contains("let closed ="));
         assert!(runner.contains("if !closed"));
+    }
+
+    struct ControlledHistoryPublicWake {
+        state: std::sync::Weak<ArtifactHistoryState>,
+        wakes: std::sync::atomic::AtomicUsize,
+        lock_released: std::sync::atomic::AtomicBool,
+    }
+
+    impl std::task::Wake for ControlledHistoryPublicWake {
+        fn wake(self: Arc<Self>) {
+            self.wake_by_ref();
+        }
+
+        fn wake_by_ref(self: &Arc<Self>) {
+            if let Some(state) = self.state.upgrade() {
+                self.lock_released.store(state.waker.try_lock().is_ok(), std::sync::atomic::Ordering::Release);
+            }
+            self.wakes.fetch_add(1, std::sync::atomic::Ordering::AcqRel);
+        }
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn artifact_history_completion_interleavings_preserve_result_and_wake() {
+        use std::sync::atomic::Ordering;
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/📜️history-completion/🔣️.json")).unwrap();
+        let artifact_root = std::path::PathBuf::from(std::env::var_os("SEMIO_TEST_ARTIFACT_DIR").expect("history native law requires its ticket artifact directory"));
+        let root = artifact_root.join(format!("history-publication-{}", std::process::id()));
+        std::fs::create_dir_all(&root).unwrap();
+        let mut database = Database::open_at(test_worker_pool(), &root, Profile::Test).await.unwrap();
+        let document = protocol::ArtifactId(fixture["document"].as_str().unwrap().into());
+        let handle = database.create_document(ArtifactSpec::new(document.clone()).await).await.unwrap();
+        for operation in fixture["operations"].as_array().unwrap() {
+            let id = operation.as_str().unwrap();
+            let batch = db_artifact::CommandBatch::new(vec![envelope(id, &[], "history-fixture", &document, &[("value", serde_json::json!(id))]).await]).await.unwrap();
+            db_actor::block_on(handle.submit(batch, db_artifact::SubmitOptions::default())).unwrap().unwrap();
+        }
+        let mut observations = Vec::new();
+        for row in fixture["publication"].as_array().unwrap() {
+            let mut probe = HistoryFuture::prepare(&handle);
+            let state = probe.state.clone();
+            let terminal = probe.terminal_handle();
+            let generation = probe.generation();
+            let admission_slot = state.admission.lock().unwrap().as_ref().unwrap().slot;
+            let (captured, capture) = std::sync::mpsc::sync_channel(1);
+            *state.controlled_completion_hook.lock().unwrap() = Some(Box::new(move |result, progress| {
+                assert!(captured.send((result, progress)).is_ok(), "physical history result capture must remain live");
+            }));
+            let cancelled = row["outcome"] == "cancelled";
+            if cancelled {
+                probe.cancel();
+            } else {
+                state.schedule();
+            }
+            let (result, progress) = capture.recv_timeout(std::time::Duration::from_secs(5)).expect("actual history producer completion deadline");
+            let entry_pointer = result.as_ref().ok().map(|view| view.entries().as_ptr() as usize);
+            if let Ok(view) = result.as_ref() {
+                assert_eq!(view.entries().len(), fixture["operations"].as_array().unwrap().len());
+                assert_eq!(view.admission.as_ref().unwrap().generation, generation);
+                assert!(Arc::ptr_eq(view.terminal_state.as_ref().unwrap(), &state));
+            }
+            assert!(ARTIFACT_HISTORY_ADMISSION.lock().unwrap().slots[admission_slot].occupied);
+            let publish_state = state.clone();
+            let publish = move || publish_state.complete(result, progress);
+            let mut deferred = None;
+            match row["publication"].as_str().unwrap() {
+                "before-poll" => publish(),
+                "before-registration" => *state.controlled_publication_before_waker_hook.lock().unwrap() = Some(Box::new(publish)),
+                "after-pending" => deferred = Some(publish),
+                _ => unreachable!(),
+            }
+            let wake = Arc::new(ControlledHistoryPublicWake { state: Arc::downgrade(&state), wakes: std::sync::atomic::AtomicUsize::new(0), lock_released: std::sync::atomic::AtomicBool::new(true) });
+            let waker = std::task::Waker::from(wake.clone());
+            let mut context = std::task::Context::from_waker(&waker);
+            let first = std::pin::Pin::new(&mut probe).poll(&mut context);
+            let first_ready = first.is_ready();
+            if let Some(publish) = deferred {
+                publish();
+            }
+            let wake_count = wake.wakes.load(Ordering::Acquire);
+            let wake_lock_released = wake.lock_released.load(Ordering::Acquire);
+            let outcome = match first {
+                std::task::Poll::Ready(result) => result,
+                std::task::Poll::Pending => match std::pin::Pin::new(&mut probe).poll(&mut context) {
+                    std::task::Poll::Ready(result) => result,
+                    _ => panic!("physically published history result must remain consumable"),
+                },
+            };
+            let waiter_empty = state.waker.lock().unwrap().is_none();
+            let exact_result = match outcome {
+                Ok(mut view) => {
+                    assert!(!cancelled);
+                    let exact = Some(view.entries().as_ptr() as usize) == entry_pointer
+                        && view.admission.as_ref().is_some_and(|owner| owner.slot == admission_slot && owner.generation == generation)
+                        && view.terminal_state.as_ref().is_some_and(|owner| Arc::ptr_eq(owner, &state))
+                        && fixture["operations"].as_array().unwrap().iter().enumerate().all(|(index, operation)| view.operation_id_eq(index, 0, operation.as_str().unwrap()));
+                    for _ in 0..50_000 {
+                        if view.terminal_is_empty() {
+                            break;
+                        }
+                        assert!(view.close_step(), "actual replay result must make bounded retirement progress");
+                    }
+                    assert!(view.terminal_is_empty(), "history fixture must close every actual replay owner");
+                    exact
+                }
+                Err(error) => cancelled && error == DbError::Closed,
+            };
+            drop(probe);
+            for _ in 0..50_000 {
+                if terminal.terminal_is_empty() {
+                    break;
+                }
+                if !terminal.close_step() {
+                    std::thread::yield_now();
+                }
+            }
+            let admission_released = !ARTIFACT_HISTORY_ADMISSION.lock().unwrap().slots[admission_slot].occupied;
+            let registry_empty = handle.history_terminal(generation).is_none();
+            assert!(terminal.terminal_is_empty(), "history fixture cleanup must finish its exact terminal state");
+            eprintln!("[DEBUG] history-completion: {} first-ready={first_ready} wakes={wake_count} waiter-empty={waiter_empty} wake-lock-released={wake_lock_released} exact-result={exact_result} admission-released={admission_released} registry-empty={registry_empty}", row["name"]);
+            observations.push((row.clone(), first_ready, wake_count, waiter_empty, exact_result, admission_released, registry_empty, wake_lock_released));
+        }
+        drop(handle);
+        database.shutdown(&DatabaseShutdownControl::for_timeout(std::time::Duration::from_secs(30))).await.unwrap();
+        for (row, first_ready, wakes, waiter_empty, exact_result, admission_released, registry_empty, wake_lock_released) in observations {
+            assert_eq!(first_ready, row["firstReady"].as_bool().unwrap(), "history completion in registration gap must be observed in the same poll: {}", row["name"]);
+            assert_eq!(wakes as u64, row["wakes"].as_u64().unwrap(), "{}", row["name"]);
+            assert_eq!(waiter_empty, row["waiterEmpty"].as_bool().unwrap(), "{}", row["name"]);
+            assert_eq!(wake_lock_released, row["wakeLockReleased"].as_bool().unwrap(), "wake callback must not execute under the waiter mutex: {}", row["name"]);
+            assert_eq!(exact_result, row["exactResult"].as_bool().unwrap(), "{}", row["name"]);
+            assert_eq!(admission_released, row["admissionReleased"].as_bool().unwrap(), "{}", row["name"]);
+            assert_eq!(registry_empty, row["registryEmpty"].as_bool().unwrap(), "{}", row["name"]);
+        }
     }
 
     #[test]

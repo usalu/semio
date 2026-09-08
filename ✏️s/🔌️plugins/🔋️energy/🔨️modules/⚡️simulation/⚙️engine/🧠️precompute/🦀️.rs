@@ -5,6 +5,7 @@ use crate::geometry::surface_tilt_azimuth;
 use crate::material::{R_FILM_EXTERIOR_M2K_W, R_FILM_INTERIOR_M2K_W};
 use crate::model::{EntityId, FixedTable, Model, SurfaceClass};
 use crate::site::solar_position;
+#[cfg(test)]
 use crate::solar::beam_incidence_cosine;
 use serde::{Deserialize, Serialize};
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
@@ -99,6 +100,7 @@ impl PrecomputedModel {
     }
 
     /// ☀️ Solar incidence cosine for a surface at given solar position.
+    #[cfg(test)]
     pub(crate) fn surface_incidence(&self, surface_id: EntityId, sun_alt_deg: f64, sun_az_deg: f64) -> f64 {
         self.surfaces.get(&surface_id).map_or(0.0, |s| beam_incidence_cosine(s.normal, sun_alt_deg, sun_az_deg))
     }
@@ -228,6 +230,7 @@ impl PrecomputeBuilder {
         }
     }
 
+    #[cfg(test)]
     pub(crate) fn stage(&self) -> PrecomputeStage {
         self.stage
     }
@@ -247,10 +250,6 @@ impl PrecomputeBuilder {
         let Some(work) = self.surface_work.as_mut() else { return false };
         work.stage = stage;
         true
-    }
-
-    pub(crate) fn cursor(&self) -> usize {
-        self.cursor
     }
 
     pub(crate) fn is_complete(&self) -> bool {

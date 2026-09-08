@@ -61,6 +61,7 @@ fn wrap_descriptor(package_id: &str, manifest: manifest::PluginManifest) -> Pack
         capability_requests: Vec::new(),
         extension_points: Vec::new(),
         execution: ExecutionMode::Isolated,
+        execution_protocol: manifest::ExecutionProtocol { app_channel_version: crate::os_spr::CHANNEL_VERSION },
         quotas: Default::default(),
         contributions: ContributionSet::default(),
         assets: Vec::new(),

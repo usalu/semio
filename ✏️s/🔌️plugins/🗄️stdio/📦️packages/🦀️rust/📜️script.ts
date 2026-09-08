@@ -663,10 +663,12 @@ async function runDwgArtifactOwnership(root: string, repoRoot: string): Promise<
 
 type HomeIoSurfaceFixture = {
   readonly schema: "semio.stdio.home-io-surface/v1";
-  readonly features: { readonly homeIo: "home-io"; readonly fullArtifactCatalog: "full-artifact-catalog"; readonly spaceGuest: "space-guest" };
+  readonly features: { readonly homeIo: "home-io"; readonly fullArtifactCatalog: "full-artifact-catalog"; readonly componentAppAssembly: "component-app-assembly"; readonly spaceGuest: "space-guest" };
   readonly directArtifacts: readonly ["csv", "json", "xlsx", "zip"];
   readonly sharedCodecs: readonly ["binary", "deflate", "txt", "xml"];
   readonly fullArtifactCount: 36;
+  readonly nativeCodecCount: 26;
+  readonly surfaceCases: readonly { readonly id: string; readonly selected: readonly string[]; readonly catalog: number; readonly apps: boolean; readonly exports: boolean }[];
 };
 
 function cargoTomlFiles(directory: string, files: string[] = []): string[] {
@@ -695,7 +697,32 @@ class HomeIoSurfaceScript extends BundleScript {
     assert(validate(fixture), ajv.errorsText(validate.errors));
     const manifest = readFileSync(join(this.root, "Cargo.toml"), "utf8");
     assert.match(manifest, /default\s*=\s*\["plugin-root"\]/u);
-    assert.match(manifest, /plugin-root\s*=\s*\["full-artifact-catalog"\]/u);
+    const { parse: parseToml } = await import("@iarna/toml");
+    const firstParty = Bun.TOML.parse(manifest) as { features: Record<string, string[]> };
+    const independent = parseToml(manifest) as unknown as { features: Record<string, string[]> };
+    assert.deepEqual(firstParty.features, independent.features);
+    const featureClosure = (selected: readonly string[]): Set<string> => {
+      const closure = new Set<string>();
+      const pending = [...selected];
+      while (pending.length) {
+        const next = pending.pop()!;
+        if (closure.has(next)) continue;
+        assert(Object.hasOwn(firstParty.features, next), `unknown Stdio feature ${next}`);
+        closure.add(next);
+        pending.push(...firstParty.features[next]!);
+      }
+      return closure;
+    };
+    for (const row of fixture.surfaceCases) {
+      const closure = featureClosure(row.selected);
+      assert.deepEqual({
+        catalog: closure.has(fixture.features.fullArtifactCatalog) ? 36 : 8,
+        apps: closure.has(fixture.features.componentAppAssembly),
+        exports: closure.has("plugin-root"),
+      }, { catalog: row.catalog, apps: row.apps, exports: row.exports }, row.id);
+    }
+    assert.match(manifest, /plugin-root\s*=\s*\["component-app-assembly"\]/u);
+    assert.match(manifest, /component-app-assembly\s*=\s*\["full-artifact-catalog"\]/u);
     assert.match(manifest, /full-artifact-catalog\s*=\s*\[\]/u);
     assert.match(manifest, /home-io\s*=\s*\[\]/u);
     const root = readFileSync(join(this.root, "🦀️.rs"), "utf8");
@@ -706,9 +733,9 @@ class HomeIoSurfaceScript extends BundleScript {
     const allArtifacts = [...root.matchAll(/^    pub mod ([a-z0-9_]+) \{/gmu)].map((match) => match[1]!).slice(0, fixture.fullArtifactCount);
     assert.equal(new Set(allArtifacts).size, fixture.fullArtifactCount);
     for (const artifact of allArtifacts.filter((value) => !selected.includes(value))) assert(moduleRows.some((row) => row.artifact === artifact && row.cfg === 'feature = "full-artifact-catalog"'), `${artifact} escaped the full-catalog gate`);
-    assert.match(root, /#\[cfg\(feature = "full-artifact-catalog"\)\]\s+#\[path = "\.\.\/\.\.\/🦀️\.rs"\]\s+pub mod plugin;/u);
-    assert.match(root, /#\[cfg\(feature = "full-artifact-catalog"\)\]\s+#\[path = "\."\]\s+pub mod editor \{/u);
-    assert.match(root, /#\[cfg\(feature = "full-artifact-catalog"\)\]\s+#\[path = "\."\]\s+pub mod viewer \{/u);
+    assert.match(root, /#\[cfg\(feature = "component-app-assembly"\)\]\s+#\[path = "\.\.\/\.\.\/🦀️\.rs"\]\s+pub mod plugin;/u);
+    assert.match(root, /#\[cfg\(feature = "component-app-assembly"\)\]\s+#\[path = "\."\]\s+pub mod editor \{/u);
+    assert.match(root, /#\[cfg\(feature = "component-app-assembly"\)\]\s+#\[path = "\."\]\s+pub mod viewer \{/u);
     for (const path of [
       resolve(this.root, "../../🗿️artifacts/💾️binary/🦀️.rs"),
       resolve(this.root, "../../🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🦀️.rs"),
@@ -716,7 +743,7 @@ class HomeIoSurfaceScript extends BundleScript {
       resolve(this.root, "../../🗿️artifacts/🔤️txt/🦀️.rs"),
       resolve(this.root, "../../🗿️artifacts/🔤️txt/🏅️standards/🔖️utf-8/🦀️.rs"),
       resolve(this.root, "../../🗿️artifacts/🔤️txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🦀️.rs"),
-    ]) assert.match(readFileSync(path, "utf8"), /#\[cfg\(feature = "full-artifact-catalog"\)\]\s+pub fn (?:artifact|standard|subset)\(/u, `${relative(this.repoRoot, path)} leaked its plugin declaration into Home I/O`);
+    ]) assert.match(readFileSync(path, "utf8"), /#\[cfg\(feature = "component-app-assembly"\)\]\s+pub fn (?:artifact|standard|subset)\(/u, `${relative(this.repoRoot, path)} leaked its plugin app declaration into a catalog-only library`);
     const spaceManifestPath = resolve(this.root, "../../../🪐️space/📦️packages/🦀️rust/Cargo.toml");
     const spaceManifest = readFileSync(spaceManifestPath, "utf8");
     assert.match(spaceManifest, /semio-s-plugin-stdio\s*=\s*\{[^\n]*default-features\s*=\s*false[^\n]*features\s*=\s*\["home-io"\][^\n]*\}/u);
@@ -756,7 +783,7 @@ class HomeIoSurfaceScript extends BundleScript {
       .filter((path) => path.endsWith(".rs") && path.includes("/🗿️artifacts/🏠️home/") && !path.includes("/🧪️tests/"))
       .flatMap((path) => [...readFileSync(path, "utf8").matchAll(/semio_s_plugin_stdio::artifacts::([a-z0-9_]+)/gu)].map((match) => match[1]!));
     assert(productionRefs.every((artifact) => fixture.directArtifacts.includes(artifact as HomeIoSurfaceFixture["directArtifacts"][number]) || artifact === "txt"));
-    console.log(`stdio-home-io-surface-oracle: AJV=1 direct=${fixture.directArtifacts.length} shared=${fixture.sharedCodecs.length} full=${fixture.fullArtifactCount} consumers=${consumers.length}`);
+    console.log(`stdio-home-io-surface-oracle: AJV=1 TOML=bun+iarna surfaces=${fixture.surfaceCases.length} direct=${fixture.directArtifacts.length} shared=${fixture.sharedCodecs.length} full=${fixture.fullArtifactCount} codecs=${fixture.nativeCodecCount} consumers=${consumers.length}`);
     if (mode === "native") {
       const options = { cwd: this.repoRoot, env: devToolingEnv(), budgetMs: buildBudgetMs() };
       runCmd("cargo", ["check", "-p", PACKAGE_NAME, "--lib", "--target", "wasm32-wasip2", "--no-default-features", "--features", fixture.features.homeIo, "--message-format=short"], options);

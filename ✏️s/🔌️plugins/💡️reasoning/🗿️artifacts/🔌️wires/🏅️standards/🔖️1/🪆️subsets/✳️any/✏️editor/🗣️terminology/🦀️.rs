@@ -6,6 +6,8 @@
 semio_framework_plugin::app_labels! {
     /// 🗣️ Complete UI label set for the mindmap wires app; one field per label makes every locale×terminology combination compile-checked. No distinct reuse-terminology concept for this app, so reuse repeats native.
     pub struct WiresLabels {
+        schema: native_en "Schema", native_de "Schema", reuse_en "Schema", reuse_de "Schema";
+        board_nodes: native_en "Board nodes", native_de "Knoten auf der Leinwand", reuse_en "Board nodes", reuse_de "Knoten auf der Leinwand";
         identities: native_en "Identities", native_de "Identitäten", reuse_en "Identities", reuse_de "Identitäten";
         relationships: native_en "Relationships", native_de "Beziehungen", reuse_en "Relationships", reuse_de "Beziehungen";
         identity_kinds: native_en "Identity kinds", native_de "Identitätsarten", reuse_en "Identity kinds", reuse_de "Identitätsarten";

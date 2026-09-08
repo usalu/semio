@@ -1,0 +1,6 @@
+/** 🧬️ PdfSnapshot schema (⚕️h subset) meta — reuses the 🧱️base subset's schema verbatim. */
+export const meta = {
+  artifactKind: "s.stdio.pdf",
+  standard: "1.7",
+  subset: "h",
+} as const;

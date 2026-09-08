@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Replace Presence",
+  "type": "object",
+  "properties": {
+    "presence": {
+      "type": "object",
+      "properties": {
+        "cameraX": {
+          "type": "number"
+        },
+        "cameraY": {
+          "type": "number"
+        },
+        "cameraZoom": {
+          "type": "number"
+        },
+        "activeUtilityId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "cameraX",
+        "cameraY",
+        "cameraZoom",
+        "activeUtilityId"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "presence"
+  ],
+  "additionalProperties": false
+}

@@ -1,0 +1,11 @@
+# 🔤️ Direct embed-font-file GraphQL payload.
+input EmbedFontFileProgramInput {
+  num: Int!
+  gen: Int!
+}
+
+input EmbedFontFileMutationInput {
+  descriptorOrdinal: Int!
+  key: String!
+  program: EmbedFontFileProgramInput!
+}

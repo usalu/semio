@@ -12,9 +12,9 @@ pub use set_locale::SetLocale;
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[mutations(snapshot = EquationConfig, diff = EquationConfig, schema = "equation.config")]
 pub enum EquationConfigMutation {
-    #[dsl(key = "camera")]
+    #[dsl(key = "set-camera")]
     SetCamera(SetCamera),
-    #[dsl(key = "locale")]
+    #[dsl(key = "set-locale")]
     SetLocale(SetLocale),
 }
 

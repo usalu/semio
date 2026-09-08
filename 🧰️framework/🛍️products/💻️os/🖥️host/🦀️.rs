@@ -2278,7 +2278,10 @@ pub mod backbone {
     //! 🗄️ Trusted host-side backbone ports for local studio storage — reads/writes the raw persisted
     //! json directly, bypassing the duplex `Backbone` channel since there is no other process here.
 
-    use crate::host::{OsBackbonePort, OsBackbonePorts};
+    use crate::host::OsBackbonePort;
+    #[cfg(not(target_arch = "wasm32"))]
+    use crate::host::OsBackbonePorts;
+    #[cfg(not(target_arch = "wasm32"))]
     use crate::space;
     #[cfg(not(target_arch = "wasm32"))]
     use crate::store_sync::{FolderEventLogStorage, FolderTextStorage};
@@ -4593,6 +4596,7 @@ pub mod workflow {
     // #endregion workflow
 }
 
+#[cfg(any(test, feature = "os-host-full", feature = "space-guest"))]
 pub mod codec_abi {
     //#region 🧬️Schema
     use semio_framework::{

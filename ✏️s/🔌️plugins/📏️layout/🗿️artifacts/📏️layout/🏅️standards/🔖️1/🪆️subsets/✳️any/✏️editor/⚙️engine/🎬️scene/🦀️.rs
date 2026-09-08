@@ -16,6 +16,7 @@ use crate::artifacts::layout::schema::{parse_layout_document, resolve_page};
 use crate::artifacts::layout::{Frame, LayoutBounds, LayoutRect, LayoutSnapshot, Page, ParagraphStyle, TextStory};
 use infinite_canvas::camera::{self, Camera, Viewport};
 use infinite_canvas::{Affine, Color, FillRule, Line, Point, Rect, RoundedRect, RoundedRectRadii, Scene, Stroke, Vec2};
+#[cfg(test)]
 use serde_json::Value;
 use ui_render::{FontDependencyId, FontFamilyChoice, ShapedText, TextAlignment, TextRunStyle, TextStyle, TextSystem};
 
@@ -362,7 +363,6 @@ pub fn screen_to_world_json(camera: &Camera, viewport: &Viewport, sx: f64, sy: f
 
 //#region 📤️Export
 #[cfg(test)]
-#[cfg(test)]
 pub use crate::editor::layout::engine::export::{export_document_pdf_headless_batch, export_document_png_headless_batch, export_document_svg_headless_batch, export_package_zip_headless_batch};
 //#endregion 📤️Export
 
@@ -558,7 +558,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn package_zip_bundles_document_and_preflight() {
         let doc = sample_document();
-        let json = serde_json::to_string(&doc).expect("serialize sample document to json");
+        let json = dsl::os_pack::to_json_string(&doc);
         let bytes = export_package_zip_headless_batch(&json, "[]").expect("package export succeeds");
         assert_eq!(doc.schema, crate::artifacts::layout::LAYOUT_DOCUMENT_SCHEMA);
         assert!(bytes.starts_with(b"PK"));

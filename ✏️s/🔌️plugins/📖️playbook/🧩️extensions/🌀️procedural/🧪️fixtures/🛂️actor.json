@@ -1,0 +1,12 @@
+{
+  "role": "extension",
+  "pluginId": "playbook-module-procedural",
+  "host": "playbook",
+  "appId": "s.playbook.procedural@1/*#editor",
+  "topic": "playbook.blockKind",
+  "blockKind": "buildingComponent",
+  "windowBodies": [
+    "params",
+    "preview"
+  ]
+}

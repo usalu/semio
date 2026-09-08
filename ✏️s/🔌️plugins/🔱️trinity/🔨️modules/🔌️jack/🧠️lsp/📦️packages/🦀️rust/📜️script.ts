@@ -6,7 +6,6 @@ class WasmScript extends BundleScript {
   run(): void {
     runWasmPackWebBuild({
       rsDir: this.root,
-      skipEnvVar: "TRINITY_JACK_LSP_SKIP_WASM_BUILD",
       logPrefix: "trinity/jack/lsp",
       wasmBaseName: "trinity_jack_lsp",
       pkg: {

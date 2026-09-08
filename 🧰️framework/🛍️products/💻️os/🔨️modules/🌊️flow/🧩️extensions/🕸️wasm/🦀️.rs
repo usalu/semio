@@ -2,18 +2,10 @@
 
 use neural_engine::{inject_channel_defaults, ColdOwner, ColdRetire, Dictionary, OperatorInfo, Registry, Schema};
 use semio_framework_os_kernel::{DslValue, FromValue, ToValue};
-#[cfg(test)]
-use serde::{Deserialize, Serialize};
 
 // #region 🔖️Manifest
-/// 📋️ `flow.extension` manifest document. `serde` is TEST-ONLY (RUNTIME-DEPENDENCY-ELIMINATION-
-/// FOR-S-PLUGINS-AND-ARTIFACTS, 26/09/01, tenth-seam pass): production now derives `ToValue`/
-/// `FromValue` directly, since `Schema`/`OperatorInfo` (fanned in through `FlowExtensionContributes`)
-/// lost their own unconditional `Serialize`/`Deserialize` in this pass — see
-/// `📓️orderedmap-tenth-seam.md`.
+/// 📋️ `flow.extension` manifest encoded through the first-party value contract.
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
-#[cfg_attr(test, derive(Serialize, Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub struct FlowExtensionManifest {
     pub schema: String,
@@ -24,29 +16,22 @@ pub struct FlowExtensionManifest {
     pub contributes: FlowExtensionContributes,
 }
 
-/// 🎁️ Contributed extension surface. `serde` is TEST-ONLY — see `FlowExtensionManifest` above.
+/// 🎁️ Contributed extension surface.
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
-#[cfg_attr(test, derive(Serialize, Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub struct FlowExtensionContributes {
     pub schemas: Vec<Schema>,
     pub operators: Vec<OperatorInfo>,
-    #[cfg_attr(test, serde(default))]
     #[value(default)]
     pub widgets: Vec<FlowExtensionWidget>,
-    #[cfg_attr(test, serde(default))]
     #[value(default)]
     pub commands: Vec<FlowExtensionCommand>,
-    #[cfg_attr(test, serde(default))]
     #[value(default)]
     pub settings: Vec<FlowExtensionSetting>,
 }
 
 /// 🧩️ Declared widget contribution.
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
-#[cfg_attr(test, derive(Serialize, Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub struct FlowExtensionWidget {
     pub kind: String,
@@ -56,8 +41,6 @@ pub struct FlowExtensionWidget {
 
 /// ⌘️ Declared command contribution.
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
-#[cfg_attr(test, derive(Serialize, Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub struct FlowExtensionCommand {
     pub id: String,
@@ -67,12 +50,9 @@ pub struct FlowExtensionCommand {
 /// ⚙️ Declared setting contribution. `default` is a `DslValue` directly (was `serde_json::Value`) —
 /// the same tenth-seam pass; no bridge needed since `DslValue` already implements `ToValue`/`FromValue`.
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
-#[cfg_attr(test, derive(Serialize, Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub struct FlowExtensionSetting {
     pub id: String,
-    #[cfg_attr(test, serde(rename = "type"))]
     #[value(rename = "type")]
     pub setting_type: String,
     pub default: DslValue,

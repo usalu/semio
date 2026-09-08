@@ -12,5 +12,5 @@ pub struct SetContributions {
 }
 
 pub fn handle(payload: &SetContributions, _doc: &ArtifactView<'_, PlaybookSnapshot>, _cfg: &ConfigView<'_, PlaybookConfig>) -> Result<Emit<PlaybookMutation, PlaybookConfigMutation>, Fault> {
-    Ok(Emit::config(vec![PlaybookConfigMutation::SetContributions { json: payload.json.clone() }]))
+    Ok(Emit::config(vec![PlaybookConfigMutation::SetContributions(crate::editor::playbook::config::SetContributions { json: payload.json.clone() })]))
 }

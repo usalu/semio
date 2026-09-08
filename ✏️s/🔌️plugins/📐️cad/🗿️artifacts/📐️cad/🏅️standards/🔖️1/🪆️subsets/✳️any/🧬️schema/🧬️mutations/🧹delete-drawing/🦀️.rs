@@ -1,7 +1,6 @@
 //! 🧹️ `delete-drawing` — removes the entry matching `child_id` from `drawings`. Idempotent no-op
 //! if absent; the inverse escrows the removed handle from BASE.
 
-use crate::artifacts::cad::diff::CadDiff;
 use crate::artifacts::cad::mutations::CadMutation;
 use crate::artifacts::cad::CadSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};

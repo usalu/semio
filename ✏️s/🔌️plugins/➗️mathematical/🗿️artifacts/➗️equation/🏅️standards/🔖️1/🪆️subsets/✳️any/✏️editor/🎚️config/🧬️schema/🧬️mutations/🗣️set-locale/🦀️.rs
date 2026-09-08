@@ -4,7 +4,7 @@ use super::{EquationConfig, EquationConfigMutation};
 
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord, dsl::MutationLeaf)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[dsl(keyword = "locale")]
+#[dsl(keyword = "set-locale")]
 #[mutation_leaf(contract = ::protocol)]
 pub struct SetLocale {
     pub value: String,

@@ -167,8 +167,6 @@ pub fn helical_sweep(body: &mut Body, profile: FaceId, axis_origin: Pnt3, axis_d
     let steps_per_turn = 24usize;
     let steps = ((turns.abs() * steps_per_turn as f64).ceil() as usize).max(2);
     let mut stations = Vec::with_capacity(steps + 1);
-    let mut length = 0.0;
-    let mut prev: Option<Pnt3> = None;
     for i in 0..=steps {
         let s = i as f64 / steps as f64;
         let total_angle = turns * std::f64::consts::TAU;
@@ -177,11 +175,7 @@ pub fn helical_sweep(body: &mut Body, profile: FaceId, axis_origin: Pnt3, axis_d
         let point = axis_origin + x0 * (radius * angle.cos()) + y0 * (radius * angle.sin()) + axis * along;
         let raw_tangent = x0 * (-radius * angle.sin() * total_angle) + y0 * (radius * angle.cos() * total_angle) + axis * (pitch * turns);
         let tangent = raw_tangent.normalized().unwrap_or(axis);
-        if let Some(p) = prev {
-            length += (point - p).norm();
-        }
-        stations.push(frame::Station { point, tangent, length });
-        prev = Some(point);
+        stations.push(frame::Station { point, tangent });
     }
     let frames = frame::stations_to_frames(&stations);
     let profile_frame = { let f = body.faces.get(profile).ok_or_else(|| KernelError::MissingEntity("profile".into()))?; match body.surfaces.get(f.surface) { Some(Surface::Plane { frame }) => *frame, _ => return Err(KernelError::InvalidInput("helical_sweep profile face must be planar".into())) } };

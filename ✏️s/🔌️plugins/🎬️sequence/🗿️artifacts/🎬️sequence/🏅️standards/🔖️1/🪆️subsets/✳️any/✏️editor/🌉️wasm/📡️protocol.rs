@@ -1,8 +1,8 @@
 //! 🧬️ Dependency-free Sequence editor protocol over the owned framework ABI.
 
-use crate::semio_framework::abi::{
+use semio_framework::abi::{
     ABI_MAX_BODY_BYTES, ABI_MAX_IN_FLIGHT_HANDLES, ABI_MAX_IN_FLIGHT_REQUESTS, ABI_MAX_MESSAGE_BYTES, ABI_MAX_TRANSFER_BYTES, AbiBytes, AbiControl, AbiError, AbiErrorCode, AbiEvent, AbiEventCode, AbiHandle, AbiHandleTable, AbiMessage,
-    AbiMessageBytes, AbiOperation, AbiPageReader, AbiPort, AbiPortPoll, AbiPortRejection, AbiReply, AbiReplyLedger, AbiRequest, AbiRequestId, AbiStatus, AbiStatusCode, AbiWorkBudget,
+    AbiMessageBytes, AbiPageReader, AbiPort, AbiPortPoll, AbiPortRejection, AbiReply, AbiReplyLedger, AbiRequest, AbiRequestId, AbiStatus, AbiStatusCode, AbiWorkBudget,
 };
 use std::cell::RefCell;
 use std::collections::VecDeque;
@@ -247,7 +247,6 @@ enum OperationPhase {
 
 struct SequenceOperation<D> {
     session: Rc<RefCell<SequenceSession<D>>>,
-    session_handle: AbiHandle,
     request_id: AbiRequestId,
     generation: u32,
     operation: u16,
@@ -372,7 +371,7 @@ impl<D: SequenceDomain> SequenceBridge<D> {
         self.request_ledger.admit(request.request_id, request.generation).map_err(|code| AbiPortRejection { code, message: message() })?;
         let index = request_slot(request.request_id);
         let operation =
-            SequenceOperation { session, session_handle, request_id: request.request_id, generation: request.generation, operation: request.operation.get(), payload, cursor: 0, reader: None, phase: OperationPhase::Inspect, cancelled: false };
+            SequenceOperation { session, request_id: request.request_id, generation: request.generation, operation: request.operation.get(), payload, cursor: 0, reader: None, phase: OperationPhase::Inspect, cancelled: false };
         let handle = self.resources.open(SequenceResource::Operation(operation)).map_err(|(code, _)| AbiPortRejection { code, message: message() })?;
         self.active_resources += 1;
         self.requests[index] = Some(RequestEntry { request_id: request.request_id, generation: request.generation, operation: handle });
@@ -533,10 +532,10 @@ impl<D: SequenceDomain> SequenceBridge<D> {
                     OperationPhase::Stream => {
                         let reader = operation.reader.as_mut().ok_or(AbiErrorCode::UnknownHandle)?;
                         match reader.read_step(budget)? {
-                            crate::semio_framework::abi::AbiCursorStep::PageComplete(_) => {
+                            semio_framework::abi::AbiCursorStep::PageComplete(_) => {
                                 page = Some(reader.page().cloned().ok_or(AbiErrorCode::UnknownHandle)?);
                             }
-                            crate::semio_framework::abi::AbiCursorStep::Complete => {
+                            semio_framework::abi::AbiCursorStep::Complete => {
                                 reply = Some(success_reply(operation.request_id, operation.generation, Vec::new()));
                                 operation.phase = OperationPhase::Terminal;
                                 retain = false;
@@ -746,7 +745,7 @@ mod tests {
     }
 
     fn request(operation: u16, id: u64, generation: u32, bytes: Vec<u8>) -> AbiMessage {
-        AbiMessage::Request(AbiRequest { operation: AbiOperation::try_new(operation).unwrap(), request_id: AbiRequestId(id), generation, bytes: AbiBytes::try_new(bytes).unwrap() })
+        AbiMessage::Request(AbiRequest { operation: semio_framework::abi::AbiOperation::try_new(operation).unwrap(), request_id: AbiRequestId(id), generation, bytes: AbiBytes::try_new(bytes).unwrap() })
     }
 
     fn open(bridge: &mut SequenceBridge<MockDomain>, id: u64) -> AbiHandle {

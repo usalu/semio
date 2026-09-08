@@ -93,24 +93,15 @@ pub(crate) fn enc_opt_str(s: &Option<String>) -> String {
 pub(crate) fn dec_opt_str(s: &str) -> Result<Option<String>, String> {
     dec_option(s, dec_str)
 }
-pub(crate) fn enc_opt_u32(v: &Option<u32>) -> String {
-    enc_option(v, |n| n.to_string())
-}
 pub(crate) fn dec_opt_u32(s: &str) -> Result<Option<u32>, String> {
     dec_option(s, |n| n.parse::<u32>().map_err(|e: std::num::ParseIntError| e.to_string()))
 }
 
-pub(crate) fn enc_ref(r: &store::os_io::ArtifactRef) -> String {
-    enc_str(&r.to_uri())
-}
 pub(crate) fn dec_ref(s: &str) -> Result<store::os_io::ArtifactRef, String> {
     store::os_io::ArtifactRef::parse_uri(&dec_str(s)?)
 }
 
 /// 🪪️ `[<hex child_id>,<hex target-uri>]` — the two-string handle, real and complete, never content.
-pub(crate) fn enc_child(c: &RasterAssetChild) -> String {
-    format!("[{},{}]", enc_str(&c.child_id), enc_ref(&c.target))
-}
 pub(crate) fn dec_child(s: &str) -> Result<RasterAssetChild, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [child_id, target] = parts.as_slice() else { return Err(format!("child handle: expected 2 fields, got {}", parts.len())) };
@@ -131,9 +122,6 @@ pub(crate) fn dec_asset_map(s: &str) -> Result<RasterOwnedMap<RasterAssetChild>,
     Ok(out)
 }
 
-pub(crate) fn enc_transform(t: &RasterTransform) -> String {
-    format!("[{},{},{},{},{}]", t.x, t.y, t.scale_x, t.scale_y, t.rotation)
-}
 pub(crate) fn dec_transform(s: &str) -> Result<RasterTransform, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [x, y, sx, sy, rot] = parts.as_slice() else { return Err(format!("transform: expected 5 fields, got {}", parts.len())) };
@@ -141,27 +129,17 @@ pub(crate) fn dec_transform(s: &str) -> Result<RasterTransform, String> {
     Ok(RasterTransform { x: f(x)?, y: f(y)?, scale_x: f(sx)?, scale_y: f(sy)?, rotation: f(rot)? })
 }
 
-pub(crate) fn enc_mask(m: &RasterLayerMask) -> String {
-    format!("[{},{},{},{},{}]", m.enabled, m.linked, m.invert, enc_opt_u32(&m.width), enc_opt_u32(&m.height))
-}
 pub(crate) fn dec_mask(s: &str) -> Result<RasterLayerMask, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [enabled, linked, invert, width, height] = parts.as_slice() else { return Err(format!("mask: expected 5 fields, got {}", parts.len())) };
     let b = |s: &str| s.trim().parse::<bool>().map_err(|e: std::str::ParseBoolError| e.to_string());
     Ok(RasterLayerMask { enabled: b(enabled)?, linked: b(linked)?, invert: b(invert)?, width: dec_opt_u32(width)?, height: dec_opt_u32(height)? })
 }
-pub(crate) fn enc_mask_opt(m: &Option<RasterLayerMask>) -> String {
-    enc_option(m, enc_mask)
-}
 pub(crate) fn dec_mask_opt(s: &str) -> Result<Option<RasterLayerMask>, String> {
     dec_option(s, dec_mask)
 }
 
 /// 🧬️ Empty parameter-map shell for the legacy codec; populated output requires retained paging.
-pub(crate) fn enc_params(params: &RasterOwnedMap<dsl::DslValue>) -> String {
-    assert!(params.is_empty(), "{RASTER_POPULATED_OUTPUT_ERROR}");
-    "[]".to_string()
-}
 pub(crate) fn dec_params(s: &str) -> Result<RasterOwnedMap<dsl::DslValue>, String> {
     let mut out = RasterOwnedMap::new();
     for entry in split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()) {
@@ -177,19 +155,6 @@ pub(crate) fn dec_params(s: &str) -> Result<RasterOwnedMap<dsl::DslValue>, Strin
 /// 🌳️ Recursive layer-tree codec — one tag char (`p`/`g`/`a`) prefixed directly onto the bracketed
 /// field list (`split_top_level`'s depth tracking only keys off `[`/`]`, so the leading tag never
 /// confuses top-level list splitting).
-pub(crate) fn enc_layer(layer: &RasterLayerNode) -> String {
-    match layer {
-        RasterLayerNode::Pixel { id, name, visible, opacity, blend_mode, transform, mask, width, height, image_key } => {
-            format!("p[{},{},{},{},{},{},{},{},{},{}]", enc_str(id), enc_str(name), visible, opacity, enc_str(blend_mode), enc_transform(transform), enc_mask_opt(mask), enc_opt_u32(width), enc_opt_u32(height), enc_opt_str(image_key),)
-        }
-        RasterLayerNode::Group { id, name, visible, opacity, blend_mode, transform, mask, children } => {
-            format!("g[{},{},{},{},{},{},{},{}]", enc_str(id), enc_str(name), visible, opacity, enc_str(blend_mode), enc_transform(transform), enc_mask_opt(mask), enc_layer_list(children),)
-        }
-        RasterLayerNode::Adjustment { id, name, visible, opacity, blend_mode, transform, adjustment_kind, params } => {
-            format!("a[{},{},{},{},{},{},{},{}]", enc_str(id), enc_str(name), visible, opacity, enc_str(blend_mode), enc_transform(transform), enc_str(adjustment_kind), enc_params(params),)
-        }
-    }
-}
 pub(crate) fn dec_layer(s: &str) -> Result<RasterLayerNode, String> {
     if s.is_empty() {
         return Err("layer: empty".into());
@@ -328,22 +293,12 @@ fn write_opt_str(out: &mut Vec<u8>, v: &Option<String>) {
 fn read_opt_str(reader: &mut store::ByteReader<'_>) -> Result<Option<String>, String> {
     read_opt(reader, read_str_lp)
 }
-fn write_opt_u32(out: &mut Vec<u8>, v: &Option<u32>) {
-    write_opt(out, v, |out, n| out.extend_from_slice(&n.to_le_bytes()));
-}
 fn read_opt_u32(reader: &mut store::ByteReader<'_>) -> Result<Option<u32>, String> {
     read_opt(reader, |r| Ok(u32::from_le_bytes(r.read_bytes(4).map_err(|e| e.to_string())?.try_into().map_err(|_| "u32: short read".to_string())?)))
 }
 
-fn write_ref(out: &mut Vec<u8>, r: &store::os_io::ArtifactRef) {
-    write_str_lp(out, &r.to_uri());
-}
 fn read_ref(reader: &mut store::ByteReader<'_>) -> Result<store::os_io::ArtifactRef, String> {
     store::os_io::ArtifactRef::parse_uri(&read_str_lp(reader)?)
-}
-fn write_child(out: &mut Vec<u8>, c: &RasterAssetChild) {
-    write_str_lp(out, &c.child_id);
-    write_ref(out, &c.target);
 }
 fn read_child(reader: &mut store::ByteReader<'_>) -> Result<RasterAssetChild, String> {
     let child_id = read_str_lp(reader)?;
@@ -366,23 +321,11 @@ fn read_asset_map(reader: &mut store::ByteReader<'_>) -> Result<RasterOwnedMap<R
     Ok(out)
 }
 
-fn write_transform(out: &mut Vec<u8>, t: &RasterTransform) {
-    for v in [t.x, t.y, t.scale_x, t.scale_y, t.rotation] {
-        out.extend_from_slice(&v.to_le_bytes());
-    }
-}
 fn read_transform(reader: &mut store::ByteReader<'_>) -> Result<RasterTransform, String> {
     let mut next = || -> Result<f64, String> { Ok(f64::from_le_bytes(reader.read_bytes(8).map_err(|e| e.to_string())?.try_into().map_err(|_| "transform: short read".to_string())?)) };
     Ok(RasterTransform { x: next()?, y: next()?, scale_x: next()?, scale_y: next()?, rotation: next()? })
 }
 
-fn write_mask(out: &mut Vec<u8>, m: &RasterLayerMask) {
-    out.push(m.enabled as u8);
-    out.push(m.linked as u8);
-    out.push(m.invert as u8);
-    write_opt_u32(out, &m.width);
-    write_opt_u32(out, &m.height);
-}
 fn read_mask(reader: &mut store::ByteReader<'_>) -> Result<RasterLayerMask, String> {
     let enabled = reader.read_u8().map_err(|e| e.to_string())? != 0;
     let linked = reader.read_u8().map_err(|e| e.to_string())? != 0;
@@ -391,17 +334,10 @@ fn read_mask(reader: &mut store::ByteReader<'_>) -> Result<RasterLayerMask, Stri
     let height = read_opt_u32(reader)?;
     Ok(RasterLayerMask { enabled, linked, invert, width, height })
 }
-fn write_mask_opt(out: &mut Vec<u8>, m: &Option<RasterLayerMask>) {
-    write_opt(out, m, write_mask);
-}
 fn read_mask_opt(reader: &mut store::ByteReader<'_>) -> Result<Option<RasterLayerMask>, String> {
     read_opt(reader, read_mask)
 }
 
-fn write_params(out: &mut Vec<u8>, params: &RasterOwnedMap<dsl::DslValue>) {
-    assert!(params.is_empty(), "{RASTER_POPULATED_OUTPUT_ERROR}");
-    store::pack_rt::write_varint_u64(out, 0);
-}
 fn read_params(reader: &mut store::ByteReader<'_>) -> Result<RasterOwnedMap<dsl::DslValue>, String> {
     let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut out = RasterOwnedMap::new();
@@ -414,45 +350,6 @@ fn read_params(reader: &mut store::ByteReader<'_>) -> Result<RasterOwnedMap<dsl:
     Ok(out)
 }
 
-fn write_layer(out: &mut Vec<u8>, layer: &RasterLayerNode) {
-    match layer {
-        RasterLayerNode::Pixel { id, name, visible, opacity, blend_mode, transform, mask, width, height, image_key } => {
-            out.push(0);
-            write_str_lp(out, id);
-            write_str_lp(out, name);
-            out.push(*visible as u8);
-            out.extend_from_slice(&opacity.to_le_bytes());
-            write_str_lp(out, blend_mode);
-            write_transform(out, transform);
-            write_mask_opt(out, mask);
-            write_opt_u32(out, width);
-            write_opt_u32(out, height);
-            write_opt_str(out, image_key);
-        }
-        RasterLayerNode::Group { id, name, visible, opacity, blend_mode, transform, mask, children } => {
-            out.push(1);
-            write_str_lp(out, id);
-            write_str_lp(out, name);
-            out.push(*visible as u8);
-            out.extend_from_slice(&opacity.to_le_bytes());
-            write_str_lp(out, blend_mode);
-            write_transform(out, transform);
-            write_mask_opt(out, mask);
-            write_layer_list(out, children);
-        }
-        RasterLayerNode::Adjustment { id, name, visible, opacity, blend_mode, transform, adjustment_kind, params } => {
-            out.push(2);
-            write_str_lp(out, id);
-            write_str_lp(out, name);
-            out.push(*visible as u8);
-            out.extend_from_slice(&opacity.to_le_bytes());
-            write_str_lp(out, blend_mode);
-            write_transform(out, transform);
-            write_str_lp(out, adjustment_kind);
-            write_params(out, params);
-        }
-    }
-}
 fn read_layer(reader: &mut store::ByteReader<'_>) -> Result<RasterLayerNode, String> {
     let tag = reader.read_u8().map_err(|e| e.to_string())?;
     let id = read_str_lp(reader)?;

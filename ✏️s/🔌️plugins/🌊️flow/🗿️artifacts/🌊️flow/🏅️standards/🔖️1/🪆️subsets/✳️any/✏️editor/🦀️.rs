@@ -10,16 +10,21 @@
 //! `🔖️Manifest` region that calls one `definition()` per node.
 
 use crate::artifacts::flow::op::FlowMutation;
+#[cfg(test)]
 use crate::artifacts::flow::schema::mutations::connect_widgets::ConnectWidgets;
+#[cfg(test)]
 use crate::artifacts::flow::schema::mutations::create_widget::CreateWidget;
 use crate::artifacts::flow::schema::mutations::delete_widget::DeleteWidget;
 use crate::artifacts::flow::schema::mutations::disconnect_widgets::DisconnectWidgets;
 use crate::artifacts::flow::schema::mutations::move_widgets::MoveWidgets;
+#[cfg(test)]
 use crate::artifacts::flow::schema::mutations::reorder_synapses::ReorderSynapses;
+#[cfg(test)]
 use crate::artifacts::flow::schema::mutations::reorder_widgets::ReorderWidgets;
 use crate::artifacts::flow::schema::mutations::replace_widget::ReplaceWidget;
+#[cfg(test)]
 use crate::artifacts::flow::schema::mutations::update_synapse_endpoints::UpdateSynapseEndpoints;
-use crate::artifacts::flow::{flow_content_child_handle_bounded, FlowSnapshot, FlowWorkingScene, FLOW_DOCUMENT_SCHEMA};
+use crate::artifacts::flow::{FlowSnapshot, FlowWorkingScene, FLOW_DOCUMENT_SCHEMA};
 use crate::editor::flow::commands::{
     add_widget, connect_media_ports, context_menu_at, delete_selection, disconnect, duplicate_widget, duplicate_widget_step, evaluate, flow_eval_resolve, flow_eval_tick, focus_selection, move_media_node, node_graph_edit, node_graph_viewport,
     open_spotlight, patch_flow_widgets, remove_widget, rename_flow_widget, reorganize, replace_image, run_extension_action, set_catalogue_sections, set_contributions, set_grid_factor, set_grid_snap_enabled, set_grid_visible, set_locale,
@@ -41,8 +46,11 @@ use semio_framework_plugin::{
     DomainTopology, DraftView, Editor, Effect, Emit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, InteractionTopology, Label, LocalizedLabel, MergeMode, NoDraft, NoDraftMutation, SelectionMethod,
     SelectionMode, SelectionSpec, TopologyNode, WindowMeasure,
 };
-use serde_json::{json, Value};
+use serde_json::json;
+#[cfg(test)]
+use serde_json::Value;
 use std::collections::HashMap;
+#[cfg(test)]
 use std::io::Write;
 use std::sync::Arc;
 use store::EngineHandles;
@@ -459,11 +467,13 @@ fn prepare_flow_config(base: &FlowConfig, mutation: FlowConfigMutation) -> Resul
     Ok((post, vec![inverse], mutation))
 }
 
+#[cfg(test)]
 struct FlowBoundedByteCounter {
     written: usize,
     maximum_bytes: usize,
 }
 
+#[cfg(test)]
 impl Write for FlowBoundedByteCounter {
     fn write(&mut self, bytes: &[u8]) -> std::io::Result<usize> {
         let next = self.written.checked_add(bytes.len()).ok_or_else(|| std::io::Error::new(std::io::ErrorKind::InvalidData, "Flow retained byte count overflow"))?;
@@ -479,6 +489,7 @@ impl Write for FlowBoundedByteCounter {
     }
 }
 
+#[cfg(test)]
 fn flow_bounded_serialized_bytes<T: dsl::ToValue>(value: &T, maximum_bytes: usize) -> Result<usize, String> {
     let mut counter = FlowBoundedByteCounter { written: 0, maximum_bytes };
     let json: serde_json::Value = dsl::ToValue::to_value(value).into();
@@ -486,6 +497,7 @@ fn flow_bounded_serialized_bytes<T: dsl::ToValue>(value: &T, maximum_bytes: usiz
     Ok(counter.written)
 }
 
+#[cfg(test)]
 fn flow_artifact_mutation_items(mutation: &FlowMutation) -> usize {
     match mutation {
         FlowMutation::MoveWidgets(payload) => payload.entries.len(),
@@ -494,6 +506,7 @@ fn flow_artifact_mutation_items(mutation: &FlowMutation) -> usize {
     }
 }
 
+#[cfg(test)]
 fn admit_flow_artifact_mutation(mutation: &FlowMutation) -> Result<store::ArtifactStoreOneItemFootprint, String> {
     let work_items = flow_artifact_mutation_items(mutation);
     if work_items == 0 || work_items > FLOW_STORE_MAX_MUTATION_ITEMS {
@@ -517,6 +530,7 @@ fn flow_widget_id(widget: &Widget) -> &str {
     }
 }
 
+#[cfg(test)]
 fn prepare_flow_artifact(base: &FlowSnapshot, mutation: FlowMutation) -> Result<(FlowSnapshot, Vec<FlowMutation>, FlowMutation), String> {
     admit_flow_artifact_mutation(&mutation)?;
     let owner = base.content.local_owner::<FlowWorkingScene>().ok_or_else(|| "Flow artifact base has no exact app-instance scene owner".to_string())?;
@@ -2913,3 +2927,6 @@ mod tests {
     //#endregion 🔖️ContextMenu
 }
 //#endregion 🧪️Tests
+
+#[cfg(test)]
+use crate::artifacts::flow::flow_content_child_handle_bounded;

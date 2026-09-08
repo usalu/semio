@@ -1,0 +1,8 @@
+{
+  "schema": "semio.hub.trusted-catalog-publication/v1",
+  "requestId": "11111111111111111111111111111111",
+  "profileId": "publication-fixture",
+  "generationId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "bundleSha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+  "expectedCurrentSha256": null
+}

@@ -259,7 +259,8 @@ class HubLiveCatalogOracleScript extends BundleScript {
         packageIdentity.packageId === fixture.selection.package.packageId &&
         packageIdentity.version === fixture.selection.package.version &&
         packageIdentity.componentSha256 === fixture.selection.package.componentSha256 &&
-        packageIdentity.descriptorByteSha256 === fixture.selection.package.descriptorByteSha256
+        packageIdentity.descriptorByteSha256 === fixture.selection.package.descriptorByteSha256 &&
+        packageIdentity.executionProtocol?.appChannelVersion === fixture.selection.package.executionProtocol.appChannelVersion
       );
     };
     if (!matches(fixture.selection)) throw new Error("positive Hub selection did not match itself");
@@ -269,7 +270,7 @@ class HubLiveCatalogOracleScript extends BundleScript {
       else candidate.package[hostile.field] = hostile.value;
       if (matches(candidate)) throw new Error("Hub live-catalog oracle admitted " + hostile.name);
     }
-    console.log("hub-live-catalog-oracle: AJV=1 states=" + fixture.states.length + " hostile=" + fixture.hostile.length + " local-fallback=denied");
+    console.log("hub-live-catalog-oracle: AJV=1 states=" + fixture.states.length + " hostile=" + fixture.hostile.length + " execution-protocol=compiled-lease local-fallback=denied");
   }
 }
 
@@ -286,7 +287,7 @@ class HubLiveCatalogCheckScript extends BundleScript {
     const inferenceDiscovery = inference.slice(inference.indexOf("pub fn declared_inferences_for_workspace"), inference.indexOf("fn resolve_artifact_schema"));
     if (inferenceDiscovery.includes("find_plugin_entry") || inferenceDiscovery.includes("load_plugin_registry") || !inferenceDiscovery.includes("workspace.discovery_descriptors()"))
       throw new Error("Hub inference discovery still owns a registry fallback");
-    if (!root.includes("struct WorkspaceToolRegistry") || !root.includes("workspace.discovery_catalog()") || !root.includes("workspace_tool_catalog_meta") || !root.includes("hubSelectedPackages"))
+    if (!root.includes("struct WorkspaceToolRegistry") || !root.includes("workspace.discovery_catalog()") || !root.includes("workspace_tool_catalog_meta") || !root.includes("hubSelectedPackages") || !root.includes("selection.lease.package.execution_protocol.app_channel_version"))
       throw new Error("tools/list is not projected from live workspace discovery");
     console.log("hub-live-catalog-source: workspace=3 remote=4 inference=no-registry-fallback tools=live-selection-projection");
   }

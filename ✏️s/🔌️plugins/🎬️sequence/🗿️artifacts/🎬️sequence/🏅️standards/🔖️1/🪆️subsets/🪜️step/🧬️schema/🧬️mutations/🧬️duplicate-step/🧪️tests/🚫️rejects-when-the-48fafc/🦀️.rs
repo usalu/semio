@@ -24,17 +24,17 @@ const DIFF_ABSENT: &str = include_str!("🔺️diff/🚫️.absent");
 const OUTCOME: &str = include_str!("🎯️outcome/🔣️.json");
 
 fn mutation() -> SequenceMutation {
-    serde_json::from_str(MUTATION).expect("mutation decodes")
+    dsl::os_pack::from_json_str(MUTATION).expect("mutation decodes")
 }
 fn expected_after() -> SequenceSnapshot {
-    serde_json::from_str(AFTER).expect("after snapshot decodes")
+    dsl::os_pack::from_json_str(AFTER).expect("after snapshot decodes")
 }
 
 /// 🌱 The committed `⬅️before`, with its composed `content` child resolved to a two-step scene: the
 /// source the payload copies FROM, and a step already holding the id the payload wants to copy TO.
 /// Both ids come straight from the committed payload.
 fn before() -> SequenceSnapshot {
-    let snapshot: SequenceSnapshot = serde_json::from_str(BEFORE).expect("before snapshot decodes");
+    let mut snapshot: SequenceSnapshot = dsl::os_pack::from_json_str(BEFORE).expect("before snapshot decodes");
     let SequenceMutation::DuplicateStep(payload) = mutation() else {
         panic!("rejects-when-the-new-id-already-exists's committed mutation must be a duplicate-step");
     };
@@ -81,12 +81,12 @@ async fn the_committed_diff_is_declared_absent() {
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {
-        let decoded: SequenceSnapshot = serde_json::from_str(text).expect("snapshot decodes");
-        let reencoded = serde_json::to_value(&decoded).expect("snapshot encodes");
+        let decoded: SequenceSnapshot = dsl::os_pack::from_json_str(text).expect("snapshot decodes");
+        let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::os_pack::to_json_string(&decoded)).expect("snapshot encodes");
         let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
         assert_eq!(reencoded, original, "duplicate-step/rejects-when-the-new-id-already-exists: committed {label} JSON is not canonical");
     }
-    let reencoded = serde_json::to_value(mutation()).expect("mutation encodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::os_pack::to_json_string(&mutation())).expect("mutation encodes");
     let original: serde_json::Value = serde_json::from_str(MUTATION).expect("mutation reparses");
     assert_eq!(reencoded, original, "duplicate-step/rejects-when-the-new-id-already-exists: committed mutation JSON is not canonical");
     assert_ne!(original.get("sourceId"), original.get("newId"), "the copy must address a different id from its source");

@@ -20,11 +20,12 @@
     "current": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["profileId", "generationId", "bundleSha256"],
+      "required": ["profileId", "generationId", "bundleSha256", "publicationRevision"],
       "properties": {
         "profileId": { "type": "string", "minLength": 1, "maxLength": 256 },
         "generationId": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
-        "bundleSha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+        "bundleSha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+        "publicationRevision": { "const": "1" }
       }
     },
     "relativePaths": {

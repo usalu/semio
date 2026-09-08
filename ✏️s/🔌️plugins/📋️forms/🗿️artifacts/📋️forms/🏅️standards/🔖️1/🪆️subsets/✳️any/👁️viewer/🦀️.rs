@@ -9,7 +9,7 @@ use crate::artifacts::forms::schema::building_component_spec;
 use crate::artifacts::forms::{FormsSnapshot, FORMS_DIALECT, FORMS_DOCUMENT_SCHEMA};
 use crate::viewer::forms::modes::view;
 use crate::viewer::forms::modes::view::windows::try_wizard;
-use semio_framework_plugin::{ArtifactView, ArtifactViewer, ConfigView, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, UiNode, ViewEmit, Viewer};
+use semio_framework_plugin::{ArtifactView, ArtifactViewer, ConfigView, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, ViewEmit, Viewer};
 // 🚧️ `Dialect`/`InteractionView` are only reachable through `app`, not yet in the crate-root
 // re-export list (see the identical note in the sibling editor surface's root `🦀️.rs`).
 use semio_framework_plugin::app::{Dialect, InteractionView};
@@ -65,10 +65,10 @@ impl ArtifactViewer for FormsViewer {
         Ok(ViewEmit::default())
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
+    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         match body_key {
-            try_wizard::BODY_KEY => try_wizard::render(doc.snapshot),
-            _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
+            try_wizard::BODY_KEY => Ok(semio_framework_plugin::built_to_component_tree(try_wizard::render(doc.snapshot)?)),
+            _ => semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
         }
     }
 }

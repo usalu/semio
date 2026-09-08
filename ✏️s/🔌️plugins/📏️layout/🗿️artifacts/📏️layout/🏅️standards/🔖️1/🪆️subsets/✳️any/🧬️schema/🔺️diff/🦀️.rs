@@ -7,8 +7,6 @@ use semio_framework_value_derive::{FromValue, ToValue};
 //#region 🔖️Diff
 /// 🔺️ Sparse field delta for the layout artifact; persistent entries apply via [`MutationDiff`](protocol::MutationDiff).
 #[derive(Clone, Debug, Default, PartialEq, ArtifactSchema, ToValue, FromValue)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
 #[value(rename_all = "camelCase", default)]
 #[artifact_schema(id = "s.layout.layout")]
 pub struct LayoutDiff {

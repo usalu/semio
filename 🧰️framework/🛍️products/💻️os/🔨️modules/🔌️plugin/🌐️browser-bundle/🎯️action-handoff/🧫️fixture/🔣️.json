@@ -1,0 +1,100 @@
+{
+  "request": {
+    "kind": "browser-actor-action",
+    "scope": { "spaceId": "space-a", "documentId": "map-a" },
+    "verifiedSurfaceId": "s.gis.gismap@1/editor",
+    "appChannelVersion": 14,
+    "activationGeneration": "41",
+    "instanceId": 7,
+    "surfaceRevision": 3,
+    "actionSequence": 9,
+    "command": [10, 1, 2, 3],
+    "viewState": [10, 4, 5]
+  },
+  "acknowledged": {
+    "kind": "browser-actor-action-result",
+    "scope": { "spaceId": "space-a", "documentId": "map-a" },
+    "verifiedSurfaceId": "s.gis.gismap@1/editor",
+    "appChannelVersion": 14,
+    "activationGeneration": "41",
+    "instanceId": 7,
+    "surfaceRevision": 3,
+    "actionSequence": 9,
+    "outcome": "acknowledged",
+    "mutationCount": 1
+  },
+  "rejected": {
+    "kind": "browser-actor-action-result",
+    "scope": { "spaceId": "space-a", "documentId": "map-a" },
+    "verifiedSurfaceId": "s.gis.gismap@1/editor",
+    "appChannelVersion": 14,
+    "activationGeneration": "41",
+    "instanceId": 7,
+    "surfaceRevision": 3,
+    "actionSequence": 9,
+    "outcome": "rejected",
+    "mutationCount": 0,
+    "reason": "action-refused"
+  },
+  "invocation": {
+    "address": {
+      "pluginId": "s.gis",
+      "appId": "s.gis.gismap@1/*#editor",
+      "modeId": "gis-map",
+      "windowKindId": "map",
+      "windowInstanceId": "map-1",
+      "actionId": "createRegion"
+    },
+    "arguments": { "windowId": "map-1", "name": "Region A" }
+  },
+  "hostileResults": [
+    {
+      "kind": "browser-actor-action-result",
+      "scope": { "spaceId": "space-b", "documentId": "map-a" },
+      "verifiedSurfaceId": "s.gis.gismap@1/editor",
+      "appChannelVersion": 14,
+      "activationGeneration": "41",
+      "instanceId": 7,
+      "surfaceRevision": 3,
+      "actionSequence": 9,
+      "outcome": "acknowledged",
+      "mutationCount": 1
+    },
+    {
+      "kind": "browser-actor-action-result",
+      "scope": { "spaceId": "space-a", "documentId": "map-a" },
+      "verifiedSurfaceId": "s.gis.gismap@1/editor",
+      "appChannelVersion": 14,
+      "activationGeneration": "42",
+      "instanceId": 7,
+      "surfaceRevision": 3,
+      "actionSequence": 9,
+      "outcome": "acknowledged",
+      "mutationCount": 1
+    },
+    {
+      "kind": "browser-actor-action-result",
+      "scope": { "spaceId": "space-a", "documentId": "map-a" },
+      "verifiedSurfaceId": "s.gis.gismap@1/editor",
+      "appChannelVersion": 14,
+      "activationGeneration": "41",
+      "instanceId": 7,
+      "surfaceRevision": 4,
+      "actionSequence": 9,
+      "outcome": "acknowledged",
+      "mutationCount": 1
+    },
+    {
+      "kind": "browser-actor-action-result",
+      "scope": { "spaceId": "space-a", "documentId": "map-a" },
+      "verifiedSurfaceId": "s.gis.gismap@1/editor",
+      "appChannelVersion": 14,
+      "activationGeneration": "41",
+      "instanceId": 7,
+      "surfaceRevision": 3,
+      "actionSequence": 10,
+      "outcome": "acknowledged",
+      "mutationCount": 1
+    }
+  ]
+}

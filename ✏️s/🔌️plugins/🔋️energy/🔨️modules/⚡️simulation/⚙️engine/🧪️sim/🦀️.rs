@@ -1126,6 +1126,7 @@ impl Drop for EnergyRestoreJob {
             ready: self.ready,
         };
         let mut registry = ENERGY_RESTORE_ABANDONMENT_REGISTRY.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
+        debug_assert!(matches!(registry.get(self.abandonment_slot), Some(EnergyRestoreAbandonmentSlot::Reserved(candidate)) if candidate.operation == self.operation.operation && candidate.generation == self.operation.generation));
         registry[self.abandonment_slot] = EnergyRestoreAbandonmentSlot::Abandoned(self.operation, Box::new(authority));
     }
 }
@@ -3312,7 +3313,7 @@ impl EnergyJobAuthority {
                 if self.timestep_work.is_none() && self.timestep_builder.is_none() {
                     let weather = *self.weather.get_index(self.warmup_hour as usize % self.weather.len()).expect("admitted warmup weather record");
                     let date = crate::calendar::SimDate::new(weather.year, weather.month, weather.day);
-                    self.timestep_builder = Some(TimestepBuilder::new(&self.model, pre, weather, date, self.warmup_hour as f64, pre.zone_timestep_s));
+                    self.timestep_builder = Some(TimestepBuilder::new(pre, weather, date, self.warmup_hour as f64, pre.zone_timestep_s));
                     return StepOutcome::Yield;
                 }
                 if self.timestep_work.is_none() {
@@ -3470,7 +3471,7 @@ impl EnergyJobAuthority {
                     weather.month = date.month;
                     weather.day = date.day;
                     weather.hour = hour;
-                    self.timestep_builder = Some(TimestepBuilder::new(&self.model, pre, weather, date, self.hour_index as f64, pre.zone_timestep_s));
+                    self.timestep_builder = Some(TimestepBuilder::new(pre, weather, date, self.hour_index as f64, pre.zone_timestep_s));
                     return StepOutcome::Yield;
                 }
                 if self.timestep_work.is_none() {
@@ -4782,7 +4783,8 @@ mod tests {
 
     fn build_checkpoint_packet(job: &mut EnergyJob) -> EnergyWirePacket {
         let operation = job.operation;
-        job.start_wire(EnergyWireKind::Checkpoint, job.hour_index as u64, semio_framework_job::JobPayloadStream::CheckpointState).expect("checkpoint preflight");
+        let hour_index = job.hour_index as u64;
+        job.start_wire(EnergyWireKind::Checkpoint, hour_index, semio_framework_job::JobPayloadStream::CheckpointState).expect("checkpoint preflight");
         let mut sequence = 0;
         for _ in 0..32 {
             let mut context = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX), CancelToken::root_now(), default_now_us, &mut sequence);

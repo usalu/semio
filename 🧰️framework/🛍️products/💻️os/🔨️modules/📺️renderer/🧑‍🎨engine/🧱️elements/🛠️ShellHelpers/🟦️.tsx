@@ -107,6 +107,7 @@ import {
   packValueFromBase64,
   packValueToBase64,
 } from "@semio-tech/framework-os";
+import type { DomainSelection, InteractionState } from "../../../../../../../🔨️modules/🕹️interaction/🟦️.ts";
 import {
   decodeWorldProjectionTemplateId,
 } from "@semio-tech/infinite-world-r3f";
@@ -2072,8 +2073,8 @@ export type ResolvedToolDefinition = Omit<ToolDefinition, "label"> & { readonly 
  * `options` `#[serde(default, skip_serializing_if = "Vec::is_empty")]`, so an absent field is exactly
  * an empty option set rather than a malformed schema. */
 type ActionArgStringSchema = Extract<ActionArgDef["schema"], { kind: "string" }>;
-function actionArgStringOptions(schema: ActionArgStringSchema): ActionArgStringSchema["options"] {
-  return (schema as ActionArgStringSchema & { options?: ActionArgStringSchema["options"] }).options ?? [];
+function actionArgStringOptions<T>(schema: { readonly options?: readonly T[] }): readonly T[] {
+  return schema.options ?? [];
 }
 
 function resolveActionArgDef(def: ActionArgDef, scopeId: string, overlay: PluginAppLabelsOverlay, terminology: string, locale: string): ResolvedActionArgDef {
@@ -2118,6 +2119,27 @@ export function resolveIntroductionDefinition(introduction: IntroductionDefiniti
 }
 
 //#region 🎥️TutorialUiBridge
+/** @emoji 🕹️ Copies the exact typed selection projection without retaining mutable manifest arrays or invoking special object keys. */
+function captureInteractionSelection(state: ShellState): TutorialUiSnapshot["interactionSelection"] {
+  const selection: Record<string, { granularity: string; ids: string[]; anchorId?: string }> = {};
+  for (const [domainId, current] of Object.entries(state.interaction.selection)) {
+    const captured = { granularity: current.granularity, ids: [...current.ids], ...(current.anchorId === undefined ? {} : { anchorId: current.anchorId }) };
+    Object.defineProperty(selection, domainId, { value: captured, enumerable: true, writable: true, configurable: true });
+  }
+  return selection;
+}
+
+/** @emoji 🛡️ Converts the generated optional-value map into the total runtime selection projection. */
+function tutorialInteractionSelection(selection: TutorialUiSnapshot["interactionSelection"]): InteractionState["selection"] {
+  const result: Record<string, DomainSelection> = {};
+  for (const [domainId, current] of Object.entries(selection)) {
+    if (!current) continue;
+    const captured = { granularity: current.granularity, ids: [...current.ids], ...(current.anchorId === undefined ? {} : { anchorId: current.anchorId }) };
+    Object.defineProperty(result, domainId, { value: captured, enumerable: true, writable: true, configurable: true });
+  }
+  return result;
+}
+
 /** @emoji 🎥️ Captures the shell's current `ShellState` (+ active session) as a renderer-neutral `TutorialUiSnapshot` — the recorder's periodic full-snapshot keyframes and the `TutorialBar`'s "record" path both call this. See the Rust doc comment on `TutorialUiSnapshot` for why this is deliberately NOT a serialization of `ShellState` itself. */
 export function captureTutorialUiSnapshot(state: ShellState, session: ActiveSession | null): TutorialUiSnapshot {
   const activeUtilityByWindowId: Record<string, string> = {};
@@ -2138,7 +2160,7 @@ export function captureTutorialUiSnapshot(state: ShellState, session: ActiveSess
     layout: captureCurrentFrameworkLayout(state.layout.shellLayout, state.layout.extraWindowInstances),
     activePanelTabByGroup,
     panelJson: session?.viewState.panelJson,
-    selectionJson: session?.viewState.selectionJson,
+    interactionSelection: captureInteractionSelection(state),
     openDialogId: state.overlays.dialog?.dialogId,
     expandedTreeIds: Object.entries(state.layout.treeOpenStates).filter(([, open]) => open).map(([id]) => id),
     commandPanelOpen: state.overlays.searchOpen,
@@ -2151,9 +2173,11 @@ export type TutorialUiBridgeContext = {
   readonly appLabelsOverlay: PluginAppLabelsOverlay;
   readonly terminology: string;
   readonly locale: string;
+  readonly interactionSelection: () => InteractionState["selection"];
+  readonly publishInteractionSelection: (selection: InteractionState["selection"]) => void;
 };
 
-/** @emoji 🎥️ Applies a full `TutorialUiSnapshot` (a `TutorialUiSample::Snapshot`, or the composed target of a seek/deviation-converge) onto the live `ShellState` — snaps every field instantly (camera is the only interpolated track, applied separately by the director). Dispatches the atomic `APPLY_TUTORIAL_UI_SNAPSHOT` for everything resolvable purely from `ShellState`, plus one `SET_SESSION` for the fields that live on `ActiveSession.viewState` (`activeModeId`/`panelJson`/`selectionJson`). */
+/** @emoji 🎥️ Applies a full `TutorialUiSnapshot` (a `TutorialUiSample::Snapshot`, or the composed target of a seek/deviation-converge) onto the live `ShellState` — snaps every field instantly (camera is the only interpolated track, applied separately by the director). Dispatches the atomic `APPLY_TUTORIAL_UI_SNAPSHOT` for shell-owned fields, including typed interaction selection, plus one `SET_SESSION` for `ActiveSession.viewState`'s `activeModeId`/`panelJson`. */
 export function applyTutorialUiSnapshotToShell(dispatch: (action: ShellAction) => void, snapshot: TutorialUiSnapshot, ctx: TutorialUiBridgeContext): void {
   const windowKinds = ctx.session?.app.windowKinds.map((kind) => ({ id: kind.id, label: kind.label })) ?? [];
   const seed = applyFrameworkLayoutSeed(snapshot.layout, windowKinds, ctx.appLabelsOverlay, ctx.terminology, ctx.locale);
@@ -2164,6 +2188,10 @@ export function applyTutorialUiSnapshotToShell(dispatch: (action: ShellAction) =
   }
   const treeOpenStates: Record<string, boolean> = {};
   for (const id of snapshot.expandedTreeIds) treeOpenStates[id] = true;
+  const activeUtilityByWindowId: Record<string, string | null> = {};
+  for (const [windowId, utilityId] of Object.entries(snapshot.activeUtilityByWindowId)) {
+    if (utilityId !== undefined) activeUtilityByWindowId[windowId] = utilityId;
+  }
   dispatch({
     type: "APPLY_TUTORIAL_UI_SNAPSHOT",
     snapshot: {
@@ -2172,12 +2200,13 @@ export function applyTutorialUiSnapshotToShell(dispatch: (action: ShellAction) =
       extraWindowInstances: seed.extraInstances,
       panelPatches,
       treeOpenStates,
-      activeUtilityByWindowId: snapshot.activeUtilityByWindowId,
+      activeUtilityByWindowId,
       activeToolId: snapshot.activeToolId ?? null,
       openDialogId: snapshot.openDialogId ?? null,
       commandPanelOpen: snapshot.commandPanelOpen,
     },
   });
+  ctx.publishInteractionSelection(tutorialInteractionSelection(snapshot.interactionSelection));
   if (ctx.session) {
     dispatch({
       type: "SET_SESSION",
@@ -2189,7 +2218,6 @@ export function applyTutorialUiSnapshotToShell(dispatch: (action: ShellAction) =
                 ...current.viewState,
                 activeModeId: snapshot.activeModeId ?? current.viewState.activeModeId,
                 panelJson: snapshot.panelJson ?? current.viewState.panelJson,
-                selectionJson: snapshot.selectionJson ?? current.viewState.selectionJson,
               },
             }
           : current,
@@ -2231,10 +2259,13 @@ export function applyTutorialUiChangeToShell(dispatch: (action: ShellAction) => 
       if (!ctx.session) return;
       dispatch({ type: "SET_SESSION", value: (current) => (current ? { ...current, viewState: { ...current.viewState, panelJson: change.panelJson } } : current) });
       return;
-    case "selection":
-      if (!ctx.session) return;
-      dispatch({ type: "SET_SESSION", value: (current) => (current ? { ...current, viewState: { ...current.viewState, selectionJson: change.selectionJson } } : current) });
+    case "selection": {
+      const selection = { ...ctx.interactionSelection() };
+      if (change.ids.length === 0) delete selection[change.domainId];
+      else Object.defineProperty(selection, change.domainId, { value: { granularity: change.granularity, ids: [...change.ids] }, enumerable: true, writable: true, configurable: true });
+      ctx.publishInteractionSelection(selection);
       return;
+    }
     case "dialog":
       dispatch({ type: "SET_DIALOG", value: change.id ? { dialogId: change.id, seedArgs: change.args as Record<string, unknown> | undefined } : null });
       return;
@@ -3254,7 +3285,7 @@ export function buildOsCommands(
   hasIntroduction: boolean,
   locks: ResolvedShellLocks = EMPTY_SHELL_LOCKS,
   driverList: readonly UiDriver[] = builtinUiDrivers(),
-  tutorials: readonly { readonly id: string; readonly title: LocalizedLabel | string }[] = [],
+  tutorials: readonly { readonly id: string; readonly title: unknown }[] = [],
   tutorialRecorderAvailable = false,
   terminology: string = UI_TERMINOLOGY_NATIVE,
   locale: string = SHELL_LOCALES[0],

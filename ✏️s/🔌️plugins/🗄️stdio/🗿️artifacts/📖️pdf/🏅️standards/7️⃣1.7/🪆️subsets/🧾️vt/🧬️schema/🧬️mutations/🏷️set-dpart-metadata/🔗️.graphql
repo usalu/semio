@@ -1,0 +1,4 @@
+# 🏷️ Direct set-dpart-metadata GraphQL payload.
+input SetDpartMetadataMutationInput {
+  job: String!
+}

@@ -12,7 +12,7 @@
 //! `🔖️Manifest` region that calls one `definition()` per node.
 
 use crate::artifacts::remodeling::op::RemodelingMutation;
-use crate::artifacts::remodeling::{default_remodeling_scene, FrameRef, ImageAsset, MediaKind, MediaStream, RemodelingSnapshot, REMODELING_DOCUMENT_SCHEMA};
+use crate::artifacts::remodeling::{FrameRef, ImageAsset, MediaKind, MediaStream, RemodelingSnapshot, REMODELING_DOCUMENT_SCHEMA};
 use crate::editor::remodeling::config::{RemodelingConfig, RemodelingConfigMutation};
 use crate::editor::remodeling::engine::images as remodeling_image;
 use crate::editor::remodeling::modes::{analyze, capture, model};
@@ -23,7 +23,7 @@ use semio_framework::{ToolExecutionContract, ToolFactoryKey, ToolJobFactoryError
 use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::retained_command::{ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
 use semio_framework_plugin::{
-    ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, AppDefinition, AppIo, AppOperationContext, ArtifactEditor, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry, ArtifactView, ConfigView, Dialect, DraftView,
+    ActionArgDef, ActionArgOption, ActionDefinition, ActionKind, AppDefinition, AppIo, AppOperationContext, ArtifactEditor, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry, ArtifactView, ConfigView, Dialect, DraftView,
     Editor, EditorApp, Emit, Fault, FaultCode, FaultOrigin, GlbExporter, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, InteractiveJobClassification, Label, LocalizedLabel, Media, MediaClass, MediaError,
     MediaForm, MediaPayload, MediaPortDirection, MediaPortSpec, MediaType, MergeMode, MeshExporter, NoDraft, NoDraftMutation, SelectionMethod, SelectionMode, SelectionSpec, UtilityCategory, UtilityDefinition, WindowMeasure,
 };
@@ -743,7 +743,7 @@ impl store::ArtifactStoreOneItemPreparationFactory<RemodelingSnapshot, Remodelin
 
 impl store::ArtifactStoreOneItemPreparation<RemodelingSnapshot, RemodelingMutation> for RemodelingStorePreparation {
     fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {
-        use protocol::{Mutation as _, MutationDiff as _};
+        use protocol::Mutation as _;
         if !grant.permits_one() || self.cancelled {
             return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked);
         }
@@ -858,7 +858,7 @@ impl store::ArtifactStoreOneItemPreparationFactory<RemodelingConfig, RemodelingC
 
 impl store::ArtifactStoreOneItemPreparation<RemodelingConfig, RemodelingConfigMutation> for RemodelingConfigStorePreparation {
     fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {
-        use protocol::{Mutation as _, MutationDiff as _};
+        use protocol::Mutation as _;
         if !grant.permits_one() || self.cancelled {
             return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked);
         }

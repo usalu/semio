@@ -8,7 +8,7 @@ use crate::artifacts::wires::{WiresSnapshot, MINDMAP_WIRES_SCHEMA, WIRES_DIALECT
 use crate::viewer::wires::modes::view;
 use crate::viewer::wires::modes::view::windows::canvas;
 use semio_framework_plugin::app::InteractionView;
-use semio_framework_plugin::{ArtifactView, ArtifactViewer, ConfigView, Dialect, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, UiNode, ViewEmit, Viewer};
+use semio_framework_plugin::{ArtifactView, ArtifactViewer, ConfigView, Dialect, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, UiAssemblyResult, ComponentTree, ViewEmit, Viewer};
 use store::EngineHandles;
 
 //#region 🔖️Command
@@ -62,11 +62,11 @@ impl ArtifactViewer for WiresViewer {
         Ok(ViewEmit::default())
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
+    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiAssemblyResult<ComponentTree> {
         match body_key {
             canvas::WIRES_VIEW_BODY_CANVAS => canvas::render(doc.snapshot),
-            _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
-        }
+            _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "wires diagnostic admission failed")),
+        }.map(semio_framework_plugin::built_to_component_tree)
     }
 }
 //#endregion 🔖️Viewer

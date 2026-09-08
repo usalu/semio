@@ -1,5 +1,5 @@
 //! 🧬️ Flow artifact — typed invertible semantic mutations over [`FlowSnapshot`]. Verbs drawn from
-//! the closed taxonomy (`.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📓️taxonomy.md`);
+//! the closed taxonomy (`.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📓️taxonomy.md`);
 //! every variant wraps a `MutationKind<FlowSnapshot, FlowMutation>` payload from its own
 //! `🧬️mutations/<kind>/` triad leaf. `impl Mutation`/`impl SemanticMutation` are
 //! `#[derive(protocol::Mutations)]`-generated — never hand-written.

@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "semio.plugin.fresh-source-epoch-laws/v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "limits", "files", "legs", "cases"],
+  "properties": {
+    "schema": { "const": "semio.plugin.fresh-source-epoch-laws/v1" },
+    "limits": { "const": { "fileBytes": 4194304, "totalBytes": 134217728, "files": 32768, "legs": 16 } },
+    "files": { "type": "array", "minItems": 1, "maxItems": 32768, "items": { "type": "object", "additionalProperties": false, "required": ["path", "text"], "properties": { "path": { "type": "string", "minLength": 1, "maxLength": 4096 }, "text": { "type": "string", "maxLength": 4194304 } } } },
+    "legs": { "type": "array", "minItems": 2, "maxItems": 16, "items": { "type": "object", "additionalProperties": false, "required": ["id", "package", "args", "inputs"], "properties": { "id": { "type": "string", "pattern": "^[a-z][a-z0-9-]*$" }, "package": { "type": "string", "pattern": "^[a-z][a-z0-9-]*$" }, "args": { "type": "array", "minItems": 1, "items": { "type": "string" } }, "inputs": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string", "minLength": 1 } } } } },
+    "cases": { "const": ["shared-epoch", "changed-before-first", "changed-between-legs", "changed-after-last", "unknown-compiler-input", "missing-input", "same-bytes-name-replacement", "linked-parent", "oversized-input", "changed-arguments", "changed-environment", "out-of-order-leg", "duplicate-leg-completion", "incomplete-finish", "cancelled", "deadline", "closed-owner"] }
+  }
+}

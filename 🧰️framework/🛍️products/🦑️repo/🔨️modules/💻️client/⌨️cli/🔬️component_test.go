@@ -46,9 +46,6 @@ func TestRepoMetaDirUsesSemioRoot(t *testing.T) {
 	if got != want {
 		t.Fatalf("GetRepoMetaDir() = %q, want %q", got, want)
 	}
-	if strings.Contains(got, ".🦑️repo") {
-		t.Fatalf("GetRepoMetaDir() retained legacy path: %q", got)
-	}
 }
 
 // #endregion 🧬️RepoMetaDir
@@ -1203,7 +1200,7 @@ func TestExhaustiveFilterTicketWorkspaceFiles(t *testing.T) {
 		FolderPath: filepath.Join(rootDir, ".🧬semio", "🦑️repo", "🎫️tickets", "26", "01", "20", "SAMPLE"),
 	}
 	files := []string{
-		".🦑️repo/🎫️tickets/26/01/20/SAMPLE/plan.md",
+		"./.🧬semio/🦑️repo/🎫️tickets/26/01/20/SAMPLE/plan.md",
 		"./.🧬semio/🦑️repo/🎫️tickets/26/01/20/SAMPLE/ticket.json",
 		filepath.Join(rootDir, ".🧬semio", "🦑️repo", "🎫️tickets", "26", "01", "20", "SAMPLE", "extra.txt"),
 		absMain,
@@ -13445,7 +13442,7 @@ func TestSearchMonorepoTreeWithCache(t *testing.T) {
 		t.Fatalf("mkdir .git: %v", err)
 	}
 	if err := os.MkdirAll(filepath.Join(tmpDir, ".🧬semio", "🦑️repo"), 0755); err != nil {
-		t.Fatalf("mkdir .🦑️repo: %v", err)
+		t.Fatalf("mkdir repo metadata directory: %v", err)
 	}
 	oldRoot := GetRootDir()
 	SetRootDir(tmpDir)
@@ -15202,7 +15199,7 @@ func TestFolderPolicySkipsExcludedDirs(t *testing.T) {
 	oldRoot := rootDir
 	rootDir = tmpDir
 	defer func() { rootDir = oldRoot }()
-	for _, dir := range []string{".git/objects", ".🦑️repo/cache", "node_modules/.cache"} {
+	for _, dir := range []string{".git/objects", ".🧬semio/🦑️repo/⚡️cache", "node_modules/.cache"} {
 		os.MkdirAll(filepath.Join(tmpDir, dir), 0755)
 	}
 	bundles := []Bundle{}
@@ -15304,7 +15301,7 @@ func TestFilePolicyGodfileSkipsComposeRepo(t *testing.T) {
 	breachs := filePolicy(ctx)
 	for _, v := range breachs {
 		if v.Kind == BreachFileIllegalUseGodfile && strings.HasPrefix(v.Excerpt, ".🧬semio") {
-			t.Errorf("should skip .🦑️repo files, got breach for %s", v.Excerpt)
+			t.Errorf("should skip .🧬semio files, got breach for %s", v.Excerpt)
 		}
 	}
 }
@@ -16709,7 +16706,7 @@ func writeRepoLoggingConfig(t *testing.T, root string, lg LoggingConfig) {
 	t.Helper()
 	repoDir := filepath.Join(root, ".🧬semio", "🦑️repo")
 	if err := os.MkdirAll(repoDir, 0o755); err != nil {
-		t.Fatalf("mkdir .🦑️repo: %v", err)
+		t.Fatalf("mkdir repo metadata directory: %v", err)
 	}
 	content := fmt.Sprintf("[logging]\nsession = %t\noperations = %t\nplan = %t\ndetail = \"%s\"\n",
 		lg.Session, lg.Operations, lg.Plan, lg.Detail)
@@ -18191,7 +18188,7 @@ func assertNoHookLogFiles(t *testing.T, tmpDir string) {
 	t.Helper()
 	logFiles := getLogFiles(t, tmpDir)
 	if len(logFiles) != 0 {
-		t.Fatalf("expected no hook log files under .🦑️repo/⚡️, got %v", logFiles)
+		t.Fatalf("expected no hook log files under .🧬semio/🦑️repo/⚡️cache, got %v", logFiles)
 	}
 }
 
@@ -18722,8 +18719,8 @@ func TestClassifyCommandKind(t *testing.T) {
 		{"locate", "locate main.go", ToolKindCodeSearch},
 		{"mlocate", "mlocate something", ToolKindCodeSearch},
 		{"ls", "ls -la", ToolKindCodeSearch},
-		{"ls piped", "ls .🦑️repo/ | head -20", ToolKindCodeSearch},
-		{"ls with redirect", "ls .🦑️repo/🎯️/ 2>/dev/null | head -20 || ls .🦑️repo/ | head -20", ToolKindCodeSearch},
+		{"ls piped", "ls .🧬semio/🦑️repo/ | head -20", ToolKindCodeSearch},
+		{"ls with redirect", "ls .🧬semio/🦑️repo/🎯️goals/ 2>/dev/null | head -20 || ls .🧬semio/🦑️repo/ | head -20", ToolKindCodeSearch},
 		{"exa", "exa --long", ToolKindCodeSearch},
 		{"eza", "eza --tree", ToolKindCodeSearch},
 		{"tree", "tree -L 2", ToolKindCodeSearch},
@@ -18927,7 +18924,7 @@ func TestResolveHookEventCommandReclassification(t *testing.T) {
 		{"find", "find . -name '*.go'"},
 		{"fd", "fd pattern"},
 		{"ls", "ls -la"},
-		{"ls piped", "ls .🦑️repo/ | head -20"},
+		{"ls piped", "ls .🧬semio/🦑️repo/ | head -20"},
 		{"cat", "cat file.txt"},
 		{"head", "head -20 file.txt"},
 		{"tail", "tail -f log.txt"},

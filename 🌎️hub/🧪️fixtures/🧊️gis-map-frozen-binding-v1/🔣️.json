@@ -8,7 +8,8 @@
       "version": "0.1.0",
       "componentSha256": "1111111111111111111111111111111111111111111111111111111111111111",
       "componentBlake3": "1212121212121212121212121212121212121212121212121212121212121212",
-      "descriptorByteSha256": "1313131313131313131313131313131313131313131313131313131313131313"
+      "descriptorByteSha256": "1313131313131313131313131313131313131313131313131313131313131313",
+      "executionProtocol": { "appChannelVersion": 14 }
     },
     "artifact": { "kind": "s.gis.gismap", "schema": "gis.map", "packSchemaHash": "1414141414141414141414141414141414141414141414141414141414141414" },
     "parentDialect": { "artifactKind": "s.gis.gismap", "standard": "1", "subset": "*" },
@@ -21,7 +22,7 @@
     },
     "nativeExecutable": "semio_s_plugin_gis::gis_map_inference_service"
   },
-  "expectedDigest": "435e02065db2d2e0694b6b1c468ee24ae8fe8711432f112f510aaa103a546386",
+  "expectedDigest": "24a934f552343221c667cbda44c83ecad1720a13515efb5b789d64af56a2ec0f",
   "hostile": [
     { "name": "catalog-generation", "path": ["catalogGenerationId"], "value": "0202020202020202020202020202020202020202020202020202020202020202", "accepted": false },
     { "name": "plugin", "path": ["package", "pluginId"], "value": "stdio", "accepted": false },
@@ -30,6 +31,7 @@
     { "name": "component-sha256", "path": ["package", "componentSha256"], "value": "2121212121212121212121212121212121212121212121212121212121212121", "accepted": false },
     { "name": "component-blake3", "path": ["package", "componentBlake3"], "value": "2222222222222222222222222222222222222222222222222222222222222222", "accepted": false },
     { "name": "descriptor-sha256", "path": ["package", "descriptorByteSha256"], "value": "2323232323232323232323232323232323232323232323232323232323232323", "accepted": false },
+    { "name": "execution-protocol", "path": ["package", "executionProtocol", "appChannelVersion"], "value": 13, "accepted": false },
     { "name": "artifact-kind", "path": ["artifact", "kind"], "value": "s.gis.terrain", "accepted": false },
     { "name": "artifact-schema", "path": ["artifact", "schema"], "value": "gis.terrain", "accepted": false },
     { "name": "pack-schema", "path": ["artifact", "packSchemaHash"], "value": "2424242424242424242424242424242424242424242424242424242424242424", "accepted": false },

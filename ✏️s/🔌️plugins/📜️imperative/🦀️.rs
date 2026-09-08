@@ -6,8 +6,8 @@ use semio_framework_plugin::plugin_app_close_prelude::*;
 use semio_framework_plugin::{ExecutionMode, Plugin, PluginApp};
 
 //#region 🗃️Apps
-/// 🗃️ Closed runtime app fleet for the imperative plugin's editor and viewer.
 semio_framework_dispatch_macros::dyn_enum_close! {
+    /// 🗃️ Closed runtime app fleet for the imperative plugin's editor and viewer.
     pub enum ImperativeApps: PluginApp {
         Editor(VcsArtifactApp<EditorApp<crate::editor::procedure::ImperativePlayApp>>),
         Viewer(VcsArtifactApp<ViewerApp<crate::viewer::procedure::ImperativeViewer>>),
@@ -53,12 +53,12 @@ mod surface_tests {
 
     #[semio_framework_async_macros::async_test]
     async fn imperative_viewer_never_mutates() {
-        assert_viewer_never_mutates::<crate::viewer::procedure::ImperativeViewer>();
+        assert_viewer_never_mutates::<crate::viewer::procedure::ImperativeViewer>().await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn imperative_editor_and_viewer_share_dialect() {
-        assert_editor_and_viewer_share_dialect::<crate::editor::procedure::ImperativePlayApp, crate::viewer::procedure::ImperativeViewer>();
+        assert_editor_and_viewer_share_dialect::<crate::editor::procedure::ImperativePlayApp, crate::viewer::procedure::ImperativeViewer>().await;
     }
 }
 //#endregion 🧪️Tests

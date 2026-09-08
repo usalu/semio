@@ -1,0 +1,190 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "root",
+    "transfers",
+    "completion",
+    "recovery"
+  ],
+  "properties": {
+    "schema": {
+      "const": "semio.db.catalog-read-ownership/v1"
+    },
+    "root": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "bytes",
+        "epoch",
+        "key"
+      ],
+      "properties": {
+        "bytes": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 4096,
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
+          }
+        },
+        "epoch": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "key": {
+          "const": "root"
+        }
+      }
+    },
+    "transfers": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "phase",
+          "closeBlocked",
+          "admissionRetained",
+          "storageRetained",
+          "submissionsWhileActive",
+          "finalEmpty"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "phase": {
+            "enum": [
+              "Handoff",
+              "RetainWork",
+              "Poll"
+            ]
+          },
+          "closeBlocked": {
+            "const": true
+          },
+          "admissionRetained": {
+            "const": true
+          },
+          "storageRetained": {
+            "const": true
+          },
+          "submissionsWhileActive": {
+            "const": 0
+          },
+          "finalEmpty": {
+            "const": true
+          }
+        }
+      }
+    },
+    "completion": {
+      "type": "array",
+      "minItems": 8,
+      "maxItems": 8,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "publication",
+          "outcome",
+          "admissionDuringPublication",
+          "retirementSubmissions",
+          "lateSubmissions",
+          "terminalEmpty"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "publication": {
+            "enum": [
+              "synchronous",
+              "before-wake",
+              "after-finalizer-check",
+              "refused-finalizer"
+            ]
+          },
+          "outcome": {
+            "enum": [
+              "pages",
+              "backend-fault"
+            ]
+          },
+          "admissionDuringPublication": {
+            "type": "boolean"
+          },
+          "retirementSubmissions": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "lateSubmissions": {
+            "const": 0
+          },
+          "terminalEmpty": {
+            "const": true
+          }
+        }
+      }
+    },
+    "recovery": {
+      "type": "array",
+      "minItems": 8,
+      "maxItems": 8,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "path",
+          "outcome",
+          "staleRetrySubmissions",
+          "checkoutBlocksRetirement",
+          "terminalEmpty"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "path": {
+            "enum": [
+              "retry",
+              "terminal-completion",
+              "terminal-result",
+              "spent-work"
+            ]
+          },
+          "outcome": {
+            "enum": [
+              "pages",
+              "backend-fault"
+            ]
+          },
+          "staleRetrySubmissions": {
+            "const": 0
+          },
+          "checkoutBlocksRetirement": {
+            "type": "boolean"
+          },
+          "terminalEmpty": {
+            "const": true
+          }
+        }
+      }
+    }
+  }
+}

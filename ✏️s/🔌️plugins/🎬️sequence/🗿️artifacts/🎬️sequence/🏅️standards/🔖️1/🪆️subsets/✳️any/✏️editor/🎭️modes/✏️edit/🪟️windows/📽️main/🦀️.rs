@@ -3,8 +3,7 @@
 use crate::artifacts::sequence::SequenceSnapshot;
 use crate::editor::sequence::config::SequenceConfig;
 use crate::editor::sequence::host_from_snapshot;
-use crate::editor::sequence::SEQUENCE_PLAY_APP_ID;
-use semio_framework_plugin::{build_node_graph_scene, LocalizedLabel, NodeGraphEdgeRecord, NodeGraphNodeRecord, NodeGraphPortRecord, NodeGraphScene, NodeGraphViewport, SurfaceKind, UiNode, WindowKindDefinition, WindowOptions};
+use semio_framework_plugin::{LocalizedLabel, NodeGraphEdgeRecord, NodeGraphNodeRecord, NodeGraphPortRecord, NodeGraphScene, NodeGraphViewport, SurfaceKind, BuiltNode, UiAssemblyResult, WindowKindDefinition, WindowOptions};
 
 //#region 🔖️Constants
 pub const SEQUENCE_PLAY_WINDOW_MAIN: &str = "sequence-main";
@@ -69,7 +68,7 @@ fn fixture_to_workflow(fixture: &infinite_board_port_directed_dag::DagFixture) -
 //#endregion 🔖️Helpers
 
 //#region 🔖️Render
-pub fn render(fixture: &SequenceSnapshot, config: &SequenceConfig) -> UiNode {
+pub fn render(fixture: &SequenceSnapshot, config: &SequenceConfig) -> UiAssemblyResult<BuiltNode> {
     let mut host = host_from_snapshot(fixture);
     host.layout_expanded_slots();
     let (nodes, edges) = fixture_to_workflow(&host.dag.fixture);
@@ -81,7 +80,7 @@ pub fn render(fixture: &SequenceSnapshot, config: &SequenceConfig) -> UiNode {
     // at `NodeGraphScene::base`'s defaults (empty/none) — the canvas no longer paints a live
     // highlight until a future wave threads interaction into scene rendering. Flagged as a
     // discovered framework gap, not worked around here (same gap `space`'s workflow window carries).
-    build_node_graph_scene(SEQUENCE_PLAY_SURFACE_MAIN, SEQUENCE_PLAY_APP_ID, NodeGraphScene { editable: Some(true), ..NodeGraphScene::base(nodes, edges, viewport) })
+    semio_framework_plugin::scene_surface(SEQUENCE_PLAY_SURFACE_MAIN, semio_framework_ui_contract::SurfaceKind::NodeGraph, &NodeGraphScene { editable: Some(true), ..NodeGraphScene::base(nodes, edges, viewport) })
 }
 //#endregion 🔖️Render
 
@@ -93,8 +92,8 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn renders_node_graph_scene() {
-        let mut app = new_app();
-        assert!(render_body(&mut app, SEQUENCE_PLAY_BODY_MAIN).contains("node-graph"));
+        let mut app = new_app().await;
+        assert!(render_body(&mut app, SEQUENCE_PLAY_BODY_MAIN).await.contains("node-graph"));
     }
 
     #[semio_framework_async_macros::async_test]

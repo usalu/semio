@@ -1,0 +1,40 @@
+{
+  "schema": "semio.os.document-opening-attempt/v1",
+  "runtime": { "spaceId": "space-a", "documentId": "same-document" },
+  "attemptA": "11111111-1111-4111-8111-111111111111",
+  "attemptB": "22222222-2222-4222-8222-222222222222",
+  "cases": [
+    { "name": "first-open-a", "current": null, "incoming": "a", "kind": "open", "accepted": true, "replaced": false, "currentAfter": "a" },
+    { "name": "replace-a-with-b", "current": "a", "incoming": "b", "kind": "open", "accepted": true, "replaced": true, "currentAfter": "b" },
+    { "name": "duplicate-b", "current": "b", "incoming": "b", "kind": "open", "accepted": false, "replaced": false, "currentAfter": "b" },
+    { "name": "stale-a-event", "current": "b", "incoming": "a", "kind": "event", "accepted": false, "replaced": false, "currentAfter": "b" },
+    { "name": "stale-a-patch", "current": "b", "incoming": "a", "kind": "patch", "accepted": false, "replaced": false, "currentAfter": "b" },
+    { "name": "stale-a-send", "current": "b", "incoming": "a", "kind": "send", "accepted": false, "replaced": false, "currentAfter": "b" },
+    { "name": "stale-a-close", "current": "b", "incoming": "a", "kind": "close", "accepted": false, "replaced": false, "currentAfter": "b" },
+    { "name": "matching-b-event", "current": "b", "incoming": "b", "kind": "event", "accepted": true, "replaced": false, "currentAfter": "b" },
+    { "name": "matching-b-send", "current": "b", "incoming": "b", "kind": "send", "accepted": true, "replaced": false, "currentAfter": "b" },
+    { "name": "matching-b-close", "current": "b", "incoming": "b", "kind": "close", "accepted": true, "replaced": false, "currentAfter": null },
+    { "name": "missing-token", "current": "b", "incoming": null, "kind": "send", "accepted": false, "replaced": false, "currentAfter": "b" },
+    { "name": "malformed-token", "current": "b", "incoming": "malformed", "kind": "close", "accepted": false, "replaced": false, "currentAfter": "b" }
+  ],
+  "rebootstrapCases": [
+    { "name": "exact-attempt-retires-old-actor", "currentOwner": "actor-a", "entryClient": "a", "messageClient": "a", "messageAccepted": true, "ownerRemoved": true, "ownerAfter": null, "freshBaseZeroAccepted": true },
+    { "name": "stale-attempt-cannot-retire-current-actor", "currentOwner": "actor-a", "entryClient": "b", "messageClient": "a", "messageAccepted": false, "ownerRemoved": false, "ownerAfter": "actor-a", "freshBaseZeroAccepted": false },
+    { "name": "exact-attempt-without-old-actor-remains-ready", "currentOwner": null, "entryClient": "b", "messageClient": "b", "messageAccepted": true, "ownerRemoved": false, "ownerAfter": null, "freshBaseZeroAccepted": true }
+  ],
+  "sourceHostiles": [
+    "shell-open-without-token",
+    "waiter-keyed-by-runtime-only",
+    "unconditional-finally-delete",
+    "unstamped-shell-close",
+    "worker-mints-shell-token",
+    "owner-entry-without-token",
+    "stale-worker-send",
+    "stale-worker-close",
+    "unstamped-state-event",
+    "unstamped-patch-envelope",
+    "inner-patch-schema-widened",
+    "replacement-without-retirement",
+    "rebootstrap-without-ui-owner-retirement"
+  ]
+}

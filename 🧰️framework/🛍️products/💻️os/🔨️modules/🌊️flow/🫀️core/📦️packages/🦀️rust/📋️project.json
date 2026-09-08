@@ -3,34 +3,60 @@
   "root": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/📦️packages/🦀️rust",
   "sourceRoot": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/📦️packages/🦀️rust",
   "projectType": "library",
-  "tags": ["type:rust", "scope:os", "flow", "wasm"],
+  "tags": [
+    "type:rust",
+    "scope:os",
+    "flow",
+    "wasm"
+  ],
   "targets": {
     "declarations": {
       "executor": "nx:run-commands",
-      "options": {"command":"bun ./📜️script.ts declarations", "cwd":"{projectRoot}"}
+      "options": {
+        "command": "bun ./📜️script.ts declarations",
+        "cwd": "{projectRoot}"
+      }
     },
     "check": {
       "executor": "nx:run-commands",
-      "options": {"command":"bun ./📜️script.ts check", "forwardAllArgs":true, "cwd":"{projectRoot}"}
+      "options": {
+        "command": "bun ./📜️script.ts check",
+        "forwardAllArgs": true,
+        "cwd": "{projectRoot}"
+      }
     },
     "test-browser": {
       "executor": "nx:run-commands",
-      "options": { "command": "bun ./📜️script.ts test-browser", "cwd": "{projectRoot}" }
+      "options": {
+        "command": "bun ./📜️script.ts test-browser",
+        "cwd": "{projectRoot}"
+      }
     },
     "test-browser-clock": {
       "executor": "nx:run-commands",
-      "options": { "command": "bun ./📜️script.ts test-browser-clock", "cwd": "{projectRoot}" }
+      "options": {
+        "command": "bun ./📜️script.ts test-browser-clock",
+        "cwd": "{projectRoot}"
+      }
     },
     "test-source": {
       "executor": "nx:run-commands",
-      "options": {"command":"bun ./📜️script.ts test-source", "cwd":"{projectRoot}"}
+      "options": {
+        "command": "bun ./📜️script.ts test-source",
+        "cwd": "{projectRoot}"
+      }
     },
     "wasm": {
       "executor": "nx:run-commands",
       "options": {
         "command": "bun ./📜️script.ts wasm",
         "cwd": "{projectRoot}"
-      }
+      },
+      "outputs": [
+        "{projectRoot}/../../🕸️bindings",
+        "{projectRoot}/../../../📦️packages/🦀️rust/🕸️bindings"
+      ],
+      "cache": true
     },
     "test": {
       "executor": "nx:run-commands",
@@ -39,5 +65,8 @@
         "cwd": "{projectRoot}"
       }
     }
-  }
+  },
+  "implicitDependencies": [
+    "semio-framework-os-flow"
+  ]
 }

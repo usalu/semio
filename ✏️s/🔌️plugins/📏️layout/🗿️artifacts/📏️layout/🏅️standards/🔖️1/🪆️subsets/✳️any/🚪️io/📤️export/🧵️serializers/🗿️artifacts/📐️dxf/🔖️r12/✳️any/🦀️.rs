@@ -5,6 +5,5 @@ use semio_s_plugin_stdio::artifacts::dxf::DxfSnapshot;
 pub fn register() {}
 
 pub fn serialize(from: &LayoutSnapshot) -> Result<DxfSnapshot, store::PackError> {
-    let value = serde_json::to_value(from).map_err(|e| store::PackError::Schema(e.to_string()))?;
-    serde_json::from_value(value).map_err(|e| store::PackError::Schema(e.to_string()))
+    <DxfSnapshot as dsl::FromValue>::from_value(dsl::ToValue::to_value(from)).map_err(|error| store::PackError::Schema(error.to_string()))
 }

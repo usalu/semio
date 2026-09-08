@@ -68,6 +68,7 @@ impl Dispatcher {
 
 /// 🎛️ Stable one-equipment-at-a-time dispatch cursor over pre-admitted input order.
 #[derive(Clone, Debug, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[cfg(test)]
 pub(crate) struct DispatchBuilder {
     request: DispatchRequest,
     stage: DispatchStage,
@@ -80,12 +81,14 @@ pub(crate) struct DispatchBuilder {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[cfg(test)]
 pub(crate) enum DispatchFault {
     ResultBacking,
     UnorderedPriority,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive)]
+#[cfg(test)]
 pub(crate) enum DispatchStage {
     Reserve,
     ValidateOrder,
@@ -94,6 +97,7 @@ pub(crate) enum DispatchStage {
     Complete,
 }
 
+#[cfg(test)]
 impl DispatchBuilder {
     pub(crate) fn new(request: DispatchRequest) -> Self {
         let remaining_w = request.total_load_w;
@@ -102,10 +106,6 @@ impl DispatchBuilder {
 
     pub(crate) fn is_complete(&self) -> bool {
         self.stage == DispatchStage::Complete
-    }
-
-    pub(crate) fn fault(&self) -> Option<DispatchFault> {
-        self.fault
     }
 
     pub(crate) fn step(&mut self, dispatcher: &Dispatcher) {
@@ -174,12 +174,6 @@ impl DispatchBuilder {
         self.fault.map_or(Ok(self.results), Err)
     }
 
-    pub(crate) fn close_step(&mut self, maximum_items: usize) -> bool {
-        if maximum_items == 0 {
-            return false;
-        }
-        self.results.pop().is_none()
-    }
 }
 // #endregion 🔖️Dispatcher
 

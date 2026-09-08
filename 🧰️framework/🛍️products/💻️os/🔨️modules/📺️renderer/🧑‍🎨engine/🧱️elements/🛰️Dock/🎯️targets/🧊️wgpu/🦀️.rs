@@ -1173,10 +1173,10 @@ fn render_stack(state: &DockState, ctx: &mut DockRenderContext<'_>, path: &[usiz
     }
     let theme = ctx.theme;
     let tab_h = theme.control_height;
-    let stroke = theme.stroke_hairline;
+    let _stroke = theme.stroke_hairline;
     let globally_active = state.active_stack.as_ref().map(|p| p.as_slice()) == Some(path);
     let stack_hovered = bounds.contains(ctx.input.pointer_x, ctx.input.pointer_y);
-    let border = if globally_active {
+    let _border = if globally_active {
         theme.accent
     } else if stack_hovered {
         theme.border_emphasized
@@ -1515,7 +1515,7 @@ fn collect_stack_bodies(
             }
         }
         DockNode::Stack { windows, active } => {
-            let maximized = state.maximized_stack.as_ref().map(|p| p.as_slice()) == Some(path);
+            let _maximized = state.maximized_stack.as_ref().map(|p| p.as_slice()) == Some(path);
             let layout = layout_stack_cap(windows, window_labels, &HashMap::new(), atlas, theme, bounds);
             let silhouette = stack_window_silhouette(bounds, theme, &layout);
             out.push((path.to_vec(), silhouette.safe_body_rect(), active.clone()));

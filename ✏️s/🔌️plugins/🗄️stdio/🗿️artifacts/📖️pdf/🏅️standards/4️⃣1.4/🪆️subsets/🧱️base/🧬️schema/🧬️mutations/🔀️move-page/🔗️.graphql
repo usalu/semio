@@ -1,0 +1,4 @@
+# 🔀️ move-page payload.
+input MovePageInput {
+  from: Pdf14Index!
+  to: Pdf14Index!

@@ -21,6 +21,7 @@ use semio_framework_plugin::{
     AppOperationContext, ArtifactEditor, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView, ComponentTree, ConfigView, Dialect, DraftView, Editor, EditorApp, Emit, Fault, InteractiveJobClassification, Label, LocalizedLabel,
     NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, UiAssemblyResult,
 };
+#[cfg(test)]
 use dsl::os_pack::json::{parse, Value};
 use store::EngineHandles;
 

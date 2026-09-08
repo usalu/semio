@@ -34,8 +34,8 @@ fn entries() -> &'static [IoEntry] {
                 serializer_entry::<WriterSnapshot, export::json::v_rfc8259::any::WriterIntoJson>(WRITER_DIALECT),
                 deserializer_entry::<WriterSnapshot, import::md::v_commonmark::any::MdIntoWriter>(WRITER_DIALECT),
                 serializer_entry::<WriterSnapshot, export::md::v_commonmark::any::WriterIntoMd>(WRITER_DIALECT),
-                deserializer_entry::<WriterSnapshot, import::pdf::v1_4::any::PdfIntoWriter>(WRITER_DIALECT),
-                serializer_entry::<WriterSnapshot, export::pdf::v1_4::any::WriterIntoPdf>(WRITER_DIALECT),
+                deserializer_entry::<WriterSnapshot, import::pdf::v1_4::base::PdfIntoWriter>(WRITER_DIALECT),
+                serializer_entry::<WriterSnapshot, export::pdf::v1_4::base::WriterIntoPdf>(WRITER_DIALECT),
                 deserializer_entry::<WriterSnapshot, import::docx::v_ecma_376::any::DocxIntoWriter>(WRITER_DIALECT),
                 serializer_entry::<WriterSnapshot, export::docx::v_ecma_376::any::WriterIntoDocx>(WRITER_DIALECT),
             ]

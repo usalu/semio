@@ -11,7 +11,6 @@ use semio_framework_value_derive::{FromValue, ToValue};
 //#region 🔖️Helpers
 /// ✂️ Nudge step magnitudes: `1px` fine, `10px` fast.
 const NUDGE_STEP: f64 = 1.0;
-const NUDGE_STEP_FAST: f64 = 10.0;
 
 /// 🧬️ Offsets every unlocked selected block by `(dx, dy)` — one `drag-blocks` mutation for the
 /// whole gesture (real multi-select drag), never a whole-`blocks` vec swap.
@@ -71,11 +70,11 @@ mod tests {
             (NoteCommand::NudgeSelectionLeft(crate::editor::note::commands::nudge_selection_left::NudgeSelectionLeft {}), -1.0, 0.0),
             (NoteCommand::NudgeSelectionRight(crate::editor::note::commands::nudge_selection_right::NudgeSelectionRight {}), 1.0, 0.0),
         ] {
-            let mut app = note_app_with_registry();
-            dispatch(&mut app, NoteCommand::AddBlock(crate::editor::note::commands::add_block::AddBlock { kind: "text".into(), x: 0.0, y: 0.0 }));
+            let mut app = note_app_with_registry().await;
+            dispatch(&mut app, NoteCommand::AddBlock(crate::editor::note::commands::add_block::AddBlock { kind: "text".into(), x: 0.0, y: 0.0 })).await;
             let new_id = block_id(&app.snapshot().expect("snapshot").blocks[0]).to_string();
-            select_blocks(&mut app, &[&new_id]);
-            let operations = dispatch(&mut app, command.clone()).mutations.len();
+            select_blocks(&mut app, &[&new_id]).await;
+            let operations = dispatch(&mut app, command.clone()).await.mutations.len();
             assert_eq!(operations, 1, "{command:?} should emit one operation");
             let projection = app.snapshot().expect("snapshot");
             let (x, y, ..) = block_bounds(&projection.blocks[0]);
@@ -85,11 +84,11 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn nudge_fast_actions_use_ten_pixel_step() {
-        let mut app = note_app_with_registry();
-        dispatch(&mut app, NoteCommand::AddBlock(crate::editor::note::commands::add_block::AddBlock { kind: "text".into(), x: 0.0, y: 0.0 }));
+        let mut app = note_app_with_registry().await;
+        dispatch(&mut app, NoteCommand::AddBlock(crate::editor::note::commands::add_block::AddBlock { kind: "text".into(), x: 0.0, y: 0.0 })).await;
         let new_id = block_id(&app.snapshot().expect("snapshot").blocks[0]).to_string();
-        select_blocks(&mut app, &[&new_id]);
-        dispatch(&mut app, NoteCommand::NudgeSelectionRightFast(crate::editor::note::commands::nudge_selection_right_fast::NudgeSelectionRightFast {}));
+        select_blocks(&mut app, &[&new_id]).await;
+        dispatch(&mut app, NoteCommand::NudgeSelectionRightFast(crate::editor::note::commands::nudge_selection_right_fast::NudgeSelectionRightFast {})).await;
         let projection = app.snapshot().expect("snapshot");
         let (x, y, ..) = block_bounds(&projection.blocks[0]);
         assert_eq!((x, y), (10.0, 0.0));

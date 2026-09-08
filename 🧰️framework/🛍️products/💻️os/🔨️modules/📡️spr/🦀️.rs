@@ -3,11 +3,11 @@
 //! collaboration semantics layer added by the `INTRODUCE-DB-PROTOCOL-COMMAND-LAYER-AND-VCS-SLIMMING`
 //! amendment (`protocol_command/causal/conflict/wire`) — `protocol_crdt` was deleted in favor of
 //! `protocol_conflict`'s first-class quarantine/degrade model
-//! (`.🦑️repo/🎫️tickets/26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS`).
+//! (`.🧬semio/🦑️repo/🎫️tickets/26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS`).
 //! Every downstream crate (`db`, `vcs`, app-layer
 //! `#[derive(crate::os_dsl::DslOps)]` consumers) depends on `protocol`, never on the individual sub-crates
 //! directly, so this file's re-export surface IS the family's frozen public API. Frozen contracts:
-//! `.🦑️repo/🎫️tickets/26/07/27/PROTOCOL-BINARY-OP-LOG-LAYER/contract.md` (`## protocol (facade)` +
+//! `.🧬semio/🦑️repo/🎫️tickets/26/07/27/PROTOCOL-BINARY-OP-LOG-LAYER/contract.md` (`## protocol (facade)` +
 //! `### protocol (facade) — additional re-exports`).
 
 //#region 🔖️Reexports
@@ -28,15 +28,16 @@ pub use crate::os_spr::causal::{
 };
 pub use crate::os_spr::channel::{
     decode_app_frame, encode_app_command, encode_app_frame, encode_local_interaction_query_frame_into, AppCommand, AppFrame, ChildPackEntry, DecodedAppCommandOwner, PagedAppCommandDecodeCursor, PresenceCommandCursor, CHANNEL_VERSION,
+    INVOCATION_RESULT_PACK_MAXIMUM_BYTES,
 };
 pub use crate::os_spr::command::{
     apply_collection_mutation, collection_diff_from_mutation, fold_plan_diff, fold_plan_inverse, indexed_apply, inverse_collection_mutation, is_approved_verb, mutation_descriptor, named_apply, plan_foreign_steps, plan_of,
     register_mutation_descriptor, register_mutation_descriptors, str_eq, validate_mutation_leaf_descriptor, validate_mutation_leaf_descriptor_roster, validate_mutation_leaf_descriptor_roster_uniqueness, validate_mutation_leaf_source, worst_level,
     CollectionDiff, CollectionMutation, CommandOutcome, CompositeMutationKind, DiffAlgebra, DiffCodec, DiffRegions, Edit, ForeignStep, ForeignTarget, Identified, IndexedTripleDiff, Inference, InferenceFieldSpec, InferenceSpec, ItemPatch, Mutation,
     MutationApplyError, MutationApplyResult, MutationComposition, MutationDescriptor, MutationDescriptorError, MutationDescriptorRegistry, MutationDiff, MutationDiffParticipation, MutationDomainOperation, MutationEvent, MutationInvertibility,
-    MutationKind, MutationLanguageSurface, MutationLeaf, MutationLeafDescriptor, MutationLeafDescriptorRosterValidationError, MutationLeafDescriptorValidationError, MutationLeafSourceScope, ValidatedMutationLeafSourceScope, MutationLeafSourceValidationError, MutationMessage,
+    MutationKind, MutationLanguageSurface, MutationLeaf, MutationLeafDescriptor, MutationLeafDescriptorRosterValidationError, MutationLeafDescriptorValidationError, MutationLeafSourceScope, MutationLeafSourceValidationError, MutationMessage,
     MutationMeta, MutationOrigin, MutationOutcome, MutationOutcomeClass, MutationOwnerLayout, MutationSourceProvenance, MutationUpcaster, NamedTripleDiff, OpBinary, OpText, Patchable, PlanError, PlanStep, Planner, SemanticDescriptor,
-    SemanticMutation, TouchedPaths, APPROVED_VERBS, MAX_PLAN_DEPTH,
+    SemanticMutation, TouchedPaths, ValidatedMutationLeafSourceScope, APPROVED_VERBS, MAX_PLAN_DEPTH,
 };
 pub use crate::os_spr::conflict::{Conflict, ConflictId, ConflictKind, ConflictResolution, ConflictStatus, DispatchReport, EditMessages, MergeReport};
 pub use crate::os_spr::wire::{

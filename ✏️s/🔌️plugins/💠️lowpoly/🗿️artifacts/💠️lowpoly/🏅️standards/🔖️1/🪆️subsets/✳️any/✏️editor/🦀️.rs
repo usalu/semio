@@ -26,7 +26,7 @@ use semio_framework_plugin::app::{ArtifactOwnedToolJobContext, InteractionView};
 use semio_framework_plugin::retained_command::{ArtifactCommandWork, ArtifactCommandWorkStep, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload};
 use semio_framework_plugin::{
     ActionArgDef, ActionArgOption, ActionDescriptor, ActionRef, AppOperationContext, ArtifactEditor, ArtifactOwnedToolJobFactory, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry, DraftView,
-    Editor, EditorApp, EphemeralEmit, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, LabelText, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, MergeMode,
+    Editor, EditorApp, EphemeralEmit, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, LabelText, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, MergeMode,
     NoDraft, NoDraftMutation, SelectionMethod, SelectionMode, SelectionSpec, UtilityCategory, UtilityDefinition, WindowEngagement, WindowEngagementInput, WindowEngagementOption, WindowEngagementPossible, WindowEngagementStatus,
     WindowMeasure,
 };
@@ -2396,3 +2396,6 @@ mod tests {
     //#endregion 🔖️ContextMenuRegistry
 }
 //#endregion 🧪️Tests
+
+#[cfg(test)]
+use semio_framework_plugin::InteractionRef;

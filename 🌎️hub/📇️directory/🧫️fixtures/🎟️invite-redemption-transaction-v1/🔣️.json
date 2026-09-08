@@ -20,12 +20,8 @@
         }
       ],
       "expected": {
-        "outcomes": [
-          "newly-committed"
-        ],
-        "returnedEventIds": [
-          "event-1"
-        ],
+        "outcomes": ["newly-committed"],
+        "returnedEventIds": ["event-1"],
         "marker": {
           "acceptedAt": 101,
           "acceptedEventId": "event-1"
@@ -51,12 +47,8 @@
         }
       ],
       "expected": {
-        "outcomes": [
-          "already-committed"
-        ],
-        "returnedEventIds": [
-          "event-0"
-        ],
+        "outcomes": ["already-committed"],
+        "returnedEventIds": ["event-0"],
         "marker": {
           "acceptedAt": 100,
           "acceptedEventId": "event-0"
@@ -89,14 +81,8 @@
         }
       ],
       "expected": {
-        "outcomes": [
-          "newly-committed",
-          "already-committed"
-        ],
-        "returnedEventIds": [
-          "event-1",
-          "event-1"
-        ],
+        "outcomes": ["newly-committed", "already-committed"],
+        "returnedEventIds": ["event-1", "event-1"],
         "marker": {
           "acceptedAt": 101,
           "acceptedEventId": "event-1"
@@ -129,14 +115,8 @@
         }
       ],
       "expected": {
-        "outcomes": [
-          "newly-committed",
-          "conflict"
-        ],
-        "returnedEventIds": [
-          "event-1",
-          null
-        ],
+        "outcomes": ["newly-committed", "conflict"],
+        "returnedEventIds": ["event-1", null],
         "marker": {
           "acceptedAt": 101,
           "acceptedEventId": "event-1"
@@ -162,12 +142,8 @@
         }
       ],
       "expected": {
-        "outcomes": [
-          "conflict"
-        ],
-        "returnedEventIds": [
-          null
-        ],
+        "outcomes": ["conflict"],
+        "returnedEventIds": [null],
         "marker": {
           "acceptedAt": 100,
           "acceptedEventId": "event-0"
@@ -193,12 +169,8 @@
         }
       ],
       "expected": {
-        "outcomes": [
-          "unauthorized"
-        ],
-        "returnedEventIds": [
-          null
-        ],
+        "outcomes": ["unauthorized"],
+        "returnedEventIds": [null],
         "marker": {
           "acceptedAt": null,
           "acceptedEventId": null
@@ -224,12 +196,8 @@
         }
       ],
       "expected": {
-        "outcomes": [
-          "unauthorized"
-        ],
-        "returnedEventIds": [
-          null
-        ],
+        "outcomes": ["unauthorized"],
+        "returnedEventIds": [null],
         "marker": {
           "acceptedAt": null,
           "acceptedEventId": null
@@ -255,12 +223,8 @@
         }
       ],
       "expected": {
-        "outcomes": [
-          "conflict"
-        ],
-        "returnedEventIds": [
-          null
-        ],
+        "outcomes": ["conflict"],
+        "returnedEventIds": [null],
         "marker": {
           "acceptedAt": null,
           "acceptedEventId": null
@@ -286,12 +250,8 @@
         }
       ],
       "expected": {
-        "outcomes": [
-          "conflict"
-        ],
-        "returnedEventIds": [
-          null
-        ],
+        "outcomes": ["conflict"],
+        "returnedEventIds": [null],
         "marker": {
           "acceptedAt": null,
           "acceptedEventId": null
@@ -317,12 +277,8 @@
         }
       ],
       "expected": {
-        "outcomes": [
-          "unauthorized"
-        ],
-        "returnedEventIds": [
-          null
-        ],
+        "outcomes": ["unauthorized"],
+        "returnedEventIds": [null],
         "marker": {
           "acceptedAt": null,
           "acceptedEventId": null
@@ -348,12 +304,8 @@
         }
       ],
       "expected": {
-        "outcomes": [
-          "unauthorized"
-        ],
-        "returnedEventIds": [
-          null
-        ],
+        "outcomes": ["unauthorized"],
+        "returnedEventIds": [null],
         "marker": {
           "acceptedAt": null,
           "acceptedEventId": null
@@ -379,12 +331,8 @@
         }
       ],
       "expected": {
-        "outcomes": [
-          "unauthorized"
-        ],
-        "returnedEventIds": [
-          null
-        ],
+        "outcomes": ["unauthorized"],
+        "returnedEventIds": [null],
         "marker": {
           "acceptedAt": null,
           "acceptedEventId": null
@@ -410,12 +358,8 @@
         }
       ],
       "expected": {
-        "outcomes": [
-          "backend-error"
-        ],
-        "returnedEventIds": [
-          null
-        ],
+        "outcomes": ["backend-error"],
+        "returnedEventIds": [null],
         "marker": {
           "acceptedAt": null,
           "acceptedEventId": null
@@ -441,12 +385,8 @@
         }
       ],
       "expected": {
-        "outcomes": [
-          "backend-error"
-        ],
-        "returnedEventIds": [
-          null
-        ],
+        "outcomes": ["backend-error"],
+        "returnedEventIds": [null],
         "marker": {
           "acceptedAt": null,
           "acceptedEventId": null
@@ -472,12 +412,8 @@
         }
       ],
       "expected": {
-        "outcomes": [
-          "backend-error"
-        ],
-        "returnedEventIds": [
-          null
-        ],
+        "outcomes": ["backend-error"],
+        "returnedEventIds": [null],
         "marker": {
           "acceptedAt": null,
           "acceptedEventId": null
@@ -503,12 +439,8 @@
         }
       ],
       "expected": {
-        "outcomes": [
-          "backend-error"
-        ],
-        "returnedEventIds": [
-          null
-        ],
+        "outcomes": ["backend-error"],
+        "returnedEventIds": [null],
         "marker": {
           "acceptedAt": 100,
           "acceptedEventId": null
@@ -534,12 +466,8 @@
         }
       ],
       "expected": {
-        "outcomes": [
-          "backend-error"
-        ],
-        "returnedEventIds": [
-          null
-        ],
+        "outcomes": ["backend-error"],
+        "returnedEventIds": [null],
         "marker": {
           "acceptedAt": 100,
           "acceptedEventId": "event-missing"
@@ -579,16 +507,8 @@
         }
       ],
       "expected": {
-        "outcomes": [
-          "restarted",
-          "rebuilt",
-          "already-committed"
-        ],
-        "returnedEventIds": [
-          null,
-          null,
-          "event-0"
-        ],
+        "outcomes": ["restarted", "rebuilt", "already-committed"],
+        "returnedEventIds": [null, null, "event-0"],
         "marker": {
           "acceptedAt": 100,
           "acceptedEventId": "event-0"
@@ -621,14 +541,8 @@
         }
       ],
       "expected": {
-        "outcomes": [
-          "newly-committed",
-          "conflict"
-        ],
-        "returnedEventIds": [
-          "event-1",
-          null
-        ],
+        "outcomes": ["newly-committed", "conflict"],
+        "returnedEventIds": ["event-1", null],
         "marker": {
           "acceptedAt": 101,
           "acceptedEventId": "event-1"
@@ -661,14 +575,8 @@
         }
       ],
       "expected": {
-        "outcomes": [
-          "revoked",
-          "conflict"
-        ],
-        "returnedEventIds": [
-          null,
-          null
-        ],
+        "outcomes": ["revoked", "conflict"],
+        "returnedEventIds": [null, null],
         "marker": {
           "acceptedAt": null,
           "acceptedEventId": null
@@ -694,12 +602,8 @@
         }
       ],
       "expected": {
-        "outcomes": [
-          "append-denied"
-        ],
-        "returnedEventIds": [
-          null
-        ],
+        "outcomes": ["append-denied"],
+        "returnedEventIds": [null],
         "marker": {
           "acceptedAt": null,
           "acceptedEventId": null
@@ -811,44 +715,28 @@
     {
       "name": "session-revoked-after-hint",
       "revocation": "session",
-      "order": [
-        "hint",
-        "revoke",
-        "fence"
-      ],
+      "order": ["hint", "revoke", "fence"],
       "status": 401,
       "appended": 0
     },
     {
       "name": "archive-author-after-hint",
       "revocation": "archive",
-      "order": [
-        "hint",
-        "revoke",
-        "fence"
-      ],
+      "order": ["hint", "revoke", "fence"],
       "status": 401,
       "appended": 0
     },
     {
       "name": "delete-space-after-hint",
       "revocation": "delete",
-      "order": [
-        "hint",
-        "revoke",
-        "fence"
-      ],
+      "order": ["hint", "revoke", "fence"],
       "status": 401,
       "appended": 0
     },
     {
       "name": "admitted-redemption-before-archive",
       "revocation": "archive",
-      "order": [
-        "hint",
-        "fence",
-        "revoke"
-      ],
+      "order": ["hint", "fence", "revoke"],
       "status": 200,
       "appended": 1
     }
@@ -859,14 +747,16 @@
       "first": "archive",
       "between": "invite",
       "accepted": true,
-      "appended": 1
+      "appended": 1,
+      "rebuildWriterExcluded": true
     },
     {
       "name": "author-member-decision-after-independent-archive",
       "first": "member",
       "between": "archive",
       "accepted": false,
-      "appended": 0
+      "appended": 0,
+      "rebuildWriterExcluded": true
     }
   ],
   "receiptRelease": [

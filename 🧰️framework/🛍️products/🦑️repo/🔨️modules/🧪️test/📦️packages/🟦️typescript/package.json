@@ -7,8 +7,8 @@
     ".": "./🟦️.ts"
   },
   "scripts": {
-    "lint": "bun ./📜️script.ts lint",
-    "test": "bun ./📜️script.ts test"
+    "lint": "bun nx run @semio-tech/repo-test:lint",
+    "test": "bun nx run @semio-tech/repo-test:test"
   },
   "devDependencies": {
     "@types/node": "^22.19.6",
@@ -17,5 +17,8 @@
     "semver": "7.8.5",
     "typescript": "^5.9.3"
   },
-  "_comment": "🔮️ Every dependency here is test-only by construction: this package is the repository test platform, never a production target. `clsx` is a REGISTERED ORACLE (📇️registry/🔣️.json) — `bun ./📜️script.ts dependency` fails if it ever becomes production-reachable."
+  "_comment": "🔮️ Every dependency here is test-only by construction: this package is the repository test platform, never a production target. `clsx` is a REGISTERED ORACLE (📇️registry/🔣️.json) — `bun ./📜️script.ts dependency` fails if it ever becomes production-reachable.",
+  "nx": {
+    "includedScripts": []
+  }
 }

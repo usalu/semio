@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import { buildCargoArtifacts } from "../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📜️script.ts";
 /**
  * 🛂️ `@semio-tech/os-plugin-describe-rs` task router: `bun ./📜️script.ts <build|test|describe>`.
  * `describe <component.wasm> --core <core.wasm> --out <dir>` builds (if needed) and execs the
@@ -27,6 +28,7 @@ import {
   resolveTestLevel,
 } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { verifyDescriptorPairBytesV1, verifyFreshCatalogPackageV1 } from "../../../📇️registry/📜️script.ts";
+import { semanticOwnedInputFileSnapshot } from "../../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts";
 
 const CRATE_NAME = "semio-framework-plugin-describe";
 const DESCRIPTOR_PACK_FILENAME = "🛂️.descriptor.semio";
@@ -70,9 +72,246 @@ export type FreshComponentProducedV1<T> = Readonly<{
   derived: T;
 }>;
 
+export type FreshSourceEpochLegV1 = Readonly<{ id: string; package: string; args: readonly string[] }>;
+export type FreshSourceEpochPlanV1 = Readonly<{
+  toolchain: Readonly<{ cargo: string; rustc: string }>;
+  environment: readonly (readonly [string, string | null])[];
+  legs: readonly FreshSourceEpochLegV1[];
+  files: readonly string[];
+}>;
+export type FreshSourceEpochFileV1 = Readonly<{ path: string; sha256: string; byteLength: number; mode: number }>;
+export type FreshSourceEpochRecordV1 = Readonly<{
+  schema: "semio.plugin.fresh-source-epoch/v1";
+  toolchain: FreshSourceEpochPlanV1["toolchain"];
+  environment: FreshSourceEpochPlanV1["environment"];
+  legs: readonly FreshSourceEpochLegV1[];
+  files: readonly FreshSourceEpochFileV1[];
+}>;
+export type FreshSourceEpochOwnerV1 = Readonly<{
+  digest: string;
+  record: FreshSourceEpochRecordV1;
+  start(leg: FreshSourceEpochLegV1, environment: FreshSourceEpochPlanV1["environment"]): void;
+  complete(id: string, compilerInputs: readonly string[]): void;
+  finish(): string;
+  abort(): void;
+}>;
+
+const FRESH_SOURCE_EPOCH_LIMITS = Object.freeze({ fileBytes: 4 * 1024 * 1024, totalBytes: 128 * 1024 * 1024, files: 32768, legs: 16 });
+
+function freshSourceOrderedJson(value: unknown): string {
+  if (value === null || typeof value === "string" || typeof value === "boolean" || (typeof value === "number" && Number.isFinite(value))) return JSON.stringify(value);
+  if (Array.isArray(value)) return "[" + value.map(freshSourceOrderedJson).join(",") + "]";
+  if (value && typeof value === "object") return "{" + Object.keys(value).sort().map((key) => JSON.stringify(key) + ":" + freshSourceOrderedJson((value as Record<string, unknown>)[key])).join(",") + "}";
+  throw new Error("fresh source epoch contains a non-JSON value");
+}
+
+type FreshRustDepInfoV1 = Readonly<{ targets: readonly string[]; inputs: readonly string[]; environment: readonly (readonly [string, string | null])[] }>;
+
+/** 📃️ Reads the Rust dep-info writer's closed rule and environment grammar without evaluating Make syntax. */
+function parseFreshRustDepInfoV1(bytes: Uint8Array, check: () => void): FreshRustDepInfoV1 {
+  check();
+  if (!bytes.byteLength || bytes.byteLength > 8 * 1024 * 1024) throw new Error("fresh Rust dep-info byte boundary");
+  const text = new TextDecoder("utf-8", { fatal: true }).decode(bytes).replaceAll("\r\n", "\n");
+  if (!text.endsWith("\n") || text.includes("\0")) throw new Error("fresh Rust dep-info is truncated or contains NUL");
+  const targets: string[] = [], fake = new Set<string>(), environment: (readonly [string, string | null])[] = [], names = new Set<string>();
+  let inputs: string[] | undefined, inputSet = new Set<string>(), phase: "outputs" | "inputs" | "environment" = "outputs";
+  const path = (value: string): string => {
+    if (!value || Buffer.byteLength(value) > 4096 || /[\x00-\x1f\x7f]/u.test(value)) throw new Error("fresh Rust dep-info path boundary");
+    return value;
+  };
+  const paths = (value: string): string[] => {
+    const result: string[] = [];
+    let token = "";
+    for (let index = 0; index < value.length; index++) {
+      if ((index & 65535) === 0) check();
+      const character = value[index]!;
+      if (character === "\\" && value[index + 1] === " ") { token += " "; index++; }
+      else if (character === " ") { result.push(path(token)); token = ""; }
+      else token += character;
+      if (token.length > 4096 || result.length > FRESH_SOURCE_EPOCH_LIMITS.files) throw new Error("fresh Rust dep-info token boundary");
+    }
+    result.push(path(token));
+    if (result.length > FRESH_SOURCE_EPOCH_LIMITS.files || new Set(result).size !== result.length) throw new Error("fresh Rust dep-info input count or duplicate");
+    return result;
+  };
+  const unescapeEnvironment = (value: string): string => {
+    if (Buffer.byteLength(value) > 32768) throw new Error("fresh Rust dep-info environment boundary");
+    let output = "";
+    for (let index = 0; index < value.length; index++) {
+      const character = value[index]!;
+      if (character !== "\\") { output += character; continue; }
+      const escaped = value[++index];
+      if (escaped === "n") output += "\n";
+      else if (escaped === "r") output += "\r";
+      else if (escaped === "\\") output += "\\";
+      else throw new Error("fresh Rust dep-info environment escape is unknown");
+    }
+    if (Buffer.byteLength(output) > 16384) throw new Error("fresh Rust dep-info environment boundary");
+    return output;
+  };
+  const lines = text.split("\n");
+  if (lines.length > 4 * FRESH_SOURCE_EPOCH_LIMITS.files + 1024) throw new Error("fresh Rust dep-info line boundary");
+  for (const line of lines) {
+    check();
+    if (!line) continue;
+    if (line.startsWith("# env-dep:")) {
+      if (!inputs || fake.size !== inputs.length) throw new Error("fresh Rust dep-info environment precedes complete input rules");
+      phase = "environment";
+      const row = line.slice(10), equal = row.indexOf("="), name = equal < 0 ? row : row.slice(0, equal);
+      if (!/^[A-Za-z_][A-Za-z0-9_]{0,255}$/u.test(name) || names.has(name) || environment.length >= 256) throw new Error("fresh Rust dep-info environment name or count");
+      names.add(name);
+      environment.push(Object.freeze([name, equal < 0 ? null : unescapeEnvironment(row.slice(equal + 1))] as const));
+      continue;
+    }
+    if (line.startsWith("#") || phase === "environment") throw new Error("fresh Rust dep-info contains an unknown or out-of-order record");
+    const separator = line.indexOf(": ");
+    if (separator >= 0) {
+      if (phase !== "outputs" || targets.length >= 128) throw new Error("fresh Rust dep-info output order or count");
+      const target = path(line.slice(0, separator)), selected = paths(line.slice(separator + 2));
+      if (targets.includes(target) || (inputs && freshSourceOrderedJson(inputs) !== freshSourceOrderedJson(selected))) throw new Error("fresh Rust dep-info output dependency lists disagree");
+      targets.push(target);
+      inputs = selected;
+      inputSet = new Set(selected);
+    } else {
+      if (!line.endsWith(":") || !inputs) throw new Error("fresh Rust dep-info rule is unknown");
+      phase = "inputs";
+      const selected = paths(line.slice(0, -1));
+      if (selected.length !== 1 || !inputSet.has(selected[0]!) || fake.has(selected[0]!)) throw new Error("fresh Rust dep-info fake input rule disagrees");
+      fake.add(selected[0]!);
+    }
+  }
+  if (!targets.length || !inputs?.length || fake.size !== inputs.length) throw new Error("fresh Rust dep-info input closure is incomplete");
+  return Object.freeze({ targets: Object.freeze(targets), inputs: Object.freeze(inputs), environment: Object.freeze(environment) });
+}
+
+function freshSourceCoordinate(path: string): string {
+  if (typeof path !== "string" || Buffer.byteLength(path) > 4096 || /[\\\\\x00-\x1f\x7f:*?"<>|]/u.test(path) || Buffer.from(path).toString("utf8") !== path || path.split("/").some((part) => !part || part === "." || part === "..")) throw new Error("fresh source epoch coordinate is unsafe");
+  if (path.split("/").some((part) => [".git", "node_modules", "target", "🗑️generated"].includes(part))) throw new Error("fresh source epoch refuses compiler, dependency, or ticket output inputs");
+  return path;
+}
+
+function freshSourceEpochEnvironment(value: FreshSourceEpochPlanV1["environment"]): FreshSourceEpochPlanV1["environment"] {
+  if (!Array.isArray(value) || value.length > 256) throw new Error("fresh source epoch environment exceeds its boundary");
+  const names = new Set<string>();
+  return Object.freeze(value.map((row) => {
+    if (!Array.isArray(row) || row.length !== 2 || !/^[A-Za-z_][A-Za-z0-9_]{0,255}$/u.test(row[0]) || names.has(row[0]) || (row[1] !== null && (typeof row[1] !== "string" || Buffer.byteLength(row[1]) > 16384 || row[1].includes("\0")))) throw new Error("fresh source epoch environment is not a closed unique projection");
+    names.add(row[0]);
+    return Object.freeze([row[0], row[1]] as const);
+  }).sort((left, right) => Buffer.from(left[0]).compare(Buffer.from(right[0]))));
+}
+
+function freshSourceEpochLeg(leg: FreshSourceEpochLegV1): FreshSourceEpochLegV1 {
+  if (!leg || Object.keys(leg).sort().join(",") !== "args,id,package" || !/^[a-z][a-z0-9-]*$/u.test(leg.id) || !/^[a-z][a-z0-9-]*$/u.test(leg.package) || !Array.isArray(leg.args) || !leg.args.length || leg.args.length > 128 || leg.args.some((arg) => typeof arg !== "string" || Buffer.byteLength(arg) > 4096 || arg.includes("\0"))) throw new Error("fresh source epoch leg is not a bounded exact command");
+  return Object.freeze({ id: leg.id, package: leg.package, args: Object.freeze([...leg.args]) });
+}
+
+/** 🧾️ Encodes a bounded source epoch independently of object insertion order. */
+export function freshSourceEpochBytesV1(record: FreshSourceEpochRecordV1): Uint8Array {
+  const pieces: Buffer[] = [];
+  const field = (value: string): void => {
+    const bytes = Buffer.from(value), length = Buffer.alloc(4);
+    length.writeUInt32BE(bytes.byteLength);
+    pieces.push(length, bytes);
+  };
+  field(record.schema);
+  field(freshSourceOrderedJson(record.toolchain));
+  field(freshSourceOrderedJson(record.environment));
+  field(freshSourceOrderedJson(record.legs));
+  field(freshSourceOrderedJson(record.files));
+  return Buffer.concat(pieces);
+}
+
+/** 🧊️ Retains one no-follow source epoch across exact ordered compiler legs; it does not freeze collaborators' files. */
+export function captureFreshSourceEpochV1(repoRoot: string, plan: FreshSourceEpochPlanV1, control: FreshBuildControlV1): FreshSourceEpochOwnerV1 {
+  const check = (stage: string, index = 0, total = plan.files.length): void => freshCheckpoint(control, `source-epoch-${stage}`, index, total);
+  check("capture");
+  if (!plan.toolchain || Object.keys(plan.toolchain).sort().join(",") !== "cargo,rustc" || Object.values(plan.toolchain).some((value) => typeof value !== "string" || !value.length || Buffer.byteLength(value) > 8192 || value.includes("\0"))) throw new Error("fresh source epoch toolchain identity is invalid");
+  if (!Array.isArray(plan.legs) || !plan.legs.length || plan.legs.length > FRESH_SOURCE_EPOCH_LIMITS.legs || !Array.isArray(plan.files) || !plan.files.length || plan.files.length > FRESH_SOURCE_EPOCH_LIMITS.files) throw new Error("fresh source epoch count exceeds its boundary");
+  const environment = freshSourceEpochEnvironment(plan.environment), legs = plan.legs.map(freshSourceEpochLeg);
+  if (new Set(legs.map((leg) => leg.id)).size !== legs.length) throw new Error("fresh source epoch repeats a compiler leg");
+  const paths = plan.files.map(freshSourceCoordinate).sort((left, right) => Buffer.from(left).compare(Buffer.from(right)));
+  if (new Set(paths).size !== paths.length) throw new Error("fresh source epoch repeats an input");
+  const physical = new Map<string, string>();
+  let totalBytes = 0;
+  const identity = (path: string): string => {
+    const node = lstatSync(join(repoRoot, path));
+    if (!node.isFile() || node.isSymbolicLink() || node.size > FRESH_SOURCE_EPOCH_LIMITS.fileBytes) throw new Error("fresh source epoch input is non-regular or oversized: " + path);
+    return [node.dev, node.ino, node.mode, node.size, node.mtimeMs, node.ctimeMs].join(":");
+  };
+  const read = (path: string): FreshSourceEpochFileV1 => {
+    const before = identity(path), input = semanticOwnedInputFileSnapshot(repoRoot, path, { maximumBytes: FRESH_SOURCE_EPOCH_LIMITS.fileBytes, checkpoint: () => check("read") });
+    if (!input) throw new Error("fresh source epoch input is missing: " + path);
+    try {
+      if (input.size > FRESH_SOURCE_EPOCH_LIMITS.fileBytes || before !== identity(path)) throw new Error("fresh source epoch input changed during capture: " + path);
+      if (physical.has(path) && physical.get(path) !== before) throw new Error("fresh source epoch input identity changed: " + path);
+      physical.set(path, before);
+      return Object.freeze({ path, sha256: input.contentHash, byteLength: input.size, mode: input.mode });
+    } finally { input.bytes.fill(0); }
+  };
+  const files = paths.map((path, index) => {
+    check("capture", index);
+    const input = read(path);
+    totalBytes += input.byteLength;
+    if (totalBytes > FRESH_SOURCE_EPOCH_LIMITS.totalBytes) throw new Error("fresh source epoch aggregate exceeds its byte boundary");
+    return input;
+  });
+  const record: FreshSourceEpochRecordV1 = Object.freeze({ schema: "semio.plugin.fresh-source-epoch/v1", toolchain: Object.freeze({ ...plan.toolchain }), environment, legs: Object.freeze(legs), files: Object.freeze(files) });
+  const encoded = freshSourceEpochBytesV1(record), digest = createHash("sha256").update(encoded).digest("hex");
+  encoded.fill(0);
+  const known = new Set(paths);
+  let next = 0, phase: "ready" | "running" | "closed" = "ready";
+  const verify = (): void => {
+    for (const [index, expected] of files.entries()) {
+      check("verify", index);
+      if (freshSourceOrderedJson(read(expected.path)) !== freshSourceOrderedJson(expected)) throw new Error("fresh source epoch input bytes changed: " + expected.path);
+    }
+    check("verified", files.length);
+  };
+  const transition = <T>(operation: () => T): T => {
+    try {
+      if (phase === "closed") throw new Error("fresh source epoch owner is closed");
+      check("transition");
+      return operation();
+    } catch (error) { phase = "closed"; throw error; }
+  };
+  return Object.freeze({
+    digest, record,
+    start(leg, actualEnvironment) {
+      transition(() => {
+        if (phase !== "ready" || next >= legs.length || freshSourceOrderedJson(freshSourceEpochLeg(leg)) !== freshSourceOrderedJson(legs[next])) throw new Error("fresh source epoch compiler leg is out of order or changed");
+        if (freshSourceOrderedJson(freshSourceEpochEnvironment(actualEnvironment)) !== freshSourceOrderedJson(environment)) throw new Error("fresh source epoch compiler environment changed");
+        verify();
+        phase = "running";
+      });
+    },
+    complete(id, compilerInputs) {
+      transition(() => {
+        if (phase !== "running" || legs[next]?.id !== id) throw new Error("fresh source epoch completion has no exact running leg");
+        if (!Array.isArray(compilerInputs) || !compilerInputs.length || compilerInputs.length > FRESH_SOURCE_EPOCH_LIMITS.files || new Set(compilerInputs).size !== compilerInputs.length) throw new Error("fresh source epoch compiler input report is empty, duplicated, or oversized");
+        for (const [index, input] of compilerInputs.entries()) {
+          check("compiler-input", index, compilerInputs.length);
+          if (!known.has(freshSourceCoordinate(input))) throw new Error("fresh source epoch has an unknown compiler input: " + input);
+        }
+        verify();
+        next++;
+        phase = "ready";
+      });
+    },
+    finish() {
+      return transition(() => {
+        if (phase !== "ready" || next !== legs.length) throw new Error("fresh source epoch cannot finish incomplete compiler legs");
+        verify();
+        phase = "closed";
+        return digest;
+      });
+    },
+    abort() { phase = "closed"; },
+  });
+}
+
 class BuildScript extends BundleScript {
-  run(): void {
-    runCmd("cargo", ["build", "-p", CRATE_NAME, "--release"], { cwd: this.repoRoot, env: devToolingEnv() });
+  async run(): Promise<void> {
+    await buildCargoArtifacts(join(this.root, "Cargo.toml"), ["--release", "--bin", CRATE_NAME], this.repoRoot);
   }
 }
 
@@ -96,10 +335,10 @@ function ensureBuiltBin(repoRoot: string, budgetMs = buildBudgetMs()): string {
   return join(cargoTargetRoot(repoRoot), "debug", binName);
 }
 
-/** @emoji 🛂️ `describe <component.wasm> --core <core.wasm> --out <dir>` — builds then execs the emitter with forwarded argv and inherited stdio. */
+/** 🛂️ Runs the restored descriptor emitter with forwarded argv and inherited stdio. */
 class DescribeScript extends BundleScript {
   run(segments: string[]): void {
-    const bin = ensureBuiltBin(this.repoRoot);
+    const bin = join(this.root, "dist", "build", process.platform === "win32" ? `${CRATE_NAME}.exe` : CRATE_NAME);
     const status = runCmdStatus(bin, ["describe", ...segments], { cwd: this.repoRoot, env: devToolingEnv() });
     process.exit(status);
   }
@@ -162,9 +401,14 @@ export type DescriptorEmissionControlV1 = Readonly<{
   checkpoint?: (stage: string) => void;
 }>;
 
+/** ⏱️ Carries the descriptor emission budget into each child process. */
+export function remainingDescriptorEmissionBudgetMs(budgetMs: number, elapsedMs: number): number {
+  return budgetMs === 0 ? 0 : Math.max(1, budgetMs - elapsedMs);
+}
+
 function emissionGuard(control: DescriptorEmissionControlV1, startedAt: number, budgetMs: number, stage: string): void {
   if (control.cancelled?.()) throw new Error(`descriptor emission cancelled at ${stage}`);
-  if (Date.now() - startedAt > budgetMs) throw new Error(`descriptor emission deadline of ${budgetMs}ms exceeded at ${stage}`);
+  if (budgetMs !== 0 && Date.now() - startedAt > budgetMs) throw new Error(`descriptor emission deadline of ${budgetMs}ms exceeded at ${stage}`);
   control.checkpoint?.(stage);
 }
 
@@ -224,9 +468,9 @@ export function emitOwnerDescriptorPairV1(repoRoot: string, request: DescriptorE
   emissionGuard(control, startedAt, budgetMs, "emit");
   const staging = mkdtempSync(join(ownerRoot, ".🛂️descriptor-staging-"));
   try {
-    const emitter = ensureBuiltBin(repoRoot, Math.max(1, budgetMs - (Date.now() - startedAt)));
+    const emitter = ensureBuiltBin(repoRoot, remainingDescriptorEmissionBudgetMs(budgetMs, Date.now() - startedAt));
     emissionGuard(control, startedAt, budgetMs, "describe");
-    const status = runCmdStatus(emitter, ["describe", raw.path, "--core", core.path, "--out", staging], { cwd: repoRoot, env: devToolingEnv(), budgetMs: Math.max(1, budgetMs - (Date.now() - startedAt)) });
+    const status = runCmdStatus(emitter, ["describe", raw.path, "--core", core.path, "--out", staging], { cwd: repoRoot, env: devToolingEnv(), budgetMs: remainingDescriptorEmissionBudgetMs(budgetMs, Date.now() - startedAt) });
     if (status !== 0) throw new Error(`descriptor emitter exited with ${status}`);
     emissionGuard(control, startedAt, budgetMs, "verify");
     const packPath = join(staging, DESCRIPTOR_PACK_FILENAME);
@@ -589,6 +833,104 @@ export function describeExtensionComponent(repoRoot: string, rsDir: string, cont
   return describePluginComponent(repoRoot, manifest.packageName, resolve(rsDir, "..", ".."), false, control);
 }
 
+/** 🧪️ Exercises the physical epoch owner against neutral races and independent canonical/hash oracles. */
+export async function testFreshComponentSourceEpochV1(repoRoot: string): Promise<void> {
+  const { default: assert } = await import("node:assert/strict");
+  const { default: Ajv2020 } = await import("ajv/dist/2020.js");
+  const { default: stableStringify } = await import("fast-json-stable-stringify");
+  const { dirname } = await import("node:path");
+  const { symlinkSync, ftruncateSync } = await import("node:fs");
+  const fixtureRoot = resolve(import.meta.dir, "../../🧪️fixtures/🧾️fresh-source-epoch");
+  const fixture = JSON.parse(readFileSync(join(fixtureRoot, "🔣️.json"), "utf8"));
+  const ajv = new Ajv2020({ strict: true, allErrors: true });
+  const validate = ajv.compile(JSON.parse(readFileSync(join(fixtureRoot, "🧬️.schema.json"), "utf8")));
+  const validateEpoch = ajv.compile(JSON.parse(readFileSync(join(fixtureRoot, "📌️epoch.schema.json"), "utf8")));
+  assert(validate(fixture), JSON.stringify(validate.errors));
+  assert.deepEqual(fixture.limits, FRESH_SOURCE_EPOCH_LIMITS);
+  const depInfo = JSON.parse(readFileSync(join(fixtureRoot, "📃️dep-info.json"), "utf8"));
+  const validateDepInfo = ajv.compile(JSON.parse(readFileSync(join(fixtureRoot, "📃️dep-info.schema.json"), "utf8")));
+  assert(validateDepInfo(depInfo), JSON.stringify(validateDepInfo.errors));
+  for (const row of depInfo.cases) {
+    const bytes = Buffer.from(row.text);
+    if (row.expected === null) assert.throws(() => parseFreshRustDepInfoV1(bytes, () => {}), undefined, row.id);
+    else assert.equal(stableStringify(parseFreshRustDepInfoV1(bytes, () => {})), stableStringify(row.expected), row.id);
+  }
+  assert.throws(() => parseFreshRustDepInfoV1(new Uint8Array([0xff, 0x0a]), () => {}), undefined, "lossy UTF-8");
+  assert.throws(() => parseFreshRustDepInfoV1(new Uint8Array(depInfo.maximumBytes + 1), () => {}), undefined, "dep-info byte bound");
+  assert.throws(() => parseFreshRustDepInfoV1(Buffer.from(depInfo.cases[0].text), () => { throw new Error("dep-info cancelled"); }), /dep-info cancelled/);
+  const artifactRoot = process.env.SEMIO_TEST_ARTIFACT_DIR;
+  assert(artifactRoot && isAbsolute(artifactRoot) && artifactRoot.split(/[\\/]/u).includes("🗑️generated"));
+  const evidence = mkdtempSync(join(artifactRoot, "fresh-source-epoch-"));
+  const legs: FreshSourceEpochLegV1[] = fixture.legs.map(({ id, package: cargoPackage, args }) => ({ id, package: cargoPackage, args }));
+  const environment = [["CARGO_INCREMENTAL", "0"], ["RUSTC_WRAPPER", ""], ["RUSTFLAGS", null]] as const;
+  const plan: FreshSourceEpochPlanV1 = { toolchain: { cargo: "cargo fixture", rustc: "rustc fixture" }, environment, legs, files: fixture.files.map((file) => file.path) };
+  for (const name of fixture.cases as string[]) {
+    const root = join(evidence, name);
+    mkdirSync(root);
+    for (const file of fixture.files) {
+      const path = join(root, file.path);
+      mkdirSync(dirname(path), { recursive: true });
+      writeFileSync(path, file.text, { flag: "wx", mode: 0o600 });
+    }
+    const pointer = join(root, "current.json"), prior = Buffer.from("unpublished-epoch-fixture\n");
+    writeFileSync(pointer, prior, { flag: "wx", mode: 0o600 });
+    let cancelled = false, expired = false;
+    const control: FreshBuildControlV1 = { cancelled: () => cancelled, remainingMs: () => expired ? 0 : 10000, checkpoint() {} };
+    const owner = captureFreshSourceEpochV1(root, plan, control);
+    assert(validateEpoch(owner.record), JSON.stringify(validateEpoch.errors));
+    assert(Object.isFrozen(owner) && Object.isFrozen(owner.record) && owner.record.files.every(Object.isFrozen));
+    const mutate = (): void => writeFileSync(join(root, "artifacts/🦀️.rs"), "pub const CHANNEL_VERSION: u32 = 15;\n");
+    const start = (index: number): void => owner.start(legs[index]!, environment);
+    const complete = (index: number): void => owner.complete(legs[index]!.id, fixture.legs[index].inputs);
+    const run = (index: number): void => { start(index); complete(index); };
+    if (name === "shared-epoch") {
+      assert.equal(freshSourceOrderedJson(owner.record), stableStringify(owner.record));
+      const fields = [owner.record.schema, stableStringify(owner.record.toolchain), stableStringify(owner.record.environment), stableStringify(owner.record.legs), stableStringify(owner.record.files)];
+      const parts = fields.map((field) => new TextEncoder().encode(field));
+      const oracle = new Uint8Array(parts.reduce((sum, bytes) => sum + bytes.length + 4, 0));
+      let offset = 0;
+      for (const bytes of parts) { new DataView(oracle.buffer).setUint32(offset, bytes.length, false); oracle.set(bytes, offset + 4); offset += bytes.length + 4; }
+      assert.deepEqual(Buffer.from(freshSourceEpochBytesV1(owner.record)), Buffer.from(oracle));
+      assert.notDeepEqual(Buffer.from(freshSourceEpochBytesV1({ ...owner.record, legs: [...owner.record.legs].reverse() })), Buffer.from(oracle));
+      assert.equal(owner.digest, Buffer.from(await crypto.subtle.digest("SHA-256", oracle)).toString("hex"));
+      run(0); run(1);
+      assert.equal(owner.finish(), owner.digest);
+      assert.throws(() => owner.finish(), /closed/);
+    } else {
+      assert.throws(() => {
+        if (name === "changed-before-first") { mutate(); start(0); }
+        else if (name === "changed-between-legs") { run(0); mutate(); start(1); }
+        else if (name === "changed-after-last") { run(0); run(1); mutate(); owner.finish(); }
+        else if (name === "unknown-compiler-input") { start(0); owner.complete(legs[0]!.id, [...fixture.legs[0].inputs, "unknown/🦀️.rs"]); }
+        else if (name === "missing-input") { rmSync(join(root, "Cargo.lock")); start(0); }
+        else if (name === "same-bytes-name-replacement") { const path = join(root, "Cargo.lock"); renameSync(path, path + ".retained"); writeFileSync(path, readFileSync(path + ".retained")); start(0); }
+        else if (name === "linked-parent") { const path = join(root, "assets"); renameSync(path, path + "-retained"); symlinkSync(path + "-retained", path, process.platform === "win32" ? "junction" : "dir"); start(0); }
+        else if (name === "oversized-input") { const file = openSync(join(root, "Cargo.lock"), "r+"); try { ftruncateSync(file, fixture.limits.fileBytes + 1); } finally { closeSync(file); } start(0); }
+        else if (name === "changed-arguments") owner.start({ ...legs[0]!, args: [...legs[0]!.args, "--features", "foreign"] }, environment);
+        else if (name === "changed-environment") owner.start(legs[0]!, [["RUSTFLAGS", "--cfg foreign"]]);
+        else if (name === "out-of-order-leg") start(1);
+        else if (name === "duplicate-leg-completion") { run(0); complete(0); }
+        else if (name === "incomplete-finish") { run(0); owner.finish(); }
+        else if (name === "cancelled") { cancelled = true; start(0); }
+        else if (name === "deadline") { expired = true; start(0); }
+        else if (name === "closed-owner") { owner.abort(); start(0); }
+        else assert.fail("unknown epoch law " + name);
+      }, undefined, name);
+      assert.throws(() => owner.finish(), /closed/, name + " terminal refusal");
+    }
+    assert.deepEqual(readFileSync(pointer), prior, name + " pointer is untouched");
+  }
+  const bounded = join(evidence, "bounded");
+  mkdirSync(bounded);
+  writeFileSync(join(bounded, "input.rs"), Buffer.alloc(2 * FRESH_IO_CHUNK_BYTES + 1, 65));
+  assert.throws(() => semanticOwnedInputFileSnapshot(bounded, "input.rs", { maximumBytes: FRESH_IO_CHUNK_BYTES }), /byte boundary/);
+  let checks = 0;
+  assert.throws(() => semanticOwnedInputFileSnapshot(bounded, "input.rs", { maximumBytes: 3 * FRESH_IO_CHUNK_BYTES, checkpoint() { if (++checks === 4) throw new Error("bounded snapshot cancellation"); } }), /bounded snapshot cancellation/);
+  assert.equal(checks, 4);
+  for (const path of ["../foreign.rs", "/foreign.rs", "C:/foreign.rs", "a\\foreign.rs", "node_modules/source.rs", "target/source.rs", "🗑️generated/source.rs"]) assert.throws(() => captureFreshSourceEpochV1(bounded, { ...plan, files: [path] }, { cancelled: () => false, remainingMs: () => 10000, checkpoint() {} }), /coordinate|refuses/);
+  console.log(`[DEBUG] fresh-source-epoch: AJV=3 stable-stringify=1 WebCrypto=1 physical-laws=${fixture.cases.length} bounded-capture=2 unsafe-paths=7 dep-info=${depInfo.cases.length}+3 evidence=${evidence}; Cargo resolver/dep-info integration remains unqualified`);
+}
+
 /** 🧪️ Qualifies retained verified inputs and staging independently of Cargo or descriptor execution. */
 export async function testFreshComponentStagingV1(repoRoot: string): Promise<void> {
   const { default: assert } = await import("node:assert/strict");
@@ -613,6 +955,7 @@ export async function testFreshComponentStagingV1(repoRoot: string): Promise<voi
     capabilityRequests: [],
     extensionPoints: [],
     execution: "isolated",
+    executionProtocol: { appChannelVersion: 14 },
     quotas: {},
     contributions: {},
     assets: [],

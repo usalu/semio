@@ -31,7 +31,7 @@ impl Default for SpacePresence {
 
 impl protocol::MutationDiff<SpacePresence> for SpacePresence {
     fn apply(&self, _base: &SpacePresence) -> protocol::MutationApplyResult<SpacePresence> {
-        Ok({ self.clone() })
+        Ok(self.clone())
     }
     fn absorb(&mut self, other: Self) {
         *self = other;

@@ -16,8 +16,9 @@ use super::topology::{compute_sequence_topology, SequenceTopology};
 /// `💡️inferences/` (currently: `topology`, backed by the `🧭topology/` slug dir) — sequence is a
 /// genuine step DAG (`steps` + `edges`), so `topology` here is a real Kahn's-algorithm topological
 /// sort, not a degenerate stand-in.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::ToValue, dsl::FromValue, ArtifactSchema)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.sequence.sequence.inference")]
 pub struct SequenceInference {
     #[derived]
@@ -36,7 +37,7 @@ impl protocol::Inference<SequenceSnapshot> for SequenceInference {
 /// it via `infer` instead keeps the law correct regardless of what the default snapshot contains.
 impl Default for SequenceInference {
     fn default() -> Self {
-        <Self as protocol::Inference<SequenceSnapshot>>::infer(&SequenceSnapshot::default())
+        <Self as protocol::Inference<SequenceSnapshot>>::infer(&neural_engine::ColdOwner::new(SequenceSnapshot::default()))
     }
 }
 
@@ -108,13 +109,13 @@ mod tests {
     //#region 🧪️InferenceLaws
     #[semio_framework_async_macros::async_test]
     async fn inference_determinism_law() {
-        let snapshot = sample_snapshot();
+        let snapshot = neural_engine::ColdOwner::new(sample_snapshot());
         assert_eq!(SequenceInference::infer(&snapshot), SequenceInference::infer(&snapshot));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn inference_default_law() {
-        assert_eq!(SequenceInference::infer(&SequenceSnapshot::default()), SequenceInference::default());
+        assert_eq!(SequenceInference::infer(&neural_engine::ColdOwner::new(SequenceSnapshot::default())), SequenceInference::default());
     }
     //#endregion 🧪️InferenceLaws
 }

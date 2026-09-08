@@ -33,7 +33,7 @@ pub fn add_step_operation(step_id: String, title: String) -> PlaybookMutation {
 impl protocol::MutationKind<PlaybookSnapshot, PlaybookMutation> for AddStep {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "add", entity: "step", kind: "add-step", record: "AddedStep" };
 
-    fn diff(&self, base: &PlaybookSnapshot) -> protocol::MutationOutcome<crate::artifacts::playbook::PlaybookDiff> {
+    fn diff(&self, base: &PlaybookSnapshot) -> protocol::MutationOutcome<PlaybookDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &PlaybookSnapshot) -> Vec<PlaybookMutation> {

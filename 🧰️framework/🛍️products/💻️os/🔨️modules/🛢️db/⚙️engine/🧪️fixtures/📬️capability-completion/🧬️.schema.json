@@ -1,0 +1,176 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "format",
+    "publication",
+    "retirement",
+    "driveOwnership",
+    "leaseCompletion"
+  ],
+  "properties": {
+    "format": {
+      "const": "semio.db.capability-completion/v1"
+    },
+    "publication": {
+      "type": "array",
+      "minItems": 6,
+      "maxItems": 6,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "publication",
+          "outcome",
+          "firstReady",
+          "wakes"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "publication": {
+            "enum": [
+              "before-poll",
+              "before-registration",
+              "after-pending"
+            ]
+          },
+          "outcome": {
+            "enum": [
+              "success",
+              "fault"
+            ]
+          },
+          "firstReady": {
+            "type": "boolean"
+          },
+          "wakes": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 1
+          }
+        }
+      }
+    },
+    "retirement": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "outcome",
+          "terminalBeforePublisherWake",
+          "wakes"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "outcome": {
+            "enum": [
+              "success",
+              "fault"
+            ]
+          },
+          "terminalBeforePublisherWake": {
+            "type": "boolean"
+          },
+          "wakes": {
+            "const": 0
+          }
+        }
+      }
+    },
+    "driveOwnership": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "phase",
+          "closeBlocked",
+          "admissionRetained",
+          "storageRetained",
+          "finalReleases"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "phase": {
+            "enum": [
+              "Handoff",
+              "RetainWork",
+              "Poll"
+            ]
+          },
+          "closeBlocked": {
+            "const": true
+          },
+          "admissionRetained": {
+            "const": true
+          },
+          "storageRetained": {
+            "const": true
+          },
+          "finalReleases": {
+            "const": 1
+          }
+        }
+      }
+    },
+    "leaseCompletion": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "publication",
+          "admissionDuringPublication",
+          "lateSubmissions",
+          "retirementSubmissions"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "publication": {
+            "enum": [
+              "synchronous",
+              "active-publisher",
+              "after-finalizer-check",
+              "after-finalizer-check-refused"
+            ]
+          },
+          "admissionDuringPublication": {
+            "type": "boolean"
+          },
+          "lateSubmissions": {
+            "const": 0
+          },
+          "retirementSubmissions": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 1
+          }
+        }
+      }
+    }
+  }
+}

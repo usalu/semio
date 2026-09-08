@@ -745,6 +745,7 @@ impl FillPreviewJsonCursor {
         self.ready.as_deref()
     }
 
+    #[cfg(test)]
     pub(crate) fn ready_identity(&self) -> Option<[u64; 5]> {
         self.ready_identity.map(|identity| [identity.operation, identity.base_revision, identity.registry_generation, identity.generation, identity.sequence])
     }
@@ -1198,7 +1199,6 @@ enum FillDslOwnerRoot {
     SequencePayload(usize),
     AppendedObject(usize),
     CatalogObject(usize),
-    TargetVolume(usize),
     CurrentPreview,
     PendingPayload,
     PendingObject,
@@ -1231,7 +1231,6 @@ impl FillDslOwnerCensusCursor {
             FillDslOwnerRoot::SequencePayload(index) => fill.sequence.get(index)?.scale.as_ref(),
             FillDslOwnerRoot::AppendedObject(index) => fill.appended_objects.get(index)?.scale.as_ref(),
             FillDslOwnerRoot::CatalogObject(index) => fill.catalogs.objects.get(index)?.scale.as_ref(),
-            FillDslOwnerRoot::TargetVolume(index) => fill.base.target_volumes.get(index)?.scale.as_ref(),
             FillDslOwnerRoot::CurrentPreview => fill.current_preview.as_ref()?.scale.as_ref(),
             FillDslOwnerRoot::PendingPayload => fill.pending_payload.as_ref()?.scale.as_ref(),
             FillDslOwnerRoot::PendingObject => fill.pending_object.as_ref()?.scale.as_ref(),
@@ -2505,14 +2504,6 @@ fn release_vec_backing<T>(values: &mut Vec<T>) -> bool {
     debug_assert!(values.is_empty());
     drop(std::mem::take(values));
     true
-}
-
-fn take_string_vec_owner(values: &mut Vec<String>, current: &mut Option<FillRetiredOwner>) -> bool {
-    if let Some(value) = values.pop() {
-        *current = Some(FillRetiredOwner::String(value));
-        return true;
-    }
-    release_vec_backing(values)
 }
 
 fn take_fixture_owner(value: &mut FixedFixtureOwner, current: &mut Option<FillRetiredOwner>) -> bool {

@@ -5,5 +5,5 @@ use crate::editor::jack::config::JackConfigMutation;
 use semio_framework_plugin::{Emit, Fault};
 
 pub(crate) fn text_edit(text: &str) -> Result<Emit<TrinityGraphMutation, JackConfigMutation>, Fault> {
-    Ok(Emit::config(vec![JackConfigMutation::SetQuery { value: text.to_string() }]))
+    Ok(Emit::config(vec![JackConfigMutation::SetQuery(crate::editor::jack::config::SetQuery { value: text.to_string() })]))
 }

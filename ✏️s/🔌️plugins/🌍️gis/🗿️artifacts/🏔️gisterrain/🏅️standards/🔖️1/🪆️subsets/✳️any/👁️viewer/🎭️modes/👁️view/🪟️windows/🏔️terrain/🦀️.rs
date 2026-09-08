@@ -17,9 +17,6 @@ use serde_json::{json, Value};
 pub const WINDOW_KIND_ID: &str = "gis3d-view-terrain";
 pub const BODY_KEY: &str = "gis3d.view.terrain";
 const SURFACE_ID: &str = "gis3d.view.composite";
-/// 👁️ Read-only counterpart of the editor's `GIS3D_PLAY_APP_ID` controller id — kept distinct so a
-/// viewer session's world-3d controller can never be mistaken for an editor session's.
-const GIS_TERRAIN_VIEW_CONTROLLER_ID: &str = "gis3d-view";
 /// 👁️ Matches the editor's `Gis3dConfig::default()` camera — a viewer has no persisted per-session
 /// camera (`Config = NoConfig`), so this is a hardcoded default, not a bug.
 const GIS_TERRAIN_VIEW_DEFAULT_CAMERA_JSON: &str = r#"{"position":[800.0,-800.0,600.0],"target":[0.0,0.0,0.0],"up":[0.0,0.0,1.0],"fov":45.0}"#;

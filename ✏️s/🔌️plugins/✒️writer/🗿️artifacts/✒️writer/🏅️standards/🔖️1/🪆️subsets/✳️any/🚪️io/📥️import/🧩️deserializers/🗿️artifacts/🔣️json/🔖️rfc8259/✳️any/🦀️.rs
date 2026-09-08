@@ -21,12 +21,12 @@ impl Deserializer<WriterSnapshot> for JsonIntoWriter {
     /// restores the ephemeral working-scene text cache; that is a documented, orthogonal gap, not a
     /// json-specific loss).
     const FIDELITY: IoFidelity = IoFidelity::Exact;
-    fn deserialize(payload: &IoPayload) -> IoResult<WriterSnapshot> {
+    async fn deserialize(payload: &IoPayload) -> IoResult<WriterSnapshot> {
         let IoPayload::Text(text) = payload else {
             return Err(IoError { message: "JsonIntoWriter: expected a text payload".to_string(), diagnostics: Vec::new() });
         };
         let json = <JsonSnapshot as store::ArtifactDsl>::parse_dsl(text).map_err(|error| IoError { message: format!("JsonIntoWriter: {error}"), diagnostics: Vec::new() })?;
-        let snapshot: WriterSnapshot = serde_json::from_value(json.to_serde_value()).map_err(|error| IoError { message: format!("JsonIntoWriter: {error}"), diagnostics: Vec::new() })?;
+        let snapshot: WriterSnapshot = dsl::os_pack::json::from_json_str(&store::ArtifactDsl::print_dsl(&json)).map_err(|error| IoError { message: format!("JsonIntoWriter: {error}"), diagnostics: Vec::new() })?;
         Ok(IoOutcome { value: snapshot, diagnostics: Vec::new() })
     }
 }
@@ -39,8 +39,8 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn json_into_writer_round_trips_a_real_snapshot() {
         let original = crate::artifacts::writer::writer_snapshot_with_text("writer.document", "id", "plain", "writer://id", "hello");
-        let text = serde_json::to_string(&original).expect("serialize");
-        let outcome = JsonIntoWriter::deserialize(&IoPayload::Text(text)).expect("deserialize");
+        let text = dsl::os_pack::json::to_json_string(&original);
+        let outcome = JsonIntoWriter::deserialize(&IoPayload::Text(text)).await.expect("deserialize");
         assert_eq!(outcome.value, original);
     }
 }

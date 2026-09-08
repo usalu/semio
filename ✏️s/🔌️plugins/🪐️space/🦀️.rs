@@ -775,8 +775,8 @@ where
 //#endregion 🧵️RetainedStore
 
 //#region 🔌️Registration
-/// 🗃️ Closed runtime app fleet for the home, space-index, and studio surfaces.
 semio_framework_dispatch_macros::dyn_enum_close! {
+    /// 🗃️ Closed runtime app fleet for the home, space-index, and studio surfaces.
     pub enum SpaceApps: PluginApp {
         HomeEditor(VcsArtifactApp<EditorApp<crate::editor::home::HomeApp>>),
         HomeViewer(VcsArtifactApp<ViewerApp<crate::viewer::home::HomeViewer>>),

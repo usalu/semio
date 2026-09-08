@@ -10,7 +10,7 @@ pub use remodeling_camera::{CameraPose, Distortion, Intrinsics};
 
 use crate::algebra::{jacobi_eigen_symmetric, poly_roots_companion, real_eigenvalues, svd, svd_nullvector, vec3d_length, vec3d_normalize, vec3d_sub, Mat3d, MatD, VecD};
 use crate::lie::umeyama;
-use crate::optimize::{lo_ransac, numeric_jacobian, ransac, schur_lm, BipartiteResiduals, LeastSquaresProblem, LmConfig, MinimalSolver, RansacConfig, RansacScoring, ResidualTerm, SchurResult};
+use crate::optimize::{lo_ransac, numeric_jacobian, ransac, BipartiteResiduals, LeastSquaresProblem, LmConfig, MinimalSolver, RansacConfig, RansacScoring, ResidualTerm};
 use geometry::random::{normal, Rng};
 use remodeling_camera::reproject;
 use remodeling_feature::{match_brute, Descriptor256, Keypoint, Match};
@@ -1991,6 +1991,7 @@ impl BipartiteResiduals for SfmBundleProblem {
 /// while the constrained 5-DOF five-point manifold stays well-conditioned. Both solvers run over the same
 /// correspondences with the same normalized-ray MSAC threshold, so their [`TwoViewResult::score`]s are
 /// directly comparable; five-point wins ties.
+#[cfg(test)]
 fn estimate_init_pair_essential(matches: &[([f64; 2], [f64; 2])], k: &Intrinsics, seed: u64) -> Option<TwoViewResult> {
     const FIVE_POINT_THRESHOLD: f64 = 0.005;
     let five_point = estimate_essential_five_point(matches, k, k, FIVE_POINT_THRESHOLD, seed);
@@ -2101,6 +2102,7 @@ impl IncrementalSfm {
         self.pairwise_matches = pairwise_matches;
     }
 
+    #[cfg(test)]
     fn is_registered(&self, frame: usize) -> bool {
         self.cameras.iter().any(|&(f, _)| f == frame)
     }
@@ -3847,3 +3849,6 @@ mod tests {
     }
 }
 // #endregion 🔖️Tests
+
+#[cfg(test)]
+use crate::optimize::{schur_lm, SchurResult};

@@ -5,6 +5,7 @@ use crate::artifacts::gismap::op::GisMapMutation;
 use crate::artifacts::gismap::GisMapSnapshot;
 use crate::editor::gis2d::config::{mutations as config_mutations, Gis2dConfig, Gis2dConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+#[cfg(test)]
 use serde::{Deserialize, Serialize};
 use semio_framework_value_derive::{FromValue, ToValue};
 

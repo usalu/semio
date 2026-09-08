@@ -2,6 +2,7 @@
 //! it owns are captured wholesale, since they live embedded on the object itself).
 
 use crate::artifacts::lowpoly::{LowpolyMutation, LowpolySnapshot};
+#[cfg(test)]
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Payload

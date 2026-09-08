@@ -4,6 +4,8 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { BundleScript, ScriptRouter, resolveTestLevel, runBundleScriptMain, runCargo, runExactCargoLaws } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 
+import { buildCargoArtifacts } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📜️script.ts";
+
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
@@ -13,7 +15,7 @@ class TestScript extends BundleScript {
 
 class BuildScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    await runCargo(["build", "-p", "semio-framework-replication", ...segments], this.repoRoot);
+    await buildCargoArtifacts(`${this.root}/Cargo.toml`, segments, this.repoRoot);
   }
 }
 

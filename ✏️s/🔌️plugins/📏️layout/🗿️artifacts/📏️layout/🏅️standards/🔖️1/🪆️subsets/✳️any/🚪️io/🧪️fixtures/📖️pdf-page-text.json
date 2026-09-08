@@ -1,0 +1,12 @@
+{
+  "snapshot": {
+    "schema": "layout.layout",
+    "name": "Document / Prüfung",
+    "grid": { "baselineGrid": 0.5, "baselineOffset": 0.25, "snapToBaseline": false },
+    "paragraphStyles": [], "characterStyles": [], "stories": [], "links": [],
+    "parentPages": [], "spreads": [], "pages": [], "printTarget": null
+  },
+  "exportPages": 1,
+  "width": 612.0,
+  "height": 792.0
+}

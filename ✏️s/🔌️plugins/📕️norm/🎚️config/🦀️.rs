@@ -61,7 +61,7 @@ impl store::ConfigRecord for NormConfig {}
 /// 🧮️ Resolved one-field configuration projection produced by its semantic mutation.
 impl protocol::MutationDiff<NormConfig> for NormConfig {
     fn apply(&self, _base: &NormConfig) -> protocol::MutationApplyResult<NormConfig> {
-        Ok({ self.clone() })
+        Ok(self.clone())
     }
     fn absorb(&mut self, other: Self) {
         *self = other;

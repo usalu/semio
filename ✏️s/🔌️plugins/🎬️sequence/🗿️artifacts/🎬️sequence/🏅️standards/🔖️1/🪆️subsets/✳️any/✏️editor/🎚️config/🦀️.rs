@@ -7,6 +7,7 @@
 //! like document content.
 
 use crate::artifacts::sequence::SequenceCamera;
+#[cfg(test)]
 use protocol::Mutation;
 #[cfg(test)]
 use serde::{Deserialize, Serialize};
@@ -20,9 +21,9 @@ use serde::{Deserialize, Serialize};
 /// 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: `selected_step_ids` no longer lives here —
 /// selection is framework-owned now, read via `InteractionView::selection("steps")`.
 #[derive(Clone, Debug, PartialEq, dsl::DslArtifact)]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
 #[derive(dsl::ToValue, dsl::FromValue)]
 #[cfg_attr(test, derive(Serialize, Deserialize))]
+#[cfg_attr(test, serde(rename_all = "camelCase", default))]
 #[value(rename_all = "camelCase", default)]
 #[dsl(extension = "sequencecfg")]
 #[dsl(id = "sequence.config")]
@@ -97,108 +98,10 @@ impl Default for SequenceConfig {
 store::impl_whole_record_config!(SequenceConfig);
 //#endregion 🔖️Config
 
-//#region 🔖️ConfigMutations
-/// 🧮️ B1: `SequenceConfig`'s operation enum — one variant per settled interaction (mirrors the pre-B1
-/// `SequencePlayRuntime` field writes), plus a generic `Snapshot` every variant's `backwards()`
-/// returns — same "whole-config snapshot is the simplest correct inverse" shape as
-/// `shooting_op::ShootingConfigMutation`.
-#[derive(Clone, Debug, PartialEq, dsl::DslOps)]
-#[derive(dsl::ToValue, dsl::FromValue)]
-#[cfg_attr(test, derive(Serialize, Deserialize))]
-pub enum SequenceConfigMutation {
-    #[dsl(key = "snapshot")]
-    Snapshot {
-        #[dsl(block)]
-        config: SequenceConfig,
-    },
-    #[dsl(key = "last-run")]
-    SetLastRun { json: String },
-    #[dsl(key = "orientation")]
-    SetOrientation { value: String },
-    #[dsl(key = "camera")]
-    SetCamera {
-        #[dsl(block)]
-        camera: SequenceCamera,
-    },
-    #[dsl(key = "locale")]
-    SetLocale { value: String },
-}
+#[path = "🧬️schema/🧬️mutations/🦀️.rs"]
+mod mutations;
+pub use mutations::*;
 
-//#region 🔖️OpCodec
-impl protocol::OpText for SequenceConfigMutation {
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        let variants = <Self as dsl::DslVariants>::variants();
-        for (keyword, spec_fn) in &variants {
-            let probe = format!("{} ", keyword);
-            if line == keyword.as_str() || line.starts_with(&probe) {
-                let record = dsl::parse(line, &spec_fn(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline })?;
-                return <Self as dsl::DslVariants>::from_named_record(keyword, &record);
-            }
-        }
-        Err(dsl::__rt::field_error(format!("unknown mutation line '{line}'")))
-    }
-    fn print_op(&self) -> String {
-        let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
-        let variants = <Self as dsl::DslVariants>::variants();
-        let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
-        dsl::print(&record, &spec_fn(), dsl::JoinMode::Inline)
-    }
-}
-
-/// 🎯️ Handcrafted OpBinary (P6).
-impl protocol::OpBinary for SequenceConfigMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        const OP_BINARY_FORMAT: u8 = 1;
-        let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
-        let variants = <Self as dsl::DslVariants>::variants();
-        let ordinal = variants.iter().position(|(k, _)| *k == keyword).ok_or(protocol::ProtocolError::Malformed { what: "op variant", offset: 0, detail: format!("keyword {keyword:?} is not a declared variant") })?;
-        let spec = (variants[ordinal].1)();
-        let body = store::pack_rt::encode_record_body(&spec, &record, &store::PackEncodeOptions::default()).map_err(protocol::ProtocolError::from)?;
-        let mut out = Vec::with_capacity(body.len() + 3);
-        out.push(OP_BINARY_FORMAT);
-        store::pack_rt::write_varint_u64(&mut out, ordinal as u64);
-        out.extend_from_slice(&body);
-        Ok(out)
-    }
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        const OP_BINARY_FORMAT: u8 = 1;
-        let mut reader = store::pack_rt::ByteReader::new(bytes);
-        let format = reader.read_u8()?;
-        if format != OP_BINARY_FORMAT {
-            return Err(protocol::ProtocolError::Malformed { what: "op format", offset: 0, detail: format!("unsupported op format {format}") });
-        }
-        let ordinal = reader.read_varint_u64()?;
-        let variants = <Self as dsl::DslVariants>::variants();
-        let (keyword, spec_fn) = variants.get(ordinal as usize).ok_or(protocol::ProtocolError::Malformed { what: "op variant", offset: 1, detail: format!("ordinal {ordinal} out of range for {} declared variants", variants.len()) })?;
-        let spec = spec_fn();
-        let body = &bytes[reader.position()..];
-        let (record, _report) = store::pack_rt::decode_record_body(body, &spec, &store::PackDecodeOptions::default()).map_err(protocol::ProtocolError::from)?;
-        <Self as dsl::DslVariants>::from_named_record(keyword, &record).map_err(|error| protocol::ProtocolError::Malformed { what: "op record", offset: reader.position() as u64, detail: error.to_string() })
-    }
-}
-
-//#endregion 🔖️OpCodec
-
-impl Mutation<SequenceConfig> for SequenceConfigMutation {
-    type Diff = SequenceConfig;
-
-    fn diff(&self, base: &SequenceConfig) -> protocol::MutationOutcome<SequenceConfig> {
-        let mut next = base.clone();
-        match self {
-            SequenceConfigMutation::Snapshot { config } => return protocol::MutationOutcome::new(config.clone()),
-            SequenceConfigMutation::SetLastRun { json } => next.last_run_json = json.clone(),
-            SequenceConfigMutation::SetOrientation { value } => next.orientation = value.clone(),
-            SequenceConfigMutation::SetCamera { camera } => next.camera = camera.clone(),
-            SequenceConfigMutation::SetLocale { value } => next.locale = value.clone(),
-        }
-        protocol::MutationOutcome::new(next)
-    }
-
-    fn inverse(&self, base: &SequenceConfig) -> Vec<Self> {
-        vec![SequenceConfigMutation::Snapshot { config: base.clone() }]
-    }
-}
-//#endregion 🔖️ConfigMutations
 
 //#region 🧪️Tests
 #[cfg(test)]
@@ -242,14 +145,14 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn config_set_last_run_round_trips() {
         let config = SequenceConfig::default();
-        let next = round_trip_config(&config, &SequenceConfigMutation::SetLastRun { json: "{\"ok\":true}".into() });
+        let next = round_trip_config(&config, &SequenceConfigMutation::SetLastRun(SetLastRun { json: "{\"ok\":true}".into() }));
         assert_eq!(next.last_run_json, "{\"ok\":true}");
     }
 
     #[semio_framework_async_macros::async_test]
     async fn config_set_orientation_round_trips() {
         let config = SequenceConfig::default();
-        let next = round_trip_config(&config, &SequenceConfigMutation::SetOrientation { value: "topBottom".into() });
+        let next = round_trip_config(&config, &SequenceConfigMutation::SetOrientation(SetOrientation { value: "topBottom".into() }));
         assert_eq!(next.orientation, "topBottom");
     }
 
@@ -257,25 +160,51 @@ mod tests {
     async fn config_set_camera_round_trips() {
         let config = SequenceConfig::default();
         let camera = SequenceCamera { x: 5.0, y: 6.0, zoom: 2.0 };
-        let next = round_trip_config(&config, &SequenceConfigMutation::SetCamera { camera: camera.clone() });
+        let next = round_trip_config(&config, &SequenceConfigMutation::SetCamera(SetCamera { camera: camera.clone() }));
         assert_eq!(next.camera, camera);
     }
 
     #[semio_framework_async_macros::async_test]
     async fn config_set_locale_round_trips() {
         let config = SequenceConfig::default();
-        let next = round_trip_config(&config, &SequenceConfigMutation::SetLocale { value: "de-DE".into() });
+        let next = round_trip_config(&config, &SequenceConfigMutation::SetLocale(SetLocale { value: "de-DE".into() }));
         assert_eq!(next.locale, "de-DE");
     }
 
     #[semio_framework_async_macros::async_test]
     async fn config_op_text_round_trips_every_variant() {
-        store::os_store::test_support::assert_op_line_round_trip(&SequenceConfigMutation::Snapshot { config: SequenceConfig::default() });
-        store::os_store::test_support::assert_op_line_round_trip(&SequenceConfigMutation::SetLastRun { json: "{}".into() });
-        store::os_store::test_support::assert_op_line_round_trip(&SequenceConfigMutation::SetOrientation { value: "leftRight".into() });
-        store::os_store::test_support::assert_op_line_round_trip(&SequenceConfigMutation::SetCamera { camera: SequenceCamera { x: 1.0, y: 2.0, zoom: 3.0 } });
-        store::os_store::test_support::assert_op_line_round_trip(&SequenceConfigMutation::SetLocale { value: "en-US".into() });
+        store::os_store::test_support::assert_op_line_round_trip(&SequenceConfigMutation::SetLastRun(SetLastRun { json: "{}".into() }));
+        store::os_store::test_support::assert_op_line_round_trip(&SequenceConfigMutation::SetOrientation(SetOrientation { value: "leftRight".into() }));
+        store::os_store::test_support::assert_op_line_round_trip(&SequenceConfigMutation::SetCamera(SetCamera { camera: SequenceCamera { x: 1.0, y: 2.0, zoom: 3.0 } }));
+        store::os_store::test_support::assert_op_line_round_trip(&SequenceConfigMutation::SetLocale(SetLocale { value: "en-US".into() }));
     }
     //#endregion 🔖️ConfigMutationTests
 }
 //#endregion 🧪️Tests
+
+#[cfg(test)]
+mod contract_vectors {
+    use super::*;
+    use protocol::{Mutation, MutationDiff, OpBinary, OpText};
+    use dsl::os_pack as pack;
+
+    #[test]
+    fn sequence_configuration_contract_vectors_match_the_json_oracle() {
+        let vectors: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🔁️mutation-contracts.json")).expect("neutral contract vectors");
+        let base: SequenceConfig = pack::from_json_str(&vectors["base"].to_string()).expect("owned base decoder");
+        assert_eq!(<SequenceConfigMutation as Mutation<SequenceConfig>>::DESCRIPTORS.len(), vectors["cases"].as_array().expect("cases").len());
+        for vector in vectors["cases"].as_array().expect("cases") {
+            let mutation: SequenceConfigMutation = pack::from_json_str(&vector["mutation"].to_string()).expect("owned operation decoder");
+            assert_eq!(serde_json::from_str::<serde_json::Value>(&pack::to_json_string(&mutation)).expect("independent operation oracle"), vector["mutation"]);
+            assert_eq!(mutation.descriptor().semantic_kind, vector["kind"].as_str().expect("semantic kind"));
+            assert_eq!(SequenceConfigMutation::parse_op(&mutation.print_op()).expect("operation text"), mutation);
+            assert_eq!(SequenceConfigMutation::decode_op(&mutation.encode_op().expect("operation binary")).expect("binary decode"), mutation);
+            let outcome = mutation.diff(&base);
+            assert!(outcome.messages().is_empty());
+            let next = outcome.diff().apply(&base).expect("apply diff");
+            assert_eq!(serde_json::from_str::<serde_json::Value>(&pack::to_json_string(&next)).expect("independent state oracle"), vector["expected"]);
+            let restored = mutation.inverse(&base).into_iter().fold(next, |state, inverse| inverse.diff(&state).diff().apply(&state).expect("apply inverse"));
+            assert_eq!(restored, base);
+        }
+    }
+}

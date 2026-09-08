@@ -6,13 +6,14 @@
 //! two-phase registry path.
 
 use super::{JobCtx, run_two_phase};
-use semio_framework_job::{CommitCandidate, Generation, Operation, OperationId, RevisionId, StepOutcome};
+use semio_framework_job::{Generation, Operation, OperationId, RevisionId, StepOutcome};
 use semio_framework_value_derive::ToValue;
 use std::collections::VecDeque;
 use std::future::Future;
 use std::pin::Pin;
 
 const PREVIEW_MAX_BYTES: usize = 1 << 20;
+#[cfg(test)]
 const LOSSLESS_MAX_ITEMS: usize = 2;
 const LOSSLESS_MAX_BYTES: usize = 2 << 20;
 const DIAGNOSTIC_MAX_ITEMS: usize = 32;
@@ -40,18 +41,18 @@ struct InferenceBridgeItem {
 }
 
 #[derive(Debug, PartialEq, Eq)]
+#[cfg(test)]
 enum LosslessInferenceItem {
     Checkpoint(semio_framework_job::Checkpoint),
-    Commit(CommitCandidate),
     #[cfg(test)]
     TestBytes(usize),
 }
 
+#[cfg(test)]
 impl LosslessInferenceItem {
     fn byte_len(&self) -> usize {
         match self {
             Self::Checkpoint(checkpoint) => checkpoint.state.len(),
-            Self::Commit(candidate) => candidate.state.len().saturating_add(candidate.output.len()),
             #[cfg(test)]
             Self::TestBytes(bytes) => *bytes,
         }
@@ -61,6 +62,7 @@ impl LosslessInferenceItem {
 #[derive(Clone, Debug, PartialEq, Eq)]
 enum InferenceBridgeError {
     Oversized { channel: &'static str, bytes: usize, max_bytes: usize },
+    #[cfg(test)]
     Saturated { channel: &'static str, items: usize, bytes: usize },
 }
 
@@ -68,6 +70,7 @@ impl std::fmt::Display for InferenceBridgeError {
     fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::Oversized { channel, bytes, max_bytes } => write!(formatter, "{channel} item has {bytes} bytes, above {max_bytes}"),
+            #[cfg(test)]
             Self::Saturated { channel, items, bytes } => write!(formatter, "{channel} is saturated at {items} items/{bytes} bytes"),
         }
     }
@@ -77,8 +80,11 @@ struct InferenceBridge {
     operation: Operation,
     sequence: u64,
     preview: Option<InferenceBridgeItem>,
+    #[cfg(test)]
     lossless: [Option<LosslessInferenceItem>; LOSSLESS_MAX_ITEMS],
+    #[cfg(test)]
     lossless_len: usize,
+    #[cfg(test)]
     lossless_bytes: usize,
     diagnostics: VecDeque<InferenceBridgeItem>,
     diagnostic_bytes: usize,
@@ -86,7 +92,7 @@ struct InferenceBridge {
 
 impl InferenceBridge {
     fn new(operation: Operation) -> Self {
-        Self { operation, sequence: 0, preview: None, lossless: std::array::from_fn(|_| None), lossless_len: 0, lossless_bytes: 0, diagnostics: VecDeque::new(), diagnostic_bytes: 0 }
+        Self { operation, sequence: 0, preview: None, #[cfg(test)] lossless: std::array::from_fn(|_| None), #[cfg(test)] lossless_len: 0, #[cfg(test)] lossless_bytes: 0, diagnostics: VecDeque::new(), diagnostic_bytes: 0 }
     }
 
     fn item(&mut self, kind: InferenceBridgeKind, payload: Vec<u8>) -> InferenceBridgeItem {
@@ -108,6 +114,7 @@ impl InferenceBridge {
         self.preview.take()
     }
 
+    #[cfg(test)]
     fn publish_lossless(&mut self, item: LosslessInferenceItem) -> Result<(), InferenceBridgeError> {
         let bytes = item.byte_len();
         if bytes > LOSSLESS_MAX_BYTES {
@@ -123,6 +130,7 @@ impl InferenceBridge {
         Ok(())
     }
 
+    #[cfg(test)]
     fn take_lossless(&mut self) -> Option<LosslessInferenceItem> {
         let item = self.lossless[0].take()?;
         for index in 1..self.lossless_len {

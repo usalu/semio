@@ -32,7 +32,7 @@ pub fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(document: &ProcedureSnapshot) -> BuiltNode {
+pub fn render(document: &ProcedureSnapshot) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let host = ImperativeHost::from_snapshot(document.clone());
     TextWindowKit::render(&TextView { text: host.compile_text(), language: Some("imperative".into()), read_only: true })
 }

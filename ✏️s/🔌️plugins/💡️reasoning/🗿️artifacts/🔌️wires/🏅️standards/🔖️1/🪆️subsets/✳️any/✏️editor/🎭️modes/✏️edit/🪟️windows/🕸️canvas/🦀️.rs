@@ -1,10 +1,9 @@
 //! 🕸️ Wires play app — the canvas window: the editable WIRES mindmap board.
 
 use crate::artifacts::wires::schema::{dsl_to_json, fixture_camera, fixture_edges, fixture_nodes, wires_relationships};
-use crate::editor::wires::WIRES_PLAY_APP_ID;
 use dsl::DslValue;
 use dsl::os_pack::json::Value;
-use semio_framework_plugin::{build_canvas_2d_scene, Canvas2dScene, LocalizedLabel, SurfaceKind, UiNode, WindowKindDefinition, WindowOptions};
+use semio_framework_plugin::{Canvas2dScene, LocalizedLabel, SurfaceKind, BuiltNode, UiAssemblyResult, WindowKindDefinition, WindowOptions};
 
 //#region 🔖️Constants
 pub const WIRES_PLAY_WINDOW_CANVAS: &str = "reasoning-wires-composite";
@@ -63,12 +62,12 @@ fn relationship_edge_layers(wires: &DslValue, board: &DslValue) -> Vec<Value> {
     layers
 }
 
-pub fn render(board: &DslValue, wires: &DslValue) -> UiNode {
+pub fn render(board: &DslValue, wires: &DslValue) -> UiAssemblyResult<BuiltNode> {
     let (camera_x, camera_y, zoom) = fixture_camera(board);
     let mut layers: Vec<Value> = fixture_nodes(board).iter().map(dsl_to_json).collect();
     layers.extend(fixture_edges(board).iter().map(dsl_to_json));
     layers.extend(relationship_edge_layers(wires, board));
-    build_canvas_2d_scene(WIRES_PLAY_SURFACE_ID, WIRES_PLAY_APP_ID, Canvas2dScene { camera_x, camera_y, zoom, layers_json: dsl::os_pack::json::to_string(&Value::Array(layers)), snapshot: None })
+    semio_framework_plugin::scene_surface(WIRES_PLAY_SURFACE_ID, semio_framework_ui_contract::SurfaceKind::Canvas2d, &Canvas2dScene { camera_x, camera_y, zoom, layers_json: dsl::os_pack::json::to_string(&Value::Array(layers)), snapshot: None })
 }
 //#endregion 🔖️Render
 
@@ -80,8 +79,8 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn renders_canvas_scene() {
-        let mut app = new_app();
-        assert!(render_body(&mut app, WIRES_PLAY_BODY_COMPOSITE).contains("canvas-2d"));
+        let mut app = new_app().await;
+        assert!(render_body(&mut app, WIRES_PLAY_BODY_COMPOSITE).await.contains("canvas-2d"));
     }
 
     #[semio_framework_async_macros::async_test]

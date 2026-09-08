@@ -131,7 +131,7 @@ pub fn imperative_module_topic_contribution() -> semio_framework::TopicContribut
     imperative_extension_sdk::imperative_module_topic_contribution("core", "Actions", "zap", "core", "Core", MODULE_VERSION, &registry, Some(&catalogue))
 }
 
-#[cfg(target_arch = "wasm32")]
+#[cfg(all(target_arch = "wasm32", feature = "extension-entry"))]
 fn bundle() -> semio_framework_plugin::ExtensionBundle {
     let topic_contribution = imperative_module_topic_contribution();
     semio_framework_plugin::ExtensionBundle::new(EXTENSION_ID, "Imperative Effect", MODULE_VERSION)
@@ -158,8 +158,8 @@ mod tests {
         let topic_contribution = entry.topic_contribution.expect("imperative module topic contribution");
         assert_eq!(topic_contribution.topic, "imperative.module");
         let payload = topic_contribution.payload;
-        assert_eq!(payload["appId"], imperative_extension_sdk::IMPERATIVE_PLAY_APP_ID);
-        assert_eq!(payload["moduleId"], "core");
+        assert_eq!(payload["appId"].as_str(), Some(imperative_extension_sdk::IMPERATIVE_PLAY_APP_ID));
+        assert_eq!(payload["moduleId"].as_str(), Some("core"));
         assert!(payload["manifestJson"].as_str().unwrap_or_default().contains("imperative.extension"));
     }
 

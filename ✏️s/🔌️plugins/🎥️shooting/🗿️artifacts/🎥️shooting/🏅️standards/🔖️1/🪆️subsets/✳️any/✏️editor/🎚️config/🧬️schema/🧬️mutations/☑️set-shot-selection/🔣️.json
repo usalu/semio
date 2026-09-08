@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🧬️mutations/☑️set-shot-selection",
+  "semanticKind": "set-shot-selection",
+  "displayName": "Set Shot Selection",
+  "emoji": "☑️",
+  "aggregateVariant": "SetShotSelection",
+  "payloadSchema": "🧬️.schema.json",
+  "textOpcode": "set-shot-selection",
+  "binaryTag": 1,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "apply-only",
+  "outcomeClasses": [
+    "applied"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "text",
+    "binary",
+    "json-schema"
+  ]
+}

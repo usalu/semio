@@ -14,42 +14,33 @@ use schema::ArtifactSchema;
 //#region 🔖️Snapshot
 /// 📸️ Persisted shooting document snapshot (persistent fields of the artifact).
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.shooting.shooting")]
 pub struct ShootingSnapshot {
     #[state(artifact)]
     pub schema: String,
     #[state(artifact)]
-    #[cfg_attr(test, serde(default))]
     #[value(default)]
     pub assets: Vec<ShootingAsset>,
     #[state(artifact)]
-    #[cfg_attr(test, serde(default))]
     #[value(default)]
     pub saved_cameras: Vec<ShootingSavedCamera>,
     #[state(artifact)]
-    #[cfg_attr(test, serde(default))]
     #[value(default)]
     pub scene: ShootingSceneLighting,
     #[state(artifact)]
-    #[cfg_attr(test, serde(default))]
     #[value(default)]
     pub shots: Vec<ShootingShot>,
     #[state(artifact)]
-    #[cfg_attr(test, serde(default))]
     #[value(default)]
     pub active_shot_id: String,
     #[state(artifact)]
-    #[cfg_attr(test, serde(default))]
     #[value(default)]
     pub active_asset_id: String,
     /// 🕸️ Composed `s.stdio.semio.image` child — the scene's emblem overlay, genuinely absent for
     /// most documents (no default fixture sets one). See `🔖️Composition` in the artifact root.
     #[state(artifact)]
     #[child(kind = "s.stdio.semio.image")]
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub emblem: Option<ShootingEmblemChild>,
 }

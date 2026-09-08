@@ -6,12 +6,15 @@
 
 use crate::wfc_engine::bitset::PatternSet;
 use crate::wfc_engine::error::ModelError;
-use crate::wfc_engine::ids::{PatternId, RelationId, TileId};
+use crate::wfc_engine::ids::{PatternId, RelationId};
+#[cfg(test)]
+use crate::wfc_engine::ids::TileId;
 use crate::wfc_engine::weights::WeightTable;
 
 // #region 🔖️Info
 /// 🧩️ Per-pattern metadata carried alongside the compiled compatibility tables.
 #[derive(Clone, Debug)]
+#[cfg(test)]
 pub struct PatternInfo {
     pub weight: f64,
     /// 🧩️ Interned tag ids (see [`CompiledModel::tag_name`]); order-independent, deduplicated.
@@ -25,6 +28,7 @@ pub struct PatternInfo {
 
 /// ↔ Per-relation metadata: a display name and its declared directed inverse.
 #[derive(Clone, Debug)]
+#[cfg(test)]
 pub struct RelationInfo {
     pub name: String,
     pub inverse: RelationId,
@@ -36,6 +40,7 @@ pub struct RelationInfo {
 /// resolves everything into dense bitset tables. The lowest-level builder in the crate — `TiledModelBuilder`
 /// and pattern extraction both compile down to this shape.
 #[derive(Clone, Debug, Default)]
+#[cfg(test)]
 pub struct ModelBuilder {
     weights: Vec<f64>,
     tags: Vec<Vec<u32>>,
@@ -49,6 +54,7 @@ pub struct ModelBuilder {
     deny_pairs: Vec<Vec<(PatternId, PatternId)>>,
 }
 
+#[cfg(test)]
 impl ModelBuilder {
     pub fn new() -> Self {
         Self::default()
@@ -173,15 +179,21 @@ impl ModelBuilder {
 /// compatibility exclusively through [`CompiledModel::allowed`]/[`CompiledModel::supporters`].
 #[derive(Clone, Debug)]
 pub struct CompiledModel {
+    #[cfg(test)]
     patterns: Vec<PatternInfo>,
+    #[cfg(test)]
     relations: Vec<RelationInfo>,
     /// 🗂️ Indexed `[relation.index() * pattern_count + source.index()]`.
     allowed: Vec<PatternSet>,
     /// 🗂️ The transpose of `allowed`: indexed `[relation.index() * pattern_count + target.index()]`.
+    #[cfg(test)]
     supporters: Vec<PatternSet>,
+    #[cfg(test)]
     base_support: Vec<u32>,
     weights: WeightTable,
+    #[cfg(test)]
     tag_names: Vec<String>,
+    #[cfg(test)]
     tag_ids: std::collections::HashMap<String, u32>,
     fingerprint: u64,
 }
@@ -191,6 +203,7 @@ pub struct CompiledModel {
 pub(crate) enum AssemblyModelPhase {
     Weights,
     Allowed,
+    #[cfg(test)]
     Supporters,
     Complete,
 }
@@ -203,14 +216,21 @@ pub(crate) struct AssemblyModelBuild {
     cursor: usize,
     word_cursor: usize,
     current_words: Vec<u64>,
+    #[cfg(test)]
     current_support: u32,
+    #[cfg(test)]
     ln_w: Vec<f64>,
     w_ln_w: Vec<f64>,
+    #[cfg(test)]
     w_int: Vec<u64>,
+    #[cfg(test)]
     all_integral: bool,
+    #[cfg(test)]
     patterns: Vec<PatternInfo>,
     allowed: Vec<PatternSet>,
+    #[cfg(test)]
     supporters: Vec<PatternSet>,
+    #[cfg(test)]
     base_support: Vec<u32>,
     fingerprint: u64,
     completed_units: usize,
@@ -223,7 +243,8 @@ impl AssemblyModelBuild {
             return Err(ModelError::EmptyPatternUniverse);
         }
         let word_count = raw_weights.len().div_ceil(64);
-        let total_units = raw_weights.len().saturating_add(raw_weights.len().saturating_mul(word_count).saturating_mul(2)).saturating_add(4);
+        let table_count = if cfg!(test) { 2 } else { 1 };
+        let total_units = raw_weights.len().saturating_add(raw_weights.len().saturating_mul(word_count).saturating_mul(table_count)).saturating_add(table_count + 2);
         let mut build = Self {
             phase: AssemblyModelPhase::Weights,
             raw_weights,
@@ -231,14 +252,21 @@ impl AssemblyModelBuild {
             cursor: 0,
             word_cursor: 0,
             current_words: Vec::new(),
+            #[cfg(test)]
             current_support: 0,
+            #[cfg(test)]
             ln_w: Vec::new(),
             w_ln_w: Vec::new(),
+            #[cfg(test)]
             w_int: Vec::new(),
+            #[cfg(test)]
             all_integral: true,
+            #[cfg(test)]
             patterns: Vec::new(),
             allowed: Vec::new(),
+            #[cfg(test)]
             supporters: Vec::new(),
+            #[cfg(test)]
             base_support: Vec::new(),
             fingerprint: 0xcbf2_9ce4_8422_2325,
             completed_units: 0,
@@ -282,14 +310,17 @@ impl AssemblyModelBuild {
                         return Err(ModelError::InvalidWeight { pattern_index: self.cursor, value });
                     }
                     let ln = if value > 0.0 { value.ln() } else { 0.0 };
-                    self.ln_w.push(ln);
                     self.w_ln_w.push(if value > 0.0 { value * ln } else { 0.0 });
-                    if value.fract() == 0.0 && value <= u64::MAX as f64 {
-                        self.w_int.push(value as u64);
-                    } else {
-                        self.all_integral = false;
+                    #[cfg(test)]
+                    {
+                        self.ln_w.push(ln);
+                        if value.fract() == 0.0 && value <= u64::MAX as f64 {
+                            self.w_int.push(value as u64);
+                        } else {
+                            self.all_integral = false;
+                        }
+                        self.patterns.push(PatternInfo { weight: value, tags: Vec::new(), tile: None, orbit_canonical: None });
                     }
-                    self.patterns.push(PatternInfo { weight: value, tags: Vec::new(), tile: None, orbit_canonical: None });
                     self.mix(&value.to_bits().to_le_bytes());
                     self.mix(&0u64.to_le_bytes());
                     self.cursor += 1;
@@ -315,9 +346,13 @@ impl AssemblyModelBuild {
                     }
                 } else {
                     self.cursor = 0;
-                    self.phase = AssemblyModelPhase::Supporters;
+                    #[cfg(test)]
+                    { self.phase = AssemblyModelPhase::Supporters; }
+                    #[cfg(not(test))]
+                    { self.phase = AssemblyModelPhase::Complete; }
                 }
             }
+            #[cfg(test)]
             AssemblyModelPhase::Supporters => {
                 if self.cursor < pattern_count {
                     let word = self.word(true);
@@ -337,16 +372,24 @@ impl AssemblyModelBuild {
                 }
             }
             AssemblyModelPhase::Complete => {
-                let weights = WeightTable::from_resumable_parts(std::mem::take(&mut self.raw_weights), std::mem::take(&mut self.ln_w), std::mem::take(&mut self.w_ln_w), self.all_integral.then(|| std::mem::take(&mut self.w_int)));
+                let weights = WeightTable::from_resumable_parts(std::mem::take(&mut self.raw_weights), std::mem::take(&mut self.w_ln_w));
+                #[cfg(test)]
+                let weights = weights.with_reference_columns(std::mem::take(&mut self.ln_w), self.all_integral.then(|| std::mem::take(&mut self.w_int)));
                 self.completed_units += 1;
                 return Ok(Some(CompiledModel {
+                    #[cfg(test)]
                     patterns: std::mem::take(&mut self.patterns),
+                    #[cfg(test)]
                     relations: vec![RelationInfo { name: "adjacent".into(), inverse: RelationId(0) }],
                     allowed: std::mem::take(&mut self.allowed),
+                    #[cfg(test)]
                     supporters: std::mem::take(&mut self.supporters),
+                    #[cfg(test)]
                     base_support: std::mem::take(&mut self.base_support),
                     weights,
+                    #[cfg(test)]
                     tag_names: Vec::new(),
+                    #[cfg(test)]
                     tag_ids: std::collections::HashMap::new(),
                     fingerprint: self.fingerprint,
                 }));
@@ -361,10 +404,11 @@ impl AssemblyModelBuild {
 impl CompiledModel {
     #[inline]
     pub fn pattern_count(&self) -> usize {
-        self.patterns.len()
+        self.weights.len()
     }
 
     #[inline]
+    #[cfg(test)]
     pub fn relation_count(&self) -> usize {
         self.relations.len()
     }
@@ -375,16 +419,19 @@ impl CompiledModel {
     }
 
     #[inline]
+    #[cfg(test)]
     pub fn pattern_info(&self, p: PatternId) -> &PatternInfo {
         &self.patterns[p.index()]
     }
 
     #[inline]
+    #[cfg(test)]
     pub fn relation_info(&self, r: RelationId) -> &RelationInfo {
         &self.relations[r.index()]
     }
 
     #[inline]
+    #[cfg(test)]
     pub fn inverse(&self, r: RelationId) -> RelationId {
         self.relations[r.index()].inverse
     }
@@ -395,27 +442,33 @@ impl CompiledModel {
     }
 
     #[inline]
+    #[cfg(test)]
     pub fn supporters(&self, r: RelationId, tgt: PatternId) -> &PatternSet {
         &self.supporters[r.index() * self.pattern_count() + tgt.index()]
     }
 
     #[inline]
+    #[cfg(test)]
     pub fn base_support(&self, r: RelationId, tgt: PatternId) -> u32 {
         self.base_support[r.index() * self.pattern_count() + tgt.index()]
     }
 
+    #[cfg(test)]
     pub fn tag_id(&self, name: &str) -> Option<u32> {
         self.tag_ids.get(name).copied()
     }
 
+    #[cfg(test)]
     pub fn tag_name(&self, id: u32) -> Option<&str> {
         self.tag_names.get(id as usize).map(|s| s.as_str())
     }
 
+    #[cfg(test)]
     pub fn full_domain(&self) -> PatternSet {
         PatternSet::new_full(self.pattern_count())
     }
 
+    #[cfg(test)]
     fn compute_fingerprint(&self) -> u64 {
         let mut h: u64 = 0xcbf2_9ce4_8422_2325;
         let mut mix = |bytes: &[u8]| {
@@ -452,6 +505,7 @@ impl CompiledModel {
 
     /// ✅️ Checks that every relation's compiled table is the exact transpose of its declared
     /// inverse's table (`allowed(r,a,b) == allowed(inv(r),b,a)` for every `a, b`).
+    #[cfg(test)]
     pub fn validate(&self) -> Result<(), ModelError> {
         if self.patterns.is_empty() {
             return Err(ModelError::EmptyPatternUniverse);
@@ -473,6 +527,7 @@ impl CompiledModel {
     }
 
     /// 🔍️ Non-fatal structural findings a model author probably wants to know about.
+    #[cfg(test)]
     pub fn lint(&self) -> Vec<LintFinding> {
         let mut findings = Vec::new();
         let p = self.pattern_count();
@@ -498,6 +553,7 @@ impl CompiledModel {
         findings
     }
 
+    #[cfg(test)]
     pub fn stats(&self) -> ModelStats {
         let p = self.pattern_count();
         let r = self.relation_count();
@@ -520,6 +576,7 @@ impl CompiledModel {
 // #region 🔖️Lint
 /// 🔍️ One non-fatal structural observation from [`CompiledModel::lint`].
 #[derive(Clone, PartialEq, Debug)]
+#[cfg(test)]
 pub enum LintFinding {
     /// 🔍️ No pattern supports `pattern` as a neighbor under `relation` — it can never appear
     /// adjacent to anything along that relation and will always be pruned immediately.
@@ -533,6 +590,7 @@ pub enum LintFinding {
 
 /// 📊️ Aggregate statistics over a [`CompiledModel`], useful for diagnostics and capacity planning.
 #[derive(Clone, Copy, PartialEq, Debug)]
+#[cfg(test)]
 pub struct ModelStats {
     pub pattern_count: usize,
     pub relation_count: usize,

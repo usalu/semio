@@ -8,6 +8,9 @@ use semio_framework_hash::Sha256;
 #[path = "🧱️chunk-cas/🦀️.rs"]
 pub mod chunk_cas;
 
+#[path = "🔒️file-fence/🦀️.rs"]
+mod file_fence;
+
 /// 🔐️ Domain prefix for a canonical checkpoint identity.
 pub const CHECKPOINT_ID_V1_DOMAIN: &[u8] = b"semio.hub.artifact-checkpoint.v1\0";
 

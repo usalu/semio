@@ -10,7 +10,7 @@ pub(crate) fn render(surface_id: &str, _controller_id: &str, fixture: &JackSnaps
     let query = &cfg.jack_query;
     let graph = crate::editor::jack::graph_from_fixture_or_default(fixture);
     let cursor = cfg.editor_selection.as_ref().map_or(0, |selection| selection.end as usize);
-    let selection_json = cfg.editor_selection.as_ref().map(|selection| json!({ "start": selection.start, "end": selection.end }).to_string());
+    let selection_json = cfg.editor_selection.as_ref().map(|selection| pack::json!({ "start": selection.start, "end": selection.end }).to_string());
     scene_surface(
         surface_id,
         SurfaceKind::TextEditor,

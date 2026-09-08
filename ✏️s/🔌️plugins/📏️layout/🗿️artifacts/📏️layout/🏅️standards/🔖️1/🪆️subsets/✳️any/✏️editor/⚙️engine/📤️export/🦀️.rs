@@ -6,16 +6,18 @@ use semio_framework_value_derive::{FromValue, ToValue};
 use semio_framework::action_bus::RetainedToolWireInput;
 use semio_framework::{InteractiveJobClassification, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError};
 use semio_framework_job::{
-    BatchDriveConfig, BatchJobParams, Checkpoint, CommitCandidate, Generation, InteractiveJob, InteractiveJobCloseStep, InteractiveStage, JobFault, JobPayloadCloseStep, JobPayloadStream, Operation, RetainedJobPayload, RetainedJobPayloadWriter,
-    RevisionId, StepContext, StepOutcome,
+    Checkpoint, CommitCandidate, InteractiveJob, InteractiveJobCloseStep, JobFault, JobPayloadCloseStep, JobPayloadStream, Operation, RetainedJobPayload, RetainedJobPayloadWriter,
+    StepContext, StepOutcome,
 };
 use semio_framework_plugin::app::{
-    ArtifactDownloadOutput, ArtifactMediaExportCompletion, ArtifactMediaExportCredit, ArtifactMediaExportResult, ArtifactOutputChunks, ArtifactOwnedToolJobFactory, ArtifactReservedToolJob, ArtifactSnapshotCloseLease, ArtifactToolCompletion,
+    ArtifactDownloadOutput, ArtifactMediaExportCompletion, ArtifactMediaExportCredit, ArtifactMediaExportResult, ArtifactOutputChunks, ArtifactReservedToolJob, ArtifactSnapshotCloseLease, ArtifactToolCompletion,
 };
 use semio_framework_plugin::{ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactReservedJob, EditorApp, EphemeralEmit, Fault, MediaClass, MediaForm, MediaType, PluginCloseStep};
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::base::schema::geometry::{SemioPoint2, SemioPoint3, SemioQuaternion, SemioRgba, SemioTransform};
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::{DrawNode, PathSegment};
 use std::sync::Arc;
+#[cfg(test)]
+use semio_framework_job::{BatchDriveConfig, BatchJobParams, Generation, InteractiveStage, RevisionId};
 
 //#region 🔖️Contract
 pub const LAYOUT_EXPORT_TOOL_IDS: &[&str] = &["exportPng", "exportSvg", "exportPdf", "exportPackage"];
@@ -23,7 +25,6 @@ pub const LAYOUT_EXPORT_PAYLOAD_SCHEMA: &str = "layout.layout.tool-command.v1";
 pub const LAYOUT_MEDIA_EXPORT_PAYLOAD_SCHEMA: &str = "layout.layout.media-export.v1";
 pub const LAYOUT_MEDIA_EXPORT_TOOL_ID: &str = "export-media:layout:out";
 pub const LAYOUT_MEDIA_EXPORT_SCHEMA: &str = "2d.layout";
-pub const LAYOUT_PREFLIGHT_REPORT_SCHEMA: &str = "layout.preflight-report.array.v1";
 pub const MAX_LAYOUT_EXPORT_RAW_BYTES: usize = 2 << 20;
 pub const MAX_LAYOUT_EXPORT_COMMAND_RAW_BYTES: usize = 4_096;
 pub const MAX_LAYOUT_EXPORT_PAGES: usize = 64;
@@ -133,6 +134,7 @@ pub struct LayoutExportCheckpoint {
     pub output_digest: u64,
 }
 
+#[cfg(test)]
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct LayoutExportCommit {
     pub filename: String,
@@ -141,6 +143,7 @@ pub struct LayoutExportCommit {
     pub data: String,
 }
 
+#[cfg(test)]
 impl LayoutExportCommit {
     pub(crate) fn from_output(kind: LayoutExportKind, name: &str, bytes: Vec<u8>) -> Self {
         // SAFETY: every final route emits only ASCII: SVG's owned numeric vocabulary or the owned
@@ -151,7 +154,7 @@ impl LayoutExportCommit {
 
     fn from_chunks(kind: LayoutExportKind, name: &str, chunks: &ArtifactOutputChunks) -> Result<Self, String> {
         let mut bytes = Vec::with_capacity(chunks.bytes());
-        while let Some(chunk) = chunks.take_chunk().map_err(|error| error.to_string())? {
+        while let Some(chunk) = chunks.take_chunk().map_err(|error| error.message)? {
             bytes.extend_from_slice(&chunk);
         }
         Ok(Self::from_output(kind, name, bytes))
@@ -2358,7 +2361,8 @@ impl LayoutExportToolJob {
     }
 
     fn decoded_wire_command_matches(&self) -> bool {
-        let Ok((verb, command)) = serde_json::from_slice::<(String, Option<LayoutExportWireCommand>)>(&self.raw_bytes) else { return false };
+        let Ok(raw) = std::str::from_utf8(&self.raw_bytes) else { return false };
+        let Ok((verb, command)) = dsl::os_pack::json::from_json_str::<(String, Option<LayoutExportWireCommand>)>(raw) else { return false };
         if verb != self.kind.tool_id() {
             return false;
         }
@@ -2579,7 +2583,7 @@ impl ArtifactReservedJob for LayoutMediaExportJob {
         if maximum_items == 0 {
             return Ok(PluginCloseStep::Pending { released_items: 0, released_bytes: 0 });
         }
-        match self.inner.close_step(maximum_items, maximum_bytes)? {
+        match ArtifactReservedJob::close_step(&mut self.inner, maximum_items, maximum_bytes)? {
             PluginCloseStep::Complete => {}
             step => return Ok(step),
         }
@@ -3072,6 +3076,7 @@ impl LayoutExportJob {
             && self.snapshot_placeholder.is_none()
     }
 
+    #[cfg(test)]
     pub fn restore(operation: Operation, request: LayoutExportRequest, state: &[u8]) -> Result<Self, String> {
         let checkpoint = decode_checkpoint(&operation, &request, state)?;
         let mut job = Self::new(operation, request)?;
@@ -3845,12 +3850,12 @@ impl LayoutExportJob {
         let chunk = if self.request.kind.binary() { self.encoded.take_chunk() } else { self.output.take_chunk() };
         if let Some(bytes) = chunk {
             if let Some(credit) = &self.media_output_credit {
-                credit.credit(bytes.len()).map_err(|error| error.to_string())?;
+                credit.credit(bytes.len()).map_err(|error| error.message)?;
             }
-            self.output_chunks.push(bytes).map_err(|error| error.to_string())?;
+            self.output_chunks.push(bytes).map_err(|error| error.message)?;
             self.commit_cursor += 1;
         } else {
-            self.output_chunks.seal().map_err(|error| error.to_string())?;
+            self.output_chunks.seal().map_err(|error| error.message)?;
             self.stage = ExportStage::Complete;
         }
         Ok(())
@@ -4070,11 +4075,13 @@ fn add_validated_items(total: &mut usize, count: usize) -> Result<(), String> {
 //#endregion 🔧️PlanPrimitives
 
 //#region 🔧️CodecPrimitives
+#[cfg(test)]
 struct CheckpointReader<'a> {
     bytes: &'a [u8],
     cursor: usize,
 }
 
+#[cfg(test)]
 impl<'a> CheckpointReader<'a> {
     fn take(&mut self, count: usize) -> Result<&'a [u8], String> {
         let end = self.cursor.checked_add(count).ok_or("layout-export-checkpoint-decode")?;
@@ -4152,6 +4159,7 @@ fn encode_checkpoint(operation: &Operation, request: &LayoutExportRequest, check
     Ok(state.bytes)
 }
 
+#[cfg(test)]
 fn decode_checkpoint(operation: &Operation, request: &LayoutExportRequest, state: &[u8]) -> Result<LayoutExportCheckpoint, String> {
     if state.len() != MAX_LAYOUT_EXPORT_CHECKPOINT_BYTES {
         return Err("layout-export-checkpoint-limit".into());
@@ -4225,6 +4233,7 @@ pub(crate) fn output_name(request: &LayoutExportRequest) -> String {
     }
 }
 
+#[cfg(test)]
 fn decode_base64(value: &str) -> Result<Vec<u8>, String> {
     let mut result = Vec::with_capacity(value.len() / 4 * 3);
     for quartet in value.as_bytes().chunks_exact(4) {
@@ -4246,6 +4255,7 @@ fn decode_base64(value: &str) -> Result<Vec<u8>, String> {
     Ok(result)
 }
 
+#[cfg(test)]
 fn base64_value(byte: u8) -> Result<u8, String> {
     match byte {
         b'A'..=b'Z' => Ok(byte - b'A'),
@@ -4353,7 +4363,7 @@ pub fn export_document_png_headless_batch(doc: &LayoutSnapshot, page_id: &str) -
 
 #[cfg(test)]
 pub fn export_package_zip_headless_batch(doc_json: &str, preflight_json: &str) -> Result<Vec<u8>, crate::artifacts::layout::io::LayoutError> {
-    let snapshot: LayoutSnapshot = serde_json::from_str(doc_json)?;
+    let snapshot: LayoutSnapshot = dsl::os_pack::json::from_json_str(doc_json)?;
     let commit = headless_batch_export(LayoutExportKind::Package, &snapshot, None, Some(preflight_json)).map_err(crate::artifacts::layout::io::LayoutError::Svg)?;
     decode_base64(&commit.data).map_err(crate::artifacts::layout::io::LayoutError::Svg)
 }
@@ -4538,7 +4548,7 @@ mod tests {
                 Ok(step) => panic!("unwitnessed close must not reach {step:?}"),
             }
         };
-        assert!(error.to_string().contains("snapshot-unwitnessed"));
+        assert!(format!("{error:?}").contains("snapshot-unwitnessed"));
         assert!(job.json_validation.is_none());
         assert!(job.typed_validation.is_none());
         assert!(job.package_json.is_none());
@@ -4662,7 +4672,7 @@ mod tests {
         let guide = crate::artifacts::layout::LayoutRect { x: 0.0, y: 0.0, width: 1.0, height: 1.0 };
         let page = &mut snapshot.pages[0];
         page.frames.resize(MAX_LAYOUT_EXPORT_FRAMES_PER_PAGE, frame);
-        page.overrides.resize(MAX_LAYOUT_EXPORT_FRAMES_PER_PAGE, crate::artifacts::layout::PageOverride { object_id: "frame-1".into(), bounds: None, visible: None, locked: None });
+        page.overrides.resize(MAX_LAYOUT_EXPORT_FRAMES_PER_PAGE, PageOverride { object_id: "frame-1".into(), bounds: None, visible: None, locked: None });
         page.guides.resize(MAX_LAYOUT_EXPORT_GUIDES_PER_PAGE, guide);
         page.layers.resize(MAX_LAYOUT_EXPORT_LAYERS_PER_PAGE, layer);
         for layer in &mut page.layers {
@@ -4747,7 +4757,7 @@ mod tests {
             content: Default::default(),
         });
         snapshot.referenced_model = Some(store::ArtifactLink { target: store::os_io::ArtifactRef::parse_uri("document!s.stdio.semio@v1/model").expect("model reference"), pin: store::LinkPin::Head, role: "model".into() });
-        let expected = serde_json::to_vec(&snapshot).expect("reference JSON");
+        let expected: serde_json::Value = serde_json::from_str(&dsl::os_pack::to_json_string(&snapshot)).expect("independent document JSON oracle");
         let mut cursor = TypedJsonCursor::document();
         let mut actual = Vec::new();
         loop {
@@ -4758,7 +4768,7 @@ mod tests {
                 break;
             }
         }
-        assert_eq!(actual, expected);
+        assert_eq!(serde_json::from_slice::<serde_json::Value>(&actual).expect("independent bounded JSON oracle"), expected);
     }
 
     #[test]
@@ -4778,7 +4788,7 @@ mod tests {
     #[test]
     fn terminal_candidate_is_empty_and_owned_chunks_never_exceed_four_kibibytes() {
         let operation = operation();
-        let mut job = LayoutExportJob::new(operation, request(LayoutExportKind::Png)).expect("job");
+        let job = LayoutExportJob::new(operation, request(LayoutExportKind::Png)).expect("job");
         let snapshot_owner = Arc::clone(&job.request.snapshot);
         let chunks = job.output_chunks.clone();
         let params = BatchJobParams {
@@ -4807,7 +4817,7 @@ mod tests {
     fn supplied_preflight_array_is_preserved_byte_for_byte_in_package_entry() {
         let snapshot = crate::artifacts::layout::schema::default_document();
         let supplied = r#"[{"kind":"custom","severity":"warning"}]"#;
-        let json = serde_json::to_string(&snapshot).expect("document json");
+        let json = dsl::os_pack::to_json_string(&snapshot);
         let package = export_package_zip_headless_batch(&json, supplied).expect("package");
         assert!(package.windows(supplied.len()).any(|window| window == supplied.as_bytes()));
     }

@@ -6,8 +6,8 @@ use semio_framework_plugin::plugin_app_close_prelude::*;
 use semio_framework_plugin::{ExecutionMode, Plugin, PluginApp};
 
 //#region 🗃️Apps
-/// 🗃️ Closed runtime app fleet for the flow editor and viewer surfaces.
 semio_framework_dispatch_macros::dyn_enum_close! {
+    /// 🗃️ Closed runtime app fleet for the flow editor and viewer surfaces.
     pub enum FlowApps: PluginApp {
         FlowEditor(VcsArtifactApp<EditorApp<crate::editor::flow::FlowPlayApp>, semio_s_plugin_stdio::artifacts::semio::SemioMembers>),
         FlowViewer(VcsArtifactApp<ViewerApp<crate::viewer::flow::FlowViewer>, semio_s_plugin_stdio::artifacts::semio::SemioMembers>),

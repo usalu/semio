@@ -7,6 +7,7 @@
 //! ephemeral `WiresPlayRuntime` (selection + in-flight pointer drag of one board node) plus the `locale`
 //! the deleted `ViewModel` used to carry.
 
+#[cfg(test)]
 use protocol::Mutation;
 
 //#region 🔖️Config
@@ -81,101 +82,9 @@ impl Default for WiresConfig {
 store::impl_whole_record_config!(WiresConfig);
 //#endregion 🔖️Config
 
-//#region 🔖️ConfigOperations
-/// 🧮️ [`WiresConfig`]'s operation enum — one variant per settled interaction (mirrors the pre-B1
-/// `WiresPlayRuntime` field writes). Every field already carries its own setter, so `backwards()`
-/// returns the SAME variant re-addressed at `base`'s old value — a targeted, in-kind inverse per
-/// this ticket's ban on whole-record replace, rather than a generic whole-config snapshot.
-/// `Mutation::Diff` is the WHOLE `WiresConfig` (not a granular patch type): `diff()` returns "the
-/// full config after this op", and `store::impl_whole_record_config!` supplies the
-/// `MutationDiff<WiresConfig>` that returns that snapshot verbatim, ignoring `base`.
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslOps)]
-pub enum WiresConfigMutation {
-    #[dsl(key = "drag")]
-    SetDrag { node_id: Option<String>, last_x: f64, last_y: f64 },
-    #[dsl(key = "locale")]
-    SetLocale { value: String },
-}
-
-//#region 🔖️OpCodec
-impl protocol::OpText for WiresConfigMutation {
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        let variants = <Self as dsl::DslVariants>::variants();
-        for (keyword, spec_fn) in &variants {
-            let probe = format!("{} ", keyword);
-            if line == keyword.as_str() || line.starts_with(&probe) {
-                let record = dsl::parse(line, &spec_fn(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline })?;
-                return <Self as dsl::DslVariants>::from_named_record(keyword, &record);
-            }
-        }
-        Err(dsl::__rt::field_error(format!("unknown mutation line '{line}'")))
-    }
-    fn print_op(&self) -> String {
-        let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
-        let variants = <Self as dsl::DslVariants>::variants();
-        let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
-        dsl::print(&record, &spec_fn(), dsl::JoinMode::Inline)
-    }
-}
-
-/// 🎯️ Handcrafted OpBinary (P6).
-impl protocol::OpBinary for WiresConfigMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        const OP_BINARY_FORMAT: u8 = 1;
-        let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
-        let variants = <Self as dsl::DslVariants>::variants();
-        let ordinal = variants.iter().position(|(k, _)| *k == keyword).ok_or(protocol::ProtocolError::Malformed { what: "op variant", offset: 0, detail: format!("keyword {keyword:?} is not a declared variant") })?;
-        let spec = (variants[ordinal].1)();
-        let body = store::pack_rt::encode_record_body(&spec, &record, &store::PackEncodeOptions::default()).map_err(protocol::ProtocolError::from)?;
-        let mut out = Vec::with_capacity(body.len() + 3);
-        out.push(OP_BINARY_FORMAT);
-        store::pack_rt::write_varint_u64(&mut out, ordinal as u64);
-        out.extend_from_slice(&body);
-        Ok(out)
-    }
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        const OP_BINARY_FORMAT: u8 = 1;
-        let mut reader = store::pack_rt::ByteReader::new(bytes);
-        let format = reader.read_u8()?;
-        if format != OP_BINARY_FORMAT {
-            return Err(protocol::ProtocolError::Malformed { what: "op format", offset: 0, detail: format!("unsupported op format {format}") });
-        }
-        let ordinal = reader.read_varint_u64()?;
-        let variants = <Self as dsl::DslVariants>::variants();
-        let (keyword, spec_fn) = variants.get(ordinal as usize).ok_or(protocol::ProtocolError::Malformed { what: "op variant", offset: 1, detail: format!("ordinal {ordinal} out of range for {} declared variants", variants.len()) })?;
-        let spec = spec_fn();
-        let body = &bytes[reader.position()..];
-        let (record, _report) = store::pack_rt::decode_record_body(body, &spec, &store::PackDecodeOptions::default()).map_err(protocol::ProtocolError::from)?;
-        <Self as dsl::DslVariants>::from_named_record(keyword, &record).map_err(|error| protocol::ProtocolError::Malformed { what: "op record", offset: reader.position() as u64, detail: error.to_string() })
-    }
-}
-
-//#endregion 🔖️OpCodec
-
-impl Mutation<WiresConfig> for WiresConfigMutation {
-    type Diff = WiresConfig;
-
-    fn diff(&self, base: &WiresConfig) -> protocol::MutationOutcome<WiresConfig> {
-        let mut next = base.clone();
-        match self {
-            WiresConfigMutation::SetDrag { node_id, last_x, last_y } => {
-                next.drag_node_id = node_id.clone();
-                next.drag_last_x = *last_x;
-                next.drag_last_y = *last_y;
-            }
-            WiresConfigMutation::SetLocale { value } => next.locale = value.clone(),
-        }
-        protocol::MutationOutcome::new(next)
-    }
-
-    fn inverse(&self, base: &WiresConfig) -> Vec<Self> {
-        match self {
-            WiresConfigMutation::SetDrag { .. } => vec![WiresConfigMutation::SetDrag { node_id: base.drag_node_id.clone(), last_x: base.drag_last_x, last_y: base.drag_last_y }],
-            WiresConfigMutation::SetLocale { .. } => vec![WiresConfigMutation::SetLocale { value: base.locale.clone() }],
-        }
-    }
-}
-//#endregion 🔖️ConfigOperations
+#[path = "🧬️schema/🧬️mutations/🦀️.rs"]
+mod mutations;
+pub use mutations::*;
 
 //#region 🧪️Tests
 #[cfg(test)]
@@ -203,13 +112,13 @@ mod tests {
     //#region 🔖️ConfigOperationTests
     #[semio_framework_async_macros::async_test]
     async fn config_drag_op_text_round_trip() {
-        store::os_store::test_support::assert_op_line_round_trip(&WiresConfigMutation::SetDrag { node_id: Some("node-1".into()), last_x: 12.5, last_y: -7.25 });
-        store::os_store::test_support::assert_op_line_round_trip(&WiresConfigMutation::SetDrag { node_id: None, last_x: 0.0, last_y: 0.0 });
+        store::os_store::test_support::assert_op_line_round_trip(&WiresConfigMutation::SetDrag(SetDrag { node_id: Some("node-1".into()), last_x: 12.5, last_y: -7.25 }));
+        store::os_store::test_support::assert_op_line_round_trip(&WiresConfigMutation::SetDrag(SetDrag { node_id: None, last_x: 0.0, last_y: 0.0 }));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn config_locale_op_text_round_trip() {
-        store::os_store::test_support::assert_op_line_round_trip(&WiresConfigMutation::SetLocale { value: "de-DE".into() });
+        store::os_store::test_support::assert_op_line_round_trip(&WiresConfigMutation::SetLocale(SetLocale { value: "de-DE".into() }));
     }
 
     /// ⏪️ `backwards()` returns the SAME variant re-addressed at the pre-op field value — a targeted,
@@ -217,11 +126,38 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn config_backwards_restores_the_same_field_from_base() {
         let base = WiresConfig { drag_node_id: Some("node-1".into()), drag_last_x: 1.0, drag_last_y: 2.0, ..Default::default() };
-        let forward = WiresConfigMutation::SetDrag { node_id: Some("node-2".into()), last_x: 5.0, last_y: 6.0 };
+        let forward = WiresConfigMutation::SetDrag(SetDrag { node_id: Some("node-2".into()), last_x: 5.0, last_y: 6.0 });
         let inverse = forward.inverse(&base);
-        assert_eq!(inverse, vec![WiresConfigMutation::SetDrag { node_id: base.drag_node_id.clone(), last_x: base.drag_last_x, last_y: base.drag_last_y }]);
+        assert_eq!(inverse, vec![WiresConfigMutation::SetDrag(SetDrag { node_id: base.drag_node_id.clone(), last_x: base.drag_last_x, last_y: base.drag_last_y })]);
         assert_eq!(forward.diff(&base).diff().clone(), WiresConfig { drag_node_id: Some("node-2".into()), drag_last_x: 5.0, drag_last_y: 6.0, ..base });
     }
     //#endregion 🔖️ConfigOperationTests
 }
 //#endregion 🧪️Tests
+
+#[cfg(test)]
+mod contract_vectors {
+    use super::*;
+    use protocol::{Mutation, MutationDiff, OpBinary, OpText};
+    use dsl::os_pack as pack;
+
+    #[test]
+    fn wires_configuration_contract_vectors_match_the_json_oracle() {
+        let vectors: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🔁️mutation-contracts.json")).expect("neutral contract vectors");
+        let base: WiresConfig = pack::from_json_str(&vectors["base"].to_string()).expect("owned base decoder");
+        assert_eq!(<WiresConfigMutation as Mutation<WiresConfig>>::DESCRIPTORS.len(), vectors["cases"].as_array().expect("cases").len());
+        for vector in vectors["cases"].as_array().expect("cases") {
+            let mutation: WiresConfigMutation = pack::from_json_str(&vector["mutation"].to_string()).expect("owned operation decoder");
+            assert_eq!(serde_json::from_str::<serde_json::Value>(&pack::to_json_string(&mutation)).expect("independent operation oracle"), vector["mutation"]);
+            assert_eq!(mutation.descriptor().semantic_kind, vector["kind"].as_str().expect("semantic kind"));
+            assert_eq!(WiresConfigMutation::parse_op(&mutation.print_op()).expect("operation text"), mutation);
+            assert_eq!(WiresConfigMutation::decode_op(&mutation.encode_op().expect("operation binary")).expect("binary decode"), mutation);
+            let outcome = mutation.diff(&base);
+            assert!(outcome.messages().is_empty());
+            let next = outcome.diff().apply(&base).expect("apply diff");
+            assert_eq!(serde_json::from_str::<serde_json::Value>(&pack::to_json_string(&next)).expect("independent state oracle"), vector["expected"]);
+            let restored = mutation.inverse(&base).into_iter().fold(next, |state, inverse| inverse.diff(&state).diff().apply(&state).expect("apply inverse"));
+            assert_eq!(restored, base);
+        }
+    }
+}

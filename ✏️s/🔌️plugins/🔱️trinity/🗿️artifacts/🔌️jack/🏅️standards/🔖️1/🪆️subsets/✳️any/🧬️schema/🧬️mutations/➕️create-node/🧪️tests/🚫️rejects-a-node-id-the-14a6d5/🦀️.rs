@@ -26,16 +26,16 @@ const MUTATION: &str = include_str!("🦠️mutation/🔣️.json");
 const OUTCOME: &str = include_str!("🎯️outcome/🔣️.json");
 
 fn expected_after() -> JackSnapshot {
-    serde_json::from_str(AFTER).expect("after snapshot decodes")
+    pack::from_json_str(AFTER).expect("after snapshot decodes")
 }
 fn mutation() -> TrinityGraphMutation {
-    serde_json::from_str(MUTATION).expect("mutation decodes")
+    pack::from_json_str(MUTATION).expect("mutation decodes")
 }
 
 /// 🌱️ The committed `⬅️before`, with its composed child resolved to a scene holding exactly the node
 /// the committed payload tries to create.
 fn before() -> JackSnapshot {
-    let mut snapshot: JackSnapshot = serde_json::from_str(BEFORE).expect("before snapshot decodes");
+    let mut snapshot: JackSnapshot = pack::from_json_str(BEFORE).expect("before snapshot decodes");
     let TrinityGraphMutation::CreateNode(payload) = mutation() else {
         panic!("rejects-a-node-id-the-scene-already-holds's committed mutation must be a create-node");
     };
@@ -90,12 +90,12 @@ async fn inverse_is_always_a_delete_of_the_requested_id() {
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {
-        let decoded: JackSnapshot = serde_json::from_str(text).expect("snapshot decodes");
-        let reencoded = serde_json::to_value(&decoded).expect("snapshot encodes");
+        let decoded: JackSnapshot = pack::from_json_str(text).expect("snapshot decodes");
+        let reencoded = serde_json::from_str::<serde_json::Value>(&pack::to_json_string(&decoded)).expect("snapshot encodes");
         let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
         assert_eq!(reencoded, original, "create-node/rejects-a-node-id-the-scene-already-holds: committed {label} JSON is not canonical");
     }
-    let reencoded = serde_json::to_value(mutation()).expect("mutation encodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&pack::to_json_string(&mutation())).expect("mutation encodes");
     let original: serde_json::Value = serde_json::from_str(MUTATION).expect("mutation reparses");
     assert_eq!(reencoded, original, "create-node/rejects-a-node-id-the-scene-already-holds: committed mutation JSON is not canonical");
 }

@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🧬️mutations/🖱️set-drag",
+  "semanticKind": "set-drag",
+  "displayName": "Set Drag",
+  "emoji": "🖱️",
+  "aggregateVariant": "SetDrag",
+  "payloadSchema": "🧬️.schema.json",
+  "textOpcode": "set-drag",
+  "binaryTag": 0,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "apply-only",
+  "outcomeClasses": [
+    "applied"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "text",
+    "binary",
+    "json-schema"
+  ]
+}

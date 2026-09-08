@@ -30,8 +30,8 @@ pub fn definition() -> WindowKindDefinition {
 /// stays the editor-only `after_fixture_json` helper's job), no rule-layout point positions (pure
 /// window-arrangement state, not rule content).
 pub fn rule_text(state: &RewritingSnapshot) -> String {
-    let lhs: pack::JsonValue = pack::parse_json(&state.lhs_json).unwrap_or_default();
-    let rhs: pack::JsonValue = pack::parse_json(&state.rhs_json).unwrap_or_default();
+    let lhs: pack::JsonValue = pack::parse_json(&state.lhs_json).unwrap_or(pack::JsonValue::Null);
+    let rhs: pack::JsonValue = pack::parse_json(&state.rhs_json).unwrap_or(pack::JsonValue::Null);
     let document = pack::json!({ "lhs": lhs, "rhs": rhs, "parameterBindings": state.parameter_bindings });
     pack::json_to_string_pretty(&document)
 }

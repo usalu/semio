@@ -1155,7 +1155,7 @@ impl EventRouter {
 
     /// 🎯️ Read-only: whether this window's retained content currently holds keyboard focus — see
     /// `engine::Ui::window_has_focus` (its only caller), added for the `w2-input-wiring` host-side
-    /// focus arbitration (content vs. chrome routing, `.🦑️repo/🎫️tickets/26/07/11/WGPU-RENDERER-FULL-PARITY`).
+    /// focus arbitration (content vs. chrome routing, `.🧬semio/🦑️repo/🎫️tickets/26/07/11/WGPU-RENDERER-FULL-PARITY`).
     pub(crate) fn is_focused(&self) -> bool {
         self.focus.focused.is_some()
     }
@@ -1880,7 +1880,7 @@ mod tests {
     //#endregion 🔖️HoverRevealTests
 
     //#region 🔖️W2InteractivityTests
-    // 🔽️🎴️🌳️ Tests for the wiring closed out per `.🦑️repo/🎫️tickets/26/07/11/WGPU-RENDERER-FULL-PARITY`'s W2
+    // 🔽️🎴️🌳️ Tests for the wiring closed out per `.🧬semio/🦑️repo/🎫️tickets/26/07/11/WGPU-RENDERER-FULL-PARITY`'s W2
     // pass: `Select` popup open/close (`toggle_select_popup`/`finish_close`), `Stack`
     // `activate`/`drop_action` (`is_plain_stack_container`'s hit-test exception), and `Tree` row
     // `draggable` (`find_tree_item_spec`).

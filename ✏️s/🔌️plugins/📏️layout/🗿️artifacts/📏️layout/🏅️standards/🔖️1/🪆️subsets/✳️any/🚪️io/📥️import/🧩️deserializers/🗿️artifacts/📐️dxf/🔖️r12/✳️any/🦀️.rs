@@ -6,7 +6,7 @@ pub fn register() {}
 
 pub fn deserialize(from: &DxfSnapshot) -> Result<LayoutSnapshot, store::TextError> {
     let _ = STDIO_DXF_DOCUMENT_SCHEMA;
-    let text = serde_json::to_string(from).map_err(|e| store::TextError::new(e.to_string(), dsl::TextSpan::at(1, 1)))?;
+    let text = dsl::os_pack::to_json_string(from);
     <LayoutSnapshot as store::ArtifactDsl>::parse_dsl(&text)
 }
 

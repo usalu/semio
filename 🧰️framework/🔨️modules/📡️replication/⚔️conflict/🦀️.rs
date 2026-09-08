@@ -3,7 +3,7 @@
 //! remote batch gets *quarantined* (rejected outright, replayable later once an authority accepts
 //! it) or an accepted-but-messy merge gets flagged *degraded* (applied, but worth a human's
 //! attention). Frozen contract:
-//! `.🦑️repo/🎫️tickets/26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS/📋️contract-freeze.md`
+//! `.🧬semio/🦑️repo/🎫️tickets/26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS/📋️contract-freeze.md`
 //! §C5. `📡️spr/🎮️command` owns `MutationMessage`/`MutationOutcome`/`worst_level`; `📡️spr/🧾️wire`
 //! owns `MergePolicy`; this module is the third leg — what an authority DOES once it has both.
 

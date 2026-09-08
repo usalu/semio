@@ -6,7 +6,7 @@ use crate::artifacts::writer::{writer_text, WriterSnapshot};
 use crate::editor::writer::config::WriterConfig;
 use crate::editor::writer::terminology::WriterPlayLabels;
 use semio_framework_plugin::plugin_app_close_prelude::{Buildable, HasBase, HasChildren};
-use semio_framework_plugin::{tree_item, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, UiText, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL};
+use semio_framework_plugin::{tree_item, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, UiText, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL};
 use semio_framework_ui_contract as ui;
 
 //#region 🔖️Constants
@@ -51,7 +51,7 @@ pub fn definition() -> PanelTabDefinition {
 /// never declare those actions yourself).
 fn jack_ast_to_tree_item(node: &JackAstNode) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let children = crate::editor::writer::ui_node_list(node.children.iter().map(jack_ast_to_tree_item))?;
-    ui::tree_item(Label::data(node.label.clone()))
+    ui::tree_item(crate::editor::writer::ui_label(node.label.clone())?)
         .try_id(&node.id)
         .map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "writer AST id admission failed"))?
         .description(UiText::try_from_str(&node.kind).ok_or_else(|| PluginAssemblyError::new("ui.fixed-capacity", "writer AST kind admission failed"))?)
@@ -66,12 +66,12 @@ fn jack_ast_to_tree_item(node: &JackAstNode) -> semio_framework_plugin::UiAssemb
 
 pub fn render(document: &WriterSnapshot, _config: &WriterConfig, labels: &WriterPlayLabels) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     if document.language_id != "jack" {
-        let items = crate::editor::writer::ui_node_list([tree_item("writer-document.id", Label::data(document.id.clone())), tree_item("writer-document.language", Label::data(document.language_id.clone()))])?;
-        return PanelTreeBuilder::new("writer-document")?.section("writer-document.meta", Some(labels.document.into()), true, items)?.build();
+        let items = crate::editor::writer::ui_node_list([tree_item("writer-document.id", crate::editor::writer::ui_label(document.id.clone())?), tree_item("writer-document.language", crate::editor::writer::ui_label(document.language_id.clone())?)])?;
+        return PanelTreeBuilder::new("writer-document")?.section("writer-document.meta", Some(crate::editor::writer::ui_label(labels.document.as_str())?), true, items)?.build();
     }
     let root = parse_jack_ast(&writer_text(document));
     let items = crate::editor::writer::ui_node_list([jack_ast_to_tree_item(&root)])?;
-    PanelTreeBuilder::new("writer-play-document")?.section_or_placeholder("writer-play-document.ast", Some(labels.document.into()), true, items, labels.empty_query)?.interaction_domain("ast")?.build()
+    PanelTreeBuilder::new("writer-play-document")?.section_or_placeholder("writer-play-document.ast", Some(crate::editor::writer::ui_label(labels.document.as_str())?), true, items, crate::editor::writer::ui_label(labels.empty_query.as_str())?)?.interaction_domain("ast")?.build()
 }
 //#endregion 🔖️Render
 
@@ -84,9 +84,9 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn renders_document_tree_for_jack() {
         use semio_framework_plugin::PluginApp;
-        let mut app = new_app();
-        let node = app.render(WRITER_PLAY_BODY_ARTIFACT, Some(&crate::artifacts::writer::dsl::jack_example_json()), &semio_framework_plugin::ViewModel::default()).expect("render");
-        let json = serde_json::to_string(&node).unwrap();
+        let mut app = new_app().await;
+        let node = app.render(WRITER_PLAY_BODY_ARTIFACT, Some(&crate::artifacts::writer::dsl::jack_example_json()), &semio_framework_plugin::ViewModel::default()).await.expect("render");
+        let json = semio_framework_plugin::testkit::project_and_retire_fixture_tree(node).expect("render JSON");
         assert!(json.contains("\"type\":\"tree\""));
         assert!(json.contains("Query"));
     }
@@ -103,16 +103,16 @@ mod tests {
     /// any other language) — load the jack fixture first.
     #[semio_framework_async_macros::async_test]
     async fn document_lists_the_ast_section_for_jack_documents() {
-        let mut app = app_with_jack();
-        assert!(render_body(&mut app, WRITER_PLAY_BODY_ARTIFACT).contains("writer-play-document.ast"));
+        let mut app = app_with_jack().await;
+        assert!(render_body(&mut app, WRITER_PLAY_BODY_ARTIFACT).await.contains("writer-play-document.ast"));
     }
 
     /// 📄️ A non-jack (default/plaintext) document renders the plain id/language fallback section
     /// instead of the AST tree.
     #[semio_framework_async_macros::async_test]
     async fn document_falls_back_to_a_plain_section_for_non_jack_documents() {
-        let mut app = new_app();
-        assert!(render_body(&mut app, WRITER_PLAY_BODY_ARTIFACT).contains("writer-document"));
+        let mut app = new_app().await;
+        assert!(render_body(&mut app, WRITER_PLAY_BODY_ARTIFACT).await.contains("writer-document"));
     }
 }
 //#endregion 🧪️Tests

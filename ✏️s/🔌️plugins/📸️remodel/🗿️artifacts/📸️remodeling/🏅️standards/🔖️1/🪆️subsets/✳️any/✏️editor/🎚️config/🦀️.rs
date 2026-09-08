@@ -5,7 +5,6 @@
 //! mutation. This is app-level, not artifact-level, precisely because it is view state: the artifact
 //! must never depend on the app, so nothing under `🗿️artifacts/` may reference these types.
 
-use protocol::Mutation;
 use semio_framework_value_derive::{FromValue, ToValue};
 use serde::{Deserialize, Serialize};
 
@@ -138,136 +137,15 @@ store::impl_whole_record_config!(RemodelingConfig);
 
 //#endregion 🔖️Config
 
-//#region 🔖️ConfigOperations
-/// 🧮️ `RemodelingConfig`'s operation enum — one variant per settled interaction
-/// (mirrors the former `RemodelingPlayRuntime` field writes), plus a generic `Snapshot` every variant's
-/// `backwards()` returns. Mirrors `shooting_op::ShootingConfigOperation` exactly: a config-only "View"
-/// dispatch is a plain `Apply` (never `AmendLast`), so each tick is its own distinct, real config edit
-/// and "undo this tick" is exactly "restore the whole-config snapshot from just before it" — no
-/// per-field reverse-patch bookkeeping needed. `Mutation::Diff` is the WHOLE `RemodelingConfig`.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::DslOps)]
-pub enum RemodelingConfigMutation {
-    #[dsl(key = "snapshot")]
-    Snapshot {
-        #[dsl(block)]
-        config: RemodelingConfig,
-    },
-    #[dsl(key = "camera")]
-    SetCamera {
-        #[dsl(block)]
-        camera: RemodelingWorldCamera,
-    },
-    #[dsl(key = "layer-visibility")]
-    SetLayerVisibility { layer: String, visible: bool },
-    #[dsl(key = "frame-cursor")]
-    SetFrameCursor {
-        #[value(default)]
-        #[serde(default)]
-        stream_id: Option<String>,
-        frame_index: u32,
-    },
-    #[dsl(key = "report-table")]
-    SetReportTable { table: String },
-    #[dsl(key = "active-utility")]
-    SetActiveUtility { utility_id: String },
-    #[dsl(key = "locale")]
-    SetLocale { value: String },
-}
-
-//#region 🔖️OpCodec
-impl protocol::OpText for RemodelingConfigMutation {
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        let variants = <Self as dsl::DslVariants>::variants();
-        for (keyword, spec_fn) in &variants {
-            let probe = format!("{} ", keyword);
-            if line == keyword.as_str() || line.starts_with(&probe) {
-                let record = dsl::parse(line, &spec_fn(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline })?;
-                return <Self as dsl::DslVariants>::from_named_record(keyword, &record);
-            }
-        }
-        Err(dsl::__rt::field_error(format!("unknown mutation line '{line}'")))
-    }
-    fn print_op(&self) -> String {
-        let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
-        let variants = <Self as dsl::DslVariants>::variants();
-        let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
-        dsl::print(&record, &spec_fn(), dsl::JoinMode::Inline)
-    }
-}
-
-/// 🎯️ Handcrafted OpBinary (P6).
-impl protocol::OpBinary for RemodelingConfigMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        const OP_BINARY_FORMAT: u8 = 1;
-        let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
-        let variants = <Self as dsl::DslVariants>::variants();
-        let ordinal = variants.iter().position(|(k, _)| *k == keyword).ok_or(protocol::ProtocolError::Malformed { what: "op variant", offset: 0, detail: format!("keyword {keyword:?} is not a declared variant") })?;
-        let spec = (variants[ordinal].1)();
-        let body = store::pack_rt::encode_record_body(&spec, &record, &store::PackEncodeOptions::default()).map_err(protocol::ProtocolError::from)?;
-        let mut out = Vec::with_capacity(body.len() + 3);
-        out.push(OP_BINARY_FORMAT);
-        store::pack_rt::write_varint_u64(&mut out, ordinal as u64);
-        out.extend_from_slice(&body);
-        Ok(out)
-    }
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        const OP_BINARY_FORMAT: u8 = 1;
-        let mut reader = store::pack_rt::ByteReader::new(bytes);
-        let format = reader.read_u8()?;
-        if format != OP_BINARY_FORMAT {
-            return Err(protocol::ProtocolError::Malformed { what: "op format", offset: 0, detail: format!("unsupported op format {format}") });
-        }
-        let ordinal = reader.read_varint_u64()?;
-        let variants = <Self as dsl::DslVariants>::variants();
-        let (keyword, spec_fn) = variants.get(ordinal as usize).ok_or(protocol::ProtocolError::Malformed { what: "op variant", offset: 1, detail: format!("ordinal {ordinal} out of range for {} declared variants", variants.len()) })?;
-        let spec = spec_fn();
-        let body = &bytes[reader.position()..];
-        let (record, _report) = store::pack_rt::decode_record_body(body, &spec, &store::PackDecodeOptions::default()).map_err(protocol::ProtocolError::from)?;
-        <Self as dsl::DslVariants>::from_named_record(keyword, &record).map_err(|error| protocol::ProtocolError::Malformed { what: "op record", offset: reader.position() as u64, detail: error.to_string() })
-    }
-}
-
-//#endregion 🔖️OpCodec
-
-impl Mutation<RemodelingConfig> for RemodelingConfigMutation {
-    type Diff = RemodelingConfig;
-
-    fn diff(&self, base: &RemodelingConfig) -> protocol::MutationOutcome<RemodelingConfig> {
-        let mut next = base.clone();
-        match self {
-            RemodelingConfigMutation::Snapshot { config } => return protocol::MutationOutcome::new(config.clone()),
-            RemodelingConfigMutation::SetCamera { camera } => next.camera = camera.clone(),
-            RemodelingConfigMutation::SetLayerVisibility { layer, visible } => match layer.as_str() {
-                "mesh" => next.layers.mesh = *visible,
-                "dense" => next.layers.dense = *visible,
-                "sparse" => next.layers.sparse = *visible,
-                "cameras" => next.layers.cameras = *visible,
-                "gcps" => next.layers.gcps = *visible,
-                _ => {}
-            },
-            RemodelingConfigMutation::SetFrameCursor { stream_id, frame_index } => {
-                if stream_id.is_some() {
-                    next.frame_cursor.stream_id = stream_id.clone();
-                }
-                next.frame_cursor.frame_index = *frame_index;
-            }
-            RemodelingConfigMutation::SetReportTable { table } => next.report_table = table.clone(),
-            RemodelingConfigMutation::SetActiveUtility { utility_id } => next.active_utility_id = utility_id.clone(),
-            RemodelingConfigMutation::SetLocale { value } => next.locale = value.clone(),
-        }
-        protocol::MutationOutcome::new(next)
-    }
-
-    fn inverse(&self, base: &RemodelingConfig) -> Vec<Self> {
-        vec![RemodelingConfigMutation::Snapshot { config: base.clone() }]
-    }
-}
-//#endregion 🔖️ConfigOperations
+#[path = "🧬️schema/🧬️mutations/🦀️.rs"]
+mod mutations;
+pub use mutations::{RemodelingConfigMutation, ReplaceConfig, SetCamera, SetLayerVisibility, SetFrameCursor, SetReportTable, SetActiveUtility, SetLocale};
 
 //#region 🧪️Tests
 #[cfg(test)]
 mod tests {
     use super::*;
+    use protocol::Mutation;
 
     #[semio_framework_async_macros::async_test]
     async fn remodeling_config_default_matches_the_former_runtime_defaults() {
@@ -293,43 +171,43 @@ mod tests {
         let base = RemodelingConfig::default();
 
         let camera = RemodelingWorldCamera { position: [1.0, 2.0, 3.0], target: [0.0, 0.0, 0.0], fov: 60.0 };
-        let op = RemodelingConfigMutation::SetCamera { camera: camera.clone() };
+        let op = RemodelingConfigMutation::SetCamera(crate::editor::remodeling::config::SetCamera { camera: camera.clone() });
         let next = op.diff(&base).into_parts().0;
         assert_eq!(next.camera, camera);
-        assert_eq!(op.inverse(&base), vec![RemodelingConfigMutation::Snapshot { config: base.clone() }]);
+        assert_eq!(op.inverse(&base), vec![RemodelingConfigMutation::ReplaceConfig(crate::editor::remodeling::config::ReplaceConfig { config: base.clone() })]);
         assert_eq!(op.inverse(&base)[0].diff(&next).into_parts().0, base, "backwards restores the exact pre-edit config");
 
-        let op = RemodelingConfigMutation::SetLayerVisibility { layer: "dense".into(), visible: false };
+        let op = RemodelingConfigMutation::SetLayerVisibility(crate::editor::remodeling::config::SetLayerVisibility { layer: "dense".into(), visible: false });
         let next = op.diff(&base).into_parts().0;
         assert!(!next.layers.dense);
         assert!(next.layers.mesh, "only the named layer flips");
 
-        let op = RemodelingConfigMutation::SetFrameCursor { stream_id: Some("stream-1".into()), frame_index: 4 };
+        let op = RemodelingConfigMutation::SetFrameCursor(crate::editor::remodeling::config::SetFrameCursor { stream_id: Some("stream-1".into()), frame_index: 4 });
         let next = op.diff(&base).into_parts().0;
         assert_eq!(next.frame_cursor.stream_id.as_deref(), Some("stream-1"));
         assert_eq!(next.frame_cursor.frame_index, 4);
 
-        let op = RemodelingConfigMutation::SetReportTable { table: "gcps".into() };
+        let op = RemodelingConfigMutation::SetReportTable(crate::editor::remodeling::config::SetReportTable { table: "gcps".into() });
         assert_eq!(op.diff(&base).diff().report_table, "gcps");
 
-        let op = RemodelingConfigMutation::SetActiveUtility { utility_id: "measure".into() };
+        let op = RemodelingConfigMutation::SetActiveUtility(crate::editor::remodeling::config::SetActiveUtility { utility_id: "measure".into() });
         assert_eq!(op.diff(&base).diff().active_utility_id, "measure");
 
-        let op = RemodelingConfigMutation::SetLocale { value: "de-DE".into() };
+        let op = RemodelingConfigMutation::SetLocale(crate::editor::remodeling::config::SetLocale { value: "de-DE".into() });
         assert_eq!(op.diff(&base).diff().locale, "de-DE");
     }
 
     #[semio_framework_async_macros::async_test]
     async fn config_mutations_roundtrip_through_op_text() {
         let config = RemodelingConfig::default();
-        store::os_store::test_support::assert_op_line_round_trip(&RemodelingConfigMutation::Snapshot { config });
-        store::os_store::test_support::assert_op_line_round_trip(&RemodelingConfigMutation::SetCamera { camera: RemodelingWorldCamera::default() });
-        store::os_store::test_support::assert_op_line_round_trip(&RemodelingConfigMutation::SetLayerVisibility { layer: "gcps".into(), visible: false });
-        store::os_store::test_support::assert_op_line_round_trip(&RemodelingConfigMutation::SetFrameCursor { stream_id: Some("stream-1".into()), frame_index: 2 });
-        store::os_store::test_support::assert_op_line_round_trip(&RemodelingConfigMutation::SetFrameCursor { stream_id: None, frame_index: 0 });
-        store::os_store::test_support::assert_op_line_round_trip(&RemodelingConfigMutation::SetReportTable { table: "tracks".into() });
-        store::os_store::test_support::assert_op_line_round_trip(&RemodelingConfigMutation::SetActiveUtility { utility_id: "gcpPlace".into() });
-        store::os_store::test_support::assert_op_line_round_trip(&RemodelingConfigMutation::SetLocale { value: "de-DE".into() });
+        store::os_store::test_support::assert_op_line_round_trip(&RemodelingConfigMutation::ReplaceConfig(crate::editor::remodeling::config::ReplaceConfig { config }));
+        store::os_store::test_support::assert_op_line_round_trip(&RemodelingConfigMutation::SetCamera(crate::editor::remodeling::config::SetCamera { camera: RemodelingWorldCamera::default() }));
+        store::os_store::test_support::assert_op_line_round_trip(&RemodelingConfigMutation::SetLayerVisibility(crate::editor::remodeling::config::SetLayerVisibility { layer: "gcps".into(), visible: false }));
+        store::os_store::test_support::assert_op_line_round_trip(&RemodelingConfigMutation::SetFrameCursor(crate::editor::remodeling::config::SetFrameCursor { stream_id: Some("stream-1".into()), frame_index: 2 }));
+        store::os_store::test_support::assert_op_line_round_trip(&RemodelingConfigMutation::SetFrameCursor(crate::editor::remodeling::config::SetFrameCursor { stream_id: None, frame_index: 0 }));
+        store::os_store::test_support::assert_op_line_round_trip(&RemodelingConfigMutation::SetReportTable(crate::editor::remodeling::config::SetReportTable { table: "tracks".into() }));
+        store::os_store::test_support::assert_op_line_round_trip(&RemodelingConfigMutation::SetActiveUtility(crate::editor::remodeling::config::SetActiveUtility { utility_id: "gcpPlace".into() }));
+        store::os_store::test_support::assert_op_line_round_trip(&RemodelingConfigMutation::SetLocale(crate::editor::remodeling::config::SetLocale { value: "de-DE".into() }));
     }
 }
 //#endregion 🧪️Tests

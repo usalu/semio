@@ -145,6 +145,16 @@ impl<V> RasterOwnedMap<V> {
         self.ordered_position(key).is_err() && self.free_slot().is_none() && self.length < RASTER_OWNED_MAP_CAPACITY
     }
 
+    pub(crate) fn validate_additional_unique_entries(&self, count: usize) -> Result<(), &'static str> {
+        if count > RASTER_OWNED_MAP_CAPACITY.saturating_sub(self.length) {
+            return Err("raster-map.item-capacity");
+        }
+        if count > 0 && size_of::<RasterOwnedMapPage<V>>() > RASTER_OWNED_MAP_PAGE_BACKING_BYTES {
+            return Err("raster-map.page-backing-capacity");
+        }
+        Ok(())
+    }
+
     pub(crate) fn admit_one_page(&mut self) -> Result<(), &'static str> {
         if size_of::<RasterOwnedMapPage<V>>() > RASTER_OWNED_MAP_PAGE_BACKING_BYTES {
             return Err("raster-map.page-backing-capacity");

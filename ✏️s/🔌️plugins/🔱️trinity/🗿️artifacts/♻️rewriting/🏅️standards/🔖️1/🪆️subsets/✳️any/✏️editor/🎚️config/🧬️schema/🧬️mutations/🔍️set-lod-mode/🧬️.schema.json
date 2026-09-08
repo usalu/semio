@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Set Lod Mode",
+  "type": "object",
+  "properties": {
+    "window_id": {
+      "type": "string"
+    },
+    "value": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "window_id",
+    "value"
+  ],
+  "additionalProperties": false
+}

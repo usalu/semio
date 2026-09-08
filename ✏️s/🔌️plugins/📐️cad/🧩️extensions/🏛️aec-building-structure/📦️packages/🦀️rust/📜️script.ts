@@ -11,8 +11,8 @@ class TestScript extends BundleScript {
 
 class PackageScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    const outPath = segments[0];
-    await runExtensionComponentPackage({ rsDir: import.meta.dir, repoRoot: this.repoRoot, outPath });
+    if (segments.length) throw new Error("package writes the Nx-owned deliverable and accepts no output override");
+    await runExtensionComponentPackage({ rsDir: import.meta.dir, repoRoot: this.repoRoot });
   }
 }
 

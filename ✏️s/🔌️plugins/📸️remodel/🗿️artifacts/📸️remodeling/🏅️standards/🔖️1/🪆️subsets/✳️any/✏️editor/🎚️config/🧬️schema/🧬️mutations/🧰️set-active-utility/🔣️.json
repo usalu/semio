@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🧬️mutations/🧰️set-active-utility",
+  "semanticKind": "set-active-utility",
+  "displayName": "Set Active Utility",
+  "emoji": "🧰️",
+  "aggregateVariant": "SetActiveUtility",
+  "payloadSchema": "🧬️.schema.json",
+  "textOpcode": "set-active-utility",
+  "binaryTag": 5,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "apply-only",
+  "outcomeClasses": [
+    "applied"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "text",
+    "binary",
+    "json-schema"
+  ]
+}

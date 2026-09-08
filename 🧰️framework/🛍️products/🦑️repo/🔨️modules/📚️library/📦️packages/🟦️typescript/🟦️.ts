@@ -2214,15 +2214,16 @@ export function spawnDaemon(cmd: string, args: string[], opts: { cwd?: string; e
     detached: process.platform !== "win32",
   });
   let killed = false;
-  const timer = setTimeout(() => {
+  const budgetMs = daemonBudgetMs();
+  const timer = budgetMs > 0 ? setTimeout(() => {
     killed = true;
     if (child.pid) killBudgetTree(child.pid);
-  }, daemonBudgetMs());
+  }, budgetMs) : undefined;
   const kill = () => {
-    clearTimeout(timer);
+    if (timer !== undefined) clearTimeout(timer);
     if (!killed && child.pid) killBudgetTree(child.pid);
   };
-  child.on("exit", () => clearTimeout(timer));
+  child.on("exit", () => { if (timer !== undefined) clearTimeout(timer); });
   return { child, kill };
 }
 
@@ -2917,17 +2918,22 @@ export type WasmPackWebPkg = {
   sideEffects?: string[];
 };
 
-/** 📦️Resolve wasm-bindgen CLI installed by wasm-pack. */
-function resolveWasmBindgenBin(): string {
-  const cacheRoot = join(process.env.HOME ?? "", "Library/Caches/.wasm-pack");
-  if (existsSync(cacheRoot)) {
-    const entries = readdirSync(cacheRoot)
-      .filter((name) => name.startsWith("wasm-bindgen-cargo-install-"))
-      .map((name) => join(cacheRoot, name, "wasm-bindgen"))
-      .filter((path) => existsSync(path));
-    if (entries.length > 0) return entries[entries.length - 1]!;
-  }
-  return "wasm-bindgen";
+/** 🔒️ The binding generator must have the same identity as the locked Rust crate. */
+export function wasmBindgenVersion(lock: string): string {
+  const versions = [...lock.matchAll(/^name = "wasm-bindgen"\r?\nversion = "([^"]+)"$/gm)].map((match) => match[1]!);
+  if (versions.length !== 1) throw new Error("Cargo.lock must resolve exactly one wasm-bindgen version");
+  return versions[0]!;
+}
+
+/** 📦️ Resolves an explicitly provisioned binding generator on every supported host. */
+export function resolveWasmBindgenBin(repoRoot = getWorkspaceRoot(), env: NodeJS.ProcessEnv = process.env): string {
+  const version = wasmBindgenVersion(readFileSync(join(repoRoot, "Cargo.lock"), "utf8"));
+  if (env.WASM_BINDGEN_VERSION && env.WASM_BINDGEN_VERSION !== version) throw new Error("WASM_BINDGEN_VERSION disagrees with Cargo.lock");
+  const command = env.SEMIO_WASM_BINDGEN_BIN ? resolve(repoRoot, env.SEMIO_WASM_BINDGEN_BIN) : Bun.which("wasm-bindgen", { PATH: env.PATH });
+  if (!command) throw new Error("Run bun nx run workspace:deps-wasm to provision wasm-bindgen");
+  const probe = runProbe(command, ["--version"], { env });
+  if (probe.status !== 0 || probe.stdout.trim() !== `wasm-bindgen ${version}`) throw new Error(`wasm-bindgen ${version} is required; run bun nx run workspace:deps-wasm`);
+  return command;
 }
 
 /** 📦️Collect wasm-bindgen snippet paths produced by threaded builds. */
@@ -2950,82 +2956,14 @@ function wasmPackSnippetFiles(pkgDir: string): string[] {
   return out;
 }
 
-/** 📦️Collects Rust sources beneath a crate without descending into generated output. */
-function rustSourceInputs(root: string): string[] {
-  const out: string[] = [];
-  const walk = (dir: string) => {
-    for (const entry of readdirSync(dir, { withFileTypes: true })) {
-      if (entry.isDirectory() && !["target", "pkg", ".git"].includes(entry.name)) walk(join(dir, entry.name));
-      else if (entry.isFile() && entry.name.endsWith(".rs")) out.push(join(dir, entry.name));
-    }
-  };
-  walk(root);
-  return [...out, ...rustPathMountInputs(out)];
-}
-
-/** 📄️ True only for an existing regular file — a `#[path]` mount may name a directory, which
- * `readFileSync` rejects with `EISDIR`. */
-function isReadableFile(path: string): boolean {
-  return existsSync(path) && statSync(path).isFile();
-}
-
-/** 📌️ Resolves `#[path = "…"]` module mounts out of the given `.rs` files, transitively.
- *
- * Every owner-tree `🦀️.rs` reaches its crate this way — the crate's `🦀️.rs` is pure
- * wiring and the real source sits outside the crate directory, so a walk of the crate dir alone sees
- * none of it. Without this, editing any component left the wasm `pkg/` looking up to date and
- * consumers silently ran a stale artifact. */
-function rustPathMountInputs(files: readonly string[], visited = new Set<string>()): string[] {
-  const out: string[] = [];
-  for (const file of files) {
-    const resolved = resolve(file);
-    if (visited.has(resolved) || !isReadableFile(resolved)) continue;
-    visited.add(resolved);
-    const dir = dirname(resolved);
-    const mounts: string[] = [];
-    for (const m of readFileSync(resolved, "utf8").matchAll(/#\s*\[\s*path\s*=\s*"([^"]+)"\s*\]/gu)) {
-      const mounted = resolve(dir, m[1]!);
-      if (!isReadableFile(mounted)) continue;
-      mounts.push(mounted);
-      out.push(mounted);
-    }
-    out.push(...rustPathMountInputs(mounts, visited));
-  }
-  return out;
-}
-
-/** 📦️Collects sources and manifests from transitive `[dependencies]` path crates. */
-function wasmPackPathDependencyInputs(rsDir: string, visited = new Set<string>()): string[] {
-  const cargoToml = join(rsDir, "Cargo.toml");
-  const root = resolve(rsDir);
-  if (!existsSync(cargoToml) || visited.has(root)) return [];
-  visited.add(root);
-  const out: string[] = [];
-  for (const m of readFileSync(cargoToml, "utf8").matchAll(/path\s*=\s*"([^"]+)"/gu)) {
-    const depRoot = resolve(rsDir, m[1]!);
-    const depCargo = join(depRoot, "Cargo.toml");
-    if (!existsSync(depCargo)) continue;
-    out.push(depCargo, ...rustSourceInputs(depRoot), ...wasmPackPathDependencyInputs(depRoot, visited));
-  }
-  return [...new Set(out)];
-}
-
-/** 📦️True when any wasm-pack input is newer than the built `.wasm` artifact. */
-function wasmPackInputsStale(rsDir: string, wasmPath: string): boolean {
-  if (!existsSync(wasmPath)) return true;
-  const wasmMtime = statSync(wasmPath).mtimeMs;
-  const repoRoot = getWorkspaceRoot();
-  const inputs = [...rustSourceInputs(rsDir), join(rsDir, "Cargo.toml"), join(rsDir, "Cargo.lock"), join(repoRoot, "Cargo.toml"), join(repoRoot, "Cargo.lock"), ...wasmPackPathDependencyInputs(rsDir)];
-  for (const input of inputs) {
-    if (existsSync(input) && statSync(input).mtimeMs > wasmMtime) return true;
-  }
-  return false;
+/** 🏗️ Shares browser compiler state across crates while keeping it independent of native editor checks. */
+export function wasmBuildEnvironment(repoRoot: string, env: NodeJS.ProcessEnv = process.env): NodeJS.ProcessEnv {
+  return { ...env, CARGO_TARGET_DIR: resolve(repoRoot, env.CARGO_TARGET_DIR ?? ".🧬semio/🦑️repo/⚡️cache/cargo/browser") };
 }
 
 /** 📦️`wasm-pack build` for `--target web`, restores `pkg/package.json`, verifies wasm output. */
 export function runWasmPackWebBuild(opts: {
   rsDir: string;
-  skipEnvVar: string;
   logPrefix: string;
   pkg: WasmPackWebPkg;
   wasmBaseName: string;
@@ -3040,7 +2978,7 @@ export function runWasmPackWebBuild(opts: {
    * (e.g. `wasm-release`) passes `--profile <name>`. Dev mode always uses `--dev` regardless. */
   shipProfile?: string;
 }): void {
-  const { rsDir, skipEnvVar, logPrefix, pkg, wasmBaseName, outputDirectory = "pkg", threads = false, cargoFeatures = [], noDefaultFeatures = false, shipProfile = "release" } = opts;
+  const { rsDir, logPrefix, pkg, wasmBaseName, outputDirectory = "pkg", threads = false, cargoFeatures = [], noDefaultFeatures = false, shipProfile = "release" } = opts;
   if (!outputDirectory || /[/\\:*?"<>|\u0000]|[. ]$/u.test(outputDirectory)) throw new Error("WASM outputDirectory must be one portable literal directory name");
   const profile = semioBuildMode() === "ship" ? shipProfile : "dev";
   const pkgDir = join(rsDir, outputDirectory);
@@ -3048,24 +2986,9 @@ export function runWasmPackWebBuild(opts: {
   const packProfileArgs = profile === "release" ? (["--release"] as const) : profile === "dev" ? (["--dev"] as const) : (["--profile", profile] as const);
   const cargoProfileArgs = profile === "release" ? (["--release"] as const) : profile === "dev" ? (["--dev"] as const) : (["--profile", profile] as const);
   const profileOutDir = cargoProfileDir(profile);
-  if (process.env[skipEnvVar] === "1") {
-    console.log(`[${logPrefix}] ${skipEnvVar}=1 → skipping wasm-pack build`);
-    return;
-  }
-  if (!wasmPackInputsStale(rsDir, wasmPath)) {
-    console.log(`[${logPrefix}] ${outputDirectory}/${wasmBaseName}_bg.wasm up to date → skipping wasm-pack build`);
-    if (!existsSync(pkgDir)) mkdirSync(pkgDir, { recursive: true });
-    const snippetFiles = wasmPackSnippetFiles(pkgDir);
-    const pkgJson = {
-      type: "module",
-      version: pkg.version ?? "0.1.0",
-      sideEffects: pkg.sideEffects ?? ["./snippets/*"],
-      ...pkg,
-      files: [...new Set([...pkg.files, ...snippetFiles])],
-    };
-    writeFileSync(join(pkgDir, "package.json"), `${JSON.stringify(pkgJson, null, 2)}\n`, "utf8");
-    return;
-  }
+  const buildEnv = wasmBuildEnvironment(getWorkspaceRoot());
+  const bindgen = resolveWasmBindgenBin(getWorkspaceRoot(), buildEnv);
+  buildEnv.PATH = [dirname(bindgen), buildEnv.PATH].filter(Boolean).join(process.platform === "win32" ? ";" : ":");
   const buildLabel = threads ? "cargo build (threaded) + wasm-bindgen" : "wasm-pack build";
   console.log(`[${logPrefix}] ${buildLabel} ${packProfileArgs.join(" ")} --target web --out-dir ${outputDirectory} --out-name ${wasmBaseName} --no-pack`);
   const t0 = Date.now();
@@ -3078,22 +3001,22 @@ export function runWasmPackWebBuild(opts: {
       console.error(`[${logPrefix}] missing package name in Cargo.toml`);
       process.exit(1);
     }
-    const cargoWasm = join(repoRoot, `target/wasm32-unknown-unknown/${profileOutDir}`, `${crateName.replace(/-/g, "_")}.wasm`);
-    const threadedCargoArgs = ["build", ...cargoProfileArgs, "--target", "wasm32-unknown-unknown", "-Z", "build-std=std,panic_abort", ...featureArgs];
-    status = runCmdStatus("cargo", threadedCargoArgs, { cwd: rsDir, env: { ...process.env }, budgetMs: buildBudgetMs() });
+    const cargoWasm = join(buildEnv.CARGO_TARGET_DIR!, `wasm32-unknown-unknown/${profileOutDir}`, `${crateName.replace(/-/g, "_")}.wasm`);
+    const threadedCargoArgs = ["build", "--locked", ...cargoProfileArgs, "--target", "wasm32-unknown-unknown", "-Z", "build-std=std,panic_abort", ...featureArgs];
+    status = runCmdStatus("cargo", threadedCargoArgs, { cwd: rsDir, env: buildEnv, budgetMs: buildBudgetMs() });
     if (status !== 0) {
       console.error(`[${logPrefix}] cargo threaded build failed`);
       process.exit(status);
     }
     if (!existsSync(pkgDir)) mkdirSync(pkgDir, { recursive: true });
-    status = runCmdStatus(resolveWasmBindgenBin(), [cargoWasm, "--out-dir", outputDirectory, "--typescript", "--target", "web", "--out-name", wasmBaseName], { cwd: rsDir, env: { ...process.env }, budgetMs: buildBudgetMs() });
+    status = runCmdStatus(bindgen, [cargoWasm, "--out-dir", outputDirectory, "--typescript", "--target", "web", "--out-name", wasmBaseName], { cwd: rsDir, env: buildEnv, budgetMs: buildBudgetMs() });
   } else {
     const localWasmPack = resolveWorkspaceBin("wasm-pack", rsDir);
-    const buildArgs = ["build", ...packProfileArgs, "--target", "web", "--out-dir", outputDirectory, "--out-name", wasmBaseName, "--no-pack", ...(featureArgs.length > 0 ? ["--", ...featureArgs] : [])];
+    const buildArgs = ["build", "--mode", "no-install", ...packProfileArgs, "--target", "web", "--out-dir", outputDirectory, "--out-name", wasmBaseName, "--no-pack", "--", "--locked", ...featureArgs];
     if (localWasmPack) {
-      status = runCmdStatus(process.execPath, [localWasmPack, ...buildArgs], { cwd: rsDir, env: { ...process.env }, budgetMs: buildBudgetMs() });
+      status = runCmdStatus(process.execPath, [localWasmPack, ...buildArgs], { cwd: rsDir, env: buildEnv, budgetMs: buildBudgetMs() });
     } else {
-      status = runCmdStatus("wasm-pack", buildArgs, { cwd: rsDir, env: { ...process.env }, budgetMs: buildBudgetMs() });
+      status = runCmdStatus("wasm-pack", buildArgs, { cwd: rsDir, env: buildEnv, budgetMs: buildBudgetMs() });
     }
   }
   if (status !== 0) {
@@ -3146,6 +3069,7 @@ export function parseExtensionCargoManifest(
   repoRoot: string,
 ): {
   readonly packageName: string;
+  readonly directoryName: string;
   readonly version: string;
   readonly description: string;
   readonly componentPackageId: string;
@@ -3177,11 +3101,12 @@ export function parseExtensionCargoManifest(
   const semioBlock = semioLines.join("\n");
   const extendsHost = semioBlock.match(/^extends\s*=\s*"([^"]+)"/m)?.[1] ?? "";
   const contributes = parseCargoTomlStringArray(semioBlock, "contributes");
-  return { packageName, version, description, componentPackageId, extends: extendsHost, contributes };
+  const directoryName = basename(resolve(dirname(manifestPath), "../.."));
+  return { packageName, directoryName, version, description, componentPackageId, extends: extendsHost, contributes };
 }
 
 /** @emoji 📦 Builds a wasip2 component and writes a runtime-installable `.sxt` beside the crate (`dist/<id>.sxt` by default). */
-export async function runExtensionComponentPackage(opts: { readonly rsDir: string; readonly repoRoot?: string; readonly outPath?: string; readonly logPrefix?: string }): Promise<string> {
+export async function runExtensionComponentPackage(opts: { readonly rsDir: string; readonly repoRoot?: string; readonly logPrefix?: string }): Promise<string> {
   const repoRoot = opts.repoRoot ?? getWorkspaceRoot();
   const rsDir = resolve(opts.rsDir);
   const manifestPath = join(rsDir, "Cargo.toml");
@@ -3197,6 +3122,7 @@ export async function runExtensionComponentPackage(opts: { readonly rsDir: strin
   const { packExtensionPackage } = await import("../../../../../💻️os/🔨️modules/🔌️plugin/🏪️store/📥️store.ts");
   const manifest = {
     extensionId: parsed.componentPackageId,
+    directoryName: parsed.directoryName,
     label: parsed.description,
     version: parsed.version,
     extends: parsed.extends,
@@ -3205,7 +3131,7 @@ export async function runExtensionComponentPackage(opts: { readonly rsDir: strin
     packageFormat: 1,
   };
   const packed = packExtensionPackage({ manifest, componentWasm });
-  const outPath = opts.outPath ?? join(rsDir, "dist", `${parsed.componentPackageId}.sxt`);
+  const outPath = join(rsDir, "dist", `${parsed.componentPackageId}.sxt`);
   mkdirSync(dirname(outPath), { recursive: true });
   writeFileSync(outPath, packed);
   console.log(`[DEBUG] ${logPrefix} packaged ${outPath} (${packed.length} bytes)`);
@@ -4583,7 +4509,7 @@ function git(root: string, args: string[]): { ok: boolean; out: string } {
     if (r.status === 0) return { ok: true, out: r.stdout.toString("utf8").trim() };
     const out = (r.stderr.length > 0 ? r.stderr : r.stdout).toString("utf8").trim();
     if (attempt < GIT_INDEX_LOCK_MAX_ATTEMPTS && GIT_INDEX_LOCK_RE.test(out)) {
-      Bun.sleepSync(GIT_INDEX_LOCK_RETRY_DELAY_MS);
+      Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, GIT_INDEX_LOCK_RETRY_DELAY_MS);
       continue;
     }
     return { ok: false, out };
@@ -6508,7 +6434,7 @@ export async function exportAnimatedSvgToMp4(inputSvgPath: string, outputMp4Path
 
   for (let i = 0; i <= totalFrames; i++) {
     const time = i / fps;
-    await page.evaluate((t) => {
+    await page.evaluate((t: number) => {
       const svg = document.querySelector("svg") as any;
       if (svg && svg.setCurrentTime) svg.setCurrentTime(t);
     }, time);

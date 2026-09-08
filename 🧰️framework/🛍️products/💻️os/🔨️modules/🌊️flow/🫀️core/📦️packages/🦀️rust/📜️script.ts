@@ -28,15 +28,14 @@ async function bundleBrowserModule(write: boolean) {
 
 //#region 📝️BrowserDeclarations
 async function publishBrowserDeclarations(): Promise<void> {
-  const { writeFlowBrowserDeclaration } = await import("../../../🕸️wasm/📦️packages/🟨️javascript/📜️script.ts");
-  const source = writeFlowBrowserDeclaration();
+  const { flowBrowserDeclaration } = await import("../../../🕸️wasm/📦️packages/🟨️javascript/📜️script.ts");
   mkdirSync(CORE_PKG_DIR, { recursive: true });
-  copyFileSync(source, join(CORE_PKG_DIR, "📝️flow-browser.d.ts"));
+  writeFileSync(join(CORE_PKG_DIR, "📝️flow-browser.d.ts"), flowBrowserDeclaration());
   const manifestPath = join(CORE_PKG_DIR, "package.json");
   if (existsSync(manifestPath)) {
     const manifest = JSON.parse(readFileSync(manifestPath, "utf8"));
-    manifest.files = [...new Set([...(manifest.files ?? []), "📝️flow-browser.d.ts"])];
-    manifest.exports = { ...(manifest.exports ?? {}), "./🌐️flow-browser.js": { types: "./📝️flow-browser.d.ts", import: "./🌐️flow-browser.js" } };
+    manifest.files = [...new Set([...(manifest.files ?? []), "🌐️flow-browser.js", "🖥️flow-host.js", "📝️flow-browser.d.ts"])];
+    manifest.exports = {".":{"types":"./flow_core.d.ts","import":"./flow_core.js"},"./🌐️flow-browser.js":{"types":"./📝️flow-browser.d.ts","import":"./🌐️flow-browser.js"},"./🖥️flow-host.js":"./🖥️flow-host.js"};
     writeFileSync(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`, "utf8");
   }
 }
@@ -45,7 +44,7 @@ class BrowserDeclarationsScript extends BundleScript {
   async run(): Promise<void> {
     await publishBrowserDeclarations();
     const { testFlowBrowserDeclaration } = await import("../../../🕸️wasm/📦️packages/🟨️javascript/📜️script.ts");
-    await testFlowBrowserDeclaration();
+    await testFlowBrowserDeclaration(CORE_PKG_DIR);
   }
 }
 //#endregion 📝️BrowserDeclarations
@@ -54,7 +53,6 @@ class WasmScript extends BundleScript {
   async run(): Promise<void> {
     await runWasmPackWebBuild({
       rsDir: FAMILY_RS_DIR,
-      skipEnvVar: "FLOW_CORE_SKIP_WASM_BUILD",
       logPrefix: "os/flow/core",
       wasmBaseName: "flow_core",
       outputDirectory: "🕸️bindings",
@@ -107,7 +105,13 @@ class TestScript extends BundleScript {
 }
 
 class SourceTestScript extends BundleScript {
-  async run(): Promise<void> { await import("../../../🖥️host/🧹️retirement/📜️script.ts"); }
+  async run(): Promise<void> {
+    await import("../../../🖥️host/🧹️retirement/📜️script.ts");
+    await import("../../../🕸️wasm/📦️packages/🟨️javascript/🧪️tests/🧬️flow-schema-oracle.test.js");
+    const { testFlowOpenOwnership } = await import("../../../🕸️wasm/📦️packages/🟨️javascript/🧪️tests/🧪️flow-open-ownership.test.ts");
+    const fixture = JSON.parse(readFileSync(join(BROWSER_BRIDGE_DIR, "../../🧪️fixtures/🧑‍🤝‍🧑️browser-runtime/🔣️.json"), "utf8"));
+    await testFlowOpenOwnership(fixture.openFailure);
+  }
 }
 
 class BrowserTestScript extends BundleScript {

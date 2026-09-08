@@ -1,0 +1,8 @@
+syntax = "proto3";
+package semio.s_stdio_pdf_1_7_vt.mutation.set_trim_box;
+
+// 📐️ Direct set-trim-box protobuf payload.
+message SetTrimBoxMutation {
+  uint64 page_index = 1;
+  repeated double trim_box = 2;
+}

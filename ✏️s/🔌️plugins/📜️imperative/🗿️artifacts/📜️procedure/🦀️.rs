@@ -401,6 +401,28 @@ pub fn artifact_kind() -> ArtifactKindSpec {
 }
 //#endregion 🔖️ArtifactKind
 
+/// 🧹️ Releases a test document's exact child owners and their nested neural dictionaries.
+#[cfg(test)]
+pub(crate) fn retire_procedure_fixture(mut snapshot: ProcedureSnapshot) {
+    use neural_engine::ColdRetire;
+    if let Some(owner) = snapshot.flow.take_local_owner::<ProcedureFlowWorkingData>().expect("flow fixture owner") {
+        if let Some(data) = std::sync::Arc::into_inner(owner) {
+            let mut paths = vec![data.path];
+            while let Some(path) = paths.pop() {
+                for Step { params, bodies, .. } in path.steps {
+                    params.retire_cold();
+                    paths.extend(bodies.into_values());
+                }
+            }
+        }
+    }
+    if let Some(owner) = snapshot.text.take_local_owner::<ProcedureTextWorkingData>().expect("text fixture owner") {
+        if let Some(data) = std::sync::Arc::into_inner(owner) {
+            data.seed.retire_cold();
+        }
+    }
+}
+
 //#region 🧪️Tests
 #[cfg(test)]
 mod tests {
@@ -441,10 +463,10 @@ mod tests {
     async fn working_content_is_owned_by_each_exact_child() {
         let flow = procedure_flow_child_with_owner(&Path::new());
         let text = procedure_text_child_with_owner(&BTreeMap::new());
-        let flow_wire = serde_json::to_vec(&flow).expect("Imperative flow child wire identity");
-        let text_wire = serde_json::to_vec(&text).expect("Imperative text child wire identity");
-        let reconstructed_flow: ProcedureFlowChild = serde_json::from_slice(&flow_wire).expect("Imperative flow child wire roundtrip");
-        let reconstructed_text: ProcedureTextChild = serde_json::from_slice(&text_wire).expect("Imperative text child wire roundtrip");
+        let flow_wire = dsl::os_pack::to_json_string(&flow);
+        let text_wire = dsl::os_pack::to_json_string(&text);
+        let reconstructed_flow: ProcedureFlowChild = dsl::os_pack::from_json_str(&flow_wire).expect("Imperative flow child wire roundtrip");
+        let reconstructed_text: ProcedureTextChild = dsl::os_pack::from_json_str(&text_wire).expect("Imperative text child wire roundtrip");
         let observed = serde_json::json!({
             "ownedFlowHasPayload": flow.local_owner::<ProcedureFlowWorkingData>().is_some(),
             "ownedTextHasPayload": text.local_owner::<ProcedureTextWorkingData>().is_some(),

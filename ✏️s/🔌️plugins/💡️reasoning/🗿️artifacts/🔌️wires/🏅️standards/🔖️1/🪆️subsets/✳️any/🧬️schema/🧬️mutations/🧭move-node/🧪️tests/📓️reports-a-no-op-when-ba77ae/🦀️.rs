@@ -34,16 +34,16 @@ fn board_entries(board: &DslValue, key: &str) -> Vec<DslValue> {
 /// 🌱 The committed `⬅️before` with its composed content child resolved into the working-scene
 /// child owner, materialized from the snapshot's own persisted `wiresFixture.board` mirror.
 fn before() -> WiresSnapshot {
-    let mut snapshot: WiresSnapshot = serde_json::from_str(BEFORE).expect("before snapshot decodes");
+    let mut snapshot: WiresSnapshot = dsl::os_pack::from_json_str(BEFORE).expect("before snapshot decodes");
     let board = snapshot.wires_fixture.get("board").cloned().unwrap_or(DslValue::Null);
     materialize_wires_content(&mut snapshot.content, board_entries(&board, "nodes"), board_entries(&board, "edges"));
     snapshot
 }
 fn expected_after() -> WiresSnapshot {
-    serde_json::from_str(AFTER).expect("after snapshot decodes")
+    dsl::os_pack::from_json_str(AFTER).expect("after snapshot decodes")
 }
 fn mutation() -> WiresMutation {
-    serde_json::from_str(MUTATION).expect("mutation decodes")
+    dsl::os_pack::from_json_str(MUTATION).expect("mutation decodes")
 }
 
 /// ▶️ Moving `node-drifter` to the point it already occupies carries `before` to exactly the
@@ -74,12 +74,12 @@ async fn inverse_restores_before() {
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {
-        let decoded: WiresSnapshot = serde_json::from_str(text).expect("snapshot decodes");
-        let reencoded = serde_json::to_value(&decoded).expect("snapshot encodes");
+        let decoded: WiresSnapshot = dsl::os_pack::from_json_str(text).expect("snapshot decodes");
+        let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::os_pack::to_json_string(&decoded)).expect("snapshot encodes");
         let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
         assert_eq!(reencoded, original, "move-node/reports-a-no-op-when-a-y-less-node-is-moved-to-y-zero: committed {label} JSON is not canonical");
     }
-    let reencoded = serde_json::to_value(mutation()).expect("mutation encodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::os_pack::to_json_string(&mutation())).expect("mutation encodes");
     let original: serde_json::Value = serde_json::from_str(MUTATION).expect("mutation reparses");
     assert_eq!(reencoded, original, "move-node/reports-a-no-op-when-a-y-less-node-is-moved-to-y-zero: committed moveNode JSON is not canonical");
     assert_eq!(original.get("newY").and_then(serde_json::Value::as_f64), Some(0.0), "the payload asks for the origin ordinate explicitly, which is what the missing key defaults to");
@@ -107,7 +107,7 @@ async fn declared_outcome_holds() {
 async fn produces_committed_diff() {
     let outcome = <WiresMutation as protocol::Mutation<WiresSnapshot>>::diff(&mutation(), &before());
     assert_eq!(outcome.diff(), &WiresDiff::default(), "an already-there move must carry the empty diff, never a re-minted content child");
-    let produced = serde_json::to_value(outcome.diff()).expect("produced diff encodes");
+    let produced = serde_json::from_str::<serde_json::Value>(&dsl::os_pack::to_json_string(outcome.diff())).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
     assert_eq!(produced, committed, "move-node/reports-a-no-op-when-a-y-less-node-is-moved-to-y-zero: produced diff differs from the committed 🔺️diff/🔣️.json");
 }
@@ -116,8 +116,8 @@ async fn produces_committed_diff() {
 /// `move-node` is the persisted reposition, not the ephemeral canvas drag.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical() {
-    let decoded: WiresDiff = serde_json::from_str(DIFF).expect("committed diff decodes");
-    let reencoded = serde_json::to_value(&decoded).expect("diff re-encodes");
+    let decoded: WiresDiff = dsl::os_pack::from_json_str(DIFF).expect("committed diff decodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::os_pack::to_json_string(&decoded)).expect("diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
     assert_eq!(reencoded, original, "move-node/reports-a-no-op-when-a-y-less-node-is-moved-to-y-zero: committed diff JSON is not canonical");
     for slot in ["dragNodeId", "dragLastX", "dragLastY"] {
@@ -128,7 +128,7 @@ async fn committed_diff_is_canonical() {
 /// 🩹 Applying the committed diff straight to `before` yields the committed `after`.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
-    let decoded: WiresDiff = serde_json::from_str(DIFF).expect("committed diff decodes");
+    let decoded: WiresDiff = dsl::os_pack::from_json_str(DIFF).expect("committed diff decodes");
     let produced = <WiresDiff as protocol::MutationDiff<WiresSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "move-node/reports-a-no-op-when-a-y-less-node-is-moved-to-y-zero: committed diff did not carry before to after");
 }

@@ -2,7 +2,7 @@
 //! edge ⇒ `Vec::new()`.
 
 use crate::artifacts::equation::standards::v1::subsets::graph::schema::mutations::connect_nodes;
-use crate::artifacts::equation::{equation_graph, EquationMutation, EquationSnapshot};
+use crate::artifacts::equation::{EquationMutation, EquationSnapshot};
 
 //#region 🔖️Inverse
 pub fn inverse(payload: &super::DisconnectNodes, base: &EquationSnapshot) -> Vec<EquationMutation> {

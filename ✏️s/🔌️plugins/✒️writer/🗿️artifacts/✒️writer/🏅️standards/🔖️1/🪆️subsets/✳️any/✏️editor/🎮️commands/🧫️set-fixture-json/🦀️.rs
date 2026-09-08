@@ -23,7 +23,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 /// 🙈️ Shared body for `SetSnapshotJson`/`SetFixtureJson` — both replace the whole document from a raw
 /// JSON string, silently no-op'ing on a parse failure (dev-only chrome setters, never user-facing).
 fn parse_document_json(json: &str) -> Emit<WriterMutation, WriterConfigMutation> {
-    match serde_json::from_str::<WriterSnapshot>(json) {
+    match dsl::os_pack::json::from_json_str::<WriterSnapshot>(json) {
         Ok(document) => Emit { effects: vec![reset_document_effect(&document)], ..Default::default() },
         Err(_) => Emit::default(),
     }

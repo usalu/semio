@@ -2,7 +2,8 @@
 
 use crate::artifacts::program::standards::v1::subsets::any::schema::inferences::audit_trail;
 use crate::artifacts::program::ProgramSnapshot;
-use semio_framework_plugin::{tree_item_desc, Label, LocalizedLabel, PanelTreeBuilder, PluginAssemblyError, SurfaceKind, UiFixedList, WindowKindDefinition, WindowOptions};
+use crate::editor::architect::ui_label;
+use semio_framework_plugin::{tree_item_desc,  LocalizedLabel, PanelTreeBuilder, PluginAssemblyError, SurfaceKind, UiFixedList, WindowKindDefinition, WindowOptions};
 
 //#region 🔖️Constants
 pub const ARCHITECT_WINDOW_TRACE: &str = "architect-trace";
@@ -44,14 +45,14 @@ pub fn render(program: &ProgramSnapshot) -> semio_framework_plugin::UiAssemblyRe
     let trail = audit_trail(program, None);
     let mut items = UiFixedList::default();
     for (index, event) in trail.events.iter().take(12).enumerate() {
-        let item = tree_item_desc(format!("architect-trace.audit.{index}"), Label::data(format!("{:?} @ {} — {}", event.action, event.timestamp, event.header.name)), None)?;
+        let item = tree_item_desc(format!("architect-trace.audit.{index}"), ui_label(format!("{:?} @ {} — {}", event.action, event.timestamp, event.header.name))?, None)?;
         items.try_push(item).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "architect trace event admission failed"))?;
     }
     if items.is_empty() {
-        let item = tree_item_desc("architect-trace.audit.empty", Label::data("(no events)"), None)?;
+        let item = tree_item_desc("architect-trace.audit.empty", ui_label("(no events)")?, None)?;
         items.try_push(item).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "architect trace empty row admission failed"))?;
     }
-    PanelTreeBuilder::new("architect-trace")?.section("architect-trace.audit", Some(Label::data(format!("Audit Trail ({})", trail.events.len()))), true, items)?.build()
+    PanelTreeBuilder::new("architect-trace")?.section("architect-trace.audit", Some(ui_label(format!("Audit Trail ({})", trail.events.len()))?), true, items)?.build()
 }
 //#endregion 🔖️Render
 
@@ -73,7 +74,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn no_events_renders_the_empty_placeholder_row() {
-        let json = serde_json::to_string(&render(&sample_plugin())).expect("json");
+        let json = crate::editor::architect::testkit::project_render(render(&sample_plugin()));
         assert!(json.contains("architect-trace.audit"));
         assert!(json.contains("architect-trace.audit.empty"));
     }
@@ -105,7 +106,7 @@ mod tests {
             compliance_tags: Vec::new(),
             retention_until: None,
         });
-        let json = serde_json::to_string(&render(&program)).expect("json");
+        let json = crate::editor::architect::testkit::project_render(render(&program));
         assert!(json.contains("architect-trace.audit.0"));
         assert!(!json.contains("architect-trace.audit.empty"));
     }

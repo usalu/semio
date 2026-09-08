@@ -8,6 +8,7 @@ use crate::editor::lowpoly::config::{LowpolyConfig, LowpolyConfigMutation};
 use crate::editor::lowpoly::session::{LowpolyScratch, Transform};
 use semio_framework_3d::mesh::Vec3;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+#[cfg(test)]
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️TransformBegin

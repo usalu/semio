@@ -1,0 +1,133 @@
+{
+  "base": {
+    "beforePaneCamera": {
+      "x": 1.0,
+      "y": 2.0,
+      "zoom": 2.0
+    },
+    "reorganizeEpoch": 3,
+    "lodModeByWindow": {
+      "main": "compact"
+    },
+    "locale": "de-DE"
+  },
+  "cases": [
+    {
+      "kind": "replace-config",
+      "mutation": {
+        "ReplaceConfig": {
+          "config": {
+            "beforePaneCamera": {
+              "x": 1.0,
+              "y": 2.0,
+              "zoom": 2.0
+            },
+            "reorganizeEpoch": 3,
+            "lodModeByWindow": {
+              "main": "compact"
+            },
+            "locale": "en-US"
+          }
+        }
+      },
+      "expected": {
+        "beforePaneCamera": {
+          "x": 1.0,
+          "y": 2.0,
+          "zoom": 2.0
+        },
+        "reorganizeEpoch": 3,
+        "lodModeByWindow": {
+          "main": "compact"
+        },
+        "locale": "en-US"
+      }
+    },
+    {
+      "kind": "set-before-pane-camera",
+      "mutation": {
+        "SetBeforePaneCamera": {
+          "camera": {
+            "x": 4.5,
+            "y": 6.5,
+            "zoom": 3.5
+          }
+        }
+      },
+      "expected": {
+        "beforePaneCamera": {
+          "x": 4.5,
+          "y": 6.5,
+          "zoom": 3.5
+        },
+        "reorganizeEpoch": 3,
+        "lodModeByWindow": {
+          "main": "compact"
+        },
+        "locale": "de-DE"
+      }
+    },
+    {
+      "kind": "set-reorganize-epoch",
+      "mutation": {
+        "SetReorganizeEpoch": {
+          "value": 9
+        }
+      },
+      "expected": {
+        "beforePaneCamera": {
+          "x": 1.0,
+          "y": 2.0,
+          "zoom": 2.0
+        },
+        "reorganizeEpoch": 9,
+        "lodModeByWindow": {
+          "main": "compact"
+        },
+        "locale": "de-DE"
+      }
+    },
+    {
+      "kind": "set-lod-mode",
+      "mutation": {
+        "SetLodMode": {
+          "value": "expanded",
+          "window_id": "detail"
+        }
+      },
+      "expected": {
+        "beforePaneCamera": {
+          "x": 1.0,
+          "y": 2.0,
+          "zoom": 2.0
+        },
+        "reorganizeEpoch": 3,
+        "lodModeByWindow": {
+          "main": "compact",
+          "detail": "expanded"
+        },
+        "locale": "de-DE"
+      }
+    },
+    {
+      "kind": "set-locale",
+      "mutation": {
+        "SetLocale": {
+          "value": "en-US"
+        }
+      },
+      "expected": {
+        "beforePaneCamera": {
+          "x": 1.0,
+          "y": 2.0,
+          "zoom": 2.0
+        },
+        "reorganizeEpoch": 3,
+        "lodModeByWindow": {
+          "main": "compact"
+        },
+        "locale": "en-US"
+      }
+    }
+  ]
+}

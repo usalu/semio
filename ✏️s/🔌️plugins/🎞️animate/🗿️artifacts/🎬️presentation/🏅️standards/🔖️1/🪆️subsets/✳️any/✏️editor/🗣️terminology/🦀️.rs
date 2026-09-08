@@ -11,6 +11,7 @@ semio_framework_plugin::app_labels! {
     pub struct AnimatePresentationLabels {
         tiles_section: native_en "Tiles", native_de "Kacheln", reuse_en "Tiles", reuse_de "Kacheln";
         no_tiles: native_en "(no tiles — seed a grid)", native_de "(keine Kacheln — Raster erzeugen)", reuse_en "(no tiles — seed a grid)", reuse_de "(keine Kacheln — Raster erzeugen)";
+        details_title: native_en "Inspection", native_de "Inspektion", reuse_en "Inspection", reuse_de "Inspektion";
         details_schema_field: native_en "Schema", native_de "Schema", reuse_en "Schema", reuse_de "Schema";
         details_tiles_field: native_en "Tiles", native_de "Kacheln", reuse_en "Tiles", reuse_de "Kacheln";
         catalogue_tile_templates: native_en "Tile templates", native_de "Kachelvorlagen", reuse_en "Tile templates", reuse_de "Kachelvorlagen";

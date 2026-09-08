@@ -204,10 +204,9 @@ pub fn fixtures_after_remove_edge(snapshot: &WiresSnapshot, edge_id: &str) -> (D
 mod tests {
     use super::*;
     use crate::artifacts::wires::empty_wires_snapshot;
-    use serde_json::json;
 
     fn node(id: &str, text: &str) -> DslValue {
-        dsl::to_dsl_value(&json!({ "id": id, "nodeKind": "identity", "shape": "circle", "x": 0.0, "y": 0.0, "radius": 24.0, "text": text, "handles": [] })).unwrap()
+        dsl::to_dsl_value(&dsl::json!({ "id": id, "nodeKind": "identity", "shape": "circle", "x": 0.0, "y": 0.0, "radius": 24.0, "text": text, "handles": [] })).unwrap()
     }
 
     #[semio_framework_async_macros::async_test]

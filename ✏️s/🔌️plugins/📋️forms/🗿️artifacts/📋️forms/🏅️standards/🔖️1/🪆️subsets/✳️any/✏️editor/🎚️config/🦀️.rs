@@ -14,9 +14,8 @@
 //! the framework-owned `InteractionState` (the "fields" domain declared on `create_forms_app`) — see
 //! `crate::editor::forms::FORMS_INTERACTION_FIELDS`.
 
-use protocol::Mutation;
 #[cfg(test)]
-use serde::{Deserialize, Serialize};
+use protocol::Mutation;
 use std::collections::BTreeMap;
 use std::fmt;
 use std::sync::atomic::{AtomicU64, Ordering};
@@ -169,6 +168,7 @@ pub(crate) fn try_value_content_id(chunks: &[Arc<str>]) -> String {
     format!("try-{:016x}{:016x}{:016x}{:016x}-{len:016x}", digest[0], digest[1], digest[2], digest[3])
 }
 
+#[cfg(test)]
 pub(crate) fn split_try_value_chunks(raw: &str, max_bytes: usize) -> Vec<Arc<str>> {
     let mut chunks = Vec::new();
     let mut start = 0;
@@ -240,16 +240,13 @@ impl FormsTryValues {
         node.value.as_ref().map(|value| value.id.clone())
     }
 
-    fn with_json(&self, key: &str, value_json: String) -> Self {
-        Self::with_chunks(self, key, value_json, Arc::<[Arc<str>]>::from([]))
-    }
-
     pub(crate) fn with_chunks(&self, key: &str, content_id: String, chunks: Arc<[Arc<str>]>) -> Self {
         let inserted = self.get_json(key).is_none();
         let value = TryValueContent { id: Arc::from(content_id), chunks };
         Self { root: set_try_value_node(&self.root, key.as_bytes(), Some(value)), len: self.len + usize::from(inserted), revision: self.revision.wrapping_add(1) }
     }
 
+    #[cfg(test)]
     pub(crate) fn content_chunks(&self, key: &str) -> Option<&[Arc<str>]> {
         let mut node = self.root.as_ref();
         for byte in key.as_bytes() {
@@ -291,16 +288,6 @@ impl FormsTryValues {
         self.iter_content().into_iter().map(|(key, value)| (key, value.chunks)).collect()
     }
 
-    pub(crate) fn iter_prefix(&self, prefix: &str) -> Vec<(String, Arc<str>)> {
-        let mut node = self.root.as_ref();
-        for byte in prefix.as_bytes() {
-            let Some(child) = node.children.get(byte) else { return Vec::new() };
-            node = child;
-        }
-        let mut entries = Vec::new();
-        collect_try_value_contents(node, &mut prefix.as_bytes().to_vec(), &mut entries);
-        entries.into_iter().map(|(key, value)| (key, value.id)).collect()
-    }
 }
 
 fn set_try_value_node(node: &Arc<TryValueNode>, key: &[u8], value: Option<TryValueContent>) -> Arc<TryValueNode> {
@@ -417,9 +404,7 @@ impl dsl::DslField for FormsTryValues {
 /// Try values are independently addressable JSON leaves. The contribution catalogue remains an opaque
 /// JSON document because it is replaced as one host-owned payload.
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslArtifact)]
-#[cfg_attr(test, derive(Serialize, Deserialize))]
 #[value(rename_all = "camelCase", default)]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
 #[dsl(extension = "formscfg")]
 #[dsl(id = "forms.config")]
 #[dsl(layout = "lines")]
@@ -488,168 +473,9 @@ impl Default for FormsConfig {
 store::impl_whole_record_config!(FormsConfig);
 //#endregion 🔖️Config
 
-//#region 🔖️ConfigMutations
-/// 🧮️ WORKFLOWS-END-TO-END-TYPED-PORTS Config recipe: [`FormsConfig`]'s operation enum — mirrors
-/// `shooting_op::ShootingConfigMutation`'s shape exactly: one variant per settled interaction (was a
-/// `FormsPlayRuntime` field write pre-B1), plus a generic `Snapshot` every variant's `backwards()` returns.
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslOps)]
-#[cfg_attr(test, derive(Serialize, Deserialize))]
-pub enum FormsConfigMutation {
-    #[dsl(key = "snapshot")]
-    Snapshot {
-        #[dsl(block)]
-        config: FormsConfig,
-    },
-    #[dsl(key = "step-index")]
-    SetStepIndex { index: u32 },
-    #[dsl(key = "stage-try-value-chunk")]
-    StageTryValueChunk { staging_id: String, index: u64, chunk: String },
-    #[dsl(key = "discard-try-value-staging")]
-    DiscardTryValueStaging { staging_id: String },
-    #[dsl(key = "verify-try-value-chunk")]
-    VerifyTryValueChunk { staging_id: String, content_id: String, index: u64, chunk_count: u64 },
-    #[dsl(key = "commit-try-value")]
-    CommitTryValue { key: String, staging_id: String, content_id: String, chunk_count: u64 },
-    #[dsl(key = "stage-try-values-entry")]
-    StageTryValuesEntry { staging_id: String, key: String, value_staging_id: String, content_id: String, chunk_count: u64 },
-    #[dsl(key = "discard-try-values-batch")]
-    DiscardTryValuesBatch { staging_id: String },
-    #[dsl(key = "commit-try-values-batch")]
-    CommitTryValuesBatch { staging_id: String, entry_count: u64 },
-    #[dsl(key = "clear-try-values")]
-    ClearTryValues,
-    #[dsl(key = "locale")]
-    SetLocale { value: String },
-    #[dsl(key = "contributions")]
-    SetContributions { json: String },
-}
-
-//#region 🔖️OpCodec
-impl protocol::OpText for FormsConfigMutation {
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        let variants = <Self as dsl::DslVariants>::variants();
-        for (keyword, spec_fn) in &variants {
-            let probe = format!("{} ", keyword);
-            if line == keyword.as_str() || line.starts_with(&probe) {
-                let record = dsl::parse(line, &spec_fn(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline })?;
-                return <Self as dsl::DslVariants>::from_named_record(keyword, &record);
-            }
-        }
-        Err(dsl::__rt::field_error(format!("unknown operation line '{line}'")))
-    }
-    fn print_op(&self) -> String {
-        let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
-        let variants = <Self as dsl::DslVariants>::variants();
-        let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
-        dsl::print(&record, &spec_fn(), dsl::JoinMode::Inline)
-    }
-}
-
-/// 🎯️ Handcrafted OpBinary (P6).
-impl protocol::OpBinary for FormsConfigMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        const OP_BINARY_FORMAT: u8 = 1;
-        let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
-        let variants = <Self as dsl::DslVariants>::variants();
-        let ordinal = variants.iter().position(|(k, _)| *k == keyword).ok_or(protocol::ProtocolError::Malformed { what: "op variant", offset: 0, detail: format!("keyword {keyword:?} is not a declared variant") })?;
-        let spec = (variants[ordinal].1)();
-        let body = store::pack_rt::encode_record_body(&spec, &record, &store::PackEncodeOptions::default()).map_err(protocol::ProtocolError::from)?;
-        let mut out = Vec::with_capacity(body.len() + 3);
-        out.push(OP_BINARY_FORMAT);
-        store::pack_rt::write_varint_u64(&mut out, ordinal as u64);
-        out.extend_from_slice(&body);
-        Ok(out)
-    }
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        const OP_BINARY_FORMAT: u8 = 1;
-        let mut reader = store::pack_rt::ByteReader::new(bytes);
-        let format = reader.read_u8()?;
-        if format != OP_BINARY_FORMAT {
-            return Err(protocol::ProtocolError::Malformed { what: "op format", offset: 0, detail: format!("unsupported op format {format}") });
-        }
-        let ordinal = reader.read_varint_u64()?;
-        let variants = <Self as dsl::DslVariants>::variants();
-        let (keyword, spec_fn) = variants.get(ordinal as usize).ok_or(protocol::ProtocolError::Malformed { what: "op variant", offset: 1, detail: format!("ordinal {ordinal} out of range for {} declared variants", variants.len()) })?;
-        let spec = spec_fn();
-        let body = &bytes[reader.position()..];
-        let (record, _report) = store::pack_rt::decode_record_body(body, &spec, &store::PackDecodeOptions::default()).map_err(protocol::ProtocolError::from)?;
-        let operation = <Self as dsl::DslVariants>::from_named_record(keyword, &record).map_err(|error| protocol::ProtocolError::Malformed { what: "op record", offset: reader.position() as u64, detail: error.to_string() })?;
-        if let FormsConfigMutation::StageTryValueChunk { staging_id, chunk, .. } = &operation {
-            if staging_id.len() > MAX_TRY_VALUE_OPERATION_ID_BYTES || chunk.len() > MAX_STAGED_TRY_VALUE_CHUNK_BYTES {
-                return Err(protocol::ProtocolError::Malformed { what: "forms try-value chunk", offset: reader.position() as u64, detail: "staging id or chunk exceeds the bounded operation limit".into() });
-            }
-        }
-        Ok(operation)
-    }
-}
-
-//#endregion 🔖️OpCodec
-
-impl Mutation<FormsConfig> for FormsConfigMutation {
-    type Diff = FormsConfig;
-
-    fn diff(&self, base: &FormsConfig) -> protocol::MutationOutcome<FormsConfig> {
-        let mut next = base.clone();
-        match self {
-            FormsConfigMutation::Snapshot { config } => {
-                return protocol::MutationOutcome::new(config.clone());
-            }
-            FormsConfigMutation::SetStepIndex { index } => next.current_step_index = *index,
-            FormsConfigMutation::StageTryValueChunk { staging_id, index, chunk } => {
-                if let Err(error) = stage_try_value_chunk(staging_id, *index, chunk) {
-                    return protocol::MutationOutcome::new(next).absorb_messages([error.message()]);
-                }
-            }
-            FormsConfigMutation::DiscardTryValueStaging { staging_id } => discard_staged_try_value(staging_id),
-            FormsConfigMutation::VerifyTryValueChunk { staging_id, content_id, index, chunk_count } => {
-                let expected = base.try_values.content_chunk_by_id(content_id, *index);
-                let staged = try_value_blobs().lock().expect("forms try-value blob lock").get(staging_id).and_then(|blob| blob.chunks.get(index)).cloned();
-                if expected.as_deref() != staged.as_deref() || index.saturating_add(1) > *chunk_count {
-                    return protocol::MutationOutcome::new(next).absorb_messages([FormsStageError::Conflict.message()]);
-                }
-            }
-            FormsConfigMutation::CommitTryValue { key, staging_id, content_id, chunk_count } => {
-                if base.try_values.get_json(key).is_none() && base.try_values.len() >= MAX_STAGED_TRY_VALUE_BLOBS {
-                    discard_staged_try_value(staging_id);
-                    return protocol::MutationOutcome::new(next).absorb_messages([FormsStageError::Busy.message()]);
-                }
-                let chunks = match commit_staged_try_value(staging_id, content_id, *chunk_count) {
-                    Ok(chunks) => chunks,
-                    Err(error) => return protocol::MutationOutcome::new(next).absorb_messages([error.message()]),
-                };
-                next.try_values = next.try_values.with_chunks(key, content_id.clone(), chunks);
-            }
-            FormsConfigMutation::StageTryValuesEntry { staging_id, key, value_staging_id, content_id, chunk_count } => {
-                if let Err(error) = stage_try_values_batch_entry(staging_id, key, value_staging_id, content_id, *chunk_count, &base.try_values) {
-                    return protocol::MutationOutcome::new(next).absorb_messages([error.message()]);
-                }
-            }
-            FormsConfigMutation::DiscardTryValuesBatch { staging_id } => discard_staged_try_values_batch(staging_id),
-            FormsConfigMutation::CommitTryValuesBatch { staging_id, entry_count } => {
-                let Some(values) = commit_staged_try_values_batch(staging_id, *entry_count) else {
-                    return protocol::MutationOutcome::new(next).absorb_messages([FormsStageError::Missing.message()]);
-                };
-                next.try_values = values;
-            }
-            FormsConfigMutation::ClearTryValues => {
-                next.try_values = FormsTryValues::default();
-            }
-            FormsConfigMutation::SetLocale { value } => next.locale = value.clone(),
-            FormsConfigMutation::SetContributions { json } => next.contributions_json = json.clone(),
-        }
-        protocol::MutationOutcome::new(next)
-    }
-
-    fn inverse(&self, base: &FormsConfig) -> Vec<Self> {
-        match self {
-            FormsConfigMutation::StageTryValueChunk { staging_id, .. } => vec![FormsConfigMutation::DiscardTryValueStaging { staging_id: staging_id.clone() }],
-            FormsConfigMutation::StageTryValuesEntry { staging_id, .. } => vec![FormsConfigMutation::DiscardTryValuesBatch { staging_id: staging_id.clone() }],
-            FormsConfigMutation::DiscardTryValueStaging { .. } | FormsConfigMutation::DiscardTryValuesBatch { .. } | FormsConfigMutation::VerifyTryValueChunk { .. } => Vec::new(),
-            _ => vec![FormsConfigMutation::Snapshot { config: base.clone() }],
-        }
-    }
-}
-//#endregion 🔖️ConfigMutations
+#[path = "🧬️schema/🧬️mutations/🦀️.rs"]
+mod mutations;
+pub use mutations::*;
 
 //#region 🧪️Tests
 #[cfg(test)]
@@ -688,14 +514,14 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn config_mutations_apply_and_restore_every_field() {
         let base = FormsConfig::default();
-        assert_eq!(config_round_trip(&base, &FormsConfigMutation::SetStepIndex { index: 2 }).current_step_index, 2);
+        assert_eq!(config_round_trip(&base, &FormsConfigMutation::SetStepIndex(crate::editor::forms::config::SetStepIndex { index: 2 })).current_step_index, 2);
         let one_chunks = split_try_value_chunks("1", MAX_STAGED_TRY_VALUE_CHUNK_BYTES);
         let one_id = try_value_content_id(&one_chunks);
-        let staged = FormsConfigMutation::StageTryValueChunk { staging_id: "one-stage".into(), index: 0, chunk: "1".into() }.diff(&base).diff().clone();
+        let staged = FormsConfigMutation::StageTryValueChunk(crate::editor::forms::config::StageTryValueChunk { staging_id: "one-stage".into(), index: 0, chunk: "1".into() }).diff(&base).diff().clone();
         assert_eq!(staged, base);
-        assert_eq!(config_round_trip(&staged, &FormsConfigMutation::CommitTryValue { key: "a".into(), staging_id: "one-stage".into(), content_id: one_id.clone(), chunk_count: 1 }).try_values.get_json("a"), Some(one_id.as_str()));
-        assert_eq!(config_round_trip(&base, &FormsConfigMutation::SetLocale { value: "de-DE".into() }).locale, "de-DE");
-        assert_eq!(config_round_trip(&base, &FormsConfigMutation::SetContributions { json: "[]".into() }).contributions_json, "[]");
+        assert_eq!(config_round_trip(&staged, &FormsConfigMutation::CommitTryValue(crate::editor::forms::config::CommitTryValue { key: "a".into(), staging_id: "one-stage".into(), content_id: one_id.clone(), chunk_count: 1 })).try_values.get_json("a"), Some(one_id.as_str()));
+        assert_eq!(config_round_trip(&base, &FormsConfigMutation::SetLocale(crate::editor::forms::config::SetLocale { value: "de-DE".into() })).locale, "de-DE");
+        assert_eq!(config_round_trip(&base, &FormsConfigMutation::SetContributions(crate::editor::forms::config::SetContributions { json: "[]".into() })).contributions_json, "[]");
     }
 
     #[semio_framework_async_macros::async_test]
@@ -703,9 +529,9 @@ mod tests {
         let chunks = split_try_value_chunks(r#""Ada""#, 4_096);
         let content_id = try_value_content_id(&chunks);
         let config = FormsConfig { current_step_index: 1, try_values: FormsTryValues::default().with_chunks("name", content_id, chunks.into()), locale: "de-DE".into(), contributions_json: "[]".into() };
-        store::os_store::test_support::assert_op_line_round_trip(&FormsConfigMutation::Snapshot { config });
-        store::os_store::test_support::assert_op_line_round_trip(&FormsConfigMutation::SetStepIndex { index: 3 });
-        store::os_store::test_support::assert_op_line_round_trip(&FormsConfigMutation::SetLocale { value: "en-US".into() });
+        store::os_store::test_support::assert_op_line_round_trip(&FormsConfigMutation::ReplaceConfig(crate::editor::forms::config::ReplaceConfig { config }));
+        store::os_store::test_support::assert_op_line_round_trip(&FormsConfigMutation::SetStepIndex(crate::editor::forms::config::SetStepIndex { index: 3 }));
+        store::os_store::test_support::assert_op_line_round_trip(&FormsConfigMutation::SetLocale(crate::editor::forms::config::SetLocale { value: "en-US".into() }));
     }
 
     #[test]
@@ -722,9 +548,9 @@ mod tests {
         let chunks = split_try_value_chunks(r#"{"answer":"Ada"}"#, 5);
         let content_id = try_value_content_id(&chunks);
         let config = FormsConfig { try_values: FormsTryValues::default().with_chunks("name", content_id.clone(), chunks.clone().into()), ..FormsConfig::default() };
-        let serialized = serde_json::to_vec(&config).expect("serialize committed Forms config");
+        let serialized = dsl::os_pack::json::to_json_string(&config).into_bytes();
         clear_try_value_staging_for_replay();
-        let reopened: FormsConfig = serde_json::from_slice(&serialized).expect("reopen committed Forms config");
+        let reopened: FormsConfig = dsl::os_pack::json::from_json_str(std::str::from_utf8(&serialized).expect("config UTF-8")).expect("reopen committed Forms config");
         assert_eq!(reopened.try_values.get_json("name"), Some(content_id.as_str()));
         assert_eq!(reopened.try_values.content_chunks("name"), Some(chunks.as_slice()));
     }
@@ -734,20 +560,46 @@ mod tests {
         let raw = "x".repeat(4_096);
         let chunks = split_try_value_chunks(&raw, 4_096);
         let content_id = try_value_content_id(&chunks);
-        let stage = FormsConfigMutation::StageTryValueChunk { staging_id: "timed-stage".into(), index: 0, chunk: raw };
+        let stage = FormsConfigMutation::StageTryValueChunk(crate::editor::forms::config::StageTryValueChunk { staging_id: "timed-stage".into(), index: 0, chunk: raw });
         let started = std::time::Instant::now();
-        let bytes = <FormsConfigMutation as protocol::OpBinary>::encode_op(&stage).await.expect("stage encode");
-        let decoded = <FormsConfigMutation as protocol::OpBinary>::decode_op(&bytes).await.expect("stage decode");
+        let bytes = <FormsConfigMutation as protocol::OpBinary>::encode_op(&stage).expect("stage encode");
+        let decoded = <FormsConfigMutation as protocol::OpBinary>::decode_op(&bytes).expect("stage decode");
         let staged = decoded.diff(&FormsConfig::default()).diff().clone();
         assert!(started.elapsed() < std::time::Duration::from_millis(8));
 
-        let commit = FormsConfigMutation::CommitTryValue { key: "large".into(), staging_id: "timed-stage".into(), content_id: content_id.clone(), chunk_count: 1 };
+        let commit = FormsConfigMutation::CommitTryValue(crate::editor::forms::config::CommitTryValue { key: "large".into(), staging_id: "timed-stage".into(), content_id: content_id.clone(), chunk_count: 1 });
         let started = std::time::Instant::now();
-        let bytes = <FormsConfigMutation as protocol::OpBinary>::encode_op(&commit).await.expect("commit encode");
-        let decoded = <FormsConfigMutation as protocol::OpBinary>::decode_op(&bytes).await.expect("commit decode");
+        let bytes = <FormsConfigMutation as protocol::OpBinary>::encode_op(&commit).expect("commit encode");
+        let decoded = <FormsConfigMutation as protocol::OpBinary>::decode_op(&bytes).expect("commit decode");
         let committed = decoded.diff(&staged).diff().clone();
         assert_eq!(committed.try_values.get_json("large"), Some(content_id.as_str()));
         assert!(started.elapsed() < std::time::Duration::from_millis(8));
     }
 }
 //#endregion 🧪️Tests
+
+#[cfg(test)]
+mod contract_vectors {
+    use super::*;
+    use protocol::{Mutation, MutationDiff, OpBinary, OpText};
+    use dsl::os_pack as pack;
+    #[test]
+    fn forms_configuration_contract_vectors_match_the_json_oracle() {
+        let vectors: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🔁️mutation-contracts.json")).unwrap();
+        let base: FormsConfig = pack::from_json_str(&vectors["base"].to_string()).unwrap();
+        assert_eq!(<FormsConfigMutation as Mutation<FormsConfig>>::DESCRIPTORS.len(), vectors["cases"].as_array().unwrap().len());
+        for vector in vectors["cases"].as_array().unwrap() {
+            let mutation: FormsConfigMutation = pack::from_json_str(&vector["mutation"].to_string()).unwrap();
+            assert_eq!(serde_json::from_str::<serde_json::Value>(&pack::to_json_string(&mutation)).unwrap(), vector["mutation"]);
+            assert_eq!(mutation.descriptor().semantic_kind, vector["kind"].as_str().unwrap());
+            assert_eq!(FormsConfigMutation::parse_op(&mutation.print_op()).unwrap(), mutation);
+            assert_eq!(FormsConfigMutation::decode_op(&mutation.encode_op().unwrap()).unwrap(), mutation);
+            let outcome = mutation.diff(&base);
+            assert_eq!(outcome.messages().len(), vector["errors"].as_u64().unwrap() as usize);
+            let next = outcome.diff().apply(&base).unwrap();
+            assert_eq!(serde_json::from_str::<serde_json::Value>(&pack::to_json_string(&next)).unwrap(), vector["expected"]);
+            let restored = mutation.inverse(&base).into_iter().fold(next, |state, inverse| inverse.diff(&state).diff().apply(&state).unwrap());
+            assert_eq!(restored, base);
+        }
+    }
+}

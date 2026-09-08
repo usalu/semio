@@ -20,7 +20,7 @@ pub struct Block2dPresence {}
 
 impl protocol::MutationDiff<Block2dPresence> for Block2dPresence {
     fn apply(&self, _base: &Block2dPresence) -> protocol::MutationApplyResult<Block2dPresence> {
-        Ok({ self.clone() })
+        Ok(self.clone())
     }
     fn absorb(&mut self, other: Self) {
         *self = other;

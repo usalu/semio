@@ -1,6 +1,7 @@
 //! 📐️ `scale-object` — sets an object's absolute scale.
 
 use crate::artifacts::lowpoly::{LowpolyMutation, LowpolySnapshot};
+#[cfg(test)]
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Payload

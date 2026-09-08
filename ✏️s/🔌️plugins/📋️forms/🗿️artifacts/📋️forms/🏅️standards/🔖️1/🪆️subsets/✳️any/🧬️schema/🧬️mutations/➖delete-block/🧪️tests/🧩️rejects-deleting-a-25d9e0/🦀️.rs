@@ -26,16 +26,16 @@ const MUTATION: &str = include_str!("🦠️mutation/🔣️.json");
 const OUTCOME: &str = include_str!("🎯️outcome/🔣️.json");
 
 fn mutation() -> FormMutation {
-    serde_json::from_str(MUTATION).expect("mutation decodes")
+    dsl::os_pack::json::from_json_str(MUTATION).expect("mutation decodes")
 }
 fn expected_after() -> FormsSnapshot {
-    serde_json::from_str(AFTER).expect("after snapshot decodes")
+    dsl::os_pack::json::from_json_str(AFTER).expect("after snapshot decodes")
 }
 
 /// 🌱 The committed `⬅️before`, with its composed children resolved to a scene that DOES hold the
 /// payload's owning step — carrying no blocks, so only the nested lookup can miss.
 fn before() -> FormsSnapshot {
-    let mut snapshot: FormsSnapshot = serde_json::from_str(BEFORE).expect("before snapshot decodes");
+    let mut snapshot: FormsSnapshot = dsl::os_pack::json::from_json_str(BEFORE).expect("before snapshot decodes");
     let FormMutation::DeleteBlock(payload) = mutation() else {
         panic!("rejects-deleting-a-block-missing-from-an-existing-step's committed mutation must be a delete-block");
     };
@@ -50,7 +50,7 @@ async fn rejection_leaves_the_document_at_the_committed_after() {
     let base = before();
     let snapshot = apply_form_edit_mutation(&base, &mutation()).expect("an empty diff still applies cleanly");
     assert_eq!(snapshot, expected_after(), "delete-block/rejects-deleting-a-block-missing-from-an-existing-step: applied state differs from committed after-snapshot");
-    assert_eq!((&mut snapshot.structure, &snapshot.results.child_id), (&base.structure.child_id, &base.results.child_id), "a rejected delete must not mint new structure/results handles");
+    assert_eq!((&snapshot.structure.child_id, &snapshot.results.child_id), (&base.structure.child_id, &base.results.child_id), "a rejected delete must not mint new structure/results handles");
 }
 
 /// ✂️ The step resolves, the block does not: an Error-level `mutation.target-missing` addressed by
@@ -86,12 +86,12 @@ async fn inverse_has_no_block_to_recreate() {
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {
-        let decoded: FormsSnapshot = serde_json::from_str(text).expect("snapshot decodes");
-        let reencoded = serde_json::to_value(&decoded).expect("snapshot encodes");
+        let decoded: FormsSnapshot = dsl::os_pack::json::from_json_str(text).expect("snapshot decodes");
+        let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::os_pack::json::to_json_string(&decoded)).expect("snapshot encodes");
         let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
         assert_eq!(reencoded, original, "delete-block/rejects-deleting-a-block-missing-from-an-existing-step: committed {label} JSON is not canonical");
     }
-    let reencoded = serde_json::to_value(mutation()).expect("mutation encodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::os_pack::json::to_json_string(&mutation())).expect("mutation encodes");
     let original: serde_json::Value = serde_json::from_str(MUTATION).expect("mutation reparses");
     assert_eq!(reencoded, original, "delete-block/rejects-deleting-a-block-missing-from-an-existing-step: committed mutation JSON is not canonical");
 }

@@ -9,6 +9,7 @@
       },
       "devDependencies": {
         "@eslint/js": "^10.0.1",
+        "@iarna/toml": "2.2.5",
         "@nx/devkit": "21.6.11",
         "@nx/js": "21.6.11",
         "@nxlv/python": "^21.2.3",

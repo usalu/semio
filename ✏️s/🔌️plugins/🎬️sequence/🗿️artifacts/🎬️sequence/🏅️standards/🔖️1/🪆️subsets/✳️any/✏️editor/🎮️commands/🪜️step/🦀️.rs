@@ -118,7 +118,7 @@ pub mod delete_selection {
         Emit::mutations(ops)
     }
 
-    /// 🕹️ `app_commands!`'s generated `dispatch(doc, cfg)` is framework-fixed at this exact 3-arg
+    /// 🕹️ `app_commands!`'s generated `dispatch(doc, cfg).await` is framework-fixed at this exact 3-arg
     /// shape (no `interaction` slot — ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM) —
     /// reachable only through that macro-generated path (`SequencePlayApp::handle` always routes this
     /// command through `apply` below instead), so it degrades to treating the selection as empty.
@@ -213,16 +213,16 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn add_step_command_appends_step() {
-        let mut app = new_app();
-        dispatch(&mut app, SequenceCommand::AddStep(AddStep { kind: "log.print".into(), x: 0.0, y: 0.0 }));
+        let mut app = new_app().await;
+        dispatch(&mut app, SequenceCommand::AddStep(AddStep { kind: "log.print".into(), x: 0.0, y: 0.0 })).await;
         assert!(app.snapshot().expect("projection").to_fixture().steps.len() > 2);
     }
 
     #[semio_framework_async_macros::async_test]
     async fn remove_step_command_deletes_step() {
-        let mut app = new_app();
+        let mut app = new_app().await;
         let step_id = app.snapshot().expect("projection").to_fixture().steps[0].id.clone();
-        dispatch(&mut app, SequenceCommand::RemoveStep(RemoveStep { id: step_id.clone() }));
+        dispatch(&mut app, SequenceCommand::RemoveStep(RemoveStep { id: step_id.clone() })).await;
         assert!(app.snapshot().expect("projection").to_fixture().steps.iter().all(|step| step.id != step_id));
     }
 
@@ -233,9 +233,9 @@ mod tests {
     /// that step.
     #[semio_framework_async_macros::async_test]
     async fn delete_selection_removes_the_live_selected_step() {
-        let mut app = new_app_with_registry_wired();
-        select_steps(&mut app, &["step-1"]);
-        dispatch(&mut app, SequenceCommand::DeleteSelection(DeleteSelection {}));
+        let mut app = new_app_with_registry_wired().await;
+        select_steps(&mut app, &["step-1"]).await;
+        dispatch(&mut app, SequenceCommand::DeleteSelection(DeleteSelection {})).await;
         assert!(!app.snapshot().expect("projection").to_fixture().steps.iter().any(|step| step.id == "step-1"), "selected step must be deleted");
     }
 }

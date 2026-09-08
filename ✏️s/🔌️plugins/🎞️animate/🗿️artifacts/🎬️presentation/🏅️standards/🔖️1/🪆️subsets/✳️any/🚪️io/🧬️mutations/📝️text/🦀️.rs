@@ -54,10 +54,10 @@ mod tests {
     use store::os_store::test_support;
 
     async fn round_trip(deck: &PresentationSnapshot, operation: &PresentationMutation) -> PresentationSnapshot {
-        let (forward, _messages) = vcs::apply_mutation(deck, operation).await.expect("valid mutation");
+        let (forward, _messages) = vcs::apply_mutation(deck, operation).expect("valid mutation");
         let mut restored = forward.clone();
         for back in protocol::Mutation::inverse(operation, deck) {
-            let (next, _messages) = vcs::apply_mutation(&restored, &back).await.expect("valid inverse mutation");
+            let (next, _messages) = vcs::apply_mutation(&restored, &back).expect("valid inverse mutation");
             restored = next;
         }
         assert_eq!(&restored, deck, "inverse() must exactly restore the pre-operation deck");

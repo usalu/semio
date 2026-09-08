@@ -1,7 +1,6 @@
 //! 🌱️ Fem2d mutation — `CreateRegion` payload + `MutationKind` impl.
 
 use crate::artifacts::fem2d::{Fem2dSnapshot, FemRegion};
-use crate::artifacts::fem2d::diff::{Fem2dDiff, Fem2dRegionsDelta};
 use crate::artifacts::fem2d::mutations::Fem2dMutation;
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};

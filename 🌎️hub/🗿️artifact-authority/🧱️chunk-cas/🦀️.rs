@@ -673,7 +673,7 @@ pub struct FsArtifactChunkCasStorage {
     nonce: std::sync::atomic::AtomicU64,
 }
 
-struct ArtifactCasFileFence(std::fs::File);
+use super::file_fence::{try_acquire, FileFence};
 
 #[cfg(unix)]
 fn open_artifact_cas_leaf(path: &Path, write: bool, create: bool) -> std::io::Result<std::fs::File> {
@@ -720,79 +720,6 @@ fn open_artifact_cas_leaf(path: &Path, write: bool, create: bool) -> std::io::Re
     }
 }
 
-#[cfg(unix)]
-fn try_lock_file(file: std::fs::File) -> std::io::Result<Option<ArtifactCasFileFence>> {
-    use std::os::fd::AsRawFd as _;
-    unsafe extern "C" {
-        fn flock(fd: i32, operation: i32) -> i32;
-    }
-    if unsafe { flock(file.as_raw_fd(), 2 | 4) } == 0 {
-        return Ok(Some(ArtifactCasFileFence(file)));
-    }
-    let error = std::io::Error::last_os_error();
-    if matches!(error.kind(), std::io::ErrorKind::WouldBlock) {
-        Ok(None)
-    } else {
-        Err(error)
-    }
-}
-
-#[cfg(unix)]
-impl Drop for ArtifactCasFileFence {
-    fn drop(&mut self) {
-        use std::os::fd::AsRawFd as _;
-        unsafe extern "C" {
-            fn flock(fd: i32, operation: i32) -> i32;
-        }
-        let _ = unsafe { flock(self.0.as_raw_fd(), 8) };
-    }
-}
-
-#[cfg(windows)]
-fn try_lock_file(file: std::fs::File) -> std::io::Result<Option<ArtifactCasFileFence>> {
-    use std::os::windows::io::AsRawHandle as _;
-    #[repr(C)]
-    struct Overlapped {
-        internal: usize,
-        internal_high: usize,
-        offset: u32,
-        offset_high: u32,
-        event: *mut core::ffi::c_void,
-    }
-    unsafe extern "system" {
-        fn LockFileEx(file: *mut core::ffi::c_void, flags: u32, reserved: u32, low: u32, high: u32, overlapped: *mut Overlapped) -> i32;
-    }
-    let mut overlapped = Overlapped { internal: 0, internal_high: 0, offset: 0, offset_high: 0, event: std::ptr::null_mut() };
-    if unsafe { LockFileEx(file.as_raw_handle(), 2 | 1, 0, 1, 0, &mut overlapped) } != 0 {
-        return Ok(Some(ArtifactCasFileFence(file)));
-    }
-    let error = std::io::Error::last_os_error();
-    if matches!(error.raw_os_error(), Some(33 | 158)) {
-        Ok(None)
-    } else {
-        Err(error)
-    }
-}
-
-#[cfg(windows)]
-impl Drop for ArtifactCasFileFence {
-    fn drop(&mut self) {
-        use std::os::windows::io::AsRawHandle as _;
-        #[repr(C)]
-        struct Overlapped {
-            internal: usize,
-            internal_high: usize,
-            offset: u32,
-            offset_high: u32,
-            event: *mut core::ffi::c_void,
-        }
-        unsafe extern "system" {
-            fn UnlockFileEx(file: *mut core::ffi::c_void, reserved: u32, low: u32, high: u32, overlapped: *mut Overlapped) -> i32;
-        }
-        let mut overlapped = Overlapped { internal: 0, internal_high: 0, offset: 0, offset_high: 0, event: std::ptr::null_mut() };
-        let _ = unsafe { UnlockFileEx(self.0.as_raw_handle(), 0, 1, 0, &mut overlapped) };
-    }
-}
 
 impl FsArtifactChunkCasStorage {
     /// 🏗️ Creates and validates one non-symlink dedicated storage root.
@@ -861,17 +788,17 @@ impl FsArtifactChunkCasStorage {
         Self::validate_directory(kind)
     }
 
-    async fn acquire_file_fence(&self, path: &Path, context: &OperationContext<'_>) -> Result<ArtifactCasFileFence, AuthorityError> {
+    async fn acquire_file_fence(&self, path: &Path, context: &OperationContext<'_>) -> Result<FileFence, AuthorityError> {
         loop {
             context.checkpoint()?;
             let path = path.to_path_buf();
-            let attempt = tokio::task::spawn_blocking(move || -> std::io::Result<Option<ArtifactCasFileFence>> {
+            let attempt = tokio::task::spawn_blocking(move || -> std::io::Result<Option<FileFence>> {
                 if std::fs::symlink_metadata(&path).is_ok_and(|metadata| metadata.file_type().is_symlink()) {
                     return Err(std::io::Error::new(std::io::ErrorKind::InvalidInput, "artifact CAS lock is a symlink"));
                 }
                 let file = open_artifact_cas_leaf(&path, true, true)?;
                 Self::validate_opened_leaf(&path, &file).map_err(|_| std::io::Error::new(std::io::ErrorKind::InvalidInput, "artifact CAS lock changed during open"))?;
-                try_lock_file(file)
+                try_acquire(file)
             })
             .await
             .map_err(|_| AuthorityError::Store("artifact CAS filesystem fence worker failed".into()))?

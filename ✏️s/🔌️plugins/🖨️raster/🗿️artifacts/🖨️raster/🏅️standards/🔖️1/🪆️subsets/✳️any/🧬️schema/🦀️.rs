@@ -388,10 +388,10 @@ pub fn semio_fixture_snapshot() -> RasterSnapshot {
     // must be genuinely decodable for `composite_scene_syncs_document_and_assets` to keep proving
     // real embedded pixels survive, not a decode-failure fallback.
     let emblem = RasterImageAsset { mime: "image/png".into(), data: base64_codec::base64_standard_decode("iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAYAAABytg0kAAAAEklEQVR42mP4z8DwHwyBNBgAAEnICfcD2WTxAAAAAElFTkSuQmCC").unwrap_or_default() };
-    assets.insert("semio-emblem".into(), crate::artifacts::raster::mint_raster_asset_child("semio-emblem", &emblem));
+    assets.insert("semio-emblem".into(), crate::artifacts::raster::mint_raster_asset_child("semio-emblem", &emblem)).expect("single fixture asset fits the owned map");
     let mut params = RasterOwnedMap::new();
-    params.insert("brightness".into(), dsl::DslValue::float(0.12));
-    params.insert("contrast".into(), dsl::DslValue::float(0.08));
+    params.insert("brightness".into(), dsl::DslValue::float(0.12)).expect("first fixture adjustment fits the owned map");
+    params.insert("contrast".into(), dsl::DslValue::float(0.08)).expect("second fixture adjustment has a distinct key and fits the owned map");
     RasterSnapshot {
         schema: RASTER_DOCUMENT_SCHEMA.into(),
         id: "semio-demo".into(),

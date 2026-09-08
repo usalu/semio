@@ -1,0 +1,31 @@
+{
+  "base": {
+    "activeRegister": "elements",
+    "graphCameraX": 0,
+    "graphCameraY": 0,
+    "graphCameraZoom": 1
+  },
+  "cases": [
+    {
+      "kind": "replace-presence",
+      "mutation": {
+        "ReplacePresence": {
+          "presence": {
+            "activeRegister": "risks",
+            "graphCameraX": 10,
+            "graphCameraY": -5,
+            "graphCameraZoom": 3,
+            "adjacencyKindFilter": "prohibited"
+          }
+        }
+      },
+      "expected": {
+        "activeRegister": "risks",
+        "graphCameraX": 10,
+        "graphCameraY": -5,
+        "graphCameraZoom": 3,
+        "adjacencyKindFilter": "prohibited"
+      }
+    }
+  ]
+}

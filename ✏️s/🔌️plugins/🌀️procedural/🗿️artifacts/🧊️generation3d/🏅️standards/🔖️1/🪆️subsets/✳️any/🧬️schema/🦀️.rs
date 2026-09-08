@@ -16,7 +16,6 @@ use flow::FlowFixture;
 use flow::{flow_host_with_session, FlowEvalSession, FlowHost, Widget};
 use schema::ArtifactSchema;
 use semio_framework_value_derive::{FromValue, ToValue};
-use serde_json::Value;
 use store::ArtifactDsl;
 
 //#region 🔖️Generation3dArtifact

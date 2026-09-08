@@ -1,0 +1,13 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Typed Operation Settlement Fixture",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "retainedEffects", "status", "invocation"],
+  "properties": {
+    "schema": { "const": "semio.plugin.typed-operation-settlement/v1" },
+    "retainedEffects": { "const": [{ "tag": "typed-operation-terminal-seen", "val": null }] },
+    "status": { "const": { "tag": "idle" } },
+    "invocation": { "const": { "output": null, "requestedEffects": [] } }
+  }
+}

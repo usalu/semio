@@ -1,0 +1,418 @@
+{
+  "$schema": "./🧬️policy.schema.json",
+  "version": 1,
+  "uncached": [
+    "setup",
+    "deps",
+    "install",
+    "postinstall",
+    "update",
+    "publish",
+    "deploy",
+    "migrate",
+    "seed",
+    "clean",
+    "purge",
+    "disk-prune",
+    "format",
+    "format-fix",
+    "bench",
+    "fuzz",
+    "doctor",
+    "audit",
+    "disk-report",
+    "perf-baseline",
+    "cache-verify",
+    "new"
+  ],
+  "continuous": [
+    "dev",
+    "serve",
+    "watch",
+    "start",
+    "test-watch",
+    "daemon"
+  ],
+  "generatedDirectories": [
+    "node_modules",
+    ".git",
+    ".nx",
+    ".cache",
+    "target",
+    "dist",
+    "build",
+    "out",
+    "coverage",
+    "test-results",
+    "playwright-report",
+    "storybook-static",
+    ".venv",
+    "__pycache__",
+    "bin",
+    "obj",
+    "⚡️cache",
+    "🗑️generated"
+  ],
+  "toolchains": {
+    "javascript": {
+      "files": [
+        "package.json",
+        "bun.lock",
+        "bunfig.toml",
+        "tsconfig.json"
+      ],
+      "environment": [
+        "NODE_ENV",
+        "BUN_ENV",
+        "CI",
+        "SEMIO_BUILD_MODE",
+        "SEMIO_RENDERER",
+        "SEMIO_PLUGIN",
+        "SEMIO_TEST_LEVEL",
+        "SEMIO_TEST_BUDGET_MS",
+        "SEMIO_BUILD_BUDGET_MS"
+      ],
+      "commands": [
+        "bun --version",
+        "node --version"
+      ]
+    },
+    "cargo": {
+      "files": [
+        "Cargo.toml",
+        "Cargo.lock",
+        ".cargo/config.toml",
+        "rust-toolchain.toml",
+        "rustfmt.toml"
+      ],
+      "environment": [
+        "RUSTUP_TOOLCHAIN",
+        "RUSTFLAGS",
+        "CARGO_ENCODED_RUSTFLAGS",
+        "CARGO_BUILD_TARGET",
+        "CARGO_PROFILE_DEV_OPT_LEVEL",
+        "CARGO_PROFILE_RELEASE_OPT_LEVEL",
+        "CARGO_PROFILE_DEV_DEBUG",
+        "CARGO_PROFILE_RELEASE_DEBUG",
+        "CC",
+        "CXX",
+        "CFLAGS",
+        "CXXFLAGS",
+        "LDFLAGS",
+        "SDKROOT",
+        "MACOSX_DEPLOYMENT_TARGET",
+        "SEMIO_BUILD_MODE",
+        "SEMIO_PLUGIN_PROFILE",
+        "SEMIO_DISABLE_WASM_OPT",
+        "SEMIO_WASM_OPT",
+        "SEMIO_WASM_BINDGEN_BIN",
+        "RUSTC_BOOTSTRAP",
+        "CARGO_TARGET_DIR",
+        "CARGO_UNSTABLE_EMBED_METADATA",
+        "SEMIO_WASM_OPT_BIN"
+      ],
+      "commands": [
+        "rustc -vV",
+        "cargo --version"
+      ]
+    },
+    "go": {
+      "files": [
+        "go.work",
+        "go.work.sum"
+      ],
+      "environment": [
+        "GOOS",
+        "GOARCH",
+        "CGO_ENABLED",
+        "CGO_CFLAGS",
+        "CGO_LDFLAGS",
+        "GOFLAGS",
+        "GOTOOLCHAIN"
+      ],
+      "commands": [
+        "go version"
+      ]
+    },
+    "python": {
+      "files": [
+        "pyproject.toml",
+        "uv.lock",
+        "conftest.py",
+        ".python-version"
+      ],
+      "environment": [
+        "PYTHONPATH",
+        "PYTHONHASHSEED",
+        "UV_PYTHON"
+      ],
+      "commands": [
+        "uv --version",
+        "python --version"
+      ]
+    },
+    "dotnet": {
+      "files": [
+        "global.json",
+        "Directory.Build.props",
+        "Directory.Build.targets",
+        "Directory.Packages.props",
+        "NuGet.Config"
+      ],
+      "environment": [
+        "DOTNET_ROLL_FORWARD",
+        "Configuration",
+        "RuntimeIdentifier"
+      ],
+      "commands": [
+        "dotnet --version"
+      ]
+    },
+    "cmake": {
+      "files": [
+        "CMakeLists.txt",
+        "CMakePresets.json"
+      ],
+      "environment": [
+        "CC",
+        "CXX",
+        "CFLAGS",
+        "CXXFLAGS",
+        "LDFLAGS",
+        "CMAKE_TOOLCHAIN_FILE",
+        "CMAKE_GENERATOR"
+      ],
+      "commands": [
+        "cmake --version"
+      ]
+    },
+    "wasm": {
+      "files": [
+        ".cargo/config.toml",
+        "rust-toolchain.toml"
+      ],
+      "environment": [
+        "WASM_PACK_PROFILE",
+        "WASM_BINDGEN_VERSION",
+        "WASM_OPT",
+        "TRUNK_BUILD_RELEASE",
+        "TRUNK_BUILD_PUBLIC_URL"
+      ],
+      "commands": [
+        "bun \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📜️script.ts\" toolchain wasm"
+      ]
+    }
+  },
+  "targetDefaults": {
+    "setup": {
+      "cache": false
+    },
+    "lint": {
+      "inputs": [
+        "default",
+        "^default"
+      ],
+      "outputs": [],
+      "cache": true
+    },
+    "build": {
+      "dependsOn": [],
+      "inputs": [
+        "production",
+        "^production"
+      ],
+      "cache": true
+    },
+    "dev": {
+      "cache": false,
+      "continuous": true
+    },
+    "test": {
+      "dependsOn": [],
+      "inputs": [
+        "default",
+        "^default",
+        {
+          "env": "SEMIO_TEST_LEVEL"
+        },
+        {
+          "env": "SEMIO_TEST_BUDGET_MS"
+        },
+        {
+          "env": "SEMIO_BUILD_BUDGET_MS"
+        }
+      ],
+      "cache": true
+    },
+    "test-quick": {
+      "dependsOn": [],
+      "inputs": [
+        "default",
+        "^default",
+        {
+          "env": "SEMIO_TEST_LEVEL"
+        },
+        {
+          "env": "SEMIO_TEST_BUDGET_MS"
+        },
+        {
+          "env": "SEMIO_BUILD_BUDGET_MS"
+        }
+      ],
+      "cache": true
+    },
+    "test-long": {
+      "dependsOn": [],
+      "inputs": [
+        "default",
+        "^default",
+        {
+          "env": "SEMIO_TEST_LEVEL"
+        },
+        {
+          "env": "SEMIO_TEST_BUDGET_MS"
+        },
+        {
+          "env": "SEMIO_BUILD_BUDGET_MS"
+        }
+      ],
+      "cache": true
+    },
+    "test-exhaustive": {
+      "dependsOn": [],
+      "inputs": [
+        "default",
+        "^default",
+        {
+          "env": "SEMIO_TEST_LEVEL"
+        },
+        {
+          "env": "SEMIO_TEST_BUDGET_MS"
+        },
+        {
+          "env": "SEMIO_BUILD_BUDGET_MS"
+        }
+      ],
+      "cache": false
+    },
+    "publish": {
+      "cache": false
+    },
+    "update": {
+      "cache": false
+    },
+    "wasm": {
+      "inputs": [
+        "production",
+        "^production"
+      ],
+      "cache": true,
+      "dependsOn": []
+    },
+    "native-build": {
+      "inputs": [
+        "production",
+        "^production"
+      ],
+      "cache": true,
+      "dependsOn": []
+    },
+    "package": {
+      "dependsOn": [],
+      "inputs": [
+        "production",
+        "^production"
+      ],
+      "cache": true
+    },
+    "extension-package": {
+      "dependsOn": [],
+      "inputs": [
+        "production",
+        "^production"
+      ],
+      "cache": true
+    },
+    "deps": {
+      "cache": false
+    },
+    "install": {
+      "cache": false
+    },
+    "format": {
+      "cache": false
+    },
+    "format-fix": {
+      "cache": false
+    },
+    "clean": {
+      "cache": false
+    },
+    "purge": {
+      "cache": false
+    },
+    "deploy": {
+      "cache": false
+    },
+    "migrate": {
+      "cache": false
+    },
+    "seed": {
+      "cache": false
+    },
+    "bench": {
+      "cache": false
+    },
+    "fuzz": {
+      "cache": false
+    },
+    "serve": {
+      "cache": false,
+      "continuous": true
+    },
+    "watch": {
+      "cache": false,
+      "continuous": true
+    },
+    "start": {
+      "cache": false,
+      "continuous": true
+    },
+    "test-watch": {
+      "cache": false,
+      "continuous": true
+    },
+    "typecheck": {
+      "inputs": [
+        "default",
+        "^default"
+      ],
+      "outputs": [],
+      "cache": true
+    },
+    "check": {
+      "inputs": [
+        "default",
+        "^default"
+      ],
+      "outputs": [],
+      "cache": true
+    },
+    "format-check": {
+      "inputs": [
+        "default",
+        "^default"
+      ],
+      "outputs": [],
+      "cache": true
+    },
+    "test-contract": {
+      "inputs": [
+        "default",
+        "^default"
+      ],
+      "outputs": [],
+      "cache": true
+    }
+  }
+}

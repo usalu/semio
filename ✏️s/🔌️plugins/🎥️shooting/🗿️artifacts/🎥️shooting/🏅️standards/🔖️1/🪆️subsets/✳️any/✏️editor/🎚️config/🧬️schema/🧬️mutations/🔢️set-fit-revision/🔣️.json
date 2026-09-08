@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🧬️mutations/🔢️set-fit-revision",
+  "semanticKind": "set-fit-revision",
+  "displayName": "Set Fit Revision",
+  "emoji": "🔢️",
+  "aggregateVariant": "SetFitRevision",
+  "payloadSchema": "🧬️.schema.json",
+  "textOpcode": "set-fit-revision",
+  "binaryTag": 3,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "apply-only",
+  "outcomeClasses": [
+    "applied"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "text",
+    "binary",
+    "json-schema"
+  ]
+}

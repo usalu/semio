@@ -38,16 +38,8 @@ impl<T, const N: usize> FixedOwnerVec<T, N> {
         self.page.as_ref().map(|_| (1, Self::page_bytes()))
     }
 
-    pub(crate) fn backing_ptr(&self) -> Option<*const MaybeUninit<T>> {
-        self.page.as_ref().map(|page| page.as_ptr())
-    }
-
     pub(crate) fn len(&self) -> usize {
         self.len
-    }
-
-    pub(crate) fn is_empty(&self) -> bool {
-        self.len == 0
     }
 
     pub(crate) fn as_slice(&self) -> &[T] {
@@ -135,6 +127,7 @@ impl<K, V, const N: usize> FixedOwnerMap<K, V, N> {
         self.page.as_ref().map(|_| (1, Self::page_bytes()))
     }
 
+    #[cfg(test)]
     pub(crate) fn backing_ptr(&self) -> Option<*const Option<(K, V)>> {
         self.page.as_ref().map(|page| page.as_ptr())
     }
@@ -272,6 +265,7 @@ impl<K, const N: usize> FixedOwnerSet<K, N> {
         self.values.backing_credit()
     }
 
+    #[cfg(test)]
     pub(crate) fn backing_ptr(&self) -> Option<*const Option<(K, ())>> {
         self.values.backing_ptr()
     }
@@ -390,9 +384,11 @@ impl Point3d {
     pub(crate) fn sup(&self, other: &Self) -> Self {
         Self(self.0.sup(other.0))
     }
+    #[cfg(test)]
     pub(crate) fn coords(&self) -> Vec3d {
         Vec3d(self.0.coords())
     }
+    #[cfg(test)]
     pub(crate) fn from_coords(v: Vec3d) -> Self {
         Self(rigid::Point3::from_coords(v.0))
     }
@@ -722,6 +718,7 @@ pub(crate) fn world_volumes_contain_aabb(volumes: &[WorldVolumeProps], min: Poin
     false
 }
 
+#[cfg(test)]
 pub(crate) fn point_inside_body(body: &CollisionBody, world: &Pose3d, point: Point3d) -> bool {
     let local = world.inverse().transform_point(&point);
     for part in &body.parts {
@@ -733,6 +730,7 @@ pub(crate) fn point_inside_body(body: &CollisionBody, world: &Pose3d, point: Poi
     false
 }
 
+#[cfg(test)]
 pub(crate) fn bodies_intersect(a: &CollisionBody, world_a: &Pose3d, b: &CollisionBody, world_b: &Pose3d) -> bool {
     let (amin, amax) = world_bounds(a, world_a);
     let (bmin, bmax) = world_bounds(b, world_b);
@@ -782,17 +780,17 @@ pub(crate) struct CollisionSpatialIndex {
 
 #[derive(Clone, Debug)]
 pub(crate) enum CollisionIndexRejectedOwner {
-    Capacity(String, CollisionAabb),
+    Capacity(String),
 }
 
 impl CollisionIndexRejectedOwner {
     pub(crate) fn retire_one(&mut self) -> bool {
         match self {
-            Self::Capacity(id, _) if id.capacity() != 0 => {
+            Self::Capacity(id) if id.capacity() != 0 => {
                 drop(std::mem::take(id));
                 false
             }
-            Self::Capacity(_, _) => true,
+            Self::Capacity(_) => true,
         }
     }
 }
@@ -871,6 +869,7 @@ pub(crate) enum CollisionMutationStep {
     Stale,
 }
 
+#[cfg(test)]
 pub(crate) struct CollisionIndexRemoval {
     owner: CollisionIndexOwner,
     id: String,
@@ -1107,20 +1106,22 @@ impl CollisionSpatialIndex {
                 CollisionMutationStep::Complete
             }
             CollisionMutationStage::Complete => CollisionMutationStep::Complete,
-            CollisionMutationStage::Rejected => CollisionMutationStep::Rejected(CollisionIndexRejectedOwner::Capacity(String::new(), mutation.bounds)),
+            CollisionMutationStage::Rejected => CollisionMutationStep::Rejected(CollisionIndexRejectedOwner::Capacity(String::new())),
         }
     }
 
     fn reject_mutation(mutation: &mut CollisionIndexMutation) -> CollisionMutationStep {
         mutation.stage = CollisionMutationStage::Rejected;
-        CollisionMutationStep::Rejected(CollisionIndexRejectedOwner::Capacity(std::mem::take(&mut mutation.id), mutation.bounds))
+        CollisionMutationStep::Rejected(CollisionIndexRejectedOwner::Capacity(std::mem::take(&mut mutation.id)))
     }
 
+    #[cfg(test)]
     pub(crate) fn begin_removal(&self, owner: CollisionIndexOwner, id: String) -> Option<CollisionIndexRemoval> {
         let bounds = *self.entries.get(id.as_str())?;
         Some(CollisionIndexRemoval { owner, id, bounds, span: CollisionCellSpan::new(self.cell_size, bounds), cursor: 0, complete: false })
     }
 
+    #[cfg(test)]
     pub(crate) fn step_removal(&mut self, removal: &mut CollisionIndexRemoval, current: CollisionIndexOwner) -> CollisionMutationStep {
         if removal.owner != current {
             return CollisionMutationStep::Stale;
@@ -1497,10 +1498,12 @@ impl CollisionOverlapState {
         }
     }
 
+    #[cfg(test)]
     pub(crate) fn checkpoint(&self) -> Self {
         self.clone()
     }
 
+    #[cfg(test)]
     pub(crate) fn resume(checkpoint: Self) -> Self {
         checkpoint
     }

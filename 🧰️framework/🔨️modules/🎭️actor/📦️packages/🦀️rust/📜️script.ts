@@ -69,7 +69,6 @@ class WasmScript extends BundleScript {
   run(): void {
     runWasmPackWebBuild({
       rsDir: this.root,
-      skipEnvVar: "FRAMEWORK_ACTOR_RS_SKIP_WASM_BUILD",
       logPrefix: "framework/actor/rs",
       wasmBaseName: "framework_actor",
       shipProfile: "wasm-release",

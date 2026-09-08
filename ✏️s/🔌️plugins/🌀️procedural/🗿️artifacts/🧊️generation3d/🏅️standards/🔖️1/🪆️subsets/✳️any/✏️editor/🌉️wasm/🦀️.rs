@@ -15,6 +15,8 @@ pub type Generation3dStore = ArtifactStore<Generation3dSnapshot, Generation3dMut
 //#endregion 🔖️Store
 
 //#region 🔖️MountedRegistry
+#[cfg(test)]
+mod mounted_registry {
 const GENERATION3D_ENVELOPE_MAXIMUM_PAGES: usize = store::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_PAGES;
 const GENERATION3D_ENVELOPE_MAXIMUM_BYTES: usize = store::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_BYTES;
 const GENERATION3D_ENVELOPE_MAXIMUM_ITEMS: usize = 8_192;
@@ -572,3 +574,4 @@ mod mounted_laws {
     }
 }
 //#endregion 🧪️MountedLaws
+}

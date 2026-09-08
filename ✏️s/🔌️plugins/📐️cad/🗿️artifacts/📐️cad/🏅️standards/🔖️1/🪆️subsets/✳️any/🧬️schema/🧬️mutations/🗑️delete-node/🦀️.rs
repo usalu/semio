@@ -1,6 +1,5 @@
 //! 🗑️ CAD mutation — `DeleteNode` payload + `MutationKind` impl.
 
-use crate::artifacts::cad::diff::CadDiff;
 use crate::artifacts::cad::mutations::CadMutation;
 use crate::artifacts::cad::CadSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};

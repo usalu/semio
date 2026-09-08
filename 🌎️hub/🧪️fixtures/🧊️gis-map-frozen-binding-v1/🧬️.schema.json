@@ -35,10 +35,14 @@
         "catalogGenerationId": { "$ref": "#/$defs/digest" },
         "package": {
           "type": "object", "additionalProperties": false,
-          "required": ["pluginId", "packageId", "version", "componentSha256", "componentBlake3", "descriptorByteSha256"],
+          "required": ["pluginId", "packageId", "version", "componentSha256", "componentBlake3", "descriptorByteSha256", "executionProtocol"],
           "properties": {
             "pluginId": { "const": "gis" }, "packageId": { "const": "semio:gis" }, "version": { "const": "0.1.0" },
-            "componentSha256": { "$ref": "#/$defs/digest" }, "componentBlake3": { "$ref": "#/$defs/digest" }, "descriptorByteSha256": { "$ref": "#/$defs/digest" }
+            "componentSha256": { "$ref": "#/$defs/digest" }, "componentBlake3": { "$ref": "#/$defs/digest" }, "descriptorByteSha256": { "$ref": "#/$defs/digest" },
+            "executionProtocol": {
+              "type": "object", "additionalProperties": false, "required": ["appChannelVersion"],
+              "properties": { "appChannelVersion": { "const": 14 } }
+            }
           }
         },
         "artifact": {

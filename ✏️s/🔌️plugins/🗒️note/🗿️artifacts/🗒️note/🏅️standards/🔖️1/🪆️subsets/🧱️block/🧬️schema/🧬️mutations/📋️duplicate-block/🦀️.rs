@@ -3,15 +3,13 @@
 use crate::artifacts::note::{NoteDiff, NoteSnapshot};
 use crate::artifacts::note::schema::mutations::NoteMutation;
 use protocol::{MutationKind, SemanticDescriptor};
-use serde::{Deserialize, Serialize};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Mutation
 /// 🎯 `duplicate-block` payload — copies a block to a new identity, placed after its source.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
-#[serde(rename_all = "camelCase")]
 #[dsl(keyword = "duplicate-block")]
 pub struct DuplicateBlock {
     pub source_id: String,

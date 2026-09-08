@@ -6,8 +6,8 @@ use semio_framework_plugin::plugin_app_close_prelude::*;
 use semio_framework_plugin::{ExecutionMode, Plugin, PluginApp};
 
 //#region 🗃️Apps
-/// 🗃️ Closed runtime app fleet for the note editor and viewer surfaces.
 semio_framework_dispatch_macros::dyn_enum_close! {
+    /// 🗃️ Closed runtime app fleet for the note editor and viewer surfaces.
     pub enum NoteApps: PluginApp {
         Editor(VcsArtifactApp<EditorApp<crate::editor::note::NotePlayApp>>),
         Viewer(VcsArtifactApp<ViewerApp<crate::viewer::note::NoteViewer>>),
@@ -54,12 +54,12 @@ mod surface_tests {
 
     #[semio_framework_async_macros::async_test]
     async fn note_viewer_never_mutates() {
-        assert_viewer_never_mutates::<crate::viewer::note::NoteViewer>();
+        assert_viewer_never_mutates::<crate::viewer::note::NoteViewer>().await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn note_editor_and_viewer_share_dialect() {
-        assert_editor_and_viewer_share_dialect::<crate::editor::note::NotePlayApp, crate::viewer::note::NoteViewer>();
+        assert_editor_and_viewer_share_dialect::<crate::editor::note::NotePlayApp, crate::viewer::note::NoteViewer>().await;
     }
 
     /// 🧪️ The manifest assertion the ticket asked this pass to check: note was one of six plugins

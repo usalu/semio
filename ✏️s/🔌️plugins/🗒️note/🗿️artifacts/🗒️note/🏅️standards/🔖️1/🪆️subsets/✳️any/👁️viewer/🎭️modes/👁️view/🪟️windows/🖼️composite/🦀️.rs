@@ -5,15 +5,12 @@
 //! engagement input: a viewer has none of those and emits no mutations by construction (`ViewEmit`).
 
 use crate::artifacts::note::NoteSnapshot;
-use semio_framework_plugin::{build_ink_canvas_scene, InkCanvasScene, LocalizedLabel, SurfaceKind, UiNode, WindowKindDefinition, WindowOptions};
+use semio_framework_plugin::{InkCanvasScene, LocalizedLabel, SurfaceKind, BuiltNode, UiAssemblyResult, WindowKindDefinition, WindowOptions};
 
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = "note-view-composite";
 pub const BODY_KEY: &str = "note.view.composite";
 pub const SURFACE_ID: &str = "note.view.composite";
-/// 👁️ Read-only counterpart of the editor's `NOTE_PLAY_CONTROLLER_ID` — kept distinct so a viewer
-/// session's ink-canvas controller can never be mistaken for an editor session's.
-const NOTE_VIEW_CONTROLLER_ID: &str = "note-view";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
@@ -39,19 +36,15 @@ pub fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-/// 👁️ Pure `NoteSnapshot -> UiNode` read: a hardcoded default camera (a viewer needs no persisted
+/// 👁️ Pure `NoteSnapshot -> UiAssemblyResult<BuiltNode>` read: a hardcoded default camera (a viewer needs no persisted
 /// per-session camera state — real block content renders exactly as the document stands, not through
 /// any live pan/zoom the editor's own `NoteConfig.camera` carries; the same intentional
 /// simplification the cad pilot's viewer documented for its own camera/environment defaults), no
 /// active drawing utility (nothing is drawable), `InkCanvasScene.interactive: false`.
-pub fn render(document: &NoteSnapshot) -> UiNode {
+pub fn render(document: &NoteSnapshot) -> UiAssemblyResult<BuiltNode> {
     let camera = crate::artifacts::note::NoteCamera::default();
-    let mut document_value = serde_json::to_value(document).unwrap_or_else(|_| serde_json::json!({}));
-    if let Some(map) = document_value.as_object_mut() {
-        map.insert("camera".into(), serde_json::to_value(&camera).unwrap_or_else(|_| serde_json::json!({ "x": 0.0, "y": 0.0, "zoom": 1.0 })));
-    }
-    let document_json = document_value.to_string();
-    build_ink_canvas_scene(SURFACE_ID, NOTE_VIEW_CONTROLLER_ID, InkCanvasScene::base(document_json, String::new(), "composite".into(), false))
+    let document_json = crate::artifacts::note::note_canvas_document_json(document, &camera);
+    semio_framework_plugin::scene_surface(SURFACE_ID, semio_framework_ui_contract::SurfaceKind::InkCanvas, &InkCanvasScene::base(document_json, String::new(), "composite".into(), false))
 }
 //#endregion 🔖️Render
 
@@ -70,10 +63,12 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn render_produces_a_read_only_ink_canvas_scene_for_the_empty_document() {
         let document = crate::artifacts::note::schema::empty_note_snapshot();
-        let node = render(&document);
-        let json = serde_json::to_string(&node).unwrap();
-        assert!(json.contains("ink-canvas"));
-        assert!(json.contains("\"interactive\":false"));
+        let node = render(&document).expect("viewer canvas");
+        let semio_framework_plugin::Component::Surface(props) = &node.component else { panic!("semantic canvas") };
+        let scene: InkCanvasScene = semio_framework_ui_scene::decode(props).expect("packed viewer scene");
+        assert!(!scene.interactive);
+        assert!(scene.active_utility.is_empty());
+        semio_framework_plugin::testkit::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).expect("retire viewer canvas");
     }
 }
 //#endregion 🧪️Tests

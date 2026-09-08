@@ -981,10 +981,8 @@ enum AssemblyConstructionStage {
     ReserveDofs,
     ValidateNodePairs,
     ValidateElementReferences,
-    RetireElementReferences,
     ValidateSupportReferences,
     DiscoverDofs,
-    RetireDofReferences,
     EmitDofs,
     CommitDofOwner,
     ReservePermutation,
@@ -1198,9 +1196,6 @@ impl AssemblyJobConstruction {
                     self.reference_node_cursor += 1;
                 }
             }
-            AssemblyConstructionStage::RetireElementReferences => {
-                self.stage = AssemblyConstructionStage::ValidateElementReferences;
-            }
             AssemblyConstructionStage::ValidateSupportReferences => {
                 let model = self.model.as_ref().ok_or(FemError::EmptyModel)?;
                 if self.support_cursor >= model.supports_len() {
@@ -1234,9 +1229,6 @@ impl AssemblyJobConstruction {
                     }
                     self.dof_reference_cursor += 1;
                 }
-            }
-            AssemblyConstructionStage::RetireDofReferences => {
-                self.stage = AssemblyConstructionStage::DiscoverDofs;
             }
             AssemblyConstructionStage::EmitDofs => {
                 if self.dof_emit_cursor >= self.active_dofs.len() {
@@ -1573,14 +1565,6 @@ impl AnalysisModelOwner<'_> {
         }
     }
 
-    fn nodes_len(&self) -> usize {
-        match self {
-            Self::Borrowed(model) => model.nodes.len(),
-            Self::Owned(model) => model.nodes.len(),
-            Self::Mounted(model) => model.nodes_len(),
-        }
-    }
-
     fn elements_len(&self) -> usize {
         match self {
             Self::Borrowed(model) => model.elements.len(),
@@ -1878,7 +1862,7 @@ impl<'model> AssemblyJob<'model> {
             let element = self.model.element(element_index).ok_or(FemError::Singular)?;
             let node_count = element.mounted_node_id_count().ok_or(FemError::Singular)?;
             let dof_count = element.dofs_per_node().len();
-            let side = node_count.checked_mul(dof_count).ok_or(FemError::Singular)?;
+            node_count.checked_mul(dof_count).ok_or(FemError::Singular)?;
             self.state.pending_build = Some(PendingElementBuild {
                 element_index,
                 node_count,
@@ -2447,7 +2431,7 @@ impl InteractiveJob for AssemblyJob<'_> {
                             self.state.stage = AssemblyJobStage::MergeFull;
                         } else {
                             let result = if matches!(&self.model, AnalysisModelOwner::Owned(_) | AnalysisModelOwner::Mounted(_)) { self.advance_element_build().map(|_| ()) } else { self.begin_borrowed_element() };
-                            if let Err(error) = result {
+                            if result.is_err() {
                                 return StepOutcome::Fault(JobFault { detail: RetainedJobPayload::empty(JobPayloadStream::Fault) });
                             }
                         }
@@ -3007,6 +2991,7 @@ pub fn nodal_averaged_scalar(model: &AnalysisModel, result: &StaticResult, scala
 // #region 🔖️Tests
 #[cfg(test)]
 mod tests {
+    use crate::numerical_testkit::payload_bytes;
     use super::*;
     use crate::elements2d::{Bar2, BeamEb2};
     use crate::model::{solve_linear_static, AxialSpring, Model};
@@ -3099,8 +3084,8 @@ mod tests {
     #[test]
     fn mounted_element_stiffness_observes_before_admit_and_retires_rejected_backing() {
         let mut rejected = Vec::<f64>::new();
-        assert!(!reserve_exact_owner_page(&mut rejected, MOUNTED_OWNER_PAGE_BYTES / std::mem::size_of::<f64>() + 1));
-        let observed = rejected.capacity() * std::mem::size_of::<f64>();
+        assert!(!reserve_exact_owner_page(&mut rejected, MOUNTED_OWNER_PAGE_BYTES / size_of::<f64>() + 1));
+        let observed = rejected.capacity() * size_of::<f64>();
         let pointer = rejected.as_ptr();
         assert!(observed > MOUNTED_OWNER_PAGE_BYTES);
         assert_eq!(close_vec_owner_step(&mut rejected, observed - 1), Err(()));
@@ -3119,7 +3104,7 @@ mod tests {
             let outcome = job.step(&mut context);
             max_step_micros = max_step_micros.max(started.elapsed().as_micros());
             match outcome {
-                StepOutcome::PreviewReady(bytes) => previews.push(decode_value(&bytes).expect("assembly preview decodes")),
+                StepOutcome::PreviewReady(bytes) => previews.push(decode_value(&payload_bytes(bytes)).expect("assembly preview decodes")),
                 StepOutcome::Complete(_) => break,
                 StepOutcome::Yield | StepOutcome::CheckpointReady(_) => {}
                 StepOutcome::Cancelled | StepOutcome::Fault(_) => panic!("assembly fixture must complete"),
@@ -3151,7 +3136,7 @@ mod tests {
         let checkpoint = loop {
             let mut context = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(4, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
             if let StepOutcome::CheckpointReady(checkpoint) = job.step(&mut context) {
-                break checkpoint.state;
+                break payload_bytes(checkpoint.state);
             }
         };
         let resumed = AssemblyJob::from_checkpoint(&model, operation, &checkpoint).expect("assembly checkpoint restores");
@@ -3781,9 +3766,9 @@ mod tests {
         let mut graph = FemJobGraph::new(operation, graph_plan(), 2);
         let mut sequence = 0;
         let checkpoint = loop {
-            let mut context = semio_framework_job::StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(2, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
+            let mut context = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(2, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
             if let StepOutcome::CheckpointReady(checkpoint) = graph.step(&mut context) {
-                break checkpoint.state;
+                break payload_bytes(checkpoint.state);
             }
         };
         let mut resumed = FemJobGraph::from_checkpoint(operation, &checkpoint).expect("graph checkpoint restores");
@@ -3795,7 +3780,7 @@ mod tests {
                     seen.push(stage);
                 }
             }
-            let mut context = semio_framework_job::StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(3, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
+            let mut context = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(3, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
             if matches!(resumed.step(&mut context), StepOutcome::Complete(_)) {
                 break;
             }
@@ -3811,13 +3796,13 @@ mod tests {
         let before = graph.checkpoint_bytes();
         let mut sequence = 0;
         let mut stale =
-            semio_framework_job::StepContext::new(operation.operation, semio_framework_job::Generation(operation.generation.0 + 1), semio_framework_job::StepBudget::new(2, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
+            StepContext::new(operation.operation, semio_framework_job::Generation(operation.generation.0 + 1), semio_framework_job::StepBudget::new(2, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
         assert!(matches!(graph.step(&mut stale), StepOutcome::Fault(_)));
         assert_eq!(graph.checkpoint_bytes(), before);
 
         let token = semio_framework_job::root_cancel_token();
         semio_framework_async::block_on(token.cancel());
-        let mut cancelled = semio_framework_job::StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(2, u64::MAX), token, || Some(0), &mut sequence);
+        let mut cancelled = StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(2, u64::MAX), token, || Some(0), &mut sequence);
         assert_eq!(graph.step(&mut cancelled), StepOutcome::Cancelled);
         assert_eq!(graph.checkpoint_bytes(), before);
     }

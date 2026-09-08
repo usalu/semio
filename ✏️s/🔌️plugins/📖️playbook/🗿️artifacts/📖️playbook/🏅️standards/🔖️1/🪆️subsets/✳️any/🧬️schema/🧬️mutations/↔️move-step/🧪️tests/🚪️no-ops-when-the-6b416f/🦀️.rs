@@ -22,17 +22,17 @@ const DIFF: &str = include_str!("🔺️diff/🔣️.json");
 const OUTCOME: &str = include_str!("🎯️outcome/🔣️.json");
 
 fn mutation() -> PlaybookMutation {
-    serde_json::from_str(MUTATION).expect("mutation decodes")
+    dsl::os_pack::from_json_str(MUTATION).expect("mutation decodes")
 }
 fn expected_after() -> PlaybookSnapshot {
-    serde_json::from_str(AFTER).expect("after snapshot decodes")
+    dsl::os_pack::from_json_str(AFTER).expect("after snapshot decodes")
 }
 
 /// 🌱 The committed `⬅️before`, with its composed `flow` child resolved to a one-step scene whose
 /// only step is the id the committed payload names. Only that id is load-bearing here: the guard
 /// compares list positions, never titles or blocks.
 fn before() -> PlaybookSnapshot {
-    let mut snapshot: PlaybookSnapshot = serde_json::from_str(BEFORE).expect("before snapshot decodes");
+    let mut snapshot: PlaybookSnapshot = dsl::os_pack::from_json_str(BEFORE).expect("before snapshot decodes");
     let PlaybookMutation::MoveStep(payload) = mutation() else {
         panic!("no-ops-when-the-step-is-already-at-that-index's committed mutation must be a move-step");
     };
@@ -55,7 +55,7 @@ async fn applies_to_committed_after() {
 #[semio_framework_async_macros::async_test]
 async fn produces_committed_diff() {
     let outcome = <PlaybookMutation as protocol::Mutation<PlaybookSnapshot>>::diff(&mutation(), &before());
-    let produced = serde_json::to_value(outcome.diff()).expect("produced diff encodes");
+    let produced = serde_json::from_str::<serde_json::Value>(&dsl::os_pack::to_json_string(outcome.diff())).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
     assert_eq!(produced, committed, "move-step/no-ops-when-the-step-is-already-at-that-index: produced diff differs from the committed 🔺️diff/🔣️.json");
     assert_eq!(outcome.diff(), &PlaybookDiff::default(), "a positional no-op must carry the identity diff");
@@ -64,8 +64,8 @@ async fn produces_committed_diff() {
 /// 🔣️ The committed diff is itself canonical and decodes to playbook's own diff type.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical() {
-    let decoded: PlaybookDiff = serde_json::from_str(DIFF).expect("committed diff decodes");
-    let reencoded = serde_json::to_value(&decoded).expect("diff re-encodes");
+    let decoded: PlaybookDiff = dsl::os_pack::from_json_str(DIFF).expect("committed diff decodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::os_pack::to_json_string(&decoded)).expect("diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
     assert_eq!(reencoded, original, "move-step/no-ops-when-the-step-is-already-at-that-index: committed diff JSON is not canonical");
 }
@@ -74,7 +74,7 @@ async fn committed_diff_is_canonical() {
 /// field of any kind is set, so the composed flow child keeps its original node order.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
-    let decoded: PlaybookDiff = serde_json::from_str(DIFF).expect("committed diff decodes");
+    let decoded: PlaybookDiff = dsl::os_pack::from_json_str(DIFF).expect("committed diff decodes");
     assert!(decoded.flow.is_none(), "a positional no-op must leave the ordering-bearing flow child unset");
     let produced = <PlaybookDiff as protocol::MutationDiff<PlaybookSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "move-step/no-ops-when-the-step-is-already-at-that-index: committed diff did not carry before to after");
@@ -84,12 +84,12 @@ async fn committed_diff_applies_to_after() {
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {
-        let decoded: PlaybookSnapshot = serde_json::from_str(text).expect("snapshot decodes");
-        let reencoded = serde_json::to_value(&decoded).expect("snapshot encodes");
+        let decoded: PlaybookSnapshot = dsl::os_pack::from_json_str(text).expect("snapshot decodes");
+        let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::os_pack::to_json_string(&decoded)).expect("snapshot encodes");
         let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
         assert_eq!(reencoded, original, "move-step/no-ops-when-the-step-is-already-at-that-index: committed {label} JSON is not canonical");
     }
-    let reencoded = serde_json::to_value(mutation()).expect("mutation encodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::os_pack::to_json_string(&mutation())).expect("mutation encodes");
     let original: serde_json::Value = serde_json::from_str(MUTATION).expect("mutation reparses");
     assert_eq!(reencoded, original, "move-step/no-ops-when-the-step-is-already-at-that-index: committed mutation JSON is not canonical");
 }

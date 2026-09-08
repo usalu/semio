@@ -42,7 +42,7 @@
       },
       "ignoredSourcePatterns": [
         ".DS_Store",
-        ".🦑️repo/**",
+        ".🧬semio/**",
         "node_modules/**",
         "🟦️typescript/🟨️boot.js"
       ],

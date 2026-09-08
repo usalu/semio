@@ -2,7 +2,7 @@
 //! View 2.0 era, IFC2X3 / ISO-PAS 16739:2005 schema, still ISO 10303-21 Part-21 syntax like
 //! `📐️step`/`4️⃣4`). Deliberately its own newtype (NOT a `pub use` of
 //! `step::engine::part21::Part21Document`, and not the same Rust type as `4`'s `IfcSnapshot`) —
-//! W1's own recon (`.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️10/ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION/STATUS.md`,
+//! W1's own recon (`.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️10/ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION/STATUS.md`,
 //! "shared-type violation" entry) flags reusing a cross-artifact type's IDENTITY as the exact
 //! anti-pattern this repo bans ("copy-pasted shared types... die"). Reuse here is scoped to
 //! PARSING CODE ONLY: this struct wraps a `Part21Document` as an internal field and the codec

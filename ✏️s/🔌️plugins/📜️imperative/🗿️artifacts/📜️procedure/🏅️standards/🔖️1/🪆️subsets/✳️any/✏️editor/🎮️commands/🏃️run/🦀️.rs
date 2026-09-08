@@ -17,5 +17,5 @@ pub fn handle(_payload: &Run, doc: &ArtifactView<'_, ProcedureSnapshot>, _cfg: &
     let host = ImperativeHost::from_snapshot(doc.snapshot.clone());
     let result = host.run();
     let json = dsl::os_pack::json::to_json_string(&result.scope);
-    Ok(Emit::config(vec![ImperativeConfigMutation::SetRunOutput { json }]))
+    Ok(Emit::config(vec![ImperativeConfigMutation::SetRunOutput(crate::editor::procedure::config::SetRunOutput { json })]))
 }

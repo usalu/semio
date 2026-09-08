@@ -60,6 +60,8 @@ import {
   type HistoryEntry,
   type HistoryPatch,
   type IntroductionInteraction,
+  CLEAR_SELECTION_ACTION_ID,
+  INTERACTION_SELECT_ACTION_ID,
   latestWins,
   type LocalizedLabel,
   NamedLayoutStore,
@@ -87,6 +89,8 @@ import {
   resolveWindowActions,
   SET_ACTIVE_TOOL_ACTION_ID,
   SET_ACTIVE_UTILITY_ACTION_ID,
+  SET_SELECTION_MODE_ACTION_ID,
+  SELECT_ALL_ACTION_ID,
   type ShellBrand,
   START_INTRODUCTION_ACTION_ID,
   START_TUTORIAL_ACTION_ID,
@@ -157,7 +161,7 @@ import {
  * package itself, not re-exported by `@semio-tech/framework-os` — same source
  * `🧰️framework/🛍️products/💻️os/🟦️.ts` (that package's own root) imports them from for its
  * own `encode`/`decodeMutationEnvelopesPack` helpers above. */
-import { mutationEnvelopeFromWire, mutationEnvelopeToWire, type MutationEnvelope } from "@semio-tech/framework-replication";
+import { mutationEnvelopeFromWire, mutationEnvelopeToWire, type LocalInteractionState, type MutationEnvelope } from "@semio-tech/framework-replication";
 import { scopedPresencePeersV1 } from "./🧬️contracts/👥️presence-scope/🟦️.ts";
 
 const shellReplicationPackCodec = { encode: encodePackValue, decode: decodePackValue };
@@ -386,7 +390,7 @@ import {
 import { builtNodeToSnapshot, UiDocumentStore } from "../📃️UiDocumentStore/🟦️.tsx";
 import { SpaceAdministrationPane, spaceAdministrationCapabilities, spaceAdministrationInviteRevocable, spaceAdministrationMemberRemovable, type SpaceAdministrationIntentV1 } from "../🛂️SpaceAdministration/🟦️.tsx";
 import { BoardSessionFactoryContext, resolveAppSurfaceSessionFactory, type AppSurfaceSessionFactory } from "../🪪️WasmSessionLoader/🟦️.tsx";
-import { resolveDocumentOpeningTarget, type DocumentOpeningTarget } from "./🧭️opening/🟦️.ts";
+import { resolveDocumentOpeningBindings, resolveDocumentOpeningTarget, type DocumentOpeningReference, type DocumentOpeningTarget } from "./🧭️opening/🟦️.ts";
 import {
   actionStageKey,
   type ActiveSession,
@@ -491,6 +495,7 @@ import {
   checkinMessagePlaceholderText,
   checkinSubmitText,
   computeSyncPillState,
+  createLatestAsyncDispatcher,
   presenceClientIdentity,
   preserveJsonIdentity,
   renderStagedArgControl,
@@ -816,6 +821,31 @@ const TutorialGhostPointerHost: React.FC<{ readonly tutorial: TutorialDefinition
 //#endregion 🎥️TutorialOverlayHosts
 
 //#region 🎥️TutorialRecorder
+const OBSERVED_INTERACTION_ACTION_IDS = new Set([CLEAR_SELECTION_ACTION_ID, INTERACTION_SELECT_ACTION_ID, SELECT_ALL_ACTION_ID, SET_SELECTION_MODE_ACTION_ID]);
+
+/** 📰️ Projects a tutorial selection restore onto ordinary framework interaction actions. */
+export function tutorialInteractionSelectionActions(controllerId: string, selection: LocalInteractionState["selection"]): readonly ActionDescriptor[] {
+  const actions: ActionDescriptor[] = [{ controllerId, action: CLEAR_SELECTION_ACTION_ID }];
+  for (const domainId of Object.keys(selection).sort()) {
+    const current = selection[domainId];
+    if (!current || current.ids.length === 0) continue;
+    if (current.ids.length > 1) actions.push({ controllerId, action: SET_SELECTION_MODE_ACTION_ID, args: { domainId, mode: "multiple" } });
+    actions.push({
+      controllerId,
+      action: INTERACTION_SELECT_ACTION_ID,
+      args: { domainId, merge: "replace", method: "pick", targets: JSON.stringify(current.ids.map((id) => ({ granularity: current.granularity, id }))) },
+    });
+    if (current.anchorId && current.anchorId !== current.ids[current.ids.length - 1] && current.ids.includes(current.anchorId)) {
+      actions.push({
+        controllerId,
+        action: INTERACTION_SELECT_ACTION_ID,
+        args: { domainId, merge: "additive", method: "pick", targets: JSON.stringify([{ granularity: current.granularity, id: current.anchorId }]) },
+      });
+    }
+  }
+  return actions;
+}
+
 /** @emoji ↔ Field-by-field structural diff of two `TutorialUiSnapshot`s into the sparse `TutorialUiChange`
  * alphabet — the recorder's UI-diff effect calls this every `ShellState` change while armed. */
 function diffTutorialUiSnapshot(prev: TutorialUiSnapshot, next: TutorialUiSnapshot): TutorialUiChange[] {
@@ -840,9 +870,10 @@ function diffTutorialUiSnapshot(prev: TutorialUiSnapshot, next: TutorialUiSnapsh
   for (const domainId of selectionDomainIds) {
     const prevSelection = prev.interactionSelection[domainId];
     const nextSelection = next.interactionSelection[domainId];
-    if (nextSelection && (!prevSelection || prevSelection.granularity !== nextSelection.granularity || prevSelection.ids.join(",") !== nextSelection.ids.join(","))) {
-      changes.push({ kind: "selection", domainId, granularity: nextSelection.granularity, ids: nextSelection.ids });
-    }
+    const idsMatch = prevSelection !== undefined && nextSelection !== undefined && prevSelection.ids.length === nextSelection.ids.length && prevSelection.ids.every((id, index) => id === nextSelection.ids[index]);
+    if (prevSelection?.granularity === nextSelection?.granularity && idsMatch) continue;
+    const granularity = nextSelection?.granularity ?? prevSelection?.granularity;
+    if (granularity !== undefined) changes.push({ kind: "selection", domainId, granularity, ids: nextSelection ? [...nextSelection.ids] : [] });
   }
   if (prev.openDialogId !== next.openDialogId) changes.push({ kind: "dialog", id: next.openDialogId });
   const prevTree = new Set(prev.expandedTreeIds);
@@ -1631,7 +1662,8 @@ function FrameworkOsShellInner({
    * idiom `onActionRef`/`dispatchDirectoryEventsRef` already use: assigned as a plain statement right
    * after each real declaration, read only from inside a later callback body, never from a deps array. */
   type OpenDocumentSessionTarget = DocumentOpeningTarget<ActiveSession, PluginWasmHandle>;
-  const openDocumentRef = useRef<(ref: { readonly documentId: string; readonly schema: string }, bindings?: readonly PersistenceBinding[], target?: OpenDocumentSessionTarget) => Promise<void>>(async () => {});
+  const openDocumentRef = useRef<(ref: DocumentOpeningReference, bindings?: readonly PersistenceBinding[], target?: OpenDocumentSessionTarget) => Promise<void>>(async () => {});
+  const closeDocumentRef = useRef<(runtimeKey: string, clientInstanceId?: string) => void>(() => {});
   const openArtifactWithAppRefRef = useRef<(target: AppRef, dialect: ArtifactDialect, role: AppRole) => Promise<OpenDocumentSessionTarget | null>>(async () => null);
   const resolveArtifactOpeningRelayRef = useRef<(actionId: string, args: unknown) => ResolvedArtifactOpeningRelay | null>(() => null);
   /** 📇️ Offline-queue depth surfaced by the worker's `directory-status` — not yet rendered by any
@@ -1660,6 +1692,7 @@ function FrameworkOsShellInner({
    * `IDENTITY_CONFIG_SCHEMA` (a previously-persisted session) — see that effect for the bounded
    * timeout that resolves it to `null` when no such file exists (never blocks the UI thread). */
   const identitySnapshotResolverRef = useRef<((value: Identity | null) => void) | null>(null);
+  const identityClientInstanceIdRef = useRef<string | null>(null);
   const presenceConnectedAtMsRef = useRef(Date.now());
   const presenceCursorRef = useRef<{ readonly x: number; readonly y: number } | undefined>(undefined);
   /** 🐚️ terra-web-shellhost (finding 5) — per-document `latestWins` triggers for the presence-beat
@@ -1677,11 +1710,11 @@ function FrameworkOsShellInner({
   const segmentedDownloadAbortRef = useRef(new AbortController());
   /** 🗂️ Which session/plugin owns each exact document runtime, so equal document ids in different
    * spaces cannot share socket, bootstrap, presence or plugin-routing state. */
-  const openDocumentSessionsRef = useRef<Map<string, { session: ActiveSession; plugin: PluginWasmHandle; documentId: string; scope?: DocumentScope }>>(new Map());
-  const browserActorUiByRuntimeKeyRef = useRef(new Map<string, { readonly activationGeneration: string; readonly verifiedSurfaceId: string; readonly sessionInstanceId: number; readonly windowKindId: string; readonly store: UiDocumentStore }>());
+  const openDocumentSessionsRef = useRef<Map<string, { session: ActiveSession; plugin: PluginWasmHandle; documentId: string; clientInstanceId: string; scope?: DocumentScope }>>(new Map());
+  const browserActorUiByRuntimeKeyRef = useRef(new Map<string, { readonly clientInstanceId: string; readonly activationGeneration: string; readonly verifiedSurfaceId: string; readonly sessionInstanceId: number; readonly windowKindId: string; readonly store: UiDocumentStore }>());
   const [browserActorUiVersion, setBrowserActorUiVersion] = useState(0);
   const directoryScopedOwnersRef = useRef<Map<string, DocumentScope>>(new Map());
-  const socketActorReadyRef = useRef<Map<string, { resolve(actorId: string): void; reject(error: Error): void }>>(new Map());
+  const socketActorReadyRef = useRef<Map<string, { readonly clientInstanceId: string; resolve(actorId: string): void; reject(error: Error): void }>>(new Map());
   const [bootstrapUiByDocument, setBootstrapUiByDocument] = useState<BootstrapUiState>({});
   const [executionTargetUiByDocument, setExecutionTargetUiByDocument] = useState<ExecutionTargetUiState>({});
   const [presencePeersByRuntimeKey, setPresencePeersByRuntimeKey] = useState<Readonly<Record<string, readonly PresencePeer[]>>>({});
@@ -1729,30 +1762,33 @@ function FrameworkOsShellInner({
         const entry = openDocumentSessionsRef.current.get(runtimeKey);
         const expectedSurfaceId = entry?.scope !== undefined && entry.session.app.dialect ? canonicalSurfaceId(entry.session.app.dialect, entry.session.app.role) : null;
         const windowKind = entry?.session.app.windowKinds.find((candidate) => candidate.id === message.patch.surface);
-        if (entry === undefined || entry.scope?.spaceId !== message.scope.spaceId || entry.scope.documentId !== message.scope.documentId || expectedSurfaceId !== message.verifiedSurfaceId || windowKind === undefined) return;
+        if (entry === undefined || entry.clientInstanceId !== message.clientInstanceId || entry.scope?.spaceId !== message.scope.spaceId || entry.scope.documentId !== message.scope.documentId || expectedSurfaceId !== message.verifiedSurfaceId || windowKind === undefined) return;
         const retained = browserActorUiByRuntimeKeyRef.current.get(runtimeKey);
-        if (retained !== undefined && (retained.activationGeneration !== message.activationGeneration || retained.verifiedSurfaceId !== message.verifiedSurfaceId || retained.sessionInstanceId !== entry.session.instanceId || retained.windowKindId !== windowKind.id)) return;
+        if (retained !== undefined && (retained.clientInstanceId !== message.clientInstanceId || retained.activationGeneration !== message.activationGeneration || retained.verifiedSurfaceId !== message.verifiedSurfaceId || retained.sessionInstanceId !== entry.session.instanceId || retained.windowKindId !== windowKind.id)) return;
         if (retained === undefined && message.patch.baseRevision !== 0) return;
         const store = retained?.store ?? new UiDocumentStore(windowKind.id);
         const applied = store.applyPatch(message.patch);
         const revision = store.getRevisionSnapshot();
         if (applied.ok) {
           if (retained === undefined) {
-            browserActorUiByRuntimeKeyRef.current.set(runtimeKey, { activationGeneration: message.activationGeneration, verifiedSurfaceId: message.verifiedSurfaceId, sessionInstanceId: entry.session.instanceId, windowKindId: windowKind.id, store });
+            browserActorUiByRuntimeKeyRef.current.set(runtimeKey, { clientInstanceId: message.clientInstanceId, activationGeneration: message.activationGeneration, verifiedSurfaceId: message.verifiedSurfaceId, sessionInstanceId: entry.session.instanceId, windowKindId: windowKind.id, store });
             setBrowserActorUiVersion((current) => current + 1);
           }
-          worker.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "browser-actor-ui-patch-result", scope: message.scope, verifiedSurfaceId: message.verifiedSurfaceId, activationGeneration: message.activationGeneration, instanceId: message.instanceId, receipt: message.receipt, outcome: "acknowledged", revision }) });
+          worker.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "browser-actor-ui-patch-result", clientInstanceId: entry.clientInstanceId, scope: message.scope, verifiedSurfaceId: message.verifiedSurfaceId, activationGeneration: message.activationGeneration, instanceId: message.instanceId, receipt: message.receipt, outcome: "acknowledged", revision }) });
         } else {
           const reason = applied.rejection.type;
-          worker.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "browser-actor-ui-patch-result", scope: message.scope, verifiedSurfaceId: message.verifiedSurfaceId, activationGeneration: message.activationGeneration, instanceId: message.instanceId, receipt: message.receipt, outcome: "rejected", revision, reason }) });
+          worker.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "browser-actor-ui-patch-result", clientInstanceId: entry.clientInstanceId, scope: message.scope, verifiedSurfaceId: message.verifiedSurfaceId, activationGeneration: message.activationGeneration, instanceId: message.instanceId, receipt: message.receipt, outcome: "rejected", revision, reason }) });
         }
         return;
       }
       if (message.kind === "socket-actor") {
         const runtimeKey = scopeRuntimeKey(message);
         if (runtimeKey === null) return;
-        socketActorReadyRef.current.get(runtimeKey)?.resolve(message.actorId);
-        socketActorReadyRef.current.delete(runtimeKey);
+        const entry = openDocumentSessionsRef.current.get(runtimeKey);
+        const waiter = socketActorReadyRef.current.get(runtimeKey);
+        if (entry?.clientInstanceId !== message.clientInstanceId || waiter?.clientInstanceId !== message.clientInstanceId) return;
+        waiter.resolve(message.actorId);
+        if (socketActorReadyRef.current.get(runtimeKey)?.clientInstanceId === message.clientInstanceId) socketActorReadyRef.current.delete(runtimeKey);
         return;
       }
       if (message.kind === "inference-port-status") {
@@ -1762,15 +1798,20 @@ function FrameworkOsShellInner({
         return;
       }
       if (message.kind === "execution-target-status") {
-        if (scopeRuntimeKey(message) === null || message.scope?.spaceId !== message.spaceId) return;
+        const runtimeKey = scopeRuntimeKey(message);
+        const entry = runtimeKey === null ? undefined : openDocumentSessionsRef.current.get(runtimeKey);
+        if (runtimeKey === null || message.scope?.spaceId !== message.spaceId || entry?.clientInstanceId !== message.clientInstanceId) return;
         setExecutionTargetUiByDocument((current) => reduceExecutionTargetUiState(current, message));
         return;
       }
       if (message.kind === "socket-actor-failed") {
         const runtimeKey = scopeRuntimeKey(message);
         if (runtimeKey === null) return;
-        socketActorReadyRef.current.get(runtimeKey)?.reject(new Error(`socket actor unavailable (${message.code})`));
-        socketActorReadyRef.current.delete(runtimeKey);
+        const entry = openDocumentSessionsRef.current.get(runtimeKey);
+        const waiter = socketActorReadyRef.current.get(runtimeKey);
+        if (entry?.clientInstanceId !== message.clientInstanceId || waiter?.clientInstanceId !== message.clientInstanceId) return;
+        waiter.reject(new Error(`socket actor unavailable (${message.code})`));
+        if (socketActorReadyRef.current.get(runtimeKey)?.clientInstanceId === message.clientInstanceId) socketActorReadyRef.current.delete(runtimeKey);
         return;
       }
       // 📇️ §C6 directory lane — the worker's `directory-*` responses never carry a `documentId` this
@@ -1806,7 +1847,7 @@ function FrameworkOsShellInner({
         setExecutionTargetUiByDocument((current) => reduceExecutionTargetUiState(current, { kind: "execution-target-cleared", documentId: message.scope.documentId, scope: message.scope }));
         pluginBackboneRouteUnregistersRef.current.get(key)?.();
         pluginBackboneRouteUnregistersRef.current.delete(key);
-        worker.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "close", documentId: message.scope.documentId, spaceId: message.scope.spaceId }) });
+        if (entry !== undefined) worker.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "close", documentId: message.scope.documentId, spaceId: message.scope.spaceId, clientInstanceId: entry.clientInstanceId }) });
         return;
       }
       if (message.kind === "directory-status") {
@@ -1861,9 +1902,10 @@ function FrameworkOsShellInner({
         const runtimeKey = scopeRuntimeKey(message);
         if (runtimeKey === null) return;
         const entry = openDocumentSessionsRef.current.get(runtimeKey);
-        if (!entry) return;
+        if (!entry || entry.clientInstanceId !== message.clientInstanceId) return;
         setBootstrapUiByDocument((current) => reduceBootstrapUiState(current, message));
         if (message.kind === "artifact-rebootstrap-required") {
+          if (browserActorUiByRuntimeKeyRef.current.delete(runtimeKey)) setBrowserActorUiVersion((current) => current + 1);
           const active = sessionRef.current;
           if (active?.instanceId === entry.session.instanceId) {
             rebootstrapDiscardedSessionsRef.current.set(runtimeKey, entry.session);
@@ -1879,6 +1921,7 @@ function FrameworkOsShellInner({
       // effect's one-shot wait; `remoteMutations` (another tab's sign-in/out, echoed over this
       // document's `BroadcastChannel`) folds via {@link foldIdentityEvent} like `OpeningPreferences`.
       if (message.kind === "event" && message.documentId === IDENTITY_CONFIG_SCHEMA) {
+        if (identityClientInstanceIdRef.current !== message.clientInstanceId) return;
         const identityEvent = message.event;
         if (identityEvent.kind === "snapshotReplaced") {
           const decoded = decodeIdentityPayload(decodePackValue(new Uint8Array(identityEvent.pack)));
@@ -1896,7 +1939,7 @@ function FrameworkOsShellInner({
       const runtimeKey = message.scope === undefined ? message.documentId : scopeRuntimeKey(message);
       if (runtimeKey === null) return;
       const entry = openDocumentSessionsRef.current.get(runtimeKey);
-      if (!entry) return;
+      if (!entry || entry.clientInstanceId !== message.clientInstanceId) return;
       const { event } = message;
       if (event.kind === "status") {
         dispatch({ type: "SET_SYNC_STATUS_FOR_DOCUMENT", documentId: runtimeKey, status: { persisted: event.persisted, pendingMutations: event.pendingMutations, remote: event.remote } });
@@ -1914,7 +1957,9 @@ function FrameworkOsShellInner({
         // user asking for it, instead of being dropped after the (still-present) error check.
         void entry.plugin
           .applyMutations(entry.session.instanceId, encodeMutationEnvelopesPack(event.envelopes))
-          .then((result) => applyRemoteMergeRef.current(result.conflicts, result.mergeReport))
+          .then((result) => {
+            if (openDocumentSessionsRef.current.get(runtimeKey)?.clientInstanceId === message.clientInstanceId) applyRemoteMergeRef.current(result.conflicts, result.mergeReport);
+          })
           .catch((commandError) => console.error("[DEBUG] applyMutations failed", commandError));
         const actorUri = `actor://${runtimeKey}`;
         postPluginBackboneInbound(entry.session.pluginId, actorUri, [
@@ -1932,6 +1977,7 @@ function FrameworkOsShellInner({
         void (async () => {
           try {
             if (entry.plugin.loadAppDocumentPack) await entry.plugin.loadAppDocumentPack(entry.session.instanceId, packBytes, sprBytes);
+            if (openDocumentSessionsRef.current.get(runtimeKey)?.clientInstanceId !== message.clientInstanceId) return;
             postPluginBackboneInbound(entry.session.pluginId, actorUri, [
               encodeBackboneMessage({ kind: "snapshot", pack: packBytes, spr: sprBytes }),
             ]);
@@ -1942,9 +1988,11 @@ function FrameworkOsShellInner({
             }
             setBootstrapUiByDocument((current) => reduceBootstrapUiState(current, { kind: "snapshot-replaced", documentId: message.documentId, ...(message.scope === undefined ? {} : { scope: message.scope }) }));
           } catch (replacementError) {
+            if (openDocumentSessionsRef.current.get(runtimeKey)?.clientInstanceId !== message.clientInstanceId) return;
             setBootstrapUiByDocument((current) => reduceBootstrapUiState(current, {
               kind: "artifact-bootstrap-failed",
               documentId: message.documentId,
+              clientInstanceId: message.clientInstanceId,
               ...(message.scope === undefined ? {} : { scope: message.scope }),
               code: "invalid-bootstrap",
               message: (replacementError instanceof Error ? replacementError.message : String(replacementError)).slice(0, 4_096),
@@ -2091,11 +2139,14 @@ function FrameworkOsShellInner({
     (async () => {
       const worker = ensureBackboneWorker();
       const identityConfig = identityActorConfig(shellActorIdRef.current, hubEnv.dataDir);
+      const identityAttempt = { clientInstanceId: crypto.randomUUID() };
+      const { clientInstanceId } = identityAttempt;
+      identityClientInstanceIdRef.current = clientInstanceId;
       // 📇️ Opens the identity document FIRST (folder poll starts immediately) so the snapshot wait
       // below has something to resolve against; re-opening later with the same `documentId` (once the
       // real actor id is known) is a harmless idempotent re-subscribe (`openArtifact` always closes
       // any prior state for the same id first).
-      worker.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "open", ...identityConfig }) });
+      worker.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "open", clientInstanceId, ...identityConfig }) });
       // 📇️ terra-web-shellhost (finding 3) — event-driven wait for a previously-persisted identity's
       // `snapshotReplaced`, raced against a 2s `AbortSignal.timeout` instead of an unconditional fixed
       // `setTimeout`: a 404/no-file-yet folder read never emits a `snapshotReplaced` at all (see
@@ -2121,7 +2172,7 @@ function FrameworkOsShellInner({
         // what actually stops further work in that case).
         cachedIdentity = null;
       }
-      if (cancelled) return;
+      if (cancelled || identityClientInstanceIdRef.current !== clientInstanceId) return;
       let resolved: Identity | null = null;
       try {
         const broker = localBrowserBrokerRef.current;
@@ -2141,18 +2192,19 @@ function FrameworkOsShellInner({
         if (!cancelled) setIdentityOffline(true);
         return;
       }
-      if (cancelled || !resolved) return;
+      if (cancelled || !resolved || identityClientInstanceIdRef.current !== clientInstanceId) return;
       setIdentityOffline(false);
       shellActorIdRef.current = shellActorId(shellSessionIdRef.current, resolved);
       setPluginRuntimeActor(shellActorIdRef.current);
       setIdentity(resolved);
       const mutation = signIn(resolved);
       const envelope = identityMutationEnvelope(shellActorIdRef.current, mutation, cachedIdentity);
-      worker.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "send", documentId: IDENTITY_CONFIG_SCHEMA, message: { kind: "localMutations", envelopes: [envelope] } }) });
+      worker.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "send", documentId: IDENTITY_CONFIG_SCHEMA, clientInstanceId, message: { kind: "localMutations", envelopes: [envelope] } }) });
       worker.postMessage({
         wire: encodeBackboneWorkerRequest({
           kind: "send",
           documentId: IDENTITY_CONFIG_SCHEMA,
+          clientInstanceId,
           message: { kind: "localSnapshot", pack: Array.from(encodePackValue(resolved)), spr: [] },
         }),
       });
@@ -2160,6 +2212,11 @@ function FrameworkOsShellInner({
     return () => {
       cancelled = true;
       identityWaitAbort.abort();
+      const clientInstanceId = identityClientInstanceIdRef.current;
+      if (clientInstanceId !== null) {
+        backboneWorkerRef.current?.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "close", documentId: IDENTITY_CONFIG_SCHEMA, clientInstanceId }) });
+        if (identityClientInstanceIdRef.current === clientInstanceId) identityClientInstanceIdRef.current = null;
+      }
     };
   }, [hubEnv]);
 
@@ -2894,8 +2951,26 @@ function FrameworkOsShellInner({
   tutorialRecordingRef.current = tutorialRecording;
   /** ⏺️ Non-null while armed — mutated by `toggleTutorialRecording` (defined in the TutorialOrchestration block below), read/appended-to by `onAction`'s recorder tap right below. */
   const tutorialRecorderRef = useRef<TutorialRecorder | null>(null);
+  const tutorialRecorderStartingRef = useRef(false);
   const shellStateRef = useRef(shellState);
   shellStateRef.current = shellState;
+  const publishLocalInteraction = useCallback(async (plugin: PluginWasmHandle, instanceId: number): Promise<LocalInteractionState | null> => {
+    const capture = await plugin.readLocalInteraction(instanceId);
+    const active = sessionRef.current;
+    const currentPlugin = loadedPluginsRef.current.find((entry) => entry.handle.pluginId === active?.pluginId)?.handle;
+    if (!active || active.instanceId !== instanceId || currentPlugin !== plugin) return null;
+    dispatch({ type: "INTERACTION_STATE_OBSERVED", state: { ...capture.state, hover: shellStateRef.current.interaction.hover } });
+    return capture.state;
+  }, []);
+  const observeLocalInteraction = useMemo(
+    () => createLatestAsyncDispatcher(({ plugin, instanceId }: { readonly plugin: PluginWasmHandle; readonly instanceId: number }) => publishLocalInteraction(plugin, instanceId).catch((error) => console.error("[DEBUG] local interaction observation failed", error))),
+    [publishLocalInteraction],
+  );
+  useEffect(() => {
+    if (!session) return;
+    const plugin = loadedPlugins.find((entry) => entry.handle.pluginId === session.pluginId)?.handle;
+    if (plugin) observeLocalInteraction({ plugin, instanceId: session.instanceId });
+  }, [loadedPlugins, observeLocalInteraction, session?.instanceId, session?.pluginId]);
 
   /** 🎓️ Ends the active introduction — persists the seen flag when configured, and on successful
    * completion (Done / last interaction) fires the tour-finale {@link celebrateAllElements} stamp
@@ -3018,7 +3093,7 @@ function FrameworkOsShellInner({
     } catch {
       return;
     }
-    const request: BackboneWorkerRequest = { kind: "send", documentId: entry.documentId, ...(entry.scope === undefined ? {} : { spaceId: entry.scope.spaceId }), message: actorMessage };
+    const request: BackboneWorkerRequest = { kind: "send", documentId: entry.documentId, clientInstanceId: entry.clientInstanceId, ...(entry.scope === undefined ? {} : { spaceId: entry.scope.spaceId }), message: actorMessage };
     worker.postMessage({ wire: encodeBackboneWorkerRequest(request) });
   }, []);
 
@@ -3762,12 +3837,6 @@ function FrameworkOsShellInner({
           continue;
         }
         if ("replayShellCommand" in effect) {
-          // 📇️ ticket 26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS §C6/§5 — the
-          // `os.directory.*` funnel and the `os.open-artifact`/`os.open-artifact-with` opening relay
-          // (§3-B "closes the known gap where `openArtifactWithAppRef` opened an app but no
-          // document" — `documentId`/`spaceId` are optional here since the relay side of that gap
-          // closure is a different, not-yet-landed lane; every other `replayShellCommand` action id
-          // (e.g. `os.setThemeId`'s Backwards replay) has no handler in this lease and is a no-op).
           const { actionId, args } = effect.replayShellCommand;
           const argsRecord = args as Record<string, unknown> | undefined;
           if (actionId === "os.directory.open-administration") {
@@ -3803,8 +3872,7 @@ function FrameworkOsShellInner({
               }
               const target = await openArtifactWithAppRefRef.current(opening.app, opening.dialect, opening.role);
               if (target && opening.documentId && opening.schema) {
-                if (opening.spaceId) openSpaceIdRef.current = opening.spaceId;
-                await openDocumentRef.current({ documentId: opening.documentId, schema: opening.schema }, undefined, target);
+                await openDocumentRef.current({ documentId: opening.documentId, schema: opening.schema, ...(opening.spaceId ? { spaceId: opening.spaceId } : {}) }, undefined, target);
               }
             } catch (openingError) {
               console.warn("[os-shell] replayShellCommand: artifact opening rejected", openingError, args);
@@ -3972,7 +4040,7 @@ function FrameworkOsShellInner({
         if (!studioMatch && !instanceId) {
           const hostPlugin = loadedPlugins.find((entry) => entry.handle.pluginId === hostConfig.pluginId);
           const spaceApp = findDialectApp(hostPlugin, SPACE_INDEX_DIALECT, "editor") ?? findDialectApp(hostPlugin, SPACE_INDEX_DIALECT, "viewer");
-          if (!spaceApp) {
+          if (!spaceApp || !hostPlugin) {
             console.warn("[os-shell] applyShellUri: no app registered for dialect", dialectCoordinate(SPACE_INDEX_DIALECT), "— s.space (lane 2-B) not loaded yet");
             return;
           }
@@ -3990,7 +4058,7 @@ function FrameworkOsShellInner({
           if (spaceIndexAlreadyOpen) return;
           const spaceSession = currentSession.app.id === spaceApp.id ? currentSession : await switchToManagedApp(spaceApp.id, preservedViewState);
           if (!spaceSession) return;
-          await openDocumentRef.current({ documentId: S_SPACE_INDEX_DOCUMENT_ID, schema: S_SPACE_INDEX_DOCUMENT_SCHEMA });
+          await openDocumentRef.current({ documentId: S_SPACE_INDEX_DOCUMENT_ID, schema: S_SPACE_INDEX_DOCUMENT_SCHEMA, spaceId }, undefined, { session: spaceSession, plugin: hostPlugin.handle });
           return;
         }
         // 🧭️ Pin the route studio id before the async app switch so the boot example effect cannot
@@ -4044,56 +4112,37 @@ function FrameworkOsShellInner({
     return session;
   }, [loadedPlugins, panel, session, hostMode]);
 
-  /**
-   * 🧵️ `openDocument(ref, bindings?)` — replaces `attachSyncBackbone`'s URI-string mirror. Spins up
-   * (or reuses) `🟦️backbone-🟦️worker.ts`, tells it to open the document, subscribes to its postMessage
-   * events, and calls the plugin instance's `attachBackbone`/`loadAppDocumentPack` WIT-exported
-   * methods (WS-D) so the plugin-side store starts pumping through the same logical channel. The
-   * `actor://<documentId>` uri mirrors `framework/sync`'s `ChannelBackbone::pair` convention on the
-   * Rust side.
-   *
-   * 📇️ ticket 26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS §C3/§2 — `bindings`
-   * omitted (as opposed to `attachSyncBackbone`'s always-explicit array, which stays a working manual
-   * override with zero change here) defaults to
-   * `[{kind:"hub", baseUrl, spaceId, token, surface}, {kind:"folder", path: "${dataDir}/spaces/${spaceId}"}]`
-   * when an identity is resolved and the current route has an open space, else `[{kind:"folder", …}]`
-   * (identity or dataDir missing), else `[]` (no route space — the OS config/home documents stay
-   * folder-only per contract §C3 and never call `openDocument` with omitted bindings for this reason).
-   *
-   * Full loop note: this wires the main-thread half of the contract. The remaining hop — the
-   * sandboxed plugin's own `backbone-send`/`backbone-poll` WIT host-import calls relaying through its
-   * dedicated program worker, through this main thread, into `🟦️backbone-🟦️worker.ts` — is
-   * `framework/os/dev/script.ts`'s `pluginWorkerSource` responsibility (dev workflow, deferred
-   * per this session's priority order if not otherwise completed); see that file's own notes.
-   */
+  /** 🧵️ Opens this exact document and optional shared space in its captured plugin session.
+   * Shared requests require a signed-in identity and carry only a requested surface; the worker
+   * verifies the Hub plan and catalog assets before acquiring socket authority. Explicit bindings
+   * are used by the manual persistence picker. Local documents never inherit the current route. */
   const openDocument = useCallback(
-    async (ref: { readonly documentId: string; readonly schema: string }, bindings?: readonly PersistenceBinding[], target?: OpenDocumentSessionTarget) => {
+    async (ref: DocumentOpeningReference, bindings?: readonly PersistenceBinding[], target?: OpenDocumentSessionTarget) => {
       const documentTarget = resolveDocumentOpeningTarget(target, resolveSyncTargetSession(), loadedPlugins);
       if (!documentTarget) return;
       const { session: targetSession, plugin } = documentTarget;
       const worker = ensureBackboneWorker();
-      const resolvedBindings: readonly PersistenceBinding[] =
-        bindings ??
-        (() => {
-          const spaceId = openSpaceIdRef.current;
-          const dataDir = hubEnv?.dataDir;
-          const folder: PersistenceBinding[] = spaceId && dataDir ? [{ kind: "folder", path: `${dataDir}/spaces/${spaceId}` }] : [];
-          const currentIdentity = identityRef.current;
-          if (!currentIdentity || !spaceId) return folder;
-          const surface = targetSession.app.dialect ? canonicalSurfaceId(targetSession.app.dialect, targetSession.app.role) : undefined;
-          return [{ kind: "hub", baseUrl: currentIdentity.hubBaseUrl, spaceId, surface }, ...folder];
-        })();
+      const resolvedBindings = bindings ?? resolveDocumentOpeningBindings(ref, {
+        identity: identityRef.current,
+        dataDir: hubEnv?.dataDir,
+        surface: targetSession.app.dialect ? canonicalSurfaceId(targetSession.app.dialect, targetSession.app.role) : undefined,
+      });
       const hubBinding = resolvedBindings.find((binding): binding is Extract<PersistenceBinding, { kind: "hub" }> => binding.kind === "hub");
       const scope: DocumentScope | undefined = hubBinding === undefined ? undefined : { spaceId: hubBinding.spaceId, documentId: ref.documentId };
       const runtimeKey = scope === undefined ? ref.documentId : documentRuntimeKeyV1({ kind: "hub", ...scope });
+      const openingAttempt = { clientInstanceId: crypto.randomUUID() };
+      const { clientInstanceId } = openingAttempt;
+      const previous = openDocumentSessionsRef.current.get(runtimeKey);
+      if (previous !== undefined) closeDocumentRef.current(runtimeKey, previous.clientInstanceId);
       if (browserActorUiByRuntimeKeyRef.current.delete(runtimeKey)) setBrowserActorUiVersion((current) => current + 1);
-      openDocumentSessionsRef.current.set(runtimeKey, { session: targetSession, plugin, documentId: ref.documentId, ...(scope === undefined ? {} : { scope }) });
+      openDocumentSessionsRef.current.set(runtimeKey, { session: targetSession, plugin, documentId: ref.documentId, clientInstanceId, ...(scope === undefined ? {} : { scope }) });
       // 🐚️ Registers THIS shell as the route for this document's outbound backbone bytes before the
       // plugin can possibly emit any (attachBackbone below) — see `relayPluginBackboneMessage`'s doc.
       pluginBackboneRouteUnregistersRef.current.get(runtimeKey)?.();
       pluginBackboneRouteUnregistersRef.current.set(runtimeKey, registerPluginBackboneRoute(runtimeKey, relayPluginBackboneMessage));
       const request: BackboneWorkerRequest = {
         kind: "open",
+        clientInstanceId,
         documentId: ref.documentId,
         schema: ref.schema,
         bindings: resolvedBindings,
@@ -4102,7 +4151,7 @@ function FrameworkOsShellInner({
       };
       const expectsSocketActor = resolvedBindings.some((binding) => binding.kind === "hub");
       const socketActor = expectsSocketActor
-        ? new Promise<string>((resolve, reject) => socketActorReadyRef.current.set(runtimeKey, { resolve, reject }))
+        ? new Promise<string>((resolve, reject) => socketActorReadyRef.current.set(runtimeKey, { clientInstanceId, resolve, reject }))
         : null;
       worker.postMessage({ wire: encodeBackboneWorkerRequest(request) });
       if (socketActor) {
@@ -4112,15 +4161,18 @@ function FrameworkOsShellInner({
             new Promise<never>((_, reject) => setTimeout(() => reject(new Error("socket actor deadline exceeded")), 10_000)),
           ]);
         } finally {
-          socketActorReadyRef.current.delete(runtimeKey);
+          const waiter = socketActorReadyRef.current.get(runtimeKey);
+          if (waiter !== undefined && waiter.clientInstanceId === clientInstanceId) socketActorReadyRef.current.delete(runtimeKey);
         }
       }
+      if (openDocumentSessionsRef.current.get(runtimeKey)?.clientInstanceId !== clientInstanceId) return;
       if (hubBinding && scope) {
         directoryScopedOwnersRef.current.set(runtimeKey, scope);
         worker.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "directory-scope-open", baseUrl: hubBinding.baseUrl, scope, since: 0 }) });
       }
       const uri = `actor://${runtimeKey}`;
       if (plugin.attachBackbone) await plugin.attachBackbone(targetSession.instanceId, uri);
+      if (openDocumentSessionsRef.current.get(runtimeKey)?.clientInstanceId !== clientInstanceId) return;
       dispatch({ type: "SET_SYNC_BACKBONE_URI", value: uri });
       dispatch({ type: "SET_SYNC_CARD_KIND", value: null });
     },
@@ -4128,11 +4180,15 @@ function FrameworkOsShellInner({
   );
   openDocumentRef.current = openDocument;
 
-  const closeDocument = useCallback((runtimeKey: string) => {
-    socketActorReadyRef.current.get(runtimeKey)?.reject(new Error("document closed"));
-    socketActorReadyRef.current.delete(runtimeKey);
+  const closeDocument = useCallback((runtimeKey: string, clientInstanceId?: string) => {
     const entry = openDocumentSessionsRef.current.get(runtimeKey);
     if (!entry) return;
+    if (clientInstanceId !== undefined && entry.clientInstanceId !== clientInstanceId) return;
+    const waiter = socketActorReadyRef.current.get(runtimeKey);
+    if (waiter?.clientInstanceId === entry.clientInstanceId) {
+      waiter.reject(new Error("document closed"));
+      socketActorReadyRef.current.delete(runtimeKey);
+    }
     const inferenceOwner = inferencePortOwnerRef.current;
     const retainedInferenceOwner = retainInferencePortOwnerAfterCloseV1(inferenceOwner, runtimeKey);
     if (inferenceOwner !== null && retainedInferenceOwner === null) {
@@ -4158,9 +4214,10 @@ function FrameworkOsShellInner({
     if (entry.scope !== undefined && directoryScopedOwnersRef.current.delete(runtimeKey)) {
       backboneWorkerRef.current?.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "directory-scope-close", scope: entry.scope }) });
     }
-    const request: BackboneWorkerRequest = { kind: "close", documentId: entry.documentId, ...(entry.scope === undefined ? {} : { spaceId: entry.scope.spaceId }) };
+    const request: BackboneWorkerRequest = { kind: "close", documentId: entry.documentId, clientInstanceId: entry.clientInstanceId, ...(entry.scope === undefined ? {} : { spaceId: entry.scope.spaceId }) };
     backboneWorkerRef.current?.postMessage({ wire: encodeBackboneWorkerRequest(request) });
   }, []);
+  closeDocumentRef.current = closeDocument;
 
   /** @deprecated superseded by {@link openDocument}; kept as a thin URI-parsing adapter only for the
    * existing sync-card UI (`onAction`'s `attach` handler below), which still collects a single uri
@@ -4477,9 +4534,10 @@ function FrameworkOsShellInner({
       if (interactiveAction) beginInteractivePluginAction();
       return plugin
         .handleAction(targetSession.instanceId, encodeWindowActionInvocation({ ...targetSession, viewState: dispatchViewState }, action, extraWindowInstancesRef.current, dispatchWindowId), dispatchViewState)
-        .then((response) => {
+        .then(async (response) => {
           applyHistoryPatch(response.historyPatch);
-          return applyHostEffects(response.requestedEffects ?? [], { ...targetSession, viewState: dispatchViewState }, resolveUiDirtyScope(response.uiScope));
+          await applyHostEffects(response.requestedEffects ?? [], { ...targetSession, viewState: dispatchViewState }, resolveUiDirtyScope(response.uiScope));
+          if (OBSERVED_INTERACTION_ACTION_IDS.has(action.action)) observeLocalInteraction({ plugin, instanceId: targetSession.instanceId });
         })
         .catch((actionError) => {
           if (isViewerReadOnlyFault(actionError)) {
@@ -4504,6 +4562,7 @@ function FrameworkOsShellInner({
       detachSyncBackbone,
       injectActiveUtility,
       loadedPlugins,
+      observeLocalInteraction,
       panel,
       session,
       setActiveUtilityForWindow,
@@ -4571,8 +4630,27 @@ function FrameworkOsShellInner({
     else tutorialClock.pause();
   }, [tutorialPlaying, tutorialClock]);
 
-  const uiBridgeCtxRef = useRef<TutorialUiBridgeContext>({ session, appLabelsOverlay, terminology: uiTerminology, locale: uiLocale });
-  uiBridgeCtxRef.current = { session, appLabelsOverlay, terminology: uiTerminology, locale: uiLocale };
+  const publishTutorialInteractionSelection = useCallback((selection: LocalInteractionState["selection"]) => {
+    const active = sessionRef.current;
+    if (!active) return;
+    for (const action of tutorialInteractionSelectionActions(active.app.controllerId, selection)) onActionRef.current(action);
+  }, []);
+  const uiBridgeCtxRef = useRef<TutorialUiBridgeContext>({
+    session,
+    appLabelsOverlay,
+    terminology: uiTerminology,
+    locale: uiLocale,
+    interactionSelection: () => shellStateRef.current.interaction.selection,
+    publishInteractionSelection: publishTutorialInteractionSelection,
+  });
+  uiBridgeCtxRef.current = {
+    session,
+    appLabelsOverlay,
+    terminology: uiTerminology,
+    locale: uiLocale,
+    interactionSelection: () => shellStateRef.current.interaction.selection,
+    publishInteractionSelection: publishTutorialInteractionSelection,
+  };
 
   /** ⏱️ Playhead (ms) the director/seek last applied document/UI tracks up to — the "from" side of the
    * next `tutorialSlice(def, from, to)` call. Reset to 0 on sandbox (re)start. */
@@ -4832,13 +4910,24 @@ function FrameworkOsShellInner({
       dispatch({ type: "SET_TUTORIAL_RECORDING", value: false });
       return;
     }
+    if (tutorialRecorderStartingRef.current) return;
     // 🚧️ `TutorialRecorder`'s base document is authored DSL/JSON TEXT — the channel only carries
     // binary pack/spr containers, and no TS-side pack→text decoder exists (deliberately out of scope
     // for `🔖️PackValueCodec`), so a recording's `base.documentDsl` fixture can't be captured from the
     // live channel; its UI/camera/event tracks still capture faithfully.
-    tutorialRecorderRef.current = new TutorialRecorder(captureTutorialUiSnapshot(shellStateRef.current, session), null);
-    dispatch({ type: "SET_TUTORIAL_RECORDING", value: true });
-  }, [session]);
+    const plugin = loadedPlugins.find((entry) => entry.handle.pluginId === session.pluginId)?.handle;
+    if (!plugin) return;
+    tutorialRecorderStartingRef.current = true;
+    void publishLocalInteraction(plugin, session.instanceId).then((interaction) => {
+      const active = sessionRef.current;
+      if (!interaction || !active || active.pluginId !== session.pluginId || active.instanceId !== session.instanceId) return;
+      const observed = { ...shellStateRef.current, interaction: { ...interaction, hover: shellStateRef.current.interaction.hover } };
+      tutorialRecorderRef.current = new TutorialRecorder(captureTutorialUiSnapshot(observed, active), null);
+      dispatch({ type: "SET_TUTORIAL_RECORDING", value: true });
+    }).catch((captureError) => console.error("[DEBUG] tutorial interaction capture failed", captureError)).finally(() => {
+      tutorialRecorderStartingRef.current = false;
+    });
+  }, [loadedPlugins, publishLocalInteraction, session]);
 
   useEffect(() => {
     startTutorialRef.current = startTutorial;
@@ -4959,9 +5048,11 @@ function FrameworkOsShellInner({
           const entry = openDocumentSessionsRef.current.get(runtimeKey);
           if (!worker || !entry) return;
           const snapshot = await entry.plugin.ephemeralSnapshot?.(entry.session.instanceId);
+          if (openDocumentSessionsRef.current.get(runtimeKey)?.clientInstanceId !== entry.clientInstanceId) return;
           const request: BackboneWorkerRequest = {
             kind: "send",
             documentId: entry.documentId,
+            clientInstanceId: entry.clientInstanceId,
             ...(entry.scope === undefined ? {} : { spaceId: entry.scope.spaceId }),
             message: {
               kind: "presenceHeartbeat",
@@ -6186,13 +6277,16 @@ function FrameworkOsShellInner({
           const indexScope: DocumentScope | undefined = currentIdentity ? { spaceId, documentId: S_SPACE_INDEX_DOCUMENT_ID } : undefined;
           const indexRuntimeKey = indexScope === undefined ? S_SPACE_INDEX_DOCUMENT_ID : documentRuntimeKeyV1({ kind: "hub", ...indexScope });
           const indexSession: ActiveSession = { pluginId: pluginEntry.handle.pluginId, instanceId, app, viewState: { activeModeId: app.defaultModeId ?? app.modes[0]?.id } };
-          openDocumentSessionsRef.current.set(indexRuntimeKey, { session: indexSession, plugin: pluginEntry.handle, documentId: S_SPACE_INDEX_DOCUMENT_ID, ...(indexScope === undefined ? {} : { scope: indexScope }) });
+          const indexOpeningAttempt = { clientInstanceId: crypto.randomUUID() };
+          const previous = openDocumentSessionsRef.current.get(indexRuntimeKey);
+          if (previous !== undefined) closeDocumentRef.current(indexRuntimeKey, previous.clientInstanceId);
+          openDocumentSessionsRef.current.set(indexRuntimeKey, { session: indexSession, plugin: pluginEntry.handle, documentId: S_SPACE_INDEX_DOCUMENT_ID, clientInstanceId: indexOpeningAttempt.clientInstanceId, ...(indexScope === undefined ? {} : { scope: indexScope }) });
           pluginBackboneRouteUnregistersRef.current.get(indexRuntimeKey)?.();
           pluginBackboneRouteUnregistersRef.current.set(indexRuntimeKey, registerPluginBackboneRoute(indexRuntimeKey, relayPluginBackboneMessage));
           const socketActor = currentIdentity
-            ? new Promise<string>((resolve, reject) => socketActorReadyRef.current.set(indexRuntimeKey, { resolve, reject }))
+            ? new Promise<string>((resolve, reject) => socketActorReadyRef.current.set(indexRuntimeKey, { clientInstanceId: indexOpeningAttempt.clientInstanceId, resolve, reject }))
             : null;
-          worker.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "open", documentId: S_SPACE_INDEX_DOCUMENT_ID, schema: S_SPACE_INDEX_DOCUMENT_SCHEMA, bindings, watchExternal: true, actor: shellActorIdRef.current }) });
+          worker.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "open", clientInstanceId: indexOpeningAttempt.clientInstanceId, documentId: S_SPACE_INDEX_DOCUMENT_ID, schema: S_SPACE_INDEX_DOCUMENT_SCHEMA, bindings, watchExternal: true, actor: shellActorIdRef.current }) });
           if (socketActor) {
             try {
               await Promise.race([
@@ -6200,15 +6294,18 @@ function FrameworkOsShellInner({
                 new Promise<never>((_, reject) => setTimeout(() => reject(new Error("space index socket actor deadline exceeded")), 10_000)),
               ]);
             } finally {
-              socketActorReadyRef.current.delete(indexRuntimeKey);
+              const waiter = socketActorReadyRef.current.get(indexRuntimeKey);
+              if (waiter?.clientInstanceId === indexOpeningAttempt.clientInstanceId) socketActorReadyRef.current.delete(indexRuntimeKey);
             }
           }
+          if (openDocumentSessionsRef.current.get(indexRuntimeKey)?.clientInstanceId !== indexOpeningAttempt.clientInstanceId) return;
           if (indexScope && currentIdentity) {
             directoryScopedOwnersRef.current.set(indexRuntimeKey, indexScope);
             worker.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "directory-scope-open", baseUrl: currentIdentity.hubBaseUrl, scope: indexScope, since: 0 }) });
           }
           const uri = `actor://${indexRuntimeKey}`;
           if (pluginEntry.handle.attachBackbone) await pluginEntry.handle.attachBackbone(instanceId, uri);
+          if (openDocumentSessionsRef.current.get(indexRuntimeKey)?.clientInstanceId !== indexOpeningAttempt.clientInstanceId) return;
         }
         const app = findDialectApp(pluginEntry, SPACE_INDEX_DIALECT, "editor");
         if (!app || !pluginEntry.handle.handleCommand) return;

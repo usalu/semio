@@ -24,7 +24,7 @@ pub mod node_graph_edit {
             for operation in &sub_operations {
                 match operation.get("operation").and_then(|value| value.as_str()).unwrap_or("") {
                     "setFixture" => {
-                        if let Some(fixture) = operation.get("fixtureJson").and_then(|value| value.as_str()).and_then(|json| serde_json::from_str::<crate::artifacts::sequence::SequenceFixture>(json).ok()) {
+                        if let Some(fixture) = operation.get("fixtureJson").and_then(|value| value.as_str()).and_then(|json| dsl::os_pack::from_json_str::<crate::artifacts::sequence::SequenceFixture>(json).ok()) {
                             let _ = host.replace_snapshot(fixture);
                         }
                     }
@@ -47,7 +47,7 @@ pub mod node_graph_edit {
         Emit::mutations(ops)
     }
 
-    /// 🕹️ `app_commands!`'s generated `dispatch(doc, cfg)` is framework-fixed at this exact 3-arg
+    /// 🕹️ `app_commands!`'s generated `dispatch(doc, cfg).await` is framework-fixed at this exact 3-arg
     /// shape (no `interaction` slot — ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM) —
     /// reachable only through that macro-generated path (`SequencePlayApp::handle` always routes this
     /// command through `apply` below instead), so its `"deleteSelection"` sub-operation degrades to
@@ -74,7 +74,7 @@ pub mod set_viewport {
     }
 
     pub fn handle(payload: &SetViewport, _doc: &ArtifactView<'_, SequenceSnapshot>, _cfg: &ConfigView<'_, SequenceConfig>) -> Result<Emit<SequenceMutation, SequenceConfigMutation>, Fault> {
-        Ok(Emit::config(vec![SequenceConfigMutation::SetCamera { camera: payload.camera.clone() }]))
+        Ok(Emit::config(vec![SequenceConfigMutation::SetCamera(crate::editor::sequence::config::SetCamera { camera: payload.camera.clone() })]))
     }
 }
 //#endregion 🔖️SetViewport
@@ -86,7 +86,6 @@ mod tests {
     use crate::editor::sequence::testkit::{dispatch, new_app, new_app_with_registry_wired, select_steps};
     use crate::editor::sequence::SequenceCommand;
     use semio_framework_plugin::{PluginApp, ViewModel};
-    use serde_json::{json, Value};
 
     use super::set_viewport::SetViewport;
 
@@ -94,12 +93,14 @@ mod tests {
     /// undo entry) and instead write straight into the config store.
     #[semio_framework_async_macros::async_test]
     async fn set_viewport_writes_config_not_operations() {
-        let mut app = new_app();
-        let result = app.dispatch_typed(SequenceCommand::SetViewport(SetViewport { camera: SequenceCamera { x: 5.0, y: 6.0, zoom: 2.0 } }), &semio_framework_plugin::testkit::meta("local")).expect("viewport pan/zoom");
+        let mut app = new_app().await;
+        let result = app.dispatch_typed(SequenceCommand::SetViewport(SetViewport { camera: SequenceCamera { x: 5.0, y: 6.0, zoom: 2.0 } }), &semio_framework_plugin::testkit::meta("local")).await.expect("viewport pan/zoom");
         assert!(result.mutations.is_empty(), "setViewport must not emit a VCS operation");
-        let node = app.render(crate::editor::sequence::modes::edit::windows::main::SEQUENCE_PLAY_BODY_MAIN, None, &ViewModel::default()).expect("render");
-        let payload: Value = serde_json::to_value(&node).unwrap();
-        assert_eq!(payload["nodeGraph"]["viewport"]["zoom"], json!(2.0));
+        let node = app.render(crate::editor::sequence::modes::edit::windows::main::SEQUENCE_PLAY_BODY_MAIN, None, &ViewModel::default()).await.expect("render");
+        let semio_framework_plugin::Component::Surface(props) = &node.root.component else { panic!("semantic graph") };
+        let scene: semio_framework_plugin::NodeGraphScene = semio_framework_ui_scene::decode(props).expect("packed graph");
+        assert_eq!(scene.viewport.expect("camera viewport").zoom, 2.0);
+        semio_framework_plugin::testkit::project_and_retire_fixture_tree(node).expect("retire viewport graph");
     }
 
     /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: picking is now the framework's
@@ -108,9 +109,9 @@ mod tests {
     /// `handle`, which always sees an empty selection) reads the live selection.
     #[semio_framework_async_macros::async_test]
     async fn node_graph_edit_delete_selection_clears_selection() {
-        let mut app = new_app_with_registry_wired();
-        select_steps(&mut app, &["step-1"]);
-        dispatch(&mut app, SequenceCommand::NodeGraphEdit(super::node_graph_edit::NodeGraphEdit { operations_json: "[{\"operation\":\"deleteSelection\"}]".into() }));
+        let mut app = new_app_with_registry_wired().await;
+        select_steps(&mut app, &["step-1"]).await;
+        dispatch(&mut app, SequenceCommand::NodeGraphEdit(super::node_graph_edit::NodeGraphEdit { operations_json: "[{\"operation\":\"deleteSelection\"}]".into() })).await;
         assert!(!app.snapshot().expect("projection").to_fixture().steps.iter().any(|step| step.id == "step-1"));
     }
 }

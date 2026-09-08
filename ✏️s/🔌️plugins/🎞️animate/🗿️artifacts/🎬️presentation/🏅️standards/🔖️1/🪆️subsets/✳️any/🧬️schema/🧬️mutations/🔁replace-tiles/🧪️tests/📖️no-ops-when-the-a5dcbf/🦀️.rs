@@ -23,13 +23,13 @@ const DIFF: &str = include_str!("🔺️diff/🔣️.json");
 const OUTCOME: &str = include_str!("🎯️outcome/🔣️.json");
 
 fn mutation() -> PresentationMutation {
-    serde_json::from_str(MUTATION).expect("mutation decodes")
+    dsl::os_pack::from_json_str(MUTATION).expect("mutation decodes")
 }
 fn before() -> PresentationSnapshot {
-    serde_json::from_str(BEFORE).expect("before snapshot decodes")
+    dsl::os_pack::from_json_str(BEFORE).expect("before snapshot decodes")
 }
 fn expected_after() -> PresentationSnapshot {
-    serde_json::from_str(AFTER).expect("after snapshot decodes")
+    dsl::os_pack::from_json_str(AFTER).expect("after snapshot decodes")
 }
 
 /// ▶️ Clearing an already-empty deck carries `before` to exactly the committed `after`, leaving the
@@ -48,7 +48,7 @@ fn applies_to_committed_after() {
 #[test]
 fn produces_committed_diff() {
     let outcome = <PresentationMutation as protocol::Mutation<PresentationSnapshot>>::diff(&mutation(), &before());
-    let produced = serde_json::to_value(outcome.diff()).expect("produced diff encodes");
+    let produced = serde_json::from_str::<serde_json::Value>(&dsl::os_pack::to_json_string(outcome.diff())).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
     assert_eq!(produced, committed, "replace-tiles/no-ops-when-the-collection-is-already-empty: produced diff differs from the committed 🔺️diff/🔣️.json");
     assert_eq!(outcome.diff(), &PresentationDiff::default(), "a collection-identity replace must carry the identity diff");
@@ -57,8 +57,8 @@ fn produces_committed_diff() {
 /// 🔣️ The committed diff is itself canonical and decodes to presentation's own diff type.
 #[test]
 fn committed_diff_is_canonical() {
-    let decoded: PresentationDiff = serde_json::from_str(DIFF).expect("committed diff decodes");
-    let reencoded = serde_json::to_value(&decoded).expect("diff re-encodes");
+    let decoded: PresentationDiff = dsl::os_pack::from_json_str(DIFF).expect("committed diff decodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::os_pack::to_json_string(&decoded)).expect("diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
     assert_eq!(reencoded, original, "replace-tiles/no-ops-when-the-collection-is-already-empty: committed diff JSON is not canonical");
 }
@@ -67,7 +67,7 @@ fn committed_diff_is_canonical() {
 /// deck slot never set.
 #[test]
 fn committed_diff_applies_to_after() {
-    let decoded: PresentationDiff = serde_json::from_str(DIFF).expect("committed diff decodes");
+    let decoded: PresentationDiff = dsl::os_pack::from_json_str(DIFF).expect("committed diff decodes");
     assert!(decoded.presentation.is_none(), "a collection-identity replace must leave the composed deck slot unset");
     let produced = <PresentationDiff as protocol::MutationDiff<PresentationSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "replace-tiles/no-ops-when-the-collection-is-already-empty: committed diff did not carry before to after");
@@ -78,12 +78,12 @@ fn committed_diff_applies_to_after() {
 #[test]
 fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {
-        let decoded: PresentationSnapshot = serde_json::from_str(text).expect("snapshot decodes");
-        let reencoded = serde_json::to_value(&decoded).expect("snapshot encodes");
+        let decoded: PresentationSnapshot = dsl::os_pack::from_json_str(text).expect("snapshot decodes");
+        let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::os_pack::to_json_string(&decoded)).expect("snapshot encodes");
         let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
         assert_eq!(reencoded, original, "replace-tiles/no-ops-when-the-collection-is-already-empty: committed {label} JSON is not canonical");
     }
-    let reencoded = serde_json::to_value(mutation()).expect("mutation encodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::os_pack::to_json_string(&mutation())).expect("mutation encodes");
     let original: serde_json::Value = serde_json::from_str(MUTATION).expect("mutation reparses");
     assert_eq!(reencoded, original, "replace-tiles/no-ops-when-the-collection-is-already-empty: committed mutation JSON is not canonical");
     assert_eq!(original.get("ReplaceTiles").and_then(|payload| payload.get("newTiles")).and_then(serde_json::Value::as_array).map(Vec::len), Some(0), "the clear gesture sends an explicit empty collection");

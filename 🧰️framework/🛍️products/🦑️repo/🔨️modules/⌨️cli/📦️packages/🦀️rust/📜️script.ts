@@ -1,11 +1,12 @@
 #!/usr/bin/env bun
+import { buildCargoArtifacts } from "../../../📚️library/⚡️caching/📜️script.ts";
 /** @emoji ⚙️ Builds/tests the `repo_cli` crate and execs the `semio` binary (nx bridge for `repo/cli/rs`). */
 import { join } from "node:path";
-import { BundleScript, ScriptRouter, devToolingEnv, runBundleScriptMain, runCargoTestBudgeted, runCmd, runCmdStatus, resolveTestLevel } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript, ScriptRouter, devToolingEnv, runBundleScriptMain, runCargoTestBudgeted, runCmdStatus, resolveTestLevel } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 
 class BuildScript extends BundleScript {
-  run(): void {
-    runCmd("cargo", ["build", "-p", "semio-framework-repo-cli", "--release"], { cwd: this.repoRoot, env: devToolingEnv() });
+  async run(): Promise<void> {
+    await buildCargoArtifacts(join(this.root, "Cargo.toml"), ["--release", "--bin", "semio"], this.repoRoot);
   }
 }
 
@@ -16,16 +17,11 @@ class TestScript extends BundleScript {
   }
 }
 
-/**
- * ▶️ Builds `semio` (always — cargo's own incremental cache makes a no-operation rebuild fast, and skipping
- * the build whenever the binary happened to already exist silently ran a stale binary after any
- * source edit) then execs it with forwarded argv and inherited stdio.
- */
+/** ▶️ Runs the executable restored by the Nx build prerequisite. */
 class RunScript extends BundleScript {
   run(segments: string[]): void {
-    runCmd("cargo", ["build", "-p", "semio-framework-repo-cli"], { cwd: this.repoRoot, env: devToolingEnv() });
     const binName = process.platform === "win32" ? "semio.exe" : "semio";
-    const bin = join(this.repoRoot, "target", "debug", binName);
+    const bin = join(this.root, "dist", "build", binName);
     const status = runCmdStatus(bin, segments, { cwd: this.repoRoot, env: devToolingEnv() });
     process.exit(status);
   }
@@ -33,26 +29,24 @@ class RunScript extends BundleScript {
 
 
 /**
- * 🌀 Forwards `semio daemon …` after ensuring the binary is built.
+ * 🌀 Forwards `semio daemon …` using the executable restored by Nx.
  */
 class DaemonScript extends BundleScript {
   run(segments: string[]): void {
-    runCmd("cargo", ["build", "-p", "semio-framework-repo-cli"], { cwd: this.repoRoot, env: devToolingEnv() });
     const binName = process.platform === "win32" ? "semio.exe" : "semio";
-    const bin = join(this.repoRoot, "target", "debug", binName);
+    const bin = join(this.root, "dist", "build", binName);
     const status = runCmdStatus(bin, ["daemon", ...segments], { cwd: this.repoRoot, env: devToolingEnv() });
     process.exit(status);
   }
 }
 
 /**
- * 🌊️ Forwards `semio workflow …` after ensuring the binary is built.
+ * 🌊️ Forwards `semio workflow …` using the executable restored by Nx.
  */
 class WorkflowScript extends BundleScript {
   run(segments: string[]): void {
-    runCmd("cargo", ["build", "-p", "semio-framework-repo-cli"], { cwd: this.repoRoot, env: devToolingEnv() });
     const binName = process.platform === "win32" ? "semio.exe" : "semio";
-    const bin = join(this.repoRoot, "target", "debug", binName);
+    const bin = join(this.root, "dist", "build", binName);
     const status = runCmdStatus(bin, ["workflow", ...segments], { cwd: this.repoRoot, env: devToolingEnv() });
     process.exit(status);
   }

@@ -2,7 +2,6 @@
 
 use crate::artifacts::sequence::{SequenceCamera, SequenceContentChild};
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Diff
 /// 🔺️ Sparse field delta for the sequence artifact; persistent entries apply via [`MutationDiff`](protocol::MutationDiff).
@@ -10,8 +9,8 @@ use serde::{Deserialize, Serialize};
 /// structured deltas are replaced by a single-`Option<SequenceContentChild>` slot (the composed
 /// child is opaque — a parent's diff never embeds a child diff, matching writer's `document` field
 /// and flow's `content` field exactly: an always-present slot, never absent, only ever replaced).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase", default)]
+#[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase", default)]
 #[artifact_schema(id = "s.sequence.sequence")]
 pub struct SequenceDiff {
     #[state(artifact)]

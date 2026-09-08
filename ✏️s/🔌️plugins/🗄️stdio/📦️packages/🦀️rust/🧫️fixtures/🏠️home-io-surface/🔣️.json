@@ -3,6 +3,7 @@
   "features": {
     "homeIo": "home-io",
     "fullArtifactCatalog": "full-artifact-catalog",
+    "componentAppAssembly": "component-app-assembly",
     "spaceGuest": "space-guest"
   },
   "directArtifacts": [
@@ -17,5 +18,14 @@
     "txt",
     "xml"
   ],
-  "fullArtifactCount": 36
+  "fullArtifactCount": 36,
+  "nativeCodecCount": 26,
+  "surfaceCases": [
+    { "id": "home-library", "selected": ["home-io"], "catalog": 8, "apps": false, "exports": false },
+    { "id": "native-full-catalog", "selected": ["full-artifact-catalog"], "catalog": 36, "apps": false, "exports": false },
+    { "id": "transitive-home-and-full", "selected": ["home-io", "full-artifact-catalog"], "catalog": 36, "apps": false, "exports": false },
+    { "id": "component-apps-without-exports", "selected": ["component-app-assembly"], "catalog": 36, "apps": true, "exports": false },
+    { "id": "root-component", "selected": ["plugin-root"], "catalog": 36, "apps": true, "exports": true },
+    { "id": "default-component", "selected": ["default"], "catalog": 36, "apps": true, "exports": true }
+  ]
 }

@@ -34,16 +34,16 @@ fn board_entries(board: &DslValue, key: &str) -> Vec<DslValue> {
 /// child owner. Nothing is invented: the seeded node is the committed snapshot's own persisted
 /// `wiresFixture.board` mirror, so `node-anchor` exists and `node-phantom` genuinely does not.
 fn before() -> WiresSnapshot {
-    let mut snapshot: WiresSnapshot = serde_json::from_str(BEFORE).expect("before snapshot decodes");
+    let mut snapshot: WiresSnapshot = dsl::os_pack::from_json_str(BEFORE).expect("before snapshot decodes");
     let board = snapshot.wires_fixture.get("board").cloned().unwrap_or(DslValue::Null);
     materialize_wires_content(&mut snapshot.content, board_entries(&board, "nodes"), board_entries(&board, "edges"));
     snapshot
 }
 fn expected_after() -> WiresSnapshot {
-    serde_json::from_str(AFTER).expect("after snapshot decodes")
+    dsl::os_pack::from_json_str(AFTER).expect("after snapshot decodes")
 }
 fn mutation() -> WiresMutation {
-    serde_json::from_str(MUTATION).expect("mutation decodes")
+    dsl::os_pack::from_json_str(MUTATION).expect("mutation decodes")
 }
 
 /// ▶️ A rejected `delete-node` leaves the document byte-identical to the committed `after` — and,
@@ -91,12 +91,12 @@ async fn inverse_has_no_captured_node_to_recreate() {
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {
-        let decoded: WiresSnapshot = serde_json::from_str(text).expect("snapshot decodes");
-        let reencoded = serde_json::to_value(&decoded).expect("snapshot encodes");
+        let decoded: WiresSnapshot = dsl::os_pack::from_json_str(text).expect("snapshot decodes");
+        let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::os_pack::to_json_string(&decoded)).expect("snapshot encodes");
         let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
         assert_eq!(reencoded, original, "delete-node/rejects-deleting-a-node-the-board-never-held: committed {label} JSON is not canonical");
     }
-    let reencoded = serde_json::to_value(mutation()).expect("mutation encodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::os_pack::to_json_string(&mutation())).expect("mutation encodes");
     let original: serde_json::Value = serde_json::from_str(MUTATION).expect("mutation reparses");
     assert_eq!(reencoded, original, "delete-node/rejects-deleting-a-node-the-board-never-held: committed deleteNode JSON is not canonical");
 }

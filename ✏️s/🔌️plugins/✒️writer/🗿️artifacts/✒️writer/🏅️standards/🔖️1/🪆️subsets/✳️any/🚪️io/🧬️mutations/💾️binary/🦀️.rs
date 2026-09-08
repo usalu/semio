@@ -10,6 +10,7 @@
 use crate::artifacts::writer::op::WriterMutation;
 use crate::artifacts::writer::WriterSnapshot;
 use protocol::{Mutation, MutationDiff, OpBinary};
+use store::ArtifactEnvelopeMutationFieldTarget;
 
 //#region 📡️SemioProtocol
 /// 📡️ Normative handcrafted binary protocol for this facet (`dialect protocol`).
@@ -446,7 +447,7 @@ impl store::ArtifactEnvelopeMutationFieldAuthority<WriterMutation> for WriterMut
 
     fn publish_reserved(
         &mut self,
-        target: &mut dyn store::ArtifactEnvelopeMutationFieldTarget<WriterMutation>,
+        target: &mut dyn ArtifactEnvelopeMutationFieldTarget<WriterMutation>,
         reservation: store::ArtifactEnvelopeFieldReservation,
         _cx: &mut semio_framework_job::StepContext<'_>,
     ) -> Result<store::ArtifactEnvelopeFieldDecodeStep, store::OwnedSchemaDecodeDiagnostic> {
@@ -466,7 +467,7 @@ impl store::ArtifactEnvelopeMutationFieldAuthority<WriterMutation> for WriterMut
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
         }
         if let Some(retirement) = self.retirement.as_mut() {
-            return match retirement.close_step(maximum_items, maximum_bytes).map_err(|_| self.diagnostic("writer-envelope.mutation-retirement-fault", 0))? {
+            return match retirement.close_step(maximum_items, maximum_bytes).map_err(|_| store::OwnedSchemaDecodeDiagnostic { code: "writer-envelope.mutation-retirement-fault", offset: 0, line: 0, column: 0, path: self.path })? {
                 store::SnapshotRetirementStep::Complete if retirement.terminal_is_empty() => {
                     drop(self.retirement.take());
                     self.terminal = true;
@@ -515,7 +516,7 @@ impl WriterMutationTarget {
     }
 }
 
-impl store::ArtifactEnvelopeMutationFieldTarget<WriterMutation> for WriterMutationTarget {
+impl ArtifactEnvelopeMutationFieldTarget<WriterMutation> for WriterMutationTarget {
     fn reserve_mutation(&mut self) -> Result<store::ArtifactEnvelopeFieldReservation, store::OwnedSchemaDecodeDiagnostic> {
         if self.reservation.is_some() || self.value.is_some() {
             return Err(store::OwnedSchemaDecodeDiagnostic { code: "writer-envelope.mutation-target-occupied", offset: 0, line: 0, column: 0, path: store::OwnedSchemaPath::ROOT });
@@ -605,13 +606,13 @@ impl WriterMutationArrayAuthority {
     fn accept(&mut self, token: store::OwnedSchemaToken, terminal: bool, source: &store::OwnedSchemaRecordCursor, cx: &mut semio_framework_job::StepContext<'_>) -> Result<store::ArtifactEnvelopeFieldDecodeStep, store::OwnedSchemaDecodeDiagnostic> {
         if matches!(self.state, WriterMutationArrayState::Publishing) {
             let reservation = self.reservation.ok_or_else(|| self.diagnostic("writer-envelope.mutation-array-reservation-missing", token.start))?;
-            let active = self.active.as_mut().ok_or_else(|| self.diagnostic("writer-envelope.mutation-array-owner-missing", token.start))?;
+            let active = self.active.as_mut().ok_or_else(|| store::OwnedSchemaDecodeDiagnostic { code: "writer-envelope.mutation-array-owner-missing", offset: token.start, line: 0, column: 0, path: self.path })?;
             return match active.publish_reserved(&mut self.target, reservation, cx)? {
                 store::ArtifactEnvelopeFieldDecodeStep::Pending => Ok(store::ArtifactEnvelopeFieldDecodeStep::Pending),
                 store::ArtifactEnvelopeFieldDecodeStep::FieldComplete | store::ArtifactEnvelopeFieldDecodeStep::TokenComplete => {
                     self.reservation = None;
-                    let value = self.target.value.take().ok_or_else(|| self.diagnostic("writer-envelope.mutation-array-value-missing", token.start))?;
-                    let values = self.values.as_mut().ok_or_else(|| self.diagnostic("writer-envelope.mutation-array-values-missing", token.start))?;
+                    let value = self.target.value.take().ok_or_else(|| store::OwnedSchemaDecodeDiagnostic { code: "writer-envelope.mutation-array-value-missing", offset: token.start, line: 0, column: 0, path: self.path })?;
+                    let values = self.values.as_mut().ok_or_else(|| store::OwnedSchemaDecodeDiagnostic { code: "writer-envelope.mutation-array-values-missing", offset: token.start, line: 0, column: 0, path: self.path })?;
                     if values.len() == values.capacity() {
                         *self.target.value = Some(value);
                         return Err(self.diagnostic("writer-envelope.mutation-array-capacity", token.start));
@@ -704,7 +705,7 @@ impl WriterMutationArrayAuthority {
             return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         }
         if let Some(retirement) = self.retirement.as_mut() {
-            return match retirement.close_step(maximum_items, maximum_bytes).map_err(|_| self.diagnostic("writer-envelope.mutation-array-retirement-fault", 0))? {
+            return match retirement.close_step(maximum_items, maximum_bytes).map_err(|_| store::OwnedSchemaDecodeDiagnostic { code: "writer-envelope.mutation-array-retirement-fault", offset: 0, line: 0, column: 0, path: self.path })? {
                 store::SnapshotRetirementStep::Complete if retirement.terminal_is_empty() => {
                     drop(self.retirement.take());
                     Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 })
@@ -961,7 +962,7 @@ impl store::ArtifactOwnedHistoryEntryAuthority<protocol::Edit<WriterMutation>> f
             return Ok(step);
         }
         if let Some(retirement) = self.retirement.as_mut() {
-            return match retirement.close_step(maximum_items, maximum_bytes).map_err(|_| self.diagnostic("writer-envelope.edit-retirement-fault", 0))? {
+            return match retirement.close_step(maximum_items, maximum_bytes).map_err(|_| store::OwnedSchemaDecodeDiagnostic { code: "writer-envelope.edit-retirement-fault", offset: 0, line: 0, column: 0, path: self.path })? {
                 store::SnapshotRetirementStep::Complete if retirement.terminal_is_empty() => {
                     drop(self.retirement.take());
                     self.terminal = true;
@@ -1657,7 +1658,7 @@ mod tests {
         assert_eq!(steps, 9, "four snapshot strings plus five child-reference strings retire independently");
         drop(retirement);
 
-        let hostile = WriterMutation::EditText(crate::artifacts::writer::schema::mutations::EditText { text: "x".repeat(WRITER_ENVELOPE_FIELD_BYTES) });
+        let hostile = WriterMutation::EditText(schema::mutations::EditText { text: "x".repeat(WRITER_ENVELOPE_FIELD_BYTES) });
         let mut retirement = store::ArtifactOwnedValueRetirementFactory::retire_owned(&WriterMutationRetirementFactory, hostile);
         assert_eq!(retirement.close_step(1, WRITER_ENVELOPE_FIELD_BYTES - 1).expect("under-credit preserves the exact mutation"), store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
         assert_eq!(retirement.close_step(1, WRITER_ENVELOPE_FIELD_BYTES).expect("exact byte credit releases the string"), store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: WRITER_ENVELOPE_FIELD_BYTES });
@@ -1739,7 +1740,7 @@ mod tests {
         let edit = protocol::Edit {
             id: "edit-1".into(),
             actor: None,
-            forwards: vec![WriterMutation::RenameWriter(crate::artifacts::writer::schema::mutations::RenameWriter { new_id: "next".into() })],
+            forwards: vec![WriterMutation::RenameWriter(schema::mutations::RenameWriter { new_id: "next".into() })],
             inverse: Vec::new(),
             mutation_meta: Vec::new(),
             description: None,
@@ -1748,7 +1749,7 @@ mod tests {
             started_at: "1".into(),
             finished_at: None,
         };
-        let bytes = serde_json::to_vec(&serde_json::json!({ "value": edit })).expect("bounded Writer edit fixture");
+        let bytes = dsl::os_pack::json::to_json_string(&dsl::json!({ "value": edit })).into_bytes();
         let decoded = drive_writer_edit(&bytes, semio_framework_job::root_cancel_token()).expect("Writer owns its retained edit and mutation decoders");
         assert_eq!(decoded, edit);
         assert!(drive_writer_edit(br#"{"value":{"id":"broken","forwards":[{"mutation":"unknown","newId":"x"}],"inverse":[],"sequenceNumber":1,"startedAt":"1"}}"#, semio_framework_job::root_cancel_token()).is_err());
@@ -1787,6 +1788,7 @@ mod tests {
                     assert!(released_bytes <= WRITER_ENVELOPE_FIELD_BYTES);
                 }
                 semio_framework_plugin::PluginCloseStep::Blocked { reason } => panic!("fresh Writer candidate close unexpectedly blocked: {reason}"),
+                semio_framework_plugin::PluginCloseStep::AwaitingInput { reason } => panic!("fresh Writer candidate close unexpectedly awaited input: {reason}"),
                 semio_framework_plugin::PluginCloseStep::Complete => {
                     assert!(disposer.terminal_is_empty(&candidate));
                     drop(disposer);
@@ -1829,7 +1831,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn op_binary_round_trips_and_agrees_with_text() {
-        let operation = WriterMutation::EditText(crate::artifacts::writer::schema::mutations::EditText { text: "hello".into() });
+        let operation = WriterMutation::EditText(schema::mutations::EditText { text: "hello".into() });
         store::os_store::test_support::assert_op_text_binary_equivalence(&operation);
         let bytes = encode_op(&operation).expect("encode");
         assert_eq!(decode_op(&bytes).expect("decode"), operation);
@@ -1850,20 +1852,20 @@ mod tests {
         let jack = jack_snapshot();
         let text = crate::artifacts::writer::writer_text(&jack);
         vec![
-            WriterMutation::RenameWriter(crate::artifacts::writer::schema::mutations::RenameWriter { new_id: jack.id }),
-            WriterMutation::ChangeLanguage(crate::artifacts::writer::schema::mutations::ChangeLanguage { new_language_id: jack.language_id }),
-            WriterMutation::ChangeUri(crate::artifacts::writer::schema::mutations::ChangeUri { new_uri: jack.uri }),
-            WriterMutation::EditText(crate::artifacts::writer::schema::mutations::EditText { text }),
+            WriterMutation::RenameWriter(schema::mutations::RenameWriter { new_id: jack.id }),
+            WriterMutation::ChangeLanguage(schema::mutations::ChangeLanguage { new_language_id: jack.language_id }),
+            WriterMutation::ChangeUri(schema::mutations::ChangeUri { new_uri: jack.uri }),
+            WriterMutation::EditText(schema::mutations::EditText { text }),
         ]
     }
 
     #[semio_framework_async_macros::async_test]
     async fn writer_document_text_round_trips_through_the_store() {
-        let mut store = store::ArtifactStore::<WriterSnapshot, WriterMutation>::new(store::create_document_envelope("writer.document", "writer", schema::empty_writer_snapshot(), None)).expect("valid artifact store fixture");
-        store.dispatch(store::ArtifactCommand::Apply { mutations: jack_mutations(), description: None }).expect("apply");
+        let mut store = store::ArtifactStore::<WriterSnapshot, WriterMutation>::new(store::create_document_envelope("writer.document", "writer", schema::empty_writer_snapshot(), None)).await.expect("valid artifact store fixture");
+        store.dispatch(store::ArtifactCommand::Apply { mutations: jack_mutations(), description: None }).await.expect("apply");
         assert_eq!(store.snapshot().expect("snapshot"), jack_snapshot());
-        store::os_store::test_support::assert_document_text_round_trip(&store);
-        store::os_store::test_support::assert_document_pack_round_trip(&store);
+        store::os_store::test_support::assert_document_text_round_trip(&store).await;
+        store::os_store::test_support::assert_document_pack_round_trip(&store).await;
     }
 
     //#region 🔖️CommandEnvelopeTests
@@ -1874,10 +1876,10 @@ mod tests {
     async fn command_envelope_round_trip_holds_for_an_applied_operation() {
         use protocol::{ArtifactId, Edit, SchemaId};
 
-        let mut store = store::ArtifactStore::<WriterSnapshot, WriterMutation>::new(store::create_document_envelope("writer.document", "writer", schema::empty_writer_snapshot(), None)).expect("valid artifact store fixture");
-        store.dispatch(store::ArtifactCommand::Apply { mutations: jack_mutations(), description: None }).expect("apply");
+        let mut store = store::ArtifactStore::<WriterSnapshot, WriterMutation>::new(store::create_document_envelope("writer.document", "writer", schema::empty_writer_snapshot(), None)).await.expect("valid artifact store fixture");
+        store.dispatch(store::ArtifactCommand::Apply { mutations: jack_mutations(), description: None }).await.expect("apply");
         let edit: &Edit<WriterMutation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
-        store::os_store::test_support::assert_command_envelope_round_trip::<WriterSnapshot, WriterMutation>(edit, &ArtifactId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone()));
+        store::os_store::test_support::assert_command_envelope_round_trip::<WriterSnapshot, WriterMutation>(edit, &ArtifactId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone())).await;
     }
     //#endregion 🔖️CommandEnvelopeTests
 }

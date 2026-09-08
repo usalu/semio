@@ -12,12 +12,11 @@ use crate::artifacts::wires::schema::{dsl_to_json, fixture_camera, fixture_edges
 use crate::artifacts::wires::WiresSnapshot;
 use dsl::DslValue;
 use dsl::os_pack::json::Value;
-use semio_framework_plugin::{build_canvas_2d_scene, Canvas2dScene, LocalizedLabel, SurfaceKind, UiNode, WindowKindDefinition, WindowOptions};
+use semio_framework_plugin::{Canvas2dScene, LocalizedLabel, SurfaceKind, BuiltNode, UiAssemblyResult, WindowKindDefinition, WindowOptions};
 
 //#region 🔖️Constants
 pub const WIRES_VIEW_WINDOW_CANVAS: &str = "reasoning-wires-view-composite";
 pub const WIRES_VIEW_BODY_CANVAS: &str = "reasoning.wires.view.composite";
-const WIRES_VIEW_CANVAS_CONTROLLER_ID: &str = "reasoning-wires-view";
 const WIRES_VIEW_CANVAS_SURFACE_ID: &str = "reasoning.wires.view.composite";
 //#endregion 🔖️Constants
 
@@ -73,14 +72,14 @@ fn relationship_edge_layers(wires: &DslValue, board: &DslValue) -> Vec<Value> {
 
 /// 👁️ Read-only render straight off a `WiresSnapshot` — no config/runtime/utility state, matching the
 /// viewer's `ViewEmit`-only contract.
-pub fn render(document: &WiresSnapshot) -> UiNode {
+pub fn render(document: &WiresSnapshot) -> UiAssemblyResult<BuiltNode> {
     let board = crate::artifacts::wires::wires_working_board(document);
     let wires = &document.wires_fixture;
     let (camera_x, camera_y, zoom) = fixture_camera(&board);
     let mut layers: Vec<Value> = fixture_nodes(&board).iter().map(dsl_to_json).collect();
     layers.extend(fixture_edges(&board).iter().map(dsl_to_json));
     layers.extend(relationship_edge_layers(wires, &board));
-    build_canvas_2d_scene(WIRES_VIEW_CANVAS_SURFACE_ID, WIRES_VIEW_CANVAS_CONTROLLER_ID, Canvas2dScene { camera_x, camera_y, zoom, layers_json: dsl::os_pack::json::to_string(&Value::Array(layers)), snapshot: None })
+    semio_framework_plugin::scene_surface(WIRES_VIEW_CANVAS_SURFACE_ID, semio_framework_ui_contract::SurfaceKind::Canvas2d, &Canvas2dScene { camera_x, camera_y, zoom, layers_json: dsl::os_pack::json::to_string(&Value::Array(layers)), snapshot: None })
 }
 //#endregion 🔖️Render
 
@@ -99,15 +98,23 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn renders_canvas_scene_for_the_empty_document() {
         let document = crate::artifacts::wires::empty_wires_snapshot();
-        let json = serde_json::to_string(&render(&document)).expect("render json");
-        assert!(json.contains("canvas-2d"));
+        let node = render(&document).expect("viewer canvas");
+        let semio_framework_plugin::Component::Surface(props) = &node.component else { panic!("canvas surface") };
+        let scene: Canvas2dScene = semio_framework_ui_scene::decode(props).expect("packed canvas");
+        let json = scene.layers_json;
+        semio_framework_plugin::testkit::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).expect("retire viewer tree");
+        assert!(serde_json::from_str::<serde_json::Value>(&json).expect("layer oracle").is_array());
     }
 
     #[semio_framework_async_macros::async_test]
     async fn renders_canvas_scene_for_the_metabolism_example() {
         let document = crate::artifacts::wires::schema::metabolism_wires_example_snapshot().expect("valid metabolism fixture mutations");
-        let json = serde_json::to_string(&render(&document)).expect("render json");
-        assert!(json.contains("canvas-2d"));
+        let node = render(&document).expect("viewer canvas");
+        let semio_framework_plugin::Component::Surface(props) = &node.component else { panic!("canvas surface") };
+        let scene: Canvas2dScene = semio_framework_ui_scene::decode(props).expect("packed canvas");
+        let json = scene.layers_json;
+        semio_framework_plugin::testkit::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).expect("retire viewer tree");
+        assert!(serde_json::from_str::<serde_json::Value>(&json).expect("layer oracle").is_array());
         assert!(json.contains("Demo") || json.contains("Metabolism") || json.contains("Topic"));
     }
 }

@@ -3,7 +3,7 @@
 //! `serde_json` structural round trip, `IoFidelity::Exact`. Bridges via json's own RFC8259 text
 //! codec (`write_json_pretty`), matching `s/plugin/lowpoly`'s identical export leaf.
 use crate::artifacts::curation::CurationSnapshot;
-use dsl::{FromValue, ToValue};
+use dsl::ToValue;
 use semio_framework::io::io_mechanism::Serializer;
 use semio_framework::io_schema::{Dialect, IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_plugin::{StandardId, SubsetId};

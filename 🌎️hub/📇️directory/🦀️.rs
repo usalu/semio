@@ -356,6 +356,34 @@ pub mod model {
         pub fact: NewAdminOperationAuditRecord,
     }
 
+    /// 🧾️ Private identity atomically committed by a short administrator writer.
+    #[derive(Clone, Debug, PartialEq, Eq)]
+    pub struct NewAdminOperationEffectReceiptV1 {
+        pub operation_id: String,
+        pub intent_digest: String,
+        pub committed_at: i64,
+        pub outcome_code: String,
+    }
+
+    /// 🧷️ Private factual completion proof; capability plaintext is never retained here.
+    #[derive(Clone, Debug, PartialEq, Eq)]
+    pub struct AdminOperationEffectReceiptV1 {
+        pub operation_id: String,
+        pub intent_digest: String,
+        pub committed_at: i64,
+        pub outcome_code: String,
+        pub event_seq_first: Option<u64>,
+        pub event_seq_last: Option<u64>,
+    }
+
+    /// 🧷️ Closed factual outcome of one backend-owned administrator effect transaction.
+    #[derive(Debug)]
+    pub enum AdminEffectCommitV1<T> {
+        Applied(T),
+        RejectedBeforeCommit,
+        Indeterminate,
+    }
+
     /// 🎁️ Closed durable result class of one directory command; a capability plaintext is never stored.
     #[derive(Clone, Copy, Debug, PartialEq, Eq)]
     pub enum DirectoryCommandResultKindV1 {
@@ -1254,6 +1282,34 @@ pub(crate) fn validate_admin_operation_audit(fact: &NewAdminOperationAuditRecord
     Ok(())
 }
 
+pub(crate) fn validate_admin_operation_effect_receipt(receipt: &AdminOperationEffectReceiptV1) -> DirectoryResult<()> {
+    validate_bounded_auth_text(&receipt.operation_id, "admin effect operation id", AUTH_TEXT_MAX_BYTES)?;
+    validate_bounded_auth_text(&receipt.outcome_code, "admin effect outcome", AUTH_TEXT_MAX_BYTES)?;
+    if receipt.intent_digest.len() != 64 || !receipt.intent_digest.bytes().all(|byte| byte.is_ascii_hexdigit() && !byte.is_ascii_uppercase()) {
+        return Err(DirectoryError::Conflict("admin effect intent digest must be 64 lowercase hex digits".into()));
+    }
+    if receipt.committed_at <= 0 {
+        return Err(DirectoryError::Conflict("admin effect commit time must be positive".into()));
+    }
+    if receipt.event_seq_first.is_some() != receipt.event_seq_last.is_some() || receipt.event_seq_first.zip(receipt.event_seq_last).is_some_and(|(first, last)| first == 0 || first > last) {
+        return Err(DirectoryError::Conflict("admin effect event range is invalid".into()));
+    }
+    Ok(())
+}
+
+pub(crate) fn admin_operation_effect_receipt_v1(claim: &NewAdminOperationEffectReceiptV1, events: &[DirectoryEvent]) -> DirectoryResult<AdminOperationEffectReceiptV1> {
+    let receipt = AdminOperationEffectReceiptV1 {
+        operation_id: claim.operation_id.clone(),
+        intent_digest: claim.intent_digest.clone(),
+        committed_at: claim.committed_at,
+        outcome_code: claim.outcome_code.clone(),
+        event_seq_first: events.first().map(|event| event.seq),
+        event_seq_last: events.last().map(|event| event.seq),
+    };
+    validate_admin_operation_effect_receipt(&receipt)?;
+    Ok(receipt)
+}
+
 pub(crate) fn same_admin_operation_request(existing: &NewAdminOperationAuditRecord, candidate: &NewAdminOperationAuditRecord) -> bool {
     existing.request_id == candidate.request_id
         && existing.intent_digest == candidate.intent_digest
@@ -1647,7 +1703,12 @@ fn actor_user_id(actor: &DirectoryActor) -> DirectoryResult<&str> {
 /// - Any command naming a missing/deleted space ⇒ `DirectoryError::NotFound`.
 /// - `upsert-member` with an email that has no `UserRecord` yet emits `user.created` first, using
 ///   a freshly minted user id the following `member.upserted` also uses.
-pub async fn decide(dir: &HubDirectories, actor: &DirectoryActor, command: DirectoryCommand, clock: &mut HubClock) -> DirectoryResult<Decision> {
+pub async fn decide(
+    dir: &HubDirectories,
+    actor: &DirectoryActor,
+    command: DirectoryCommand,
+    clock: &mut HubClock,
+) -> DirectoryResult<Decision> {
     match command {
         DirectoryCommand::CreateSpace { name, space_kind, visibility } => {
             let space_id = time_ordered_id();
@@ -1705,12 +1766,16 @@ pub async fn decide(dir: &HubDirectories, actor: &DirectoryActor, command: Direc
         DirectoryCommand::CreateInvite { space_id, role, ttl_secs } => {
             require_space(dir, &space_id).await?;
             let ttl_secs = i64::try_from(ttl_secs).map_err(|_| DirectoryError::Conflict("invite ttl exceeds the signed storage boundary".into()))?;
-            let issued = dir.issue_invite_as(&space_id, role_from_wire(role), ttl_secs, Some(actor_user_id(actor)?), &time_ordered_id()).await?;
+            let actor_user_id = Some(actor_user_id(actor)?);
+            let correlation_id = time_ordered_id();
+            let issued = dir.issue_invite_as(&space_id, role_from_wire(role), ttl_secs, actor_user_id, &correlation_id).await?;
             Ok(Decision { events: Vec::new(), result: Some(CommandResult { invite_token: Some(issued.capability.expose_once()) }) })
         }
         DirectoryCommand::RevokeInvite { space_id, invite_id } => {
             require_space(dir, &space_id).await?;
-            dir.revoke_invite_as(&space_id, &invite_id, "directory-command", Some(actor_user_id(actor)?), &time_ordered_id()).await?;
+            let actor_user_id = Some(actor_user_id(actor)?);
+            let correlation_id = time_ordered_id();
+            dir.revoke_invite_as(&space_id, &invite_id, "directory-command", actor_user_id, &correlation_id).await?;
             Ok(Decision { events: Vec::new(), result: None })
         }
         DirectoryCommand::AnnounceDocument { descriptor } => {
@@ -2138,6 +2203,93 @@ impl DirectoryService {
         self.append_and_publish_locked(&clock, &decision.events).await
     }
 
+    /// 🧷️ Runs one pre-audited command and commits its factual effect receipt with the writer.
+    pub async fn execute_with_admin_effect(
+        &self,
+        actor: DirectoryActor,
+        command: DirectoryCommand,
+        effect: &NewAdminOperationEffectReceiptV1,
+    ) -> AdminEffectCommitV1<(Vec<DirectoryEvent>, Option<CommandResult>)> {
+        let mut clock = self.write.lock().await;
+        match &command {
+            DirectoryCommand::CreateInvite { space_id, role, ttl_secs } => {
+                match require_space(self.dir.as_ref(), space_id).await {
+                    Ok(_) => {}
+                    Err(DirectoryError::Backend(_)) => return AdminEffectCommitV1::Indeterminate,
+                    Err(_) => return AdminEffectCommitV1::RejectedBeforeCommit,
+                }
+                let Ok(ttl_secs) = i64::try_from(*ttl_secs) else { return AdminEffectCommitV1::RejectedBeforeCommit };
+                let Ok(actor_user_id) = actor_user_id(&actor) else { return AdminEffectCommitV1::RejectedBeforeCommit };
+                let correlation_id = time_ordered_id();
+                return match self.dir.issue_invite_as_with_admin_effect(space_id, role_from_wire(*role), ttl_secs, Some(actor_user_id), &correlation_id, effect).await {
+                    AdminEffectCommitV1::Applied(issued) => AdminEffectCommitV1::Applied((Vec::new(), Some(CommandResult { invite_token: Some(issued.capability.expose_once()) }))),
+                    AdminEffectCommitV1::RejectedBeforeCommit => AdminEffectCommitV1::RejectedBeforeCommit,
+                    AdminEffectCommitV1::Indeterminate => AdminEffectCommitV1::Indeterminate,
+                };
+            }
+            DirectoryCommand::RevokeInvite { space_id, invite_id } => {
+                match require_space(self.dir.as_ref(), space_id).await {
+                    Ok(_) => {}
+                    Err(DirectoryError::Backend(_)) => return AdminEffectCommitV1::Indeterminate,
+                    Err(_) => return AdminEffectCommitV1::RejectedBeforeCommit,
+                }
+                let Ok(actor_user_id) = actor_user_id(&actor) else { return AdminEffectCommitV1::RejectedBeforeCommit };
+                let correlation_id = time_ordered_id();
+                return match self.dir.revoke_invite_as_with_admin_effect(space_id, invite_id, "directory-command", Some(actor_user_id), &correlation_id, effect).await {
+                    AdminEffectCommitV1::Applied(()) => AdminEffectCommitV1::Applied((Vec::new(), None)),
+                    AdminEffectCommitV1::RejectedBeforeCommit => AdminEffectCommitV1::RejectedBeforeCommit,
+                    AdminEffectCommitV1::Indeterminate => AdminEffectCommitV1::Indeterminate,
+                };
+            }
+            _ => {}
+        }
+        let decision = match decide(self.dir.as_ref(), &actor, command, &mut clock).await {
+            Ok(decision) => decision,
+            Err(DirectoryError::Backend(_)) => return AdminEffectCommitV1::Indeterminate,
+            Err(_) => return AdminEffectCommitV1::RejectedBeforeCommit,
+        };
+        #[cfg(test)]
+        self.pause_decision_test_fence_once().await;
+        let persisted = if decision.events.is_empty() {
+            Vec::new()
+        } else {
+            match self.dir.append_decided_events_with_admin_effect(&decision.events, effect).await {
+                AdminEffectCommitV1::Applied(events) => events,
+                AdminEffectCommitV1::RejectedBeforeCommit => return AdminEffectCommitV1::RejectedBeforeCommit,
+                AdminEffectCommitV1::Indeterminate => return AdminEffectCommitV1::Indeterminate,
+            }
+        };
+        AdminEffectCommitV1::Applied((self.publish_persisted_locked(&clock, persisted), decision.result))
+    }
+
+    /// 🌱️ Creates an administrator-selected resource id with its factual receipt in one append.
+    pub async fn execute_create_space_with_id_and_admin_effect(
+        &self,
+        actor: DirectoryActor,
+        space_id: String,
+        name: String,
+        space_kind: DirectorySpaceKind,
+        visibility: DirectorySpaceVisibility,
+        effect: &NewAdminOperationEffectReceiptV1,
+    ) -> AdminEffectCommitV1<Vec<DirectoryEvent>> {
+        let mut clock = self.write.lock().await;
+        match self.dir.get_space(&space_id).await {
+            Ok(Some(_)) => return AdminEffectCommitV1::RejectedBeforeCommit,
+            Ok(None) => {}
+            Err(_) => return AdminEffectCommitV1::Indeterminate,
+        }
+        let decision = match decide_create_space(&actor, space_id, name, space_kind, visibility, &mut clock) {
+            Ok(decision) => decision,
+            Err(DirectoryError::Backend(_)) => return AdminEffectCommitV1::Indeterminate,
+            Err(_) => return AdminEffectCommitV1::RejectedBeforeCommit,
+        };
+        match self.dir.append_decided_events_with_admin_effect(&decision.events, effect).await {
+            AdminEffectCommitV1::Applied(events) => AdminEffectCommitV1::Applied(self.publish_persisted_locked(&clock, events)),
+            AdminEffectCommitV1::RejectedBeforeCommit => AdminEffectCommitV1::RejectedBeforeCommit,
+            AdminEffectCommitV1::Indeterminate => AdminEffectCommitV1::Indeterminate,
+        }
+    }
+
     /// 🏛️ Serializes a trusted server authority decision with its atomic event/projection append.
     pub async fn execute_artifact_authority(&self, actor: DirectoryActor, command: ArtifactDirectoryCommand) -> DirectoryResult<Vec<DirectoryEvent>> {
         let mut clock = self.write.lock().await;
@@ -2464,10 +2616,27 @@ impl<S: ArtifactChunkCasStorage> crate::artifact_authority::VerifiedCheckpointPu
 pub trait HubDirectory: Send + Sync + 'static {
     //#region ShareTokens
     async fn issue_share_token_as(&self, scope: &DocumentScope, ttl_secs: i64, actor_user_id: Option<&str>, correlation_id: &str) -> DirectoryResult<IssuedShareToken>;
+    async fn issue_share_token_as_with_admin_effect(
+        &self,
+        scope: &DocumentScope,
+        ttl_secs: i64,
+        actor_user_id: Option<&str>,
+        correlation_id: &str,
+        effect: &NewAdminOperationEffectReceiptV1,
+    ) -> AdminEffectCommitV1<IssuedShareToken>;
     async fn issue_share_token(&self, scope: &DocumentScope, ttl_secs: i64, correlation_id: &str) -> DirectoryResult<IssuedShareToken> {
         self.issue_share_token_as(scope, ttl_secs, None, correlation_id).await
     }
     async fn revoke_share_token_as(&self, scope: &DocumentScope, share_id: &str, reason: &str, actor_user_id: Option<&str>, correlation_id: &str) -> DirectoryResult<()>;
+    async fn revoke_share_token_as_with_admin_effect(
+        &self,
+        scope: &DocumentScope,
+        share_id: &str,
+        reason: &str,
+        actor_user_id: Option<&str>,
+        correlation_id: &str,
+        effect: &NewAdminOperationEffectReceiptV1,
+    ) -> AdminEffectCommitV1<()>;
     async fn revoke_share_token(&self, scope: &DocumentScope, share_id: &str, reason: &str, correlation_id: &str) -> DirectoryResult<()> {
         self.revoke_share_token_as(scope, share_id, reason, None, correlation_id).await
     }
@@ -2572,6 +2741,14 @@ pub trait HubDirectory: Send + Sync + 'static {
     async fn socket_session_binding(&self, session_id: &str, user_id: &str, authorization_generation: u64, space_id: Option<&str>, now_ms: i64) -> DirectoryResult<SocketSessionBindingStatus>;
     async fn revoke_auth_session(&self, id: &str, reason: &str, actor_user_id: Option<&str>, correlation_id: &str) -> DirectoryResult<Option<RevokedAuthSession>>;
     async fn revoke_auth_sessions_for_user(&self, user_id: &str, reason: &str, actor_user_id: Option<&str>, correlation_id: &str) -> DirectoryResult<Vec<RevokedAuthSession>>;
+    async fn revoke_auth_sessions_for_user_with_admin_effect(
+        &self,
+        user_id: &str,
+        reason: &str,
+        actor_user_id: Option<&str>,
+        correlation_id: &str,
+        effect: &NewAdminOperationEffectReceiptV1,
+    ) -> AdminEffectCommitV1<Vec<RevokedAuthSession>>;
     async fn revoke_auth_sessions_for_identity(&self, provider: &str, subject_digest: [u8; 32], reason: &str, actor_user_id: Option<&str>, correlation_id: &str) -> DirectoryResult<Vec<RevokedAuthSession>>;
     async fn list_auth_audit(&self, limit: usize, offset: usize) -> DirectoryResult<Vec<AuthAuditRecord>>;
     //#endregion
@@ -2583,6 +2760,8 @@ pub trait HubDirectory: Send + Sync + 'static {
     async fn admin_operation_audit_for_request(&self, request_id: &str) -> DirectoryResult<Vec<AdminOperationAuditRecord>>;
     /// 🎯 Reads the at-most-two facts for one server-issued operation identifier.
     async fn admin_operation_audit_for_operation(&self, operation_id: &str) -> DirectoryResult<Vec<AdminOperationAuditRecord>>;
+    /// 🧷️ Reads an exact private writer receipt without exposing capability material.
+    async fn admin_operation_effect_receipt(&self, operation_id: &str, intent_digest: &str) -> DirectoryResult<Option<AdminOperationEffectReceiptV1>>;
     /// 📄 Reads one backend-ordered bounded operation-audit page.
     async fn list_admin_operation_audit(&self, after_sequence: u64, limit: usize) -> DirectoryResult<Vec<AdminOperationAuditRecord>>;
     //#endregion
@@ -2620,6 +2799,15 @@ pub trait HubDirectory: Send + Sync + 'static {
     // `DirectoryService::redeem_invite`). `create_invite`/`revoke_invite` are called directly by
     // `decide` as its one documented write exception (`//#region 🔖️Decider`).
     async fn issue_invite_as(&self, space_id: &str, role: SpaceRole, ttl_secs: i64, actor_user_id: Option<&str>, correlation_id: &str) -> DirectoryResult<IssuedInvite>;
+    async fn issue_invite_as_with_admin_effect(
+        &self,
+        space_id: &str,
+        role: SpaceRole,
+        ttl_secs: i64,
+        actor_user_id: Option<&str>,
+        correlation_id: &str,
+        effect: &NewAdminOperationEffectReceiptV1,
+    ) -> AdminEffectCommitV1<IssuedInvite>;
     async fn issue_invite(&self, space_id: &str, role: SpaceRole, ttl_secs: i64, correlation_id: &str) -> DirectoryResult<IssuedInvite> {
         self.issue_invite_as(space_id, role, ttl_secs, None, correlation_id).await
     }
@@ -2628,6 +2816,15 @@ pub trait HubDirectory: Send + Sync + 'static {
     /// 🎟️ Claims `accepted_at`, appends the derived event and applies membership in one backend transaction.
     async fn redeem_invite_atomic(&self, capability: &InviteCapability, actor: &DirectoryActor, user_id: &str, hlc: Hlc) -> DirectoryResult<InviteRedemptionCommit>;
     async fn revoke_invite_as(&self, space_id: &str, invite_id: &str, reason: &str, actor_user_id: Option<&str>, correlation_id: &str) -> DirectoryResult<()>;
+    async fn revoke_invite_as_with_admin_effect(
+        &self,
+        space_id: &str,
+        invite_id: &str,
+        reason: &str,
+        actor_user_id: Option<&str>,
+        correlation_id: &str,
+        effect: &NewAdminOperationEffectReceiptV1,
+    ) -> AdminEffectCommitV1<()>;
     async fn revoke_invite(&self, space_id: &str, invite_id: &str, reason: &str, correlation_id: &str) -> DirectoryResult<()> {
         self.revoke_invite_as(space_id, invite_id, reason, None, correlation_id).await
     }
@@ -2683,6 +2880,8 @@ pub trait HubDirectory: Send + Sync + 'static {
     /// 🔐️ Appends a decided batch or proves a semantic refusal by acknowledging rollback.
     /// Errors, including failed rollback or commit, never authorize release of an idempotency claim.
     async fn append_decided_events(&self, events: &[NewDirectoryEvent]) -> DirectoryResult<DirectoryAppendOutcomeV1>;
+    /// 🧷️ Commits the exact event page and its private administrator effect proof atomically.
+    async fn append_decided_events_with_admin_effect(&self, events: &[NewDirectoryEvent], effect: &NewAdminOperationEffectReceiptV1) -> AdminEffectCommitV1<Vec<DirectoryEvent>>;
     /// @emoji 📜️ Every event with `seq > since_seq`, ascending, capped at `limit` — backs both
     /// `GET /directory/events?since=` and `/directory/socket/v1`'s post-subscribe replay (contract C2).
     async fn events_since(&self, since_seq: u64, limit: usize) -> DirectoryResult<Vec<DirectoryEvent>>;
@@ -2768,6 +2967,17 @@ impl HubDirectory for HubDirectories {
         }
     }
 
+    async fn issue_share_token_as_with_admin_effect(&self, scope: &DocumentScope, ttl_secs: i64, actor_user_id: Option<&str>, correlation_id: &str, effect: &NewAdminOperationEffectReceiptV1) -> AdminEffectCommitV1<IssuedShareToken> {
+        match self {
+            #[cfg(feature = "sqlite")]
+            Self::Sqlite(inner) => inner.issue_share_token_as_with_admin_effect(scope, ttl_secs, actor_user_id, correlation_id, effect).await,
+            #[cfg(feature = "postgres")]
+            Self::Postgres(inner) => inner.issue_share_token_as_with_admin_effect(scope, ttl_secs, actor_user_id, correlation_id, effect).await,
+            #[cfg(feature = "neo4j")]
+            Self::Neo4j(inner) => inner.issue_share_token_as_with_admin_effect(scope, ttl_secs, actor_user_id, correlation_id, effect).await,
+        }
+    }
+
     async fn revoke_share_token_as(&self, scope: &DocumentScope, share_id: &str, reason: &str, actor_user_id: Option<&str>, correlation_id: &str) -> DirectoryResult<()> {
         match self {
             #[cfg(feature = "sqlite")]
@@ -2776,6 +2986,17 @@ impl HubDirectory for HubDirectories {
             Self::Postgres(inner) => inner.revoke_share_token_as(scope, share_id, reason, actor_user_id, correlation_id).await,
             #[cfg(feature = "neo4j")]
             Self::Neo4j(inner) => inner.revoke_share_token_as(scope, share_id, reason, actor_user_id, correlation_id).await,
+        }
+    }
+
+    async fn revoke_share_token_as_with_admin_effect(&self, scope: &DocumentScope, share_id: &str, reason: &str, actor_user_id: Option<&str>, correlation_id: &str, effect: &NewAdminOperationEffectReceiptV1) -> AdminEffectCommitV1<()> {
+        match self {
+            #[cfg(feature = "sqlite")]
+            Self::Sqlite(inner) => inner.revoke_share_token_as_with_admin_effect(scope, share_id, reason, actor_user_id, correlation_id, effect).await,
+            #[cfg(feature = "postgres")]
+            Self::Postgres(inner) => inner.revoke_share_token_as_with_admin_effect(scope, share_id, reason, actor_user_id, correlation_id, effect).await,
+            #[cfg(feature = "neo4j")]
+            Self::Neo4j(inner) => inner.revoke_share_token_as_with_admin_effect(scope, share_id, reason, actor_user_id, correlation_id, effect).await,
         }
     }
 
@@ -3249,6 +3470,17 @@ impl HubDirectory for HubDirectories {
         }
     }
 
+    async fn revoke_auth_sessions_for_user_with_admin_effect(&self, user_id: &str, reason: &str, actor_user_id: Option<&str>, correlation_id: &str, effect: &NewAdminOperationEffectReceiptV1) -> AdminEffectCommitV1<Vec<RevokedAuthSession>> {
+        match self {
+            #[cfg(feature = "sqlite")]
+            Self::Sqlite(inner) => inner.revoke_auth_sessions_for_user_with_admin_effect(user_id, reason, actor_user_id, correlation_id, effect).await,
+            #[cfg(feature = "postgres")]
+            Self::Postgres(inner) => inner.revoke_auth_sessions_for_user_with_admin_effect(user_id, reason, actor_user_id, correlation_id, effect).await,
+            #[cfg(feature = "neo4j")]
+            Self::Neo4j(inner) => inner.revoke_auth_sessions_for_user_with_admin_effect(user_id, reason, actor_user_id, correlation_id, effect).await,
+        }
+    }
+
     async fn revoke_auth_sessions_for_identity(&self, provider: &str, subject_digest: [u8; 32], reason: &str, actor_user_id: Option<&str>, correlation_id: &str) -> DirectoryResult<Vec<RevokedAuthSession>> {
         match self {
             #[cfg(feature = "sqlite")]
@@ -3301,6 +3533,17 @@ impl HubDirectory for HubDirectories {
             Self::Postgres(inner) => inner.admin_operation_audit_for_operation(operation_id).await,
             #[cfg(feature = "neo4j")]
             Self::Neo4j(inner) => inner.admin_operation_audit_for_operation(operation_id).await,
+        }
+    }
+
+    async fn admin_operation_effect_receipt(&self, operation_id: &str, intent_digest: &str) -> DirectoryResult<Option<AdminOperationEffectReceiptV1>> {
+        match self {
+            #[cfg(feature = "sqlite")]
+            Self::Sqlite(inner) => inner.admin_operation_effect_receipt(operation_id, intent_digest).await,
+            #[cfg(feature = "postgres")]
+            Self::Postgres(inner) => inner.admin_operation_effect_receipt(operation_id, intent_digest).await,
+            #[cfg(feature = "neo4j")]
+            Self::Neo4j(inner) => inner.admin_operation_effect_receipt(operation_id, intent_digest).await,
         }
     }
 
@@ -3381,6 +3624,17 @@ impl HubDirectory for HubDirectories {
         }
     }
 
+    async fn issue_invite_as_with_admin_effect(&self, space_id: &str, role: SpaceRole, ttl_secs: i64, actor_user_id: Option<&str>, correlation_id: &str, effect: &NewAdminOperationEffectReceiptV1) -> AdminEffectCommitV1<IssuedInvite> {
+        match self {
+            #[cfg(feature = "sqlite")]
+            Self::Sqlite(inner) => inner.issue_invite_as_with_admin_effect(space_id, role, ttl_secs, actor_user_id, correlation_id, effect).await,
+            #[cfg(feature = "postgres")]
+            Self::Postgres(inner) => inner.issue_invite_as_with_admin_effect(space_id, role, ttl_secs, actor_user_id, correlation_id, effect).await,
+            #[cfg(feature = "neo4j")]
+            Self::Neo4j(inner) => inner.issue_invite_as_with_admin_effect(space_id, role, ttl_secs, actor_user_id, correlation_id, effect).await,
+        }
+    }
+
     async fn invite_redemption_scope_hint(&self, capability: &InviteCapability, actor: &DirectoryActor, user_id: &str) -> DirectoryResult<InviteRedemptionScopeHintV1> {
         match self {
             #[cfg(feature = "sqlite")]
@@ -3411,6 +3665,17 @@ impl HubDirectory for HubDirectories {
             Self::Postgres(inner) => inner.revoke_invite_as(space_id, invite_id, reason, actor_user_id, correlation_id).await,
             #[cfg(feature = "neo4j")]
             Self::Neo4j(inner) => inner.revoke_invite_as(space_id, invite_id, reason, actor_user_id, correlation_id).await,
+        }
+    }
+
+    async fn revoke_invite_as_with_admin_effect(&self, space_id: &str, invite_id: &str, reason: &str, actor_user_id: Option<&str>, correlation_id: &str, effect: &NewAdminOperationEffectReceiptV1) -> AdminEffectCommitV1<()> {
+        match self {
+            #[cfg(feature = "sqlite")]
+            Self::Sqlite(inner) => inner.revoke_invite_as_with_admin_effect(space_id, invite_id, reason, actor_user_id, correlation_id, effect).await,
+            #[cfg(feature = "postgres")]
+            Self::Postgres(inner) => inner.revoke_invite_as_with_admin_effect(space_id, invite_id, reason, actor_user_id, correlation_id, effect).await,
+            #[cfg(feature = "neo4j")]
+            Self::Neo4j(inner) => inner.revoke_invite_as_with_admin_effect(space_id, invite_id, reason, actor_user_id, correlation_id, effect).await,
         }
     }
 
@@ -3517,6 +3782,17 @@ impl HubDirectory for HubDirectories {
             Self::Postgres(inner) => inner.append_decided_events(events).await,
             #[cfg(feature = "neo4j")]
             Self::Neo4j(inner) => inner.append_decided_events(events).await,
+        }
+    }
+
+    async fn append_decided_events_with_admin_effect(&self, events: &[NewDirectoryEvent], effect: &NewAdminOperationEffectReceiptV1) -> AdminEffectCommitV1<Vec<DirectoryEvent>> {
+        match self {
+            #[cfg(feature = "sqlite")]
+            Self::Sqlite(inner) => inner.append_decided_events_with_admin_effect(events, effect).await,
+            #[cfg(feature = "postgres")]
+            Self::Postgres(inner) => inner.append_decided_events_with_admin_effect(events, effect).await,
+            #[cfg(feature = "neo4j")]
+            Self::Neo4j(inner) => inner.append_decided_events_with_admin_effect(events, effect).await,
         }
     }
 
@@ -4956,6 +5232,29 @@ mod tests {
         std::fs::remove_dir(&root).expect("remove invite test directory");
     }
 
+    struct DirectoryRebuildWriterProbe {
+        connection: std::sync::Mutex<rusqlite::Connection>,
+        excluded: AtomicBool,
+    }
+
+    impl ProjectionRebuildControl for DirectoryRebuildWriterProbe {
+        fn is_cancelled(&self) -> bool {
+            false
+        }
+
+        fn report(&self, progress: ProjectionRebuildProgress) {
+            if progress.completed_events != 0 {
+                return;
+            }
+            let connection = self.connection.lock().unwrap();
+            let result = connection.execute_batch("BEGIN IMMEDIATE");
+            self.excluded.store(matches!(&result, Err(rusqlite::Error::SqliteFailure(error, _)) if matches!(error.code, rusqlite::ErrorCode::DatabaseBusy | rusqlite::ErrorCode::DatabaseLocked)), Ordering::SeqCst);
+            if result.is_ok() {
+                connection.execute_batch("ROLLBACK").unwrap();
+            }
+        }
+    }
+
     /// 🏛️ Independent service writers cannot retain or restore an Author after the archive event.
     #[tokio::test]
     async fn invite_archive_projection_serializes_independent_service_decisions() {
@@ -5021,7 +5320,12 @@ mod tests {
             let events = directory.events_since(0, DIRECTORY_EVENT_READ_MAX).await.unwrap();
             let folded = events.iter().fold(directory::os_directory::DirectoryReadModel::default(), directory::os_directory::fold);
             assert!(folded.spaces[&space].members.iter().all(|member| member.role == DirectorySpaceRole::Spectator));
-            directory.rebuild_projections().await.unwrap();
+            let probe_connection = rusqlite::Connection::open(&path).unwrap();
+            probe_connection.busy_timeout(std::time::Duration::ZERO).unwrap();
+            let probe = DirectoryRebuildWriterProbe { connection: std::sync::Mutex::new(probe_connection), excluded: AtomicBool::new(false) };
+            directory.rebuild_projections_controlled(&probe).await.unwrap();
+            assert_eq!(probe.excluded.load(Ordering::SeqCst), row["rebuildWriterExcluded"].as_bool().unwrap(), "rebuild owns backend writer before counting events");
+            drop(probe);
             assert_eq!(directory.get_role(&space, &member.id).await.unwrap(), Some(SpaceRole::Spectator));
             eprintln!("[DEBUG] independent directory archive case={} accepted={} role=spectator rebuilt=1 connections=2", row["name"], result.is_ok());
             drop(first);

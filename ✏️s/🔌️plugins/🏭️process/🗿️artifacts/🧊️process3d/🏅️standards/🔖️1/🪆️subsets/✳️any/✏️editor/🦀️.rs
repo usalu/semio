@@ -26,10 +26,9 @@ use semio_framework::{DslValue, InteractiveJobClassification, ToolExecutionContr
 use semio_framework_job::InteractiveJobCloseStep;
 use semio_framework_plugin::retained_command::{ArtifactCommandWork, ArtifactCommandWorkStep, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
 use semio_framework_plugin::{
-    ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, AppActionRegistry, AppDefinition, AppOperationContext, ArtifactEditor, ArtifactKindSpec, ArtifactOwnedToolJobFactory, ArtifactOwnedToolJobRequest,
+    ActionArgDef, ActionArgOption, ActionDefinition, ActionKind, AppActionRegistry, AppDefinition, AppOperationContext, ArtifactEditor, ArtifactKindSpec, ArtifactOwnedToolJobFactory, ArtifactOwnedToolJobRequest,
     ArtifactToolFactoryRegistry, ArtifactView, CommandDefinition, ConfigView, ContextMenuItemSpec, ContextMenuRequest, Dialect, DraftView, Editor, EditorApp, Emit, Fault, FaultCode, FaultOrigin, GranularityDefinition, HierarchyProvider, HoverSpec,
-    InteractionDefinition, InteractionRef, Label, LocalizedLabel, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, Menu, MergeMode, NoDraft, NoDraftMutation, OsMediaCapability, SelectionMethod, SelectionMode, SelectionSpec, UiNode,
-    UiTreeItemNode, UtilityCategory, UtilityDefinition, WindowMeasure,
+    InteractionDefinition, InteractionRef, Label, LocalizedLabel, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, Menu, MergeMode, NoDraft, NoDraftMutation, OsMediaCapability, SelectionMethod, SelectionMode, SelectionSpec, UtilityCategory, UtilityDefinition, WindowMeasure,
 };
 use std::collections::HashMap;
 use store::ArtifactPack;
@@ -1667,7 +1666,7 @@ impl ArtifactEditor for Process3dPlayApp {
     /// `removeSelectedStep`; it is itself a no-op via `remove_selected_step::handle` when nothing in
     /// the `"geometry"` domain is selected.
     fn context_menu(_request: &ContextMenuRequest, _doc: &ArtifactView<'_, Process3dSnapshot>, _cfg: &ConfigView<'_, Process3dConfig>, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
-        { Menu::of(registry).action("addStep").destructive("removeSelectedStep").separator().action("undo").action("redo").build() }
+        Menu::of(registry).action("addStep").destructive("removeSelectedStep").separator().action("undo").action("redo").build()
     }
 }
 //#endregion 🔖️Process3dPlayApp

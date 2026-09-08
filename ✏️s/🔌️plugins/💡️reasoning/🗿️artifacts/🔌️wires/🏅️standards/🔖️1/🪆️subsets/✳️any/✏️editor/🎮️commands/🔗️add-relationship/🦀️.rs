@@ -46,8 +46,8 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn add_relationship_appends_edge_and_selects() {
-        let mut app = new_app();
-        dispatch(&mut app, WiresCommand::AddRelationship(AddRelationship { kind: "owns".into() }));
+        let mut app = new_app().await;
+        dispatch(&mut app, WiresCommand::AddRelationship(AddRelationship { kind: "owns".into() })).await;
         let projection = app.snapshot().expect("snapshot");
         assert_eq!(fixture_edges(&crate::artifacts::wires::wires_working_board(&projection)).len(), 1);
     }

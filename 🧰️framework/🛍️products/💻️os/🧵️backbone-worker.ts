@@ -93,6 +93,7 @@ import type {
 } from "./🔨️modules/📇️directory/🧬️schema/🟦️.ts";
 import {
   DOCUMENT_BROWSER_ACTOR_MAX_BYTES,
+  DOCUMENT_EXECUTION_PROTOCOL_APP_CHANNEL_VERSION_V1,
   GIS_MAP_INFERENCE_RESPONSE_MAX_BYTES,
   gisMapInferenceCodeFromStatusV1,
   gisMapInferencePortTerminalV1,
@@ -126,7 +127,7 @@ import {
 import { blake3Hex } from "@semio-tech/framework";
 /** 🎚️ config-lane attach (contract freeze §4) — `OpeningPreferences` is a kernel type (domain-neutral
  * framework), never redefined here; see this file's `🔖️ConfigLane` region. */
-import type { OpeningPreferences } from "@semio-tech/framework";
+import type { OpeningPreferences, UiNodeRecord } from "@semio-tech/framework";
 /** 🧬️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (web-backbone): the shared event-driven primitives
  * from packet `web-glue` — full-jitter reconnect backoff, single-flight revalidation, and a fetch
  * with a composed timeout. Reused rather than reimplemented (see this file's `🔖️Folder`/`🔖️Hub`
@@ -168,9 +169,13 @@ async function ensureRustHost(): Promise<RustWorkerHost | null> {
 const rustHostPromise = ensureRustHost();
 
 type DocumentExecutionOwner = "typescript" | "rust";
-type DocumentExecutionOwnerEntry = Readonly<{ owner: DocumentExecutionOwner; documentId: string; spaceId?: string }>;
+type DocumentExecutionOwnerEntry = Readonly<{ owner: DocumentExecutionOwner; documentId: string; clientInstanceId: string; spaceId?: string }>;
 
 const documentExecutionOwners = new Map<string, DocumentExecutionOwnerEntry>();
+
+function validDocumentOpeningAttemptId(value: unknown): value is string {
+  return typeof value === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/u.test(value);
+}
 
 function documentRuntimeKeyForConfig(config: ArtifactActorConfig): string {
   const hub = hubBinding(config);
@@ -198,27 +203,33 @@ function dispatchBackboneWorkerRequest(request: BackboneWorkerRequest, host: Rus
     return;
   }
   if (request.kind === "open") {
+    const clientInstanceId = request.clientInstanceId ?? crypto.randomUUID();
+    if (!validDocumentOpeningAttemptId(clientInstanceId)) return;
     const next: DocumentExecutionOwner = hubBinding(request) === null && host !== null ? "rust" : "typescript";
     const runtimeKey = documentRuntimeKeyForConfig(request);
     const previous = documentExecutionOwners.get(runtimeKey);
-    if (previous !== undefined && previous.owner !== next) {
-      const close: BackboneWorkerRequest = { kind: "close", documentId: request.documentId, ...(previous.spaceId === undefined ? {} : { spaceId: previous.spaceId }) };
+    if (previous?.clientInstanceId === clientInstanceId) return;
+    if (previous !== undefined) {
+      const close: BackboneWorkerRequest = { kind: "close", documentId: request.documentId, clientInstanceId: previous.clientInstanceId, ...(previous.spaceId === undefined ? {} : { spaceId: previous.spaceId }) };
       if (previous.owner === "typescript") typescriptDispatch(close);
       else rustDispatch(close);
     }
     const hub = hubBinding(request);
-    documentExecutionOwners.set(runtimeKey, { owner: next, documentId: request.documentId, ...(hub === null ? {} : { spaceId: hub.spaceId }) });
-    if (next === "typescript") typescriptDispatch(request);
-    else rustDispatch(request);
+    const openedRequest: BackboneWorkerRequest = { ...request, clientInstanceId };
+    documentExecutionOwners.set(runtimeKey, { owner: next, documentId: request.documentId, clientInstanceId, ...(hub === null ? {} : { spaceId: hub.spaceId }) });
+    if (next === "typescript") typescriptDispatch(openedRequest);
+    else rustDispatch(openedRequest);
     return;
   }
   if (request.kind === "send" || request.kind === "close") {
     const runtimeKey = ownedDocumentRuntimeKey(request.documentId, request.spaceId);
     if (runtimeKey === null) return;
-    const owner = documentExecutionOwners.get(runtimeKey)?.owner ?? (host === null ? "typescript" : "rust");
+    const current = documentExecutionOwners.get(runtimeKey);
+    if (current !== undefined && request.clientInstanceId !== current.clientInstanceId) return;
+    const owner = current?.owner ?? (host === null ? "typescript" : "rust");
     if (owner === "typescript") typescriptDispatch(request);
     else rustDispatch(request);
-    if (request.kind === "close") documentExecutionOwners.delete(runtimeKey);
+    if (request.kind === "close" && current !== undefined && request.clientInstanceId === current.clientInstanceId) documentExecutionOwners.delete(runtimeKey);
     return;
   }
   if (host === null) typescriptDispatch(request);
@@ -435,13 +446,14 @@ function emitEvent(state: ArtifactState, event: ArtifactEvent): void {
     post({
       kind: "event",
       documentId: state.config.documentId,
+      clientInstanceId: state.openClientInstanceId,
       event: verified ? event : { ...event, peers: [] },
       ...(scope === undefined ? {} : { scope }),
       ...(verified ? { verifiedSurfaceId: authority.verifiedSurfaceId } : {}),
     });
     return;
   }
-  post({ kind: "event", documentId: state.config.documentId, event, ...(scope === undefined ? {} : { scope }) });
+  post({ kind: "event", documentId: state.config.documentId, clientInstanceId: state.openClientInstanceId, event, ...(scope === undefined ? {} : { scope }) });
 }
 
 const SOCKET_GRANT_REQUEST_TIMEOUT_MS = 10_000;
@@ -712,7 +724,7 @@ class VerifiedColdDocumentPair {
         head_edit_ordinal: Number(this.frontier.headEditOrdinal),
         head_edit_id: this.frontier.headEditId,
         last_commit_seq: Number(this.frontier.lastCommitSeq),
-        chain_hash: this.frontier.chainSha256,
+        chain_hash: Array.from(this.frontier.chainSha256),
       })
     )
       throw new Error("cold document pair: stale owner");
@@ -909,7 +921,13 @@ function executionTargetHex(bytes: Uint8Array): string {
 }
 
 async function executionTargetSha256Hex(bytes: Uint8Array): Promise<string> {
-  return executionTargetHex(new Uint8Array(await crypto.subtle.digest("SHA-256", bytes)));
+  return executionTargetHex(new Uint8Array(await crypto.subtle.digest("SHA-256", ownedArrayBuffer(bytes))));
+}
+
+function ownedArrayBuffer(bytes: Uint8Array): ArrayBuffer {
+  const owned = new Uint8Array(bytes.byteLength);
+  owned.set(bytes);
+  return owned.buffer;
 }
 
 function executionTargetAssetPath(spaceId: string, documentId: string, asset: DocumentExecutionTargetAssetV1): string {
@@ -938,13 +956,17 @@ let executionTargetStatusObserver: ((status: Extract<BackboneWorkerResponse, { k
 
 function emitExecutionTargetStatus(state: ArtifactState, binding: Extract<PersistenceBinding, { kind: "hub" }>, code: DocumentExecutionTargetStatusCodeV1, progress?: DocumentExecutionTargetProgressV1): void {
   const scope = { spaceId: binding.spaceId, documentId: state.config.documentId };
-  const status: Extract<BackboneWorkerResponse, { kind: "execution-target-status" }> = { kind: "execution-target-status", documentId: state.config.documentId, spaceId: binding.spaceId, scope, code, ...(progress ? { progress } : {}) };
+  const status: Extract<BackboneWorkerResponse, { kind: "execution-target-status" }> = { kind: "execution-target-status", documentId: state.config.documentId, clientInstanceId: state.openClientInstanceId, spaceId: binding.spaceId, scope, code, ...(progress ? { progress } : {}) };
   executionTargetStatusObserver?.(status);
   post(status);
 }
 
 type ExecutionTargetReadControl = Readonly<{ signal: AbortSignal; deadlineAtMs: number; assertCurrent(): void }>;
 type ExecutionTargetBodyResponse = FetchTimeoutResponse & { readonly body?: ReadableStream<Uint8Array> | null };
+
+function isExecutionTargetByteChunk(value: unknown): value is Uint8Array {
+  return ArrayBuffer.isView(value) && Object.prototype.toString.call(value) === "[object Uint8Array]";
+}
 
 function assertExecutionTargetRead(control: ExecutionTargetReadControl): void {
   if (control.signal.aborted || !Number.isSafeInteger(control.deadlineAtMs) || Date.now() >= control.deadlineAtMs) throw new Error("document execution target: cancelled or expired");
@@ -993,7 +1015,7 @@ async function readBoundedExecutionTargetBody(response: FetchTimeoutResponse, ex
       const slot: { state: "pending" | "claimed" | "abandoned"; result?: ReadableStreamReadResult<Uint8Array> } = { state: "pending" };
       const pending = reader.read().then((result) => {
         slot.result = result;
-        if (slot.state === "abandoned" && result.value instanceof Uint8Array) result.value.fill(0);
+        if (slot.state === "abandoned" && isExecutionTargetByteChunk(result.value)) result.value.fill(0);
         return result;
       });
       let result: ReadableStreamReadResult<Uint8Array>;
@@ -1002,13 +1024,13 @@ async function readBoundedExecutionTargetBody(response: FetchTimeoutResponse, ex
         slot.state = "claimed";
       } catch (error) {
         slot.state = "abandoned";
-        if (slot.result?.value instanceof Uint8Array) slot.result.value.fill(0);
+        if (isExecutionTargetByteChunk(slot.result?.value)) slot.result.value.fill(0);
         throw error;
       }
       try {
         assertExecutionTargetRead(control);
         if (result.done) break;
-        if (!(result.value instanceof Uint8Array) || result.value.byteLength > bytes.length - received) throw new Error("document execution target: invalid body");
+        if (!isExecutionTargetByteChunk(result.value) || result.value.byteLength > bytes.length - received) throw new Error("document execution target: invalid body");
         bytes.set(result.value, received);
         received += result.value.byteLength;
         if (received - announced >= EXECUTION_TARGET_PROGRESS_UNIT_BYTES) {
@@ -1016,7 +1038,7 @@ async function readBoundedExecutionTargetBody(response: FetchTimeoutResponse, ex
           report(received, declared ?? maximum);
         }
       } finally {
-        if (result.value instanceof Uint8Array) result.value.fill(0);
+        if (isExecutionTargetByteChunk(result.value)) result.value.fill(0);
       }
     }
     assertExecutionTargetRead(control);
@@ -1073,6 +1095,7 @@ function parseVerifiedPackageDescriptorV1(bytes: Uint8Array, fields: DocumentExe
     return value as Record<string, PackValue>;
   };
   const descriptor = record(decoded);
+  const executionProtocol = record(descriptor.executionProtocol);
   const manifest = record(descriptor.manifest);
   const hashes = record(descriptor.hashes);
   const apps = Array.isArray(manifest.apps) ? (manifest.apps as readonly PackValue[]).map(record) : [];
@@ -1084,6 +1107,9 @@ function parseVerifiedPackageDescriptorV1(bytes: Uint8Array, fields: DocumentExe
     packUIntSafeOrNull(descriptor.descriptorVersion) !== 1 ||
     descriptor.packageId !== fields.package.packageId ||
     descriptor.execution !== "isolated" ||
+    Object.keys(executionProtocol).length !== 1 ||
+    packUIntSafeOrNull(executionProtocol.appChannelVersion) !== DOCUMENT_EXECUTION_PROTOCOL_APP_CHANNEL_VERSION_V1 ||
+    packUIntSafeOrNull(executionProtocol.appChannelVersion) !== fields.package.executionProtocol.appChannelVersion ||
     manifest.pluginId !== fields.package.pluginId ||
     manifest.version !== fields.package.version ||
     hashes.wasmSha256 !== fields.component.sha256 ||
@@ -1179,6 +1205,7 @@ type DocumentBrowserActorChild = Awaited<ReturnType<typeof reserveBrowserActorCh
 type DocumentBrowserActorOpen = Readonly<{ binding: Extract<PersistenceBinding, { kind: "hub" }>; intent: DocumentOpenIntentV1; assertCurrent(): void }>;
 type DocumentBrowserActorGrant = Readonly<{ actorId: string; reserveBeforeMs: number; retireAtMs: number }>;
 let documentBrowserActorGeneration = 0n;
+const DOCUMENT_BROWSER_ACTOR_RENDER_TURN_LIMIT = 256;
 
 function browserActorRecord(value: BrowserActorChildValue, code: string): Record<string, BrowserActorChildValue> {
   if (!value || typeof value !== "object" || Array.isArray(value) || value instanceof Uint8Array || value instanceof ArrayBuffer) throw new Error(code);
@@ -1396,8 +1423,8 @@ class DocumentBrowserActorReservation {
           if (pageIndex + 1 === owner.pageCount) {
             owner.assertApplied(status, lifetime);
             await this.reconcileUiPatches(result, child, assertCurrent);
-          }
-          else {
+            await this.renderSurface(child, assertCurrent);
+          } else {
             const expected = { lifetime, transferGeneration: owner.transferGeneration, pageIndex, pageCount: owner.pageCount };
             if (status.kind !== "pageAccepted" || !coldDocumentPairCursorEquals(status.cursor, expected)) throw new Error("document browser actor: invalid page receipt");
             if (this.captureUiPatch(result, lifetime) !== null) throw new Error("document browser actor: patch before cold pair applied");
@@ -1417,6 +1444,26 @@ class DocumentBrowserActorReservation {
     return this.coldTransfer;
   }
 
+  private async renderSurface(child: DocumentBrowserActorChild, assertCurrent: () => void): Promise<void> {
+    const lifetime = this.lifetime;
+    if (lifetime === null) throw new Error("document browser actor: missing render lifetime");
+    const surface = { instance: lifetime.instanceId, surface: this.lease.fields().surface.windowKindId };
+    for (let turn = 0; turn < DOCUMENT_BROWSER_ACTOR_RENDER_TURN_LIMIT; turn += 1) {
+      assertCurrent();
+      let result: BrowserActorChildValue | null = await child.invoke(["reactor", "poll"], [[turn === 0 ? { tag: "surface-visible", val: { surface } } : { tag: "wake" }], null, null, browserActorTurnBudget()]);
+      try {
+        assertCurrent();
+        if (browserActorColdStatus(result).kind !== "idle") throw new Error("document browser actor: unexpected cold ingress during render");
+        const owned = result;
+        result = null;
+        if (!(await this.reconcileUiPatches(owned, child, assertCurrent))) return;
+      } finally {
+        if (result !== null) wipeBrowserActorValue(result);
+      }
+    }
+    throw new Error("document browser actor: render turn limit");
+  }
+
   private captureUiPatch(value: BrowserActorChildValue, lifetime: ActorInstanceLifetime) {
     const result = browserActorTurnResult(value),
       fields = this.lease.fields();
@@ -1427,14 +1474,17 @@ class DocumentBrowserActorReservation {
   private awaitUiPatchResult(offer: BrowserActorUiPatchOfferV1): Promise<BrowserActorUiPatchResultV1> {
     if (this.pendingUiPatch !== null) return Promise.reject(new Error("document browser actor: patch result already pending"));
     return new Promise((resolve, reject) => {
-      const timer = setTimeout(() => {
-        if (this.pendingUiPatch?.offer !== offer) return;
-        this.pendingUiPatch = null;
-        reject(new Error("document browser actor: patch result deadline"));
-        this.close();
-      }, Math.min(15_000, BROWSER_ACTOR_CHILD_LIMITS.invokeMs));
+      const timer = setTimeout(
+        () => {
+          if (this.pendingUiPatch?.offer !== offer) return;
+          this.pendingUiPatch = null;
+          reject(new Error("document browser actor: patch result deadline"));
+          this.close();
+        },
+        Math.min(15_000, BROWSER_ACTOR_CHILD_LIMITS.invokeMs),
+      );
       this.pendingUiPatch = { offer, resolve, reject, timer };
-      post(offer);
+      post({ ...offer, clientInstanceId: this.state.openClientInstanceId });
     });
   }
 
@@ -1446,14 +1496,14 @@ class DocumentBrowserActorReservation {
     pending.resolve(result);
   }
 
-  private async reconcileUiPatches(initial: BrowserActorChildValue, child: DocumentBrowserActorChild, assertCurrent: () => void): Promise<void> {
+  private async reconcileUiPatches(initial: BrowserActorChildValue, child: DocumentBrowserActorChild, assertCurrent: () => void): Promise<boolean> {
     const lifetime = this.lifetime;
     if (lifetime === null) throw new Error("document browser actor: missing patch lifetime");
     let value: BrowserActorChildValue | null = initial;
     try {
       for (let patchCount = 0; patchCount < 8; patchCount += 1) {
         const captured = this.captureUiPatch(value, lifetime);
-        if (captured === null) return;
+        if (captured === null) return browserActorRecord(browserActorTurnResult(value).status, "document browser actor: invalid render status").tag === "more-work";
         const fields = this.lease.fields();
         const offer: BrowserActorUiPatchOfferV1 = {
           kind: "browser-actor-ui-patch",
@@ -1783,7 +1833,7 @@ function hubBinding(config: ArtifactActorConfig): Extract<PersistenceBinding, { 
 
 //#region 🔖️ConfigLane
 /** 🎚️ Canonical `documentId`/`schema` for the OS-wide `os.config.opening` facet (contract freeze
- * §4 of `.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET/`) — one
+ * §4 of `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET/`) — one
  * singleton instance per install, so the schema id doubles as its document id. */
 export const OPENING_PREFERENCES_SCHEMA = "os.config.opening";
 
@@ -1872,7 +1922,7 @@ function nextWireTimestamp(state: ArtifactState): WireMutationEnvelope["timestam
  * doc — the real content-addressed check happens Rust-side via `semio_framework_hash::hash_bytes`
  * once the wasm actor is available), so a real blake3 dependency isn't worth adding here just to
  * fill an otherwise-unused field. */
-function placeholderPayloadHash(payload: PackValue): string {
+function placeholderPayloadHash(payload: unknown): string {
   const packed = encodePackValue(payload);
   let hash = 0x811c9dc5;
   for (let index = 0; index < packed.length; index++) {
@@ -1884,7 +1934,7 @@ function placeholderPayloadHash(payload: PackValue): string {
 
 /** 🎞️ `store::pack_rt` wire bytes for {@link toWireEnvelope}'s diff/inverse payloads — the TS twin
  * of the Rust actor's `encode_wire_value` call in `to_wire_envelope`. */
-function encodePackPayload(value: PackValue): number[] {
+function encodePackPayload(value: unknown): number[] {
   return Array.from(encodePackValue(value));
 }
 
@@ -2024,7 +2074,7 @@ async function reserveFolderCanonicalBootstrapMirror(state: ArtifactState, bindi
 async function stageFolderCanonicalBootstrapMirror(state: ArtifactState, owner: FolderCanonicalBootstrapMirrorOwner, pack: Uint8Array, spr: Uint8Array): Promise<void> {
   const response = await fetchWithTimeout(
     folderCanonicalBootstrapMirrorUrl(owner, "stage"),
-    { method: "PUT", headers: { ...folderCanonicalBootstrapMirrorHeaders(owner), "content-type": "application/octet-stream" }, body: encodeDocumentPackBytes(pack, spr) },
+    { method: "PUT", headers: { ...folderCanonicalBootstrapMirrorHeaders(owner), "content-type": "application/octet-stream" }, body: ownedArrayBuffer(encodeDocumentPackBytes(pack, spr)) },
     { timeoutMs: FOLDER_FETCH_TIMEOUT_MS, signal: state.docAbort.signal },
   );
   if (!response.ok) throw new Error(`folder canonical bootstrap stage failed (${response.status})`);
@@ -2391,8 +2441,10 @@ function handleAck(state: ArtifactState, batchId: number, stages: readonly WireA
   }
 }
 
-function equalByteArrays(left: readonly number[], right: readonly number[]): boolean {
-  return left.length === right.length && left.every((byte, index) => byte === right[index]);
+function equalByteArrays(left: ArrayLike<number>, right: ArrayLike<number>): boolean {
+  if (left.length !== right.length) return false;
+  for (let index = 0; index < left.length; index++) if (left[index] !== right[index]) return false;
+  return true;
 }
 
 function equalFrontiers(left: WireFrontierSummary, right: WireFrontierSummary): boolean {
@@ -2423,6 +2475,7 @@ function emitBootstrapProgress(state: ArtifactState, progress: ArtifactBootstrap
   post({
     kind: "artifact-bootstrap-progress",
     documentId: state.config.documentId,
+    clientInstanceId: state.openClientInstanceId,
     ...(scope === undefined ? {} : { scope }),
     receivedBytes: progress.receivedBytes,
     totalBytes: progress.totalBytes,
@@ -2541,7 +2594,7 @@ function artifactBootstrapFailure(state: ArtifactState, error: unknown): Extract
     normalized.includes("before artifact");
   const code = cancelled ? "cancelled" : deadline ? "deadline-exceeded" : invalid ? "invalid-bootstrap" : "transport-failure";
   const scope = artifactScope(state);
-  return { kind: "artifact-bootstrap-failed", documentId: state.config.documentId, ...(scope === undefined ? {} : { scope }), code, message, retryable: code !== "invalid-bootstrap" };
+  return { kind: "artifact-bootstrap-failed", documentId: state.config.documentId, clientInstanceId: state.openClientInstanceId, ...(scope === undefined ? {} : { scope }), code, message, retryable: code !== "invalid-bootstrap" };
 }
 
 function rejectArtifactBootstrap(state: ArtifactState, error: unknown, owner = state.artifactBootstrapOwner): void {
@@ -2569,7 +2622,7 @@ async function requireArtifactRebootstrap(state: ArtifactState): Promise<void> {
   state.artifactBootstrapProgress = [];
   setRemote(state, { kind: "connecting" });
   const scope = artifactScope(state);
-  post({ kind: "artifact-rebootstrap-required", documentId: state.config.documentId, ...(scope === undefined ? {} : { scope }), message: "rebootstrap-required", retryable: true });
+  post({ kind: "artifact-rebootstrap-required", documentId: state.config.documentId, clientInstanceId: state.openClientInstanceId, ...(scope === undefined ? {} : { scope }), message: "rebootstrap-required", retryable: true });
   state.socket?.close();
 }
 
@@ -2854,7 +2907,7 @@ async function handleHubFrame(state: ArtifactState, frame: ServerFrame, presence
       state.pendingSocketActorId = null;
       state.presenceAuthority = null;
       const scope = artifactScope(state);
-      post({ kind: "socket-actor-failed", documentId: state.config.documentId, ...(scope === undefined ? {} : { scope }), code: "session-mismatch" });
+      post({ kind: "socket-actor-failed", documentId: state.config.documentId, clientInstanceId: state.openClientInstanceId, ...(scope === undefined ? {} : { scope }), code: "session-mismatch" });
       dropDocumentExecutionTargetLease(state);
       state.socket?.close(1008, "socket actor mismatch");
       return;
@@ -2866,7 +2919,7 @@ async function handleHubFrame(state: ArtifactState, frame: ServerFrame, presence
     state.presenceAuthority = presenceCandidate?.socket === state.socket ? presenceCandidate : null;
     if (state.outbox.length > 0) relayMutationsToHub(state, state.outbox.splice(0));
     const scope = artifactScope(state);
-    post({ kind: "socket-actor", documentId: state.config.documentId, ...(scope === undefined ? {} : { scope }), actorId: expectedActor });
+    post({ kind: "socket-actor", documentId: state.config.documentId, clientInstanceId: state.openClientInstanceId, ...(scope === undefined ? {} : { scope }), actorId: expectedActor });
     emitEvent(state, { kind: "session", actor: frame.Session.actor, color: frame.Session.color });
     if (sourceSocket && state.executionTargetLease) void activateDocumentBrowserActorAfterSession(state, sourceSocket);
     return;
@@ -3986,15 +4039,16 @@ void putCachedBlob;
 //#endregion 🔖️BlobCache
 
 //#region 🔖️Lifecycle
-function openArtifact(config: ArtifactActorConfig): void {
+function openArtifact(request: ArtifactActorConfig & { readonly clientInstanceId?: string }): void {
+  const config: ArtifactActorConfig = request;
   const hub = hubBinding(config);
   const runtimeKey = documentRuntimeKeyForConfig(config);
-  closeArtifactRuntime(runtimeKey);
+  retireArtifactBeforeReplacement(runtimeKey);
   const channel = new BroadcastChannel(`semio-doc-${runtimeKey}`);
   const state: ArtifactState = {
     runtimeKey,
     config,
-    openClientInstanceId: crypto.randomUUID(),
+    openClientInstanceId: request.clientInstanceId ?? crypto.randomUUID(),
     actor: hub === null ? config.actor : "",
     hubActorReady: hub === null,
     pendingSocketActorId: null,
@@ -4043,13 +4097,19 @@ function openArtifact(config: ArtifactActorConfig): void {
     if (config.watchExternal !== false) watchFolder(state, folder);
     else void state.revalidateFolder();
   }
-  if (hub?.installedTarget === undefined && socketGrantTestIssue === null) {
+  if (hub && hub.requestedSurfaceId === undefined && hub.installedTarget === undefined && socketGrantTestIssue === null) {
     const scope = artifactScope(state);
-    post({ kind: "socket-actor-failed", documentId: config.documentId, ...(scope === undefined ? {} : { scope }), code: "installed-target-unavailable" });
+    post({ kind: "socket-actor-failed", documentId: config.documentId, clientInstanceId: state.openClientInstanceId, ...(scope === undefined ? {} : { scope }), code: "installed-target-unavailable" });
   } else if (hub) {
     connectHub(state, hub);
   }
   emitEvent(state, { kind: "status", ...state.status });
+}
+
+function retireArtifactBeforeReplacement(runtimeKey: string): void {
+  if (!artifacts.has(runtimeKey)) return;
+  closeArtifactRuntime(runtimeKey);
+  if (artifacts.has(runtimeKey)) throw new Error("artifact replacement: prior owner did not retire");
 }
 
 function closeArtifactRuntime(runtimeKey: string): void {
@@ -4071,9 +4131,12 @@ function closeArtifactRuntime(runtimeKey: string): void {
   artifacts.delete(runtimeKey);
 }
 
-function closeArtifact(documentId: string, spaceId?: string): void {
+function closeArtifact(documentId: string, spaceId?: string, clientInstanceId?: string): void {
   const runtimeKey = artifactRuntimeKey(documentId, spaceId);
-  if (runtimeKey !== null) closeArtifactRuntime(runtimeKey);
+  if (runtimeKey === null) return;
+  const state = artifacts.get(runtimeKey);
+  if (state !== undefined && clientInstanceId !== undefined && state.openClientInstanceId !== clientInstanceId) return;
+  closeArtifactRuntime(runtimeKey);
 }
 
 async function handleLocalMsg(state: ArtifactState, message: ArtifactActorMsg): Promise<void> {
@@ -4139,11 +4202,11 @@ function handleTsRequest(request: BackboneWorkerRequest): void {
       openArtifact(request);
       break;
     case "close":
-      closeArtifact(request.documentId, request.spaceId);
+      closeArtifact(request.documentId, request.spaceId, request.clientInstanceId);
       break;
     case "send": {
       const state = artifactState(request.documentId, request.spaceId);
-      if (state) void handleLocalMsg(state, request.message);
+      if (state && request.clientInstanceId === state.openClientInstanceId) void handleLocalMsg(state, request.message);
       break;
     }
     case "directory-open":
@@ -4214,7 +4277,7 @@ function handleTsRequest(request: BackboneWorkerRequest): void {
       break;
     case "browser-actor-ui-patch-result": {
       const state = artifactState(request.scope.documentId, request.scope.spaceId);
-      state?.browserActorReservation?.settleUiPatch(request);
+      if (state?.openClientInstanceId === request.clientInstanceId) state.browserActorReservation?.settleUiPatch(request);
       break;
     }
   }
@@ -4457,12 +4520,22 @@ if (import.meta.vitest) {
     // them themselves. Overwrites whatever the caller handed in, and derives `surface` from the
     // document's own hub binding (`null`/absent for a folder-only document).
     it("stampSession fills color/surface from actor state, overwriting whatever the caller set", () => {
-      const installedTarget = {
+      const installedTarget = parseDocumentExecutionTargetLeaseFieldsV1({
+        schema: "semio.os.document-execution-target-lease/v1",
+        version: 1,
+        scope: { spaceId: "studio-1", documentId: "doc-1" },
+        descriptorDigestV1: "5".repeat(64),
+        catalog: { generationId: "6".repeat(64) },
         package: { pluginId: "s.test", packageId: "s.test.codec", version: "1", componentSha256: "1".repeat(64), componentBlake3: "2".repeat(64), descriptorByteSha256: "3".repeat(64) },
+        component: { sha256: "1".repeat(64), blake3: "2".repeat(64), byteLength: 1 },
+        descriptor: { sha256: "3".repeat(64), byteLength: 1 },
+        browserActor: { kind: "none" },
         artifact: { kind: "test", schema: "demo/v1", packSchemaHash: "4".repeat(64) },
         parentDialect: { artifactKind: "test", standard: "1", subset: "*" },
         surface: { surfaceId: "s.space.home@1/*#editor", appId: "app.test", windowKindId: "window.document", role: "editor" as const, rendererTarget: "react" as const },
-      };
+        grant: { read: true, write: true, observe: true },
+        revalidation: { directoryRevision: 1, membershipGeneration: 1, sessionGeneration: 1 },
+      });
       const hubConfig: ArtifactActorConfig = { documentId: "doc-1", schema: "demo/v1", bindings: [{ kind: "hub", baseUrl: "http://hub.test", spaceId: "studio-1", installedTarget }], actor: "actor-1" };
       const hubState = { config: hubConfig, sessionColor: 7 } as unknown as ArtifactState;
       const peer: ArtifactPresencePeer = { actor: "actor-1", connectedAtMs: 1000, color: 99, surface: "shell-should-never-set-this", views: [] };
@@ -4603,7 +4676,7 @@ if (import.meta.vitest) {
         state.socket = socket;
         let successor: ArtifactBootstrapAssembler | undefined;
         const returned: { pack: Uint8Array; spr: Uint8Array }[] = [];
-        const finish = vi.spyOn(ArtifactBootstrapAssembler.prototype, "finish").mockImplementation(async function (done, control) {
+        const finish = vi.spyOn(ArtifactBootstrapAssembler.prototype, "finish").mockImplementation(async function (this: ArtifactBootstrapAssembler, done, control) {
           const pair = await originalFinish.call(this, done, control);
           returned.push(pair);
           queueMicrotask(() => {
@@ -4719,6 +4792,112 @@ if (import.meta.vitest) {
       const diagnostic = artifactBootstrapFailure(state, new Error("€".repeat(4_096)));
       expect(new TextEncoder().encode(diagnostic.message).byteLength).toBeLessThanOrEqual(ARTIFACT_BOOTSTRAP_DIAGNOSTIC_MAX_BYTES);
       closeArtifact(state.config.documentId);
+    });
+
+    it("browser document peers refetch the same exact pair after scoped rebootstrap", async () => {
+      const { readFile } = await import("node:fs/promises");
+      type GisMapPeerRebootstrapFixtureV1 = Readonly<{
+        schema: "semio.os.gis-map-peer-rebootstrap/v1";
+        scope: DocumentScope;
+        clients: readonly Readonly<{ clientInstanceId: string }>[];
+        published: Readonly<{
+          checkpointId: string;
+          descriptorDigestV1: string;
+          aggregateSha256: string;
+          frontier: Readonly<{ documentId: string; headEditOrdinal: number; headEditId: string; lastCommitSeq: number; chainHash: readonly number[] }>;
+          scene: Readonly<{ revision: number; nodeKind: "tiled-map"; region: Readonly<{ id: string; kind: "inference-bounds" }> }>;
+        }>;
+        order: readonly string[];
+        sourceHostiles: readonly string[];
+        nonclaims: readonly string[];
+      }>;
+      const parsed: unknown = JSON.parse(await readFile(new URL("./🧫️fixtures/🗺️gis-map-peer-rebootstrap-v1/🔣️.json", import.meta.url), "utf8"));
+      const schema = JSON.parse(await readFile(new URL("./🧫️fixtures/🗺️gis-map-peer-rebootstrap-v1/🧬️.schema.json", import.meta.url), "utf8"));
+      const Ajv2020 = (await import("ajv/dist/2020.js")).default;
+      const validate = new Ajv2020({ strict: true }).compile<GisMapPeerRebootstrapFixtureV1>(schema);
+      expect(validate(parsed)).toBe(true);
+      if (!validate(parsed)) throw new Error("GIS Map peer rebootstrap fixture is invalid");
+      const corpus = parsed;
+      const fixture = await artifactBootstrapFixture();
+      const welcome = decodeFixtureFrame(fixture.wire.inlineWelcomeHex);
+      if (!("Welcome" in welcome) || typeof welcome.Welcome.bootstrap !== "object" || !("ArtifactBootstrap" in welcome.Welcome.bootstrap)) throw new Error("peer bootstrap fixture");
+      const bootstrap = welcome.Welcome.bootstrap.ArtifactBootstrap;
+      const { UiDocumentStore } = await import("./🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/📃️UiDocumentStore/🟦️.tsx");
+      const priorPost = workerPostTestSink;
+      const results: { clientInstanceId: string; pack: number[]; spr: number[]; frontier: WireFrontierSummary; node: unknown; closeCount: number }[] = [];
+      try {
+        for (const client of corpus.clients) {
+          const state = await installFixture(fixture, false);
+          artifacts.delete(state.runtimeKey);
+          const binding: Extract<PersistenceBinding, { kind: "hub" }> = { kind: "hub", baseUrl: "http://hub.test", spaceId: corpus.scope.spaceId, requestedSurfaceId: "s.gis.gismap@1/*/viewer" };
+          state.config = { ...state.config, documentId: corpus.scope.documentId, bindings: [binding] };
+          state.runtimeKey = documentRuntimeKeyForConfig(state.config);
+          state.openClientInstanceId = client.clientInstanceId;
+          artifacts.set(state.runtimeKey, state);
+          let closeCount = 0;
+          const staleSocket = { close: () => closeCount++ } as unknown as WebSocket;
+          state.socket = staleSocket;
+          const posted: BackboneWorkerResponse[] = [];
+          workerPostTestSink = (message) => posted.push(message);
+          await handleHubFrame(
+            state,
+            {
+              RebootstrapRequired: {
+                control: {
+                  space_id: corpus.scope.spaceId,
+                  document_id: corpus.scope.documentId,
+                  checkpoint_id: [...bytesFromHex(corpus.published.checkpointId)],
+                  descriptor_hash: [...bootstrap.descriptor_hash],
+                  baseline_frontier: { ...bootstrap.baseline_frontier, document_id: corpus.scope.documentId },
+                },
+              },
+            },
+            null,
+            staleSocket,
+          );
+          expect(state.currentPack).toBeNull();
+          expect(state.currentSpr).toBeNull();
+          expect(state.frontier).toBeNull();
+          expect(state.resumeToken).toBeNull();
+          expect(closeCount).toBe(1);
+          expect(posted.filter((message) => message.kind === "artifact-rebootstrap-required")).toEqual([
+            { kind: "artifact-rebootstrap-required", documentId: corpus.scope.documentId, clientInstanceId: client.clientInstanceId, scope: corpus.scope, message: "rebootstrap-required", retryable: true },
+          ]);
+          const freshSocket = { close: () => closeCount++ } as unknown as WebSocket;
+          state.socket = freshSocket;
+          await handleHubFrame(state, welcome, null, freshSocket);
+          const frontier = { ...fixtureRequiredFrontier(fixture), document_id: corpus.scope.documentId };
+          await handleHubFrame(state, { Commands: { envelopes: [], origin: state.config.actor, frontier } }, null, freshSocket);
+          expect(state.status.remote.kind).toBe("live");
+          const store = new UiDocumentStore("gis-map-window");
+          const node: UiNodeRecord = {
+            id: 0,
+            key: "map-root",
+            component: { type: "surface", kind: corpus.published.scene.nodeKind, docSchema: "tiled-map@1", doc: { bytes: Array.from(encodePackValue({ regions: [corpus.published.scene.region] })) }, bindings: [] },
+            layout: { kind: "leaf", width: "fill", height: "fill" },
+            style: { variant: "plain", size: "md", density: "standard", tone: "neutral", emphasis: "regular" },
+            activity: "idle",
+            disabled: false,
+            transition: null,
+            accessibility: { label: null, description: null, live: "off", shortcut: null, hidden: false },
+            bindings: [],
+            menu: null,
+            children: [],
+          };
+          expect(store.applyPatch({ surface: "gis-map-window", baseRevision: 0, revision: corpus.published.scene.revision, ops: [{ type: "upsert", ...node }, { type: "setRoot", id: 0 }]})).toEqual({ ok: true });
+          results.push({ clientInstanceId: client.clientInstanceId, pack: [...state.currentPack!], spr: [...state.currentSpr!], frontier: state.frontier!, node: store.getNodeSnapshot(0), closeCount });
+          closeArtifactRuntime(state.runtimeKey);
+        }
+      } finally {
+        workerPostTestSink = priorPost;
+      }
+      expect(results).toHaveLength(2);
+      expect(results[0]!.pack).toEqual(results[1]!.pack);
+      expect(results[0]!.spr).toEqual(results[1]!.spr);
+      expect(results[0]!.frontier).toEqual(results[1]!.frontier);
+      expect(results[0]!.node).toEqual(results[1]!.node);
+      expect(results.map(({ clientInstanceId, closeCount }) => ({ clientInstanceId, closeCount }))).toEqual(corpus.clients.map((client) => ({ clientInstanceId: client.clientInstanceId, closeCount: 1 })));
+      console.log("gis-map-peer-rebootstrap: clients=2 production-bootstrap=1 scene=controlled simultaneous=0");
     });
 
     it("discards malformed and disconnected staging, preserves the prior commit, and restarts fresh", async () => {
@@ -5943,9 +6122,47 @@ if (import.meta.vitest) {
       return { ok: false, status: 404, statusText: "not found", headers: { get: () => null }, json: async () => ({}), text: async () => "" };
     }
 
-    it("browser document open remains D1-owned when the Rust worker resolves", async () => {
+    it("document opening attempt retires A before B and makes stale send close and duplicate open inert", async () => {
+      const fixture = await browserDocumentOpenFixture();
+      const documentId = `${fixture.intent.scope.documentId}-attempt-owner`;
+      const spaceId = fixture.intent.scope.spaceId;
+      const attemptA = "11111111-1111-4111-8111-111111111111";
+      const attemptB = "22222222-2222-4222-8222-222222222222";
+      const requests: BackboneWorkerRequest[] = [];
+      const dispatch = (request: BackboneWorkerRequest): void => dispatchBackboneWorkerRequest(request, null, (value) => requests.push(value));
+      const open = (clientInstanceId: string): BackboneWorkerRequest => ({
+        kind: "open",
+        clientInstanceId,
+        documentId,
+        schema: fixture.plan.artifact.schema,
+        bindings: [{ kind: "hub", baseUrl: "http://hub.test", spaceId, installedTarget: fixture.installedTarget }],
+        actor: "caller-selected-actor",
+      });
+      try {
+        dispatch(open(attemptA));
+        dispatch(open(attemptB));
+        dispatch(open(attemptB));
+        dispatch({ kind: "send", documentId, spaceId, clientInstanceId: attemptA, message: { kind: "externalChanged" } });
+        dispatch({ kind: "close", documentId, spaceId, clientInstanceId: attemptA });
+        dispatch({ kind: "send", documentId, spaceId, clientInstanceId: attemptB, message: { kind: "externalChanged" } });
+        dispatch({ kind: "close", documentId, spaceId, clientInstanceId: attemptB });
+        expect(requests.map((request) => [request.kind, "clientInstanceId" in request ? request.clientInstanceId : undefined])).toEqual([
+          ["open", attemptA],
+          ["close", attemptA],
+          ["open", attemptB],
+          ["send", attemptB],
+          ["close", attemptB],
+        ]);
+        expect(documentExecutionOwners.has(documentRuntimeKeyV1({ kind: "hub", spaceId, documentId }))).toBe(false);
+      } finally {
+        documentExecutionOwners.delete(documentRuntimeKeyV1({ kind: "hub", spaceId, documentId }));
+      }
+    });
+
+    it("document opening attempt remains D1-owned when the Rust worker resolves", async () => {
       const fixture = await browserDocumentOpenFixture();
       const documentId = `${fixture.intent.scope.documentId}-resolved-rust`;
+      const clientInstanceId = "33333333-3333-4333-8333-333333333333";
       const typescriptRequests: BackboneWorkerRequest[] = [];
       const rustRequests: BackboneWorkerRequest[] = [];
       const host: RustWorkerHost = {
@@ -5955,13 +6172,14 @@ if (import.meta.vitest) {
       const dispatch = (request: BackboneWorkerRequest): void => dispatchBackboneWorkerRequest(request, host, (value) => typescriptRequests.push(value));
       dispatch({
         kind: "open",
+        clientInstanceId,
         documentId,
         schema: fixture.plan.artifact.schema,
         bindings: [{ kind: "hub", baseUrl: "http://hub.test", spaceId: fixture.intent.scope.spaceId, installedTarget: fixture.installedTarget }],
         actor: "caller-selected-actor",
       });
-      dispatch({ kind: "send", documentId, spaceId: fixture.intent.scope.spaceId, message: { kind: "detach" } });
-      dispatch({ kind: "close", documentId, spaceId: fixture.intent.scope.spaceId });
+      dispatch({ kind: "send", documentId, spaceId: fixture.intent.scope.spaceId, clientInstanceId, message: { kind: "detach" } });
+      dispatch({ kind: "close", documentId, spaceId: fixture.intent.scope.spaceId, clientInstanceId });
       expect(typescriptRequests.map(({ kind }) => kind)).toEqual(["open", "send", "close"]);
       expect(rustRequests).toHaveLength(0);
     });
@@ -6174,7 +6392,8 @@ if (import.meta.vitest) {
 
     async function executionTargetLeaseFixture(): Promise<ExecutionTargetLeaseFixture> {
       const { readFile } = await import("node:fs/promises");
-      return JSON.parse(await readFile(new URL("../../../🌎️hub/🧪️fixtures/📇️directory/🔏️document-execution-target-lease-v1/🔣️.json", import.meta.url), "utf8")) as ExecutionTargetLeaseFixture;
+      const { resolve } = await import("node:path");
+      return JSON.parse(await readFile(resolve(process.cwd(), "../../../../../../../../../..", "🌎️hub/🧪️fixtures/📇️directory/🔏️document-execution-target-lease-v1/🔣️.json"), "utf8")) as ExecutionTargetLeaseFixture;
     }
 
     function executionTargetBytes(hexText: string): Uint8Array {
@@ -6191,7 +6410,7 @@ if (import.meta.vitest) {
     }
 
     function executionTargetBodyResponse(bytes: Uint8Array, declaredLength = bytes.byteLength): Response {
-      return new Response(bytes, { headers: { "content-length": String(declaredLength), "x-semio-browser-broker-advanced": "1" } });
+      return new Response(ownedArrayBuffer(bytes), { headers: { "content-length": String(declaredLength), "x-semio-browser-broker-advanced": "1" } });
     }
 
     type ExecutionTargetHarness = {
@@ -6239,6 +6458,158 @@ if (import.meta.vitest) {
       };
     }
 
+    it("browser document first open verifies server assets without a prior installed target", async () => {
+      const fixture = await executionTargetLeaseFixture();
+      const { readFile } = await import("node:fs/promises");
+      const corpusBase = "./🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🧭️opening/🧪️fixtures/📍️scope/";
+      const corpus = JSON.parse(await readFile(new URL(corpusBase + "🔣️.json", import.meta.url), "utf8"));
+      const schema = JSON.parse(await readFile(new URL(corpusBase + "🧬️.schema.json", import.meta.url), "utf8"));
+      const Ajv = (await import("ajv")).default;
+      expect(new Ajv({ strict: true }).compile(schema)(corpus)).toBe(true);
+      const originalFetch = globalThis.fetch,
+        originalSocket = globalThis.WebSocket,
+        originalPost = workerPostTestSink;
+      const requests: { stage: string; body: Record<string, unknown> }[] = [];
+      const posted: BackboneWorkerResponse[] = [];
+      const plan = { ...structuredClone(fixture.plan), expiresAtUnixMs: Date.now() + 30_000 };
+      const grant = { ...structuredClone(fixture.socketGrant), expiresAtMs: Date.now() + 25_000 };
+      const scope = fixture.intent.scope;
+      const runtimeKey = documentRuntimeKeyV1({ kind: "hub", ...scope });
+      socketGrantTestIssue = null;
+      FakeHubWebSocket.instances = [];
+      workerPostTestSink = (message) => posted.push(message);
+      (globalThis as unknown as { WebSocket: unknown }).WebSocket = FakeHubWebSocket;
+      globalThis.fetch = async (input, init) => {
+        const stage = String(input).split("/").at(-1)!;
+        const body = JSON.parse(String(init?.body));
+        requests.push({ stage, body });
+        expect(init?.method).toBe("POST");
+        if (stage === "open-plan") return Response.json(plan, { headers: { "x-semio-browser-broker-advanced": "1" } });
+        if (stage === "manifest") return Response.json(fixture.manifest, { headers: { "x-semio-browser-broker-advanced": "1" } });
+        if (stage === "component") return executionTargetBodyResponse(executionTargetBytes(fixture.componentHex));
+        if (stage === "descriptor") return executionTargetBodyResponse(executionTargetBytes(fixture.descriptorHex));
+        expect(stage).toBe("socket-grants");
+        return Response.json(grant, { headers: { "x-semio-browser-broker-advanced": "1" } });
+      };
+      try {
+        handleTsRequest({
+          kind: "open",
+          documentId: scope.documentId,
+          schema: plan.artifact.schema,
+          actor: "caller-is-not-authority",
+          bindings: [{ kind: "hub", baseUrl: fixture.hubOrigin, spaceId: scope.spaceId, requestedSurfaceId: fixture.intent.requestedSurfaceId }],
+        });
+        const deadline = Date.now() + 5_000;
+        while (FakeHubWebSocket.instances.length === 0 && !posted.some((message) => message.kind === "socket-actor-failed") && Date.now() < deadline) await new Promise((resolve) => setTimeout(resolve, 0));
+        expect(requests.map(({ stage }) => stage)).toEqual(corpus.firstOpen.requestStages);
+        expect(FakeHubWebSocket.instances.length).toBe(corpus.firstOpen.socketCount);
+        const state = artifacts.get(runtimeKey)!;
+        expect(hubBinding(state.config)!.installedTarget).toBeUndefined();
+        expect(state.executionTargetLease?.live).toBe(true);
+        expect(sameLeaseFieldsV1(state.executionTargetLease!.fields(), fixture.manifest)).toBe(true);
+        const intent = { ...fixture.intent, clientInstanceId: state.openClientInstanceId };
+        for (const request of requests.slice(0, 4)) expect(request.body).toEqual(intent);
+        expect(requests.at(-1)!.body).toEqual({ schema: "semio.hub.document-plan-socket-grant-intent/v1", version: 1, planReceipt: plan.receipt });
+        expect(state.actor).toBe("");
+        expect(state.hubActorReady).toBe(false);
+        expect(state.pendingSocketActorId).toBe(grant.actorId);
+        expect(state.outbox).toHaveLength(0);
+        const socket = FakeHubWebSocket.instances[0]!;
+        socket.open();
+        expect(socket.sent).toHaveLength(1);
+        expect(decodeClientFrame(socket.sent[0]!).frame).toHaveProperty("SocketHelloV1.schema", plan.artifact.schema);
+        const localId = "local-first-opening";
+        handleTsRequest({ kind: "open", documentId: localId, schema: plan.artifact.schema, actor: "local", bindings: [] });
+        expect(posted.filter((message) => message.kind === "socket-actor-failed" && message.documentId === localId)).toHaveLength(corpus.firstOpen.localSocketFailures);
+        closeArtifact(localId);
+        const unselectedId = "unselected-first-opening";
+        handleTsRequest({ kind: "open", documentId: unselectedId, schema: plan.artifact.schema, actor: "untrusted", bindings: [{ kind: "hub", baseUrl: fixture.hubOrigin, spaceId: scope.spaceId }] });
+        expect(posted.filter((message) => message.kind === "socket-actor-failed" && message.documentId === unselectedId)).toHaveLength(corpus.firstOpen.unselectedSocketFailures);
+        closeArtifact(unselectedId, scope.spaceId);
+        expect(requests.map(({ stage }) => stage)).toEqual(corpus.firstOpen.requestStages);
+        console.log("[DEBUG] document-first-open requested-surface-only=1 verified-assets=3 socket=1 hello=1 authenticated-session=0 local-failures=0 unselected-refusal=1 writes=0");
+      } finally {
+        closeArtifactRuntime(runtimeKey);
+        closeArtifact("local-first-opening");
+        closeArtifact("unselected-first-opening", scope.spaceId);
+        clearLocalBrowserBrokerProof();
+        globalThis.fetch = originalFetch;
+        (globalThis as unknown as { WebSocket: unknown }).WebSocket = originalSocket;
+        workerPostTestSink = originalPost;
+      }
+    });
+
+    it("browser document first open rejects hostile assets and retired owners before socket authority", async () => {
+      const { readFile } = await import("node:fs/promises");
+      const corpus = JSON.parse(await readFile(new URL("./🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🧭️opening/🧪️fixtures/📍️scope/🔣️.json", import.meta.url), "utf8"));
+      const originalFetch = globalThis.fetch,
+        originalSocket = globalThis.WebSocket,
+        originalPost = workerPostTestSink;
+      (globalThis as unknown as { WebSocket: unknown }).WebSocket = FakeHubWebSocket;
+      socketGrantTestIssue = null;
+      try {
+        for (const row of corpus.firstOpen.hostile) {
+          const fixture = await executionTargetLeaseFixture();
+          const scope = fixture.intent.scope;
+          const runtimeKey = documentRuntimeKeyV1({ kind: "hub", ...scope });
+          const stages: string[] = [];
+          const statuses: Extract<BackboneWorkerResponse, { kind: "execution-target-status" }>[] = [];
+          const plan = { ...structuredClone(fixture.plan), expiresAtUnixMs: Date.now() + 30_000 };
+          if (row.id === "foreign-plan-scope") plan.scope = { ...plan.scope, spaceId: "foreign-space" };
+          FakeHubWebSocket.instances = [];
+          clearLocalBrowserBrokerProof();
+          installLocalBrowserBrokerProof("a".repeat(64));
+          executionTargetStatusObserver = (status) => statuses.push(status);
+          workerPostTestSink = () => {};
+          globalThis.fetch = async (input) => {
+            const stage = String(input).split("/").at(-1)!;
+            stages.push(stage);
+            if (stage === "open-plan") return Response.json(plan, { headers: { "x-semio-browser-broker-advanced": "1" } });
+            if (stage === "manifest") {
+              if (row.id === "cancel-at-manifest") artifacts.get(runtimeKey)!.docAbort.abort();
+              return Response.json(fixture.manifest, { headers: { "x-semio-browser-broker-advanced": "1" } });
+            }
+            if (stage === "component") {
+              const bytes = executionTargetBytes(fixture.componentHex);
+              if (row.id === "corrupt-component") bytes[0] = bytes[0]! ^ 255;
+              if (row.id === "retire-at-component") closeArtifactRuntime(runtimeKey);
+              return executionTargetBodyResponse(bytes);
+            }
+            expect(stage).toBe("descriptor");
+            return executionTargetBodyResponse(executionTargetBytes(fixture.descriptorHex));
+          };
+          try {
+            handleTsRequest({
+              kind: "open",
+              documentId: scope.documentId,
+              schema: fixture.plan.artifact.schema,
+              actor: "untrusted",
+              bindings: [{ kind: "hub", baseUrl: fixture.hubOrigin, spaceId: scope.spaceId, requestedSurfaceId: fixture.intent.requestedSurfaceId }],
+            });
+            const state = artifacts.get(runtimeKey);
+            const deadline = Date.now() + 5_000;
+            while (!statuses.some(({ code }) => code === "integrity-failed" || code === "cancelled") && !state?.docAbort.signal.aborted && Date.now() < deadline) await new Promise((resolve) => setTimeout(resolve, 0));
+            expect(stages, row.id).toEqual(row.requestStages);
+            expect(FakeHubWebSocket.instances, row.id).toHaveLength(0);
+            expect(state?.executionTargetLease ?? null, row.id).toBeNull();
+            expect(state?.outbox ?? [], row.id).toHaveLength(0);
+            expect(stages.includes("socket-grants"), row.id).toBe(false);
+            expect(JSON.stringify(statuses)).not.toContain(plan.receipt);
+            console.log("[DEBUG] document-first-open-hostile", row.id, "requests=" + stages.length, "socket=0 grant=0 writes=0");
+          } finally {
+            closeArtifactRuntime(runtimeKey);
+            await new Promise((resolve) => setTimeout(resolve, 0));
+            executionTargetStatusObserver = null;
+            clearLocalBrowserBrokerProof();
+          }
+        }
+      } finally {
+        globalThis.fetch = originalFetch;
+        (globalThis as unknown as { WebSocket: unknown }).WebSocket = originalSocket;
+        workerPostTestSink = originalPost;
+      }
+    });
+
     it("browser execution target lease verifies GIS wasm bytes before plan exchange", async () => {
       const fixture = await executionTargetLeaseFixture();
       const component = executionTargetBytes(fixture.componentHex);
@@ -6284,14 +6655,31 @@ if (import.meta.vitest) {
       FakeHubWebSocket.instances = [];
       const rejected: string[] = [];
       for (const vector of fixture.hostile) {
-        const plan = { ...structuredClone(fixture.plan), expiresAtUnixMs: Date.now() + 30_000 };
+        let plan = { ...structuredClone(fixture.plan), expiresAtUnixMs: Date.now() + 30_000 };
         if (vector.kind === "stale-plan" || vector.kind === "mixed-generation") plan.catalog = { generationId: fixture.expected.rotation.generationA };
-        const manifest =
+        let manifest =
           vector.kind === "manifest-field"
             ? executionTargetMutate(fixture.manifest, vector.path!, vector.value)
             : vector.kind === "mixed-generation"
               ? (structuredClone(fixture.manifest) as unknown as Record<string, unknown>)
               : (structuredClone(fixture.manifest) as unknown as Record<string, unknown>);
+        let servedDescriptor = descriptor;
+        if (vector.kind === "descriptor-protocol") {
+          servedDescriptor = encodePackValue({ ...(decodePackValue(descriptor) as Record<string, unknown>), executionProtocol: { appChannelVersion: vector.value } });
+          const descriptorSha256 = await executionTargetSha256Hex(servedDescriptor);
+          if (plan.browserActor.kind !== "closed-browser-actor") throw new Error("execution target fixture lost its closed browser actor");
+          plan = {
+            ...plan,
+            package: { ...plan.package, descriptorByteSha256: descriptorSha256 },
+            browserActor: { ...plan.browserActor, sourceDescriptorByteSha256: descriptorSha256 },
+          };
+          manifest = {
+            ...manifest,
+            package: { ...(manifest.package as Record<string, unknown>), descriptorByteSha256: descriptorSha256 },
+            descriptor: { ...(manifest.descriptor as Record<string, unknown>), sha256: descriptorSha256, byteLength: servedDescriptor.byteLength },
+            browserActor: { ...(manifest.browserActor as Record<string, unknown>), sourceDescriptorByteSha256: descriptorSha256 },
+          };
+        }
         const harness = executionTargetHarness(fixture, (url, requests) => {
           if (url.endsWith("/open-plan")) return Response.json(vector.kind === "stale-plan" ? { ...plan, catalog: { generationId: fixture.expected.rotation.generationB } } : plan, { headers: { "x-semio-browser-broker-advanced": "1" } });
           if (url.endsWith("/execution-target/manifest")) {
@@ -6325,7 +6713,7 @@ if (import.meta.vitest) {
               substituted[substituted.length - 1] = substituted[substituted.length - 1]! ^ 0xff;
               return executionTargetBodyResponse(substituted);
             }
-            return executionTargetBodyResponse(descriptor);
+            return executionTargetBodyResponse(servedDescriptor);
           }
           return Response.json({ ...fixture.socketGrant, expiresAtMs: Date.now() + 25_000 }, { headers: { "x-semio-browser-broker-advanced": "1" } });
         });
@@ -6540,7 +6928,7 @@ if (import.meta.vitest) {
           };
         crypto.subtle.digest = async function (algorithm, bytes) {
           const result = await originalDigest.call(this, algorithm, bytes);
-          if (row.name.startsWith("hash-") && bytes instanceof Uint8Array && bytes.byteLength === component.byteLength) mutate();
+          if (row.name.startsWith("hash-") && bytes.byteLength === component.byteLength) mutate();
           return result;
         };
         try {
@@ -6986,6 +7374,17 @@ if (import.meta.vitest) {
     it("browser document actor transfers one verified cold pair only after lifecycle ACK and exact page receipts", async () => {
       const fixture = await executionTargetLeaseFixture();
       const corpus = JSON.parse(await (await import("node:fs/promises")).readFile(new URL("./🔨️modules/🔌️plugin/⚛️reactor/📥️cold-pair/🧫️fixture/🔣️.json", import.meta.url), "utf8"));
+      const Ajv2020 = (await import("ajv/dist/2020.js")).default;
+      const schema = JSON.parse(await (await import("node:fs/promises")).readFile(new URL("./🔨️modules/🔌️plugin/⚛️reactor/📥️cold-pair/🧬️schema/🔣️.json", import.meta.url), "utf8"));
+      expect(new Ajv2020({ strict: true }).compile(schema)(corpus)).toBe(true);
+      const { applyPatch } = await import("fast-json-patch");
+      const rendererOracle = applyPatch({ revision: 0, nodeKind: null as string | null }, [
+        { op: "replace", path: "/revision", value: corpus.browserRender.revision },
+        { op: "replace", path: "/nodeKind", value: corpus.browserRender.nodeKind },
+      ]).newDocument;
+      const renderEvents: string[] = [];
+      let renderWakes = 0;
+      let activeLifetime: ActorInstanceLifetime | null = null;
       const exact = corpus.exact as {
         packLength: number;
         sprLength: number;
@@ -7050,6 +7449,18 @@ if (import.meta.vitest) {
             const acknowledged = events[0]?.tag === "instance-lifecycle-ack";
             const patchAck = events[0]?.tag === "patch-ack" ? events[0].val : null;
             const patchRejection = events[0]?.tag === "patch-rejected" ? events[0].val : null;
+            const visible = events[0]?.tag === "surface-visible" ? events[0].val : null;
+            const wake = events[0]?.tag === "wake";
+            if (visible) {
+              expect(lifecycleAcknowledged).toBe(true);
+              expect(pageIndexes).toHaveLength(exact.pageCount);
+              expect(visible.surface).toEqual({ instance: 0, surface: windowKindId });
+            }
+            if (wake) {
+              expect(renderEvents[0]).toBe("surface-visible");
+              renderWakes++;
+            }
+            if (visible || wake || patchAck || patchRejection) renderEvents.push(events[0].tag);
             const page = message.args[2] as Record<string, any> | null;
             let coldPairIngress: Record<string, any> = { tag: "idle" };
             if (acknowledged) lifecycleAcknowledged = true;
@@ -7077,6 +7488,7 @@ if (import.meta.vitest) {
               received.set(bytes, start);
               bytes.fill(0);
               pageIndexes.push(pageIndex);
+              activeLifetime = header.lifetime;
               const cursor = { lifetime: header.lifetime, transferGeneration: header.transferGeneration, pageIndex, pageCount: header.pageCount };
               coldPairIngress =
                 pageIndex + 1 === header.pageCount
@@ -7084,8 +7496,8 @@ if (import.meta.vitest) {
                   : { tag: "page-accepted", val: cursor };
             }
             const lifecycleReceipt = open ? { tag: "captured", val: { lifetime: { activationGeneration: open.activationGeneration, instanceId: open.instance, guestLifetime: 1n }, requestSequence: open.requestSequence } } : null;
-            const finalPage = Boolean(page && page.pageIndex + 1 === page.header.pageCount);
-            const lifetime = finalPage ? page!.header.lifetime : patchAck?.receipt.lifetime ?? null;
+            const initialScene = wake && renderWakes === corpus.browserRender.lazyWakeTurns;
+            const lifetime = activeLifetime;
             const node = {
               id: 0,
               key: "map-root",
@@ -7100,31 +7512,44 @@ if (import.meta.vitest) {
               menu: null,
               children: [],
             };
-            const emitsPatch = finalPage || Boolean(patchAck);
-            const nodeBytes = finalPage ? encodePackValue(node) : null;
-            const patchReceiptBytes = emitsPatch ? encodeActorUiPatchReceipt({ lifetime: lifetime!, patchSequence: finalPage ? 1n : 2n }) : null;
-            const resultTransfers = finalPage ? [nodeBytes!.buffer, patchReceiptBytes!.buffer] : patchReceiptBytes ? [patchReceiptBytes.buffer] : [];
-            this.port.postMessage({
-              ...this.binding,
-              kind: "result",
-              sequence: message.sequence,
-              value: {
-                uiPatches: finalPage
-                  ? [{ surface: { instance: 0, surface: windowKindId }, baseRevision: 0n, revision: 1n, ops: [{ tag: "upsert", val: { node: nodeBytes } }, { tag: "set-root", val: 0n }] }]
-                  : patchAck
-                    ? [{ surface: { instance: 0, surface: windowKindId }, baseRevision: 0n, revision: 2n, ops: [] }]
-                    : [],
-                effects: [],
-                presence: [],
-                nextWake: null,
-                status: { tag: "idle" },
-                fuelUsed: 1n,
-                commandIngress: { tag: "idle" },
-                coldPairIngress,
-                lifecycleReceipt,
-                uiPatchReceipt: patchReceiptBytes,
+            const emitsPatch = initialScene || Boolean(patchAck);
+            const nodeBytes = initialScene ? encodePackValue(node) : null;
+            const patchReceiptBytes = emitsPatch ? encodeActorUiPatchReceipt({ lifetime: lifetime!, patchSequence: initialScene ? 1n : 2n }) : null;
+            const resultTransfers = initialScene ? [nodeBytes!.buffer, patchReceiptBytes!.buffer] : patchReceiptBytes ? [patchReceiptBytes.buffer] : [];
+            this.port.postMessage(
+              {
+                ...this.binding,
+                kind: "result",
+                sequence: message.sequence,
+                value: {
+                  uiPatches: initialScene
+                    ? [
+                        {
+                          surface: { instance: 0, surface: windowKindId },
+                          baseRevision: 0n,
+                          revision: 1n,
+                          ops: [
+                            { tag: "upsert", val: { node: nodeBytes } },
+                            { tag: "set-root", val: 0n },
+                          ],
+                        },
+                      ]
+                    : patchAck
+                      ? [{ surface: { instance: 0, surface: windowKindId }, baseRevision: 0n, revision: 2n, ops: [] }]
+                      : [],
+                  effects: [],
+                  presence: [],
+                  nextWake: null,
+                  status: { tag: visible || (wake && !initialScene) ? "more-work" : "idle" },
+                  fuelUsed: 1n,
+                  commandIngress: { tag: "idle" },
+                  coldPairIngress,
+                  lifecycleReceipt,
+                  uiPatchReceipt: patchReceiptBytes,
+                },
               },
-            }, resultTransfers);
+              resultTransfers,
+            );
             this.port.postMessage({ ...this.binding, kind: "transferred", sequence: message.sequence, detached: resultTransfers.length });
           };
           this.port.start();
@@ -7177,11 +7602,32 @@ if (import.meta.vitest) {
         const before = uiStore.getState();
         const applied = uiStore.applyPatch(message.patch);
         if (applied.ok) {
-          handleTsRequest({ kind: "browser-actor-ui-patch-result", scope: message.scope, verifiedSurfaceId: message.verifiedSurfaceId, activationGeneration: message.activationGeneration, instanceId: message.instanceId, receipt: message.receipt, outcome: "acknowledged", revision: uiStore.getRevisionSnapshot() });
+          handleTsRequest({
+            kind: "browser-actor-ui-patch-result",
+            clientInstanceId: message.clientInstanceId,
+            scope: message.scope,
+            verifiedSurfaceId: message.verifiedSurfaceId,
+            activationGeneration: message.activationGeneration,
+            instanceId: message.instanceId,
+            receipt: message.receipt,
+            outcome: "acknowledged",
+            revision: uiStore.getRevisionSnapshot(),
+          });
           return;
         }
         expect(uiStore.getState()).toBe(before);
-        handleTsRequest({ kind: "browser-actor-ui-patch-result", scope: message.scope, verifiedSurfaceId: message.verifiedSurfaceId, activationGeneration: message.activationGeneration, instanceId: message.instanceId, receipt: message.receipt, outcome: "rejected", revision: uiStore.getRevisionSnapshot(), reason: applied.rejection.type });
+        handleTsRequest({
+          kind: "browser-actor-ui-patch-result",
+          clientInstanceId: message.clientInstanceId,
+          scope: message.scope,
+          verifiedSurfaceId: message.verifiedSurfaceId,
+          activationGeneration: message.activationGeneration,
+          instanceId: message.instanceId,
+          receipt: message.receipt,
+          outcome: "rejected",
+          revision: uiStore.getRevisionSnapshot(),
+          reason: applied.rejection.type,
+        });
       };
       (globalThis as unknown as { Worker: unknown }).Worker = ColdPairWorker;
       globalThis.fetch = async (input) => {
@@ -7213,6 +7659,9 @@ if (import.meta.vitest) {
         state.verifiedColdPair = owner;
         expect(owner.pageCount).toBe(exact.pageCount);
         await reservation!.installColdPair(owner);
+        expect(renderEvents).toEqual(corpus.browserRender.events);
+        await reservation!.installColdPair(owner);
+        expect(renderEvents).toEqual(corpus.browserRender.events);
         expect(pageIndexes).toEqual(Array.from({ length: exact.pageCount }, (_unused, index) => index));
         expect(received.subarray(0, pack.byteLength)).toEqual(pack);
         expect(received.subarray(pack.byteLength)).toEqual(spr);
@@ -7220,8 +7669,37 @@ if (import.meta.vitest) {
         expect(patchOffers).toHaveLength(2);
         expect(patchAcknowledged).toBe(true);
         expect(patchRejected).toBe(true);
-        expect(uiStore.getRevisionSnapshot()).toBe(1);
-        expect(uiStore.getState().nodes.get(uiStore.getState().root!)?.component).toMatchObject({ type: "surface", kind: "tiled-map" });
+        expect(uiStore.getRevisionSnapshot()).toBe(rendererOracle.revision);
+        expect(uiStore.getState().nodes.get(uiStore.getState().root!)?.component).toMatchObject({ type: "surface", kind: rendererOracle.nodeKind });
+
+        const renderDriver = reservation as unknown as { renderSurface(child: DocumentBrowserActorChild, assertCurrent: () => void): Promise<void> };
+        for (const row of corpus.browserRender.hostile) {
+          let turns = 0,
+            current = row.name !== "stale-before-turn";
+          const child = {
+            async invoke(path: readonly string[], args: BrowserActorChildValue[]): Promise<BrowserActorChildValue> {
+              expect(path).toEqual(["reactor", "poll"]);
+              const events = args[0] as Record<string, any>[];
+              expect(events).toEqual([turns === 0 ? { tag: "surface-visible", val: { surface: { instance: 0, surface: windowKindId } } } : { tag: "wake" }]);
+              turns++;
+              if (row.name === "stale-after-turn") current = false;
+              return {
+                uiPatches: [],
+                uiPatchReceipt: null,
+                lifecycleReceipt: null,
+                status: { tag: row.name === "faulted-turn" ? "faulted" : "more-work" },
+                coldPairIngress: row.name === "cold-ingress" ? { tag: "page-accepted", val: { lifetime: activeLifetime!, transferGeneration: owner!.transferGeneration, pageIndex: 0, pageCount: owner!.pageCount } } : { tag: "idle" },
+              };
+            },
+          } as unknown as DocumentBrowserActorChild;
+          await expect(
+            renderDriver.renderSurface(child, () => {
+              if (!current) throw new Error("fixture-stale-render");
+            }),
+          ).rejects.toThrow(row.error);
+          expect(turns).toBe(row.turns);
+          console.log("[DEBUG] browser-render-refusal: " + row.name + " turns=" + turns);
+        }
         dropVerifiedColdDocumentPair(state);
         expect(() => owner!.page({ activationGeneration: reservation!.generation, instanceId: 0, guestLifetime: 1n }, 0)).toThrow("stale owner");
         expect({ loaded, described, lifecycleAcknowledged, pages: pageIndexes.length, networkChunks: bootstrap.chunk_count, terminated }).toEqual({
@@ -7232,7 +7710,9 @@ if (import.meta.vitest) {
           networkChunks: 2,
           terminated: 0,
         });
-        console.log(`browser-cold-pair-transfer: pages=${pageIndexes.length} bytes=${received.byteLength} lifecycle-ack=1 applied=1 patch-ack=1 patch-rejected=1 tiled-map=1 network-chunks=${bootstrap.chunk_count}`);
+        console.log(
+          `[DEBUG] browser-cold-pair-transfer: lazy-render-events=${renderEvents.join(",")} pages=${pageIndexes.length} bytes=${received.byteLength} lifecycle-ack=1 applied=1 patch-ack=1 patch-rejected=1 tiled-map=1 network-chunks=${bootstrap.chunk_count}`,
+        );
       } finally {
         closeArtifactRuntime(state.runtimeKey);
         expect(terminated).toBe(1);
@@ -7301,13 +7781,23 @@ if (import.meta.vitest) {
       state.runtimeKey = documentRuntimeKeyForConfig(state.config);
       artifacts.set(state.runtimeKey, state);
       try {
+        const rejection = <T>(promise: Promise<T>): Promise<Error> =>
+          promise.then(
+            () => {
+              throw new Error("expected document socket authority rejection");
+            },
+            (error: unknown) => {
+              if (!(error instanceof Error)) throw new Error("document socket authority rejected with a non-Error value");
+              return error;
+            },
+          );
         const hostileReceipt = current.plan.receipt;
         let effects = 0;
         (globalThis as unknown as { fetch: unknown }).fetch = async () => {
           effects += 1;
           return Response.json(current.plan, { headers: { "x-semio-browser-broker-advanced": "1" } });
         };
-        const unavailable = await requestDocumentSocketAuthority(state, { kind: "hub", baseUrl: "http://hub.test", spaceId: fixture.intent.scope.spaceId }).catch((error: unknown) => error as Error);
+        const unavailable = await rejection(requestDocumentSocketAuthority(state, { kind: "hub", baseUrl: "http://hub.test", spaceId: fixture.intent.scope.spaceId }));
         expect(unavailable.message).toBe("document open: installed target unavailable");
         expect(effects).toBe(0);
 
@@ -7315,7 +7805,7 @@ if (import.meta.vitest) {
           effects += 1;
           return Response.json({ ...structuredClone(current.plan), scope: { ...current.plan.scope, spaceId: "foreign" } }, { headers: { "x-semio-browser-broker-advanced": "1" } });
         };
-        const mismatch = await requestDocumentSocketAuthority(state, binding).catch((error: unknown) => error as Error);
+        const mismatch = await rejection(requestDocumentSocketAuthority(state, binding));
         expect(mismatch.message).toBe("document open: invalid plan");
         expect(mismatch.message).not.toContain(hostileReceipt);
         expect(effects).toBe(1);
@@ -7327,7 +7817,7 @@ if (import.meta.vitest) {
           effects += 1;
           return new Response("{}", { headers: { "content-length": String(fixture.expected.responseMaxBytes + 1), "x-semio-browser-broker-advanced": "1" } });
         };
-        const oversized = await requestDocumentSocketAuthority(state, binding).catch((error: unknown) => error as Error);
+        const oversized = await rejection(requestDocumentSocketAuthority(state, binding));
         expect(oversized.message).toBe("document open: invalid plan");
         expect(effects).toBe(1);
 
@@ -7339,7 +7829,7 @@ if (import.meta.vitest) {
           state.docAbort.abort();
           return Response.json(current.plan, { headers: { "x-semio-browser-broker-advanced": "1" } });
         };
-        const cancelled = await requestDocumentSocketAuthority(state, binding).catch((error: unknown) => error as Error);
+        const cancelled = await rejection(requestDocumentSocketAuthority(state, binding));
         expect(cancelled.message).toBe("document open: cancelled");
         expect(cancelled.message).not.toContain(hostileReceipt);
         expect(effects).toBe(1);
@@ -7382,8 +7872,8 @@ if (import.meta.vitest) {
         socketB!.open();
         await handleHubFrame(artifactState("doc-a", "space-1")!, { Session: { actor: actorA, color: 1 } });
         await handleHubFrame(artifactState("doc-b", "space-1")!, { Session: { actor: actorB, color: 2 } });
-        handleTsRequest({ kind: "send", documentId: "doc-a", message: { kind: "localMutations", envelopes: [envelope("doc-a")] } });
-        handleTsRequest({ kind: "send", documentId: "doc-b", message: { kind: "localMutations", envelopes: [envelope("doc-b")] } });
+        handleTsRequest({ kind: "send", documentId: "doc-a", clientInstanceId: artifactState("doc-a", "space-1")!.openClientInstanceId, message: { kind: "localMutations", envelopes: [envelope("doc-a")] } });
+        handleTsRequest({ kind: "send", documentId: "doc-b", clientInstanceId: artifactState("doc-b", "space-1")!.openClientInstanceId, message: { kind: "localMutations", envelopes: [envelope("doc-b")] } });
         const commandActor = (socket: FakeHubWebSocket): string => {
           const frame = decodeClientFrame(socket.sent[1]!).frame;
           if (typeof frame === "string" || !("Commands" in frame)) throw new Error("expected commands");
@@ -7566,7 +8056,7 @@ if (import.meta.vitest) {
         });
         const overSized = Array.from({ length: PENDING_MUTATIONS_QUEUE_LIMIT + 1 }, (_unused, index) => makeEnvelope(index));
 
-        handleTsRequest({ kind: "send", documentId: "doc-overflow", message: { kind: "localMutations", envelopes: overSized } });
+        handleTsRequest({ kind: "send", documentId: "doc-overflow", clientInstanceId: state.openClientInstanceId, message: { kind: "localMutations", envelopes: overSized } });
 
         // 🚨️ Rejected wholesale, never partially accepted or silently dropped — the queue is
         // untouched, and the rejection is explicitly logged (the shell-facing signal is the same
@@ -7576,7 +8066,7 @@ if (import.meta.vitest) {
         expect(errorSpy).toHaveBeenCalledWith("[backbone-worker] pending mutation queue full, rejecting batch", "doc-overflow", overSized.length);
 
         // ✅ A batch that fits is still accepted normally — overflow doesn't wedge the queue shut.
-        handleTsRequest({ kind: "send", documentId: "doc-overflow", message: { kind: "localMutations", envelopes: [makeEnvelope(0)] } });
+        handleTsRequest({ kind: "send", documentId: "doc-overflow", clientInstanceId: state.openClientInstanceId, message: { kind: "localMutations", envelopes: [makeEnvelope(0)] } });
         expect(state.pendingMutations).toHaveLength(1);
       } finally {
         errorSpy.mockRestore();
@@ -7607,7 +8097,7 @@ if (import.meta.vitest) {
           diff: { schemaId: "demo/v1", payload: { n: 1, sequenceNumber: 1 } },
           inverse: { targetOperation: "edit-offline-1", inverseDiff: { schemaId: "demo/v1", payload: { n: 0 } }, baseVersion: 0, dependencies: [], undoPolicy: "exactBaseOnly" },
         };
-        handleTsRequest({ kind: "send", documentId: "doc-hub-flush", message: { kind: "localMutations", envelopes: [envelope] } });
+        handleTsRequest({ kind: "send", documentId: "doc-hub-flush", clientInstanceId: state.openClientInstanceId, message: { kind: "localMutations", envelopes: [envelope] } });
 
         // 📴️ Socket isn't open yet — the mutation is queued in the outbox, never silently dropped.
         expect(state.outbox).toHaveLength(1);
@@ -7671,7 +8161,7 @@ if (import.meta.vitest) {
           diff: { schemaId: "demo/v1", payload: { n: 1, sequenceNumber: 1 } },
           inverse: { targetOperation: "edit-inflight-1", inverseDiff: { schemaId: "demo/v1", payload: { n: 0 } }, baseVersion: 0, dependencies: [], undoPolicy: "exactBaseOnly" },
         };
-        handleTsRequest({ kind: "send", documentId: "doc-hub-stranded", message: { kind: "localMutations", envelopes: [envelope] } });
+        handleTsRequest({ kind: "send", documentId: "doc-hub-stranded", clientInstanceId: state.openClientInstanceId, message: { kind: "localMutations", envelopes: [envelope] } });
         expect(state.pendingBatches.size).toBe(1); // socket was open — sent immediately, awaiting Ack.
         expect(state.outbox).toHaveLength(0);
 

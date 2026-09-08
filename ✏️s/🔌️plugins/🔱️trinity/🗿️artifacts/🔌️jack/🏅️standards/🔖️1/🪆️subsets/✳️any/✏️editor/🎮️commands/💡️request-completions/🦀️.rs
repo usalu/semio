@@ -5,5 +5,5 @@ use crate::editor::jack::config::JackConfigMutation;
 use semio_framework_plugin::{Emit, Fault};
 
 pub(crate) fn request_completions(revision: u64) -> Result<Emit<TrinityGraphMutation, JackConfigMutation>, Fault> {
-    Ok(Emit::config(vec![JackConfigMutation::SetRevision { value: revision + 1 }]))
+    Ok(Emit::config(vec![JackConfigMutation::SetRevision(crate::editor::jack::config::SetRevision { value: revision + 1 })]))
 }

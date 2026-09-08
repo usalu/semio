@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Discard Try Values Batch",
+  "type": "object",
+  "properties": {
+    "staging_id": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "staging_id"
+  ],
+  "additionalProperties": false
+}

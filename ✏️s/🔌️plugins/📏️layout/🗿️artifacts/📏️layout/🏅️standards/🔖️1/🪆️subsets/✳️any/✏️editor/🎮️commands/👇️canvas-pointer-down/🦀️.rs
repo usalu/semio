@@ -1,7 +1,9 @@
 //! 🖱️ 🖱️ Layout play app commands command — `canvas-pointer-down`.
 
 use crate::artifacts::layout::mutations::LayoutMutation;
-use crate::artifacts::layout::{LayoutCamera, LayoutSnapshot};
+use crate::artifacts::layout::LayoutSnapshot;
+#[cfg(test)]
+use crate::artifacts::layout::LayoutCamera;
 use crate::editor::layout::canvas::active_page;
 use crate::editor::layout::config::LayoutConfig;
 use crate::editor::layout::config::LayoutConfigMutation;
@@ -103,20 +105,20 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn set_camera_mutates_config_and_emits_no_operations() {
-        let mut app = layout_app();
+        let mut app = layout_app().await;
         let before = app.snapshot().expect("projection");
-        let result = dispatch(&mut app, LayoutCommand::SetCamera(set_camera::SetCamera { surface_id: Some(LAYOUT_PLAY_SURFACE_BLUEPRINT.into()), camera: LayoutCamera { x: 10.0, y: 20.0, zoom: 1.5 } }));
+        let result = dispatch(&mut app, LayoutCommand::SetCamera(set_camera::SetCamera { surface_id: Some(LAYOUT_PLAY_SURFACE_BLUEPRINT.into()), camera: LayoutCamera { x: 10.0, y: 20.0, zoom: 1.5 } })).await;
         assert!(result.mutations.is_empty(), "camera is a config action and emits no operations");
         assert_eq!(app.snapshot().expect("projection"), before, "camera never mutates the document");
     }
 
     #[semio_framework_async_macros::async_test]
     async fn set_camera_preview_surface_updates_independently_of_blueprint() {
-        let mut app = layout_app();
-        dispatch(&mut app, LayoutCommand::SetCamera(set_camera::SetCamera { surface_id: Some(LAYOUT_PLAY_SURFACE_PREVIEW.into()), camera: LayoutCamera { x: 3.0, y: 4.0, zoom: 2.0 } }));
-        let preview_json = render(&mut app, crate::editor::layout::modes::edit::windows::preview::LAYOUT_PLAY_BODY_PREVIEW);
+        let mut app = layout_app().await;
+        dispatch(&mut app, LayoutCommand::SetCamera(set_camera::SetCamera { surface_id: Some(LAYOUT_PLAY_SURFACE_PREVIEW.into()), camera: LayoutCamera { x: 3.0, y: 4.0, zoom: 2.0 } })).await;
+        let preview_json = render(&mut app, crate::editor::layout::modes::edit::windows::preview::LAYOUT_PLAY_BODY_PREVIEW).await;
         assert!(preview_json.contains(r#""cameraX":3.0"#), "preview scene reflects config camera: {preview_json}");
-        let blueprint_json = render(&mut app, crate::editor::layout::modes::edit::windows::blueprint::LAYOUT_PLAY_BODY_BLUEPRINT);
+        let blueprint_json = render(&mut app, crate::editor::layout::modes::edit::windows::blueprint::LAYOUT_PLAY_BODY_BLUEPRINT).await;
         assert!(blueprint_json.contains(r#""cameraX":0.0"#), "blueprint surface camera stays independent: {blueprint_json}");
     }
 
@@ -126,9 +128,9 @@ mod tests {
     /// asserts the requested effect is shaped correctly, not that selection state landed).
     #[semio_framework_async_macros::async_test]
     async fn pointer_down_requests_a_select_effect_for_the_hit_frame() {
-        let mut app = layout_app();
+        let mut app = layout_app().await;
         let (sx, sy) = test_screen_point(0.0, 0.0, 1.0, 800.0, 600.0, 136.0, 435.0);
-        let result = dispatch(&mut app, LayoutCommand::CanvasPointerDown(CanvasPointerDown { surface_id: Some(LAYOUT_PLAY_SURFACE_BLUEPRINT.into()), button: 0, extend: false, x: sx, y: sy, width: 800.0, height: 600.0 }));
+        let result = dispatch(&mut app, LayoutCommand::CanvasPointerDown(CanvasPointerDown { surface_id: Some(LAYOUT_PLAY_SURFACE_BLUEPRINT.into()), button: 0, extend: false, x: sx, y: sy, width: 800.0, height: 600.0 })).await;
         assert!(result.mutations.is_empty(), "pointer down never mutates the document directly");
         let effect = result.requested_effects.iter().find(|effect| matches!(effect, Effect::DispatchAction { action, .. } if action == INTERACTION_SELECT_ACTION_ID)).expect("interactionSelect effect");
         let Effect::DispatchAction { args, .. } = effect else { unreachable!() };
@@ -140,9 +142,9 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn pointer_down_extend_click_requests_an_invertive_merge() {
-        let mut app = layout_app();
+        let mut app = layout_app().await;
         let (sx, sy) = test_screen_point(0.0, 0.0, 1.0, 800.0, 600.0, 136.0, 435.0);
-        let result = dispatch(&mut app, LayoutCommand::CanvasPointerDown(CanvasPointerDown { surface_id: Some(LAYOUT_PLAY_SURFACE_BLUEPRINT.into()), button: 0, extend: true, x: sx, y: sy, width: 800.0, height: 600.0 }));
+        let result = dispatch(&mut app, LayoutCommand::CanvasPointerDown(CanvasPointerDown { surface_id: Some(LAYOUT_PLAY_SURFACE_BLUEPRINT.into()), button: 0, extend: true, x: sx, y: sy, width: 800.0, height: 600.0 })).await;
         let effect = result.requested_effects.iter().find(|effect| matches!(effect, Effect::DispatchAction { action, .. } if action == INTERACTION_SELECT_ACTION_ID)).expect("interactionSelect effect");
         let Effect::DispatchAction { args, .. } = effect else { unreachable!() };
         let args = args.clone().map(store::pack_rt::dsl_value_to_json).expect("select args");
@@ -151,17 +153,17 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn pointer_down_on_empty_space_requests_clear_selection() {
-        let mut app = layout_app();
+        let mut app = layout_app().await;
         let (sx, sy) = test_screen_point(0.0, 0.0, 1.0, 800.0, 600.0, 5.0, 5.0);
-        let result = dispatch(&mut app, LayoutCommand::CanvasPointerDown(CanvasPointerDown { surface_id: Some(LAYOUT_PLAY_SURFACE_BLUEPRINT.into()), button: 0, extend: false, x: sx, y: sy, width: 800.0, height: 600.0 }));
+        let result = dispatch(&mut app, LayoutCommand::CanvasPointerDown(CanvasPointerDown { surface_id: Some(LAYOUT_PLAY_SURFACE_BLUEPRINT.into()), button: 0, extend: false, x: sx, y: sy, width: 800.0, height: 600.0 })).await;
         assert!(result.requested_effects.iter().any(|effect| matches!(effect, Effect::DispatchAction { action, .. } if action == CLEAR_SELECTION_ACTION_ID)));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn pointer_move_requests_a_hover_effect_for_the_hit_frame() {
-        let mut app = layout_app();
+        let mut app = layout_app().await;
         let (sx, sy) = test_screen_point(0.0, 0.0, 1.0, 800.0, 600.0, 156.0, 220.0);
-        let result = dispatch(&mut app, LayoutCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove { surface_id: Some(LAYOUT_PLAY_SURFACE_BLUEPRINT.into()), x: sx, y: sy, width: 800.0, height: 600.0 }));
+        let result = dispatch(&mut app, LayoutCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove { surface_id: Some(LAYOUT_PLAY_SURFACE_BLUEPRINT.into()), x: sx, y: sy, width: 800.0, height: 600.0 })).await;
         assert!(result.mutations.is_empty(), "hover never mutates the document directly");
         let effect = result.requested_effects.iter().find(|effect| matches!(effect, Effect::DispatchAction { action, .. } if action == INTERACTION_HOVER_ACTION_ID)).expect("interactionHover effect");
         let Effect::DispatchAction { args, .. } = effect else { unreachable!() };
@@ -171,9 +173,9 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn canvas_drop_adds_frame_at_world_coords() {
-        let mut app = layout_app();
+        let mut app = layout_app().await;
         let (sx, sy) = test_screen_point(0.0, 0.0, 1.0, 800.0, 600.0, 100.0, 200.0);
-        let result = dispatch(&mut app, LayoutCommand::CanvasDrop(canvas_drop::CanvasDrop { surface_id: Some(LAYOUT_PLAY_SURFACE_BLUEPRINT.into()), kind: "rect".into(), x: sx, y: sy, width: 800.0, height: 600.0 }));
+        let result = dispatch(&mut app, LayoutCommand::CanvasDrop(canvas_drop::CanvasDrop { surface_id: Some(LAYOUT_PLAY_SURFACE_BLUEPRINT.into()), kind: "rect".into(), x: sx, y: sy, width: 800.0, height: 600.0 })).await;
         assert_eq!(result.mutations.len(), 1);
         let doc = app.snapshot().expect("projection");
         let frame = doc.pages[0].frames.last().unwrap();
@@ -184,21 +186,21 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn canvas_drop_page_kind_adds_page() {
-        let mut app = layout_app();
+        let mut app = layout_app().await;
         let before = app.snapshot().expect("projection").pages.len();
-        let result = dispatch(&mut app, LayoutCommand::CanvasDrop(canvas_drop::CanvasDrop { surface_id: Some(LAYOUT_PLAY_SURFACE_BLUEPRINT.into()), kind: "page".into(), x: 0.0, y: 0.0, width: 800.0, height: 600.0 }));
+        let result = dispatch(&mut app, LayoutCommand::CanvasDrop(canvas_drop::CanvasDrop { surface_id: Some(LAYOUT_PLAY_SURFACE_BLUEPRINT.into()), kind: "page".into(), x: 0.0, y: 0.0, width: 800.0, height: 600.0 })).await;
         assert_eq!(result.mutations.len(), 1);
         assert_eq!(app.snapshot().expect("projection").pages.len(), before + 1);
     }
 
     #[semio_framework_async_macros::async_test]
     async fn drag_over_emits_ghost_and_leave_clears() {
-        let mut app = layout_app();
-        dispatch(&mut app, LayoutCommand::CanvasDragOver(canvas_drag_over::CanvasDragOver { surface_id: Some(LAYOUT_PLAY_SURFACE_BLUEPRINT.into()), kind: "rect".into(), x: 400.0, y: 300.0, width: 800.0, height: 600.0 }));
-        assert!(render(&mut app, crate::editor::layout::modes::edit::windows::blueprint::LAYOUT_PLAY_BODY_BLUEPRINT).contains("layout.drop-preview"));
+        let mut app = layout_app().await;
+        dispatch(&mut app, LayoutCommand::CanvasDragOver(canvas_drag_over::CanvasDragOver { surface_id: Some(LAYOUT_PLAY_SURFACE_BLUEPRINT.into()), kind: "rect".into(), x: 400.0, y: 300.0, width: 800.0, height: 600.0 })).await;
+        assert!(render(&mut app, crate::editor::layout::modes::edit::windows::blueprint::LAYOUT_PLAY_BODY_BLUEPRINT).await.contains("layout.drop-preview"));
 
-        dispatch(&mut app, LayoutCommand::CanvasDragLeave(canvas_drag_leave::CanvasDragLeave {}));
-        assert!(!render(&mut app, crate::editor::layout::modes::edit::windows::blueprint::LAYOUT_PLAY_BODY_BLUEPRINT).contains("layout.drop-preview"));
+        dispatch(&mut app, LayoutCommand::CanvasDragLeave(canvas_drag_leave::CanvasDragLeave {})).await;
+        assert!(!render(&mut app, crate::editor::layout::modes::edit::windows::blueprint::LAYOUT_PLAY_BODY_BLUEPRINT).await.contains("layout.drop-preview"));
     }
 }
 //#endregion 🧪️Tests

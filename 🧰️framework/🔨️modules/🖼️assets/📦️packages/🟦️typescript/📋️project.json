@@ -2,7 +2,9 @@
   "name": "@semio-tech/assets",
   "$schema": "../../../../../node_modules/nx/schemas/project-schema.json",
   "namedInputs": {
-    "default": ["{workspaceRoot}/🧰️framework/🔨️modules/🖼️assets/**/*"]
+    "default": [
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖼️assets/**/*"
+    ]
   },
   "targets": {
     "build": {
@@ -11,7 +13,18 @@
         "cwd": "🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts build",
         "forwardAllArgs": true
-      }
+      },
+      "cache": true,
+      "outputs": [
+        "{projectRoot}/../../README.md",
+        "{projectRoot}/../../🌱️metabolism/🔣️icons/🤖️generated",
+        "{projectRoot}/../../🔣️icons/🤖️generated/🐍️icons.py",
+        "{projectRoot}/../../🔣️icons/🤖️generated/🖼️icon_svgs",
+        "{projectRoot}/../../🔣️icons/🤖️generated/🔷️Icons.cs",
+        "{projectRoot}/../../🔣️icons/🤖️generated/🟦️icons.ts",
+        "{projectRoot}/../../🔣️icons/🤖️generated/🔤️shortcodes.ts",
+        "{projectRoot}/../../🔣️icons/🤖️generated/🦀️icon_name.rs"
+      ]
     },
     "preview-generated": {
       "executor": "nx:run-commands",
@@ -31,9 +44,27 @@
       "executor": "nx:run-commands",
       "options": {
         "cwd": "🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts generate-logo && bun ./📜️script.ts export-logo",
+        "command": "bun ./📜️script.ts export-logo",
         "forwardAllArgs": true
-      }
+      },
+      "cache": true,
+      "dependsOn": [
+        "generate-logo",
+        "workspace:deps-browsers"
+      ],
+      "inputs": [
+        "production",
+        "^production",
+        {
+          "runtime": "ffmpeg -version"
+        },
+        {
+          "env": "PLAYWRIGHT_BROWSERS_PATH"
+        }
+      ],
+      "outputs": [
+        "{projectRoot}/../../🪧️logos/🎞️animation/🎬️animation.mp4"
+      ]
     },
     "logo-dev": {
       "executor": "nx:run-commands",
@@ -41,6 +72,22 @@
         "cwd": "🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript",
         "command": "bun --watch ./📜️script.ts generate-logo",
         "forwardAllArgs": true
+      },
+      "cache": false,
+      "continuous": true,
+      "outputs": []
+    },
+    "generate-logo": {
+      "cache": true,
+      "inputs": [
+        "production",
+        "^production"
+      ],
+      "outputs": [
+        "{projectRoot}/../../🪧️logos/🎞️animation/⚡️animated.svg"
+      ],
+      "options": {
+        "command": "bun ./📜️script.ts generate-logo"
       }
     }
   }

@@ -6,9 +6,15 @@
       "executor": "nx:run-commands",
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🟦️typescript",
-        "command": "go run .",
+        "command": "bun ./📜️script.ts dev",
         "forwardAllArgs": true
-      }
+      },
+      "cache": false,
+      "continuous": true,
+      "outputs": [],
+      "dependsOn": [
+        "build"
+      ]
     },
     "build": {
       "executor": "nx:run-commands",
@@ -16,15 +22,26 @@
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts build",
         "forwardAllArgs": true
-      }
+      },
+      "cache": true,
+      "outputs": [
+        "{projectRoot}/../../server",
+        "{projectRoot}/../../server.exe"
+      ]
     },
     "start": {
       "executor": "nx:run-commands",
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🟦️typescript",
-        "command": "go run .",
+        "command": "bun ./📜️script.ts start",
         "forwardAllArgs": true
-      }
+      },
+      "cache": false,
+      "continuous": true,
+      "outputs": [],
+      "dependsOn": [
+        "build"
+      ]
     },
     "test": {
       "executor": "nx:run-commands",

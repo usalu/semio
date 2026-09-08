@@ -27,7 +27,7 @@ use crate::artifacts::puzzle3d::Puzzle3dError;
 use crate::editor::puzzle3d::precompute::brush::{
     brush_candidate_suggestion_weight, brush_compatible_candidates, brush_preview_from_candidate, brush_target_vortex_allows_suggestion, resolve_object_kind_mesh_url, vortex_world_from_object, AttractionVortexContext, TargetVortexWorld,
 };
-use crate::editor::puzzle3d::precompute::fill::{FillBuilder, FillBuilderOwnerCensusCursor, FillBuilderOwnerCensusStep, FillBuilderRetirementCursor, FillJobStage, FillPreparationRoots, FillPreviewJsonStep, PlacedCollisionEntry};
+use crate::editor::puzzle3d::precompute::fill::{FillBuilder, FillBuilderOwnerCensusCursor, FillBuilderOwnerCensusStep, FillBuilderRetirementCursor, FillPreparationRoots, FillPreviewJsonStep, PlacedCollisionEntry};
 use crate::editor::puzzle3d::precompute::geometry::{pose_isometry, world_bounds, CollisionBody, CollisionOverlapState, CollisionStepContext, CollisionStepResult};
 use semio_framework_job::{default_now_us, root_cancel_token, CancelToken, Generation, InteractiveJob, InteractiveJobCloseStep, InteractiveStage, Operation, RevisionId, StepOutcome};
 use std::cell::RefCell;
@@ -451,6 +451,7 @@ impl FillEnvelopeRegistry {
         Some(token.to_vec())
     }
 
+    #[cfg(test)]
     fn reserve(
         &mut self,
         job: u64,
@@ -1244,11 +1245,13 @@ impl Puzzle3dCollision {
         BrushCollisionFreeResult { free, unknown_pending, resume_candidate_index: 0 }
     }
 
+    #[cfg(test)]
     fn brush_collision_free(&self, target_full_id: &str, candidates: &[BrushCompatibleCandidate], overlap_budget: f64) -> BrushCollisionFreeResult {
         let Some(deadline) = puzzle3d_deadline(PUZZLE3D_PRECOMPUTE_STEP_BUDGET_US * 8) else { return BrushCollisionFreeResult { free: Vec::new(), unknown_pending: true, resume_candidate_index: 0 }; };
         self.brush_collision_free_until(target_full_id, candidates, overlap_budget, 0, Vec::new(), deadline)
     }
 
+    #[cfg(test)]
     fn compute_brush_cache_entry(&self, target_full_id: &str) -> BrushCollisionFreeResult {
         let Some(scene) = &self.scene else {
             return BrushCollisionFreeResult { free: vec![], unknown_pending: true, resume_candidate_index: 0 };
@@ -1415,6 +1418,7 @@ impl Puzzle3dCollision {
         fill || brush || self.fill_lane_active() || self.brush_lane_active()
     }
 
+    #[cfg(test)]
     pub(crate) fn fill_progress_summary(&self) -> FillProgressSummary {
         self.fill.as_ref().and_then(|fill| fill.try_lock().ok()).map_or(FillProgressSummary { count: 0, applied_count: 0, max_count: FILL_COUNT_MAX, done: true }, |fill| FillProgressSummary {
             count: fill.sequence.len(),
@@ -1437,6 +1441,7 @@ impl Puzzle3dCollision {
     /// 🔽️ Moving the count down (or up) only changes which prefix of the already-planned sequence is
     /// applied to the document — the plan (`sequence`/`appended_*`/`placed`/`fixture`) is prefix-stable
     /// and is never discarded here, so a jittery drag can never force expensive replanning.
+    #[cfg(test)]
     pub(crate) fn apply_fill_count(&mut self, count: usize) -> Option<Fixture> {
         let mut fill = self.fill.as_ref()?.try_lock().ok()?;
         let count = count.min(fill.sequence.len());
@@ -1454,6 +1459,7 @@ impl Puzzle3dCollision {
 
     /// 🪣️ Read-only prefix of the precomputed fill plan for live viewport show/hide — does not mutate
     /// `applied_count`, the queue, or the document projection.
+    #[cfg(test)]
     pub(crate) fn compose_fill_display(&self, count: usize) -> Option<Fixture> {
         let fill = self.fill.as_ref()?.try_lock().ok()?;
         let visible = count.min(fill.sequence.len());
@@ -1873,6 +1879,7 @@ impl Puzzle3dPrecomputeSession {
         true
     }
 
+    #[cfg(test)]
     fn drive_fill_job(&self, request: &FillJobRequest) -> Option<FillJobSlice> {
         match drive_fill_envelope(request) {
             FillEnvelopeDrive::Advanced(slice) => Some(slice),

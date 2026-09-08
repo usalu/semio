@@ -11,6 +11,7 @@
 
 use protocol::Mutation;
 use semio_framework_plugin::WorldSunConfig;
+#[cfg(test)]
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Config

@@ -16,7 +16,7 @@ pub fn measure(snapshot: &ShootingSnapshot, labels: &ShootingLabels) -> WindowMe
             MeasureSelectItem { id: "shooting.measure.shape.rectangle".into(), value: "rectangle".into(), label: labels.shape_rectangle.into() },
             MeasureSelectItem { id: "shooting.measure.shape.ellipse".into(), value: "ellipse".into(), label: labels.shape_ellipse.into() },
         ],
-        on_change: crate::editor::shooting::shooting_action("setActiveShotShape", None),
+        on_change: crate::editor::shooting::shooting_window_action("setActiveShotShape", None),
     }
 }
 //#endregion 🔖️Measure

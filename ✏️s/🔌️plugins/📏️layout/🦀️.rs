@@ -6,8 +6,8 @@ use semio_framework_plugin::plugin_app_close_prelude::*;
 use semio_framework_plugin::{ExecutionMode, Plugin, PluginApp};
 
 //#region 🗃️Apps
-/// 🗃️ Closed runtime app fleet for the layout editor and viewer surfaces.
 semio_framework_dispatch_macros::dyn_enum_close! {
+    /// 🗃️ Closed runtime app fleet for the layout editor and viewer surfaces.
     pub enum LayoutApps: PluginApp {
         Editor(VcsArtifactApp<EditorApp<crate::editor::layout::LayoutPlayApp>>),
         Viewer(VcsArtifactApp<ViewerApp<crate::viewer::layout::LayoutViewer>>),
@@ -58,12 +58,12 @@ mod surface_tests {
 
     #[semio_framework_async_macros::async_test]
     async fn layout_viewer_never_mutates() {
-        assert_viewer_never_mutates::<crate::viewer::layout::LayoutViewer>();
+        assert_viewer_never_mutates::<crate::viewer::layout::LayoutViewer>().await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn layout_editor_and_viewer_share_dialect() {
-        assert_editor_and_viewer_share_dialect::<crate::editor::layout::LayoutPlayApp, crate::viewer::layout::LayoutViewer>();
+        assert_editor_and_viewer_share_dialect::<crate::editor::layout::LayoutPlayApp, crate::viewer::layout::LayoutViewer>().await;
     }
 }
 //#endregion 🧪️SurfaceTests

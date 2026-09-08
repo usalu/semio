@@ -8,7 +8,9 @@
     "features",
     "directArtifacts",
     "sharedCodecs",
-    "fullArtifactCount"
+    "fullArtifactCount",
+    "nativeCodecCount",
+    "surfaceCases"
   ],
   "properties": {
     "schema": {
@@ -20,6 +22,7 @@
       "required": [
         "homeIo",
         "fullArtifactCatalog",
+        "componentAppAssembly",
         "spaceGuest"
       ],
       "properties": {
@@ -29,6 +32,7 @@
         "fullArtifactCatalog": {
           "const": "full-artifact-catalog"
         },
+        "componentAppAssembly": { "const": "component-app-assembly" },
         "spaceGuest": {
           "const": "space-guest"
         }
@@ -76,6 +80,21 @@
     },
     "fullArtifactCount": {
       "const": 36
+    },
+    "nativeCodecCount": { "const": 26 },
+    "surfaceCases": {
+      "type": "array", "minItems": 6, "maxItems": 6,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["id", "selected", "catalog", "apps", "exports"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "selected": { "type": "array", "minItems": 1, "maxItems": 2, "uniqueItems": true, "items": { "enum": ["default", "plugin-root", "home-io", "full-artifact-catalog", "component-app-assembly"] } },
+          "catalog": { "enum": [8, 36] },
+          "apps": { "type": "boolean" },
+          "exports": { "type": "boolean" }
+        }
+      }
     }
   }
 }

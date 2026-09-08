@@ -12,7 +12,7 @@ use crate::language_service::{complete as complete_jack, parse};
 use crate::lexer::tokenize as tokenize_jack;
 use infinite_board_port_directed::{
     compute_edge_bezier_points, distance_between,
-    force_graph::{apply_force_graph_layout_to_fixture_v1_value, ForceGraphLayoutOptions},
+    force_graph::apply_force_graph_layout_to_fixture_v1_json,
     BoardEngine, CanvasPalette, HandleRole,
 };
 use infinite_board_port_directed_normal::BoardHost;
@@ -270,8 +270,9 @@ fn force_layout_reposition_operations(fixture: &JackSnapshot) -> Result<Vec<Trin
 }
 
 fn apply_force_layout_to_trinity_graph(graph: &mut Graph) -> Result<(), TrinityRewritingError> {
-    let mut fixture = trinity_graph_to_force_layout_fixture(graph);
-    apply_force_graph_layout_to_fixture_v1_value(&mut fixture, &ForceGraphLayoutOptions::default()).map_err(TrinityRewritingError::Layout)?;
+    let fixture = trinity_graph_to_force_layout_fixture(graph);
+    let positioned = apply_force_graph_layout_to_fixture_v1_json(&pack::json_to_string(&fixture), "").map_err(TrinityRewritingError::Layout)?;
+    let fixture = pack::parse_json(&positioned).map_err(|error| TrinityRewritingError::Layout(error.to_string()))?;
     apply_force_layout_positions_to_trinity_graph(graph, &fixture)
 }
 //#endregion 🔖️Lod
@@ -296,9 +297,9 @@ pub struct TrinityBridge {
 }
 
 impl TrinityBridge {
-    pub fn from_graph(graph: &Graph) -> Self {
+    pub async fn from_graph(graph: &Graph) -> Self {
         let fixture = graph.to_fixture();
-        let store = crate::artifacts::jack::op::TrinityGraphStore::new(crate::artifacts::jack::op::create_trinity_graph_envelope("trinity-host", fixture)).expect("failed to create trinity graph store");
+        let store = crate::artifacts::jack::op::TrinityGraphStore::new(crate::artifacts::jack::op::create_trinity_graph_envelope("trinity-host", fixture)).await.expect("failed to create trinity graph store");
         let graph = Graph::from_fixture(store.snapshot().expect("projection")).expect("graph");
         let mut host = Self {
             graph,
@@ -320,9 +321,9 @@ impl TrinityBridge {
         host
     }
 
-    pub fn load_fixture_json(json: &str) -> Result<Self, TrinityRewritingError> {
+    pub async fn load_fixture_json(json: &str) -> Result<Self, TrinityRewritingError> {
         let graph = Graph::load_json(json)?;
-        Ok(Self::from_graph(&graph))
+        Ok(Self::from_graph(&graph).await)
     }
 
     fn refresh_graph_from_store(&mut self) -> Result<(), TrinityRewritingError> {
@@ -330,30 +331,30 @@ impl TrinityBridge {
         Ok(())
     }
 
-    fn dispatch(&mut self, operations: Vec<TrinityGraphMutation>) -> Result<(), TrinityRewritingError> {
-        crate::artifacts::jack::op::dispatch_trinity_graph_mutations(&mut self.store, operations)?;
+    async fn dispatch(&mut self, operations: Vec<TrinityGraphMutation>) -> Result<(), TrinityRewritingError> {
+        crate::artifacts::jack::op::dispatch_trinity_graph_mutations(&mut self.store, operations).await?;
         self.refresh_graph_from_store()
     }
 
-    pub fn undo(&mut self) -> Result<(), TrinityRewritingError> {
+    pub async fn undo(&mut self) -> Result<(), TrinityRewritingError> {
         use store::ArtifactCommand;
-        self.store.dispatch(ArtifactCommand::Undo)?;
+        self.store.dispatch(ArtifactCommand::Undo).await?;
         self.refresh_graph_from_store()?;
         self.rebuild_engine();
         Ok(())
     }
 
-    pub fn redo(&mut self) -> Result<(), TrinityRewritingError> {
+    pub async fn redo(&mut self) -> Result<(), TrinityRewritingError> {
         use store::ArtifactCommand;
-        self.store.dispatch(ArtifactCommand::Redo)?;
+        self.store.dispatch(ArtifactCommand::Redo).await?;
         self.refresh_graph_from_store()?;
         self.rebuild_engine();
         Ok(())
     }
 
-    pub fn commit_checkpoint(&mut self, message: Option<String>) -> Result<(), TrinityRewritingError> {
+    pub async fn commit_checkpoint(&mut self, message: Option<String>) -> Result<(), TrinityRewritingError> {
         use store::ArtifactCommand;
-        self.store.dispatch(ArtifactCommand::CommitCheckpoint { message, authors: Vec::new() }).map_err(TrinityRewritingError::from).map(|_| ())
+        self.store.dispatch(ArtifactCommand::CommitCheckpoint { message, authors: Vec::new() }).await.map_err(TrinityRewritingError::from).map(|_| ())
     }
 
     pub fn store_generation(&self) -> u64 {
@@ -396,19 +397,19 @@ impl TrinityBridge {
         self.sync_ephemeral_positions_from_engine();
     }
 
-    pub fn pointer_up(&mut self, x: f64, y: f64) {
+    pub async fn pointer_up(&mut self, x: f64, y: f64) {
         let world = self.screen_to_world(x, y);
         self.engine.pointer_up(world.x, world.y);
-        if let Err(err) = self.commit_drag_positions() {
+        if let Err(err) = self.commit_drag_positions().await {
             eprintln!("[DEBUG] trinity drag commit failed: {err}");
         }
         self.rebuild_engine();
     }
 
-    pub fn reorganize(&mut self) {
+    pub async fn reorganize(&mut self) {
         match force_layout_reposition_operations(&self.store.snapshot().unwrap_or_else(|_| self.graph.to_fixture())) {
             Ok(operations) if !operations.is_empty() => {
-                if let Err(err) = self.dispatch(operations) {
+                if let Err(err) = self.dispatch(operations).await {
                     eprintln!("[DEBUG] trinity reorganize dispatch failed: {err}");
                     return;
                 }
@@ -419,23 +420,23 @@ impl TrinityBridge {
         }
     }
 
-    pub fn run_jack(&mut self, query: &str) -> Result<QueryResult, TrinityRewritingError> {
+    pub async fn run_jack(&mut self, query: &str) -> Result<QueryResult, TrinityRewritingError> {
         let parsed = parse(query).map_err(TrinityRewritingError::Jack)?;
         let (result, operations) = execute(&self.graph, &parsed).map_err(TrinityRewritingError::Jack)?;
         if !operations.is_empty() {
-            self.dispatch(operations)?;
+            self.dispatch(operations).await?;
             self.rebuild_engine();
         }
         Ok(result)
     }
 
-    pub fn run_jack_json(&mut self, query: &str) -> Result<String, TrinityRewritingError> {
-        let result = self.run_jack(query)?;
+    pub async fn run_jack_json(&mut self, query: &str) -> Result<String, TrinityRewritingError> {
+        let result = self.run_jack(query).await?;
         Ok(pack::to_json_string(&result))
     }
 
-    pub fn run_jack_with_fixture_json(&mut self, query: &str) -> Result<String, TrinityRewritingError> {
-        let result = self.run_jack(query)?;
+    pub async fn run_jack_with_fixture_json(&mut self, query: &str) -> Result<String, TrinityRewritingError> {
+        let result = self.run_jack(query).await?;
         let fixture_json = self.fixture_json()?;
         let out = JackRunWithFixture { result, fixture_json };
         Ok(pack::to_json_string(&out))
@@ -451,14 +452,14 @@ impl TrinityBridge {
         Ok(pack::to_json_string(&items))
     }
 
-    pub fn apply_rewriting_json(&mut self, rule_json: &str, bindings_json: &str) -> Result<String, TrinityRewritingError> {
+    pub async fn apply_rewriting_json(&mut self, rule_json: &str, bindings_json: &str) -> Result<String, TrinityRewritingError> {
         let rule: Rule = pack::from_json_str(rule_json)?;
         let bindings = crate::artifacts::rewriting::schema::parse_bindings_json(bindings_json)?;
         let query = crate::artifacts::rewriting::schema::build_rule_query(&rule, &bindings);
         let parsed = parse(&query).map_err(TrinityRewritingError::Jack)?;
         let (result, operations) = execute(&self.graph, &parsed).map_err(TrinityRewritingError::Jack)?;
         if !operations.is_empty() {
-            self.dispatch(operations)?;
+            self.dispatch(operations).await?;
             self.rebuild_engine();
         }
         Ok(pack::to_json_string(&ApplyRuleResult { fixture: self.fixture_json()?, query: result }))
@@ -544,7 +545,7 @@ impl TrinityBridge {
         self.sync_board_from_graph();
     }
 
-    fn commit_drag_positions(&mut self) -> Result<(), TrinityRewritingError> {
+    async fn commit_drag_positions(&mut self) -> Result<(), TrinityRewritingError> {
         let projection = self.store.snapshot()?;
         let projection_nodes = projection.nodes();
         let mut operations = Vec::new();
@@ -562,13 +563,13 @@ impl TrinityBridge {
         if operations.is_empty() {
             return Ok(());
         }
-        self.dispatch(operations)
+        self.dispatch(operations).await
     }
 
     fn sync_board_from_graph(&mut self) {
         let _ = self.board.set_board_kind_catalogs_from_json(TRINITY_BOARD_KIND_CATALOGS_JSON);
         let fixture = trinity_graph_to_board_fixture(&self.graph);
-        if !self.board.parse_fixture_v1(&fixture) {
+        if !self.board.parse_fixture_json(&pack::json_to_string(&fixture)) {
             eprintln!("[DEBUG] trinity board fixture parse failed");
         }
         self.board.set_size(self.width, self.height, self.dpr);
@@ -693,22 +694,22 @@ impl dsl::ToValue for JackRunWithFixture {
 // (no engine entry, no `wasm` script target) — see
 // `26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS`. The helpers themselves
 // stay: they are exercised directly by native `#[cfg(test)]` tests below.
-#[cfg(any(target_arch = "wasm32", test))]
+#[cfg(test)]
 const TRINITY_REWRITING_ENVELOPE_MAXIMUM_PAGES: usize = store::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_PAGES;
-#[cfg(any(target_arch = "wasm32", test))]
+#[cfg(test)]
 const TRINITY_REWRITING_ENVELOPE_MAXIMUM_BYTES: usize = store::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_BYTES;
 
-#[cfg(any(target_arch = "wasm32", test))]
+#[cfg(test)]
 fn trinity_rewriting_envelope_credits_are_valid(maximum_pages: usize, maximum_bytes: usize) -> bool {
     maximum_pages != 0 && maximum_pages <= TRINITY_REWRITING_ENVELOPE_MAXIMUM_PAGES && maximum_bytes != 0 && maximum_bytes <= TRINITY_REWRITING_ENVELOPE_MAXIMUM_BYTES
 }
 
-#[cfg(any(target_arch = "wasm32", test))]
+#[cfg(test)]
 struct TrinityRewritingCallerPageOwner<Page> {
     page: Option<Page>,
 }
 
-#[cfg(any(target_arch = "wasm32", test))]
+#[cfg(test)]
 impl<Page> TrinityRewritingCallerPageOwner<Page> {
     fn new(page: Page) -> Self {
         Self { page: Some(page) }
@@ -730,7 +731,7 @@ impl<Page> TrinityRewritingCallerPageOwner<Page> {
     }
 }
 
-#[cfg(any(target_arch = "wasm32", test))]
+#[cfg(test)]
 fn trinity_rewriting_page_handle_matches(operation: u64, generation: u64, expected_operation: u64, expected_generation: u64) -> bool {
     operation == expected_operation && generation == expected_generation
 }
@@ -835,7 +836,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn trinity_host_rebuilds_engine() {
-        let host = TrinityBridge::from_graph(&nakagin_graph());
+        let host = TrinityBridge::from_graph(&nakagin_graph()).await;
         assert_eq!(host.engine.nodes.len(), 9);
         assert!(!host.engine.edges.is_empty());
         assert!(!host.engine.enforce_acyclic);
@@ -845,16 +846,16 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn trinity_host_reorganize_moves_nodes() {
-        let mut host = TrinityBridge::from_graph(&nakagin_graph());
+        let mut host = TrinityBridge::from_graph(&nakagin_graph()).await;
         let before: Vec<(f64, f64)> = host.graph.nodes.values().map(|n| (n.x, n.y)).collect();
-        host.reorganize();
+        host.reorganize().await;
         let after: Vec<(f64, f64)> = host.graph.nodes.values().map(|n| (n.x, n.y)).collect();
         assert_ne!(before, after);
     }
 
     #[semio_framework_async_macros::async_test]
     async fn trinity_host_tokenize_jack_json() {
-        let host = TrinityBridge::from_graph(&nakagin_graph());
+        let host = TrinityBridge::from_graph(&nakagin_graph()).await;
         let json = host.tokenize_jack_json("MATCH (a:Piece)").unwrap();
         let tokens: Vec<JackTokenSpan> = pack::from_json_str(&json).unwrap();
         assert!(tokens.iter().any(|row| row.start == 0));
@@ -862,7 +863,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn trinity_host_complete_jack_json() {
-        let host = TrinityBridge::from_graph(&nakagin_graph());
+        let host = TrinityBridge::from_graph(&nakagin_graph()).await;
         let json = host.complete_jack_json("MAT", 3).unwrap();
         let items: Vec<JackCompletion> = pack::from_json_str(&json).unwrap();
         assert!(items.iter().any(|row| row.label == "MATCH"));
@@ -870,11 +871,11 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn trinity_host_jack_create_undo() {
-        let mut host = TrinityBridge::from_graph(&nakagin_graph());
+        let mut host = TrinityBridge::from_graph(&nakagin_graph()).await;
         let before = host.graph.nodes.len();
-        host.run_jack("CREATE (n:Piece)").unwrap();
+        host.run_jack("CREATE (n:Piece)").await.unwrap();
         assert_eq!(host.graph.nodes.len(), before + 1);
-        host.undo().unwrap();
+        host.undo().await.unwrap();
         assert_eq!(host.graph.nodes.len(), before);
     }
 
@@ -968,14 +969,14 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn trinity_host_apply_rewriting_json_end_to_end() {
-        let mut host = TrinityBridge::from_graph(&nakagin_graph());
+        let mut host = TrinityBridge::from_graph(&nakagin_graph()).await;
         let rule = Rule {
             name: "label-core".into(),
             lhs: Lhs { pattern: PatternJson { left_var: "a".into(), left_kind: "Piece".into(), edge_var: None, edge_kind: None, right_var: None, right_kind: None }, where_clause: Some("a.name = 'b'".into()) },
             rhs: Rhs { create: vec![], delete: vec![], set: vec![AssignmentJson { var: "a".into(), prop: "label".into(), value: PropertyValue::String("nakagin-core".into()) }], merge: vec![], parameters: vec![] },
         };
         let rule_json = pack::to_json_string(&rule);
-        let out = host.apply_rewriting_json(&rule_json, "{}").unwrap();
+        let out = host.apply_rewriting_json(&rule_json, "{}").await.unwrap();
         let value: pack::JsonValue = pack::parse_json(&out).unwrap();
         assert!(value.get("fixture").is_some());
         let core = host.graph.node("7dc5b737-3b6b-4068-b315-b7bacc91c2e1").unwrap();
@@ -984,13 +985,13 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn trinity_host_run_jack_json_and_with_fixture() {
-        let mut host = TrinityBridge::from_graph(&nakagin_graph());
-        let json = host.run_jack_json("MATCH (a:Piece) WHERE a.name = 'b' RETURN a.name").unwrap();
+        let mut host = TrinityBridge::from_graph(&nakagin_graph()).await;
+        let json = host.run_jack_json("MATCH (a:Piece) WHERE a.name = 'b' RETURN a.name").await.unwrap();
         let result: QueryResult = pack::from_json_str(&json).unwrap();
         assert_eq!(result.rows.len(), 1);
 
         let before = host.graph.nodes.len();
-        let out = host.run_jack_with_fixture_json("CREATE (n:Piece)").unwrap();
+        let out = host.run_jack_with_fixture_json("CREATE (n:Piece)").await.unwrap();
         let value: pack::JsonValue = pack::parse_json(&out).unwrap();
         assert!(value.get("fixtureJson").is_some());
         assert_eq!(host.graph.nodes.len(), before + 1);
@@ -998,7 +999,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn trinity_host_selected_and_highlighted_node_ids() {
-        let mut host = TrinityBridge::from_graph(&nakagin_graph());
+        let mut host = TrinityBridge::from_graph(&nakagin_graph()).await;
         host.set_viewport(800, 600, 1.0);
         host.pointer_down(400.0, 300.0, false);
         let json = host.selected_node_ids_json().unwrap();
@@ -1010,7 +1011,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn trinity_host_viewport_camera_and_wheel() {
-        let mut host = TrinityBridge::from_graph(&nakagin_graph());
+        let mut host = TrinityBridge::from_graph(&nakagin_graph()).await;
         host.set_viewport(800, 600, 1.0);
         let before_zoom = host.graph.camera.zoom;
         host.wheel_screen(400.0, 300.0, -100.0);
@@ -1021,13 +1022,13 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn trinity_host_pointer_drag_commits_position() {
-        let mut host = TrinityBridge::from_graph(&nakagin_graph());
+        let mut host = TrinityBridge::from_graph(&nakagin_graph()).await;
         host.set_viewport(800, 600, 1.0);
         let node_id = "7dc5b737-3b6b-4068-b315-b7bacc91c2e1";
         assert_eq!((host.graph.nodes[node_id].x, host.graph.nodes[node_id].y), (0.0, 0.0));
         host.pointer_down(400.0, 300.0, false);
         host.pointer_move(460.0, 360.0);
-        host.pointer_up(460.0, 360.0);
+        host.pointer_up(460.0, 360.0).await;
         let after = (host.graph.nodes[node_id].x, host.graph.nodes[node_id].y);
         assert!((after.0 - 60.0).abs() < 1e-6);
         assert!((after.1 - 60.0).abs() < 1e-6);
@@ -1035,21 +1036,21 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn trinity_host_commit_checkpoint_and_redo_and_store_generation() {
-        let mut host = TrinityBridge::from_graph(&nakagin_graph());
+        let mut host = TrinityBridge::from_graph(&nakagin_graph()).await;
         let gen0 = host.store_generation();
-        host.run_jack("CREATE (n:Piece)").unwrap();
+        host.run_jack("CREATE (n:Piece)").await.unwrap();
         assert!(host.store_generation() > gen0);
         let count_after_create = host.graph.nodes.len();
-        host.commit_checkpoint(None).unwrap();
-        host.undo().unwrap();
+        host.commit_checkpoint(None).await.unwrap();
+        host.undo().await.unwrap();
         assert_eq!(host.graph.nodes.len(), count_after_create - 1);
-        host.redo().unwrap();
+        host.redo().await.unwrap();
         assert_eq!(host.graph.nodes.len(), count_after_create);
     }
 
     #[semio_framework_async_macros::async_test]
     async fn trinity_host_forced_and_automatic_draw_lod_label() {
-        let mut host = TrinityBridge::from_graph(&nakagin_graph());
+        let mut host = TrinityBridge::from_graph(&nakagin_graph()).await;
         host.set_camera(0.0, 0.0, 0.05);
         assert_eq!(host.draw_lod_label(), "minimap");
         host.set_automatic_lod(false);

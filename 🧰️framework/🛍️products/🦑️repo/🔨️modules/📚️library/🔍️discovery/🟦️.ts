@@ -7,7 +7,7 @@
 import { ephemeralMap, ephemeralBox } from "@semio-tech/framework";
 import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { closeSync, constants, existsSync, fstatSync, lstatSync, openSync, readFileSync, readdirSync, realpathSync, statSync } from "node:fs";
+import { closeSync, constants, existsSync, fstatSync, lstatSync, openSync, readFileSync, readSync, readdirSync, realpathSync, statSync } from "node:fs";
 import { basename, dirname, extname, isAbsolute, join, posix, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 //#endregion 🔌️Adapters
@@ -4826,7 +4826,10 @@ function exactOwnerRegularFile(repoRoot: string, path: string): "file" | "absent
 }
 
 /** 🛡️ Captures a safe regular input once and rejects changed descriptors or ancestry. */
-export function semanticOwnedInputFileSnapshot(repoRoot: string, path: string): SemanticOwnedInputFileSnapshot | null {
+export function semanticOwnedInputFileSnapshot(repoRoot: string, path: string, control: Readonly<{ maximumBytes?: number; checkpoint?: () => void }> = {}): SemanticOwnedInputFileSnapshot | null {
+  const maximumBytes = control.maximumBytes ?? Number.MAX_SAFE_INTEGER;
+  if (!Number.isSafeInteger(maximumBytes) || maximumBytes < 0) throw new Error("Exact owner input byte boundary is invalid");
+  control.checkpoint?.();
   if (!exactOwnerPath(path) || /[:*?"<>|]/u.test(path) || Buffer.from(path).toString("utf8") !== path) throw new Error("Exact owner input has an unsafe coordinate");
   const parts = path.split("/"), witnesses: { path: string; dev: number; ino: number }[] = [];
   let current = repoRoot;
@@ -4834,6 +4837,7 @@ export function semanticOwnedInputFileSnapshot(repoRoot: string, path: string): 
   if (!root.isDirectory() || root.isSymbolicLink()) throw new Error("Exact owner input repository root is not a no-follow directory");
   witnesses.push({ path: current, dev: root.dev, ino: root.ino });
   for (const [index, part] of parts.entries()) {
+    control.checkpoint?.();
     current = join(current, part);
     let node;
     try { node = lstatSync(current); } catch (error) { if ((error as NodeJS.ErrnoException).code === "ENOENT") return null; throw error; }
@@ -4841,17 +4845,30 @@ export function semanticOwnedInputFileSnapshot(repoRoot: string, path: string): 
     if (index < parts.length - 1) witnesses.push({ path: current, dev: node.dev, ino: node.ino });
   }
   const before = lstatSync(current), descriptor = openSync(current, constants.O_RDONLY | (constants.O_NOFOLLOW ?? 0));
+  let retained: Buffer | undefined, complete = false;
   try {
     const node = fstatSync(descriptor);
     if (!node.isFile() || node.dev !== before.dev || node.ino !== before.ino || node.mode !== before.mode || node.size !== before.size || node.mtimeMs !== before.mtimeMs || node.ctimeMs !== before.ctimeMs) throw new Error("Exact owner input changed during open: " + path);
-    const bytes = readFileSync(descriptor), after = fstatSync(descriptor), named = lstatSync(current);
+    if (node.size > maximumBytes) throw new Error("Exact owner input exceeds its byte boundary: " + path);
+    retained = Buffer.alloc(node.size);
+    for (let offset = 0; offset < retained.byteLength;) {
+      control.checkpoint?.();
+      const count = readSync(descriptor, retained, offset, Math.min(65536, retained.byteLength - offset), offset);
+      if (!count) throw new Error("Exact owner input shortened during read: " + path);
+      offset += count;
+    }
+    control.checkpoint?.();
+    const bytes = retained, after = fstatSync(descriptor), named = lstatSync(current);
     if (bytes.byteLength !== node.size || after.dev !== node.dev || after.ino !== node.ino || after.mode !== node.mode || after.size !== node.size || after.mtimeMs !== node.mtimeMs || after.ctimeMs !== node.ctimeMs || named.isSymbolicLink() || !named.isFile() || named.dev !== node.dev || named.ino !== node.ino || named.mode !== node.mode || named.size !== node.size || named.mtimeMs !== node.mtimeMs || named.ctimeMs !== node.ctimeMs) throw new Error("Exact owner input changed during read: " + path);
     for (const witness of witnesses) {
+      control.checkpoint?.();
       const ancestor = lstatSync(witness.path);
       if (!ancestor.isDirectory() || ancestor.isSymbolicLink() || ancestor.dev !== witness.dev || ancestor.ino !== witness.ino) throw new Error("Exact owner input ancestry changed: " + path);
     }
-    return { path, nodeKind: "file", contentHash: createHash("sha256").update(bytes).digest("hex"), mode: node.mode & 0o7777, size: bytes.byteLength, ancestorNodeKinds: parts.slice(1).map(() => "directory"), bytes };
-  } finally { closeSync(descriptor); }
+    const result: SemanticOwnedInputFileSnapshot = { path, nodeKind: "file", contentHash: createHash("sha256").update(bytes).digest("hex"), mode: node.mode & 0o7777, size: bytes.byteLength, ancestorNodeKinds: parts.slice(1).map(() => "directory"), bytes };
+    complete = true;
+    return result;
+  } finally { if (!complete) retained?.fill(0); closeSync(descriptor); }
 }
 
 /** 🔐️ Loads only the schema-registered catalog with exact bytes, paths, counts, and owner classifications. */

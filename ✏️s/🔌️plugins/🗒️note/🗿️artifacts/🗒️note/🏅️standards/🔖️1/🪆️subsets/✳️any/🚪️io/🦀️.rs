@@ -226,7 +226,7 @@ pub fn note_document_to_svg(document: &NoteSnapshot) -> Result<(String, u32, u32
 }
 
 pub fn note_document_json_to_svg(value: &Value) -> Result<(String, u32, u32), String> {
-    let document: NoteSnapshot = serde_json::from_value(value.clone()).map_err(|error| error.to_string())?;
+    let document: NoteSnapshot = dsl::os_pack::from_json_str(&value.to_string()).map_err(|error| error.to_string())?;
     note_document_to_svg(&document)
 }
 //#endregion 🔖️MediaExport
@@ -314,7 +314,7 @@ pub fn note_document_json_from_dwg(drawing: &DwgDrawing) -> Result<Value, String
             _ => {}
         }
     }
-    serde_json::to_value(&document).map_err(|error| error.to_string())
+    serde_json::from_str::<Value>(&dsl::os_pack::to_json_string(&document)).map_err(|error| error.to_string())
 }
 //#endregion 🔖️MediaImport
 
@@ -338,7 +338,7 @@ mod media_tests {
             extmax: [10.0, 10.0, 0.0],
         };
         let value = note_document_json_from_dwg(&drawing).unwrap();
-        let document: NoteSnapshot = serde_json::from_value(value).unwrap();
+        let document: NoteSnapshot = dsl::os_pack::from_json_str(&value.to_string()).unwrap();
         assert_eq!(document.schema, crate::artifacts::note::NOTE_DOCUMENT_SCHEMA);
         assert_eq!(document.blocks.len(), 2);
         let ink_count = document.blocks.iter().filter(|block| matches!(block, NoteBlockNode::Ink { .. })).count();
@@ -363,7 +363,7 @@ mod media_tests {
     async fn imports_empty_dwg_drawing_as_valid_empty_note_snapshot() {
         let drawing = DwgDrawing::default();
         let value = note_document_json_from_dwg(&drawing).unwrap();
-        let document: NoteSnapshot = serde_json::from_value(value).unwrap();
+        let document: NoteSnapshot = dsl::os_pack::from_json_str(&value.to_string()).unwrap();
         assert_eq!(document.schema, crate::artifacts::note::NOTE_DOCUMENT_SCHEMA);
         assert!(document.blocks.is_empty());
     }
@@ -425,7 +425,7 @@ mod media_tests {
         assert!(width >= 1024 && height >= 1024);
 
         // Same pipeline through the JSON-wrapped entry point every io leaf/media handler actually calls.
-        let json = serde_json::to_value(&document).unwrap();
+        let json = serde_json::from_str::<Value>(&dsl::os_pack::to_json_string(&document)).unwrap();
         let (svg_via_json, _w, _h) = note_document_json_to_svg(&json).expect("json svg export via io_dispatch");
         assert_eq!(svg, svg_via_json);
     }
@@ -542,8 +542,8 @@ pub fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
                 vec![
                     serializer_entry::<NoteSnapshot, export::svg::v1_1::any::NoteIntoSvg>(NOTE_DIALECT),
                     deserializer_entry::<NoteSnapshot, import::svg::v1_1::any::SvgIntoNote>(NOTE_DIALECT),
-                    serializer_entry::<NoteSnapshot, export::pdf::v1_4::any::NoteIntoPdf>(NOTE_DIALECT),
-                    deserializer_entry::<NoteSnapshot, import::pdf::v1_4::any::PdfIntoNote>(NOTE_DIALECT),
+                    serializer_entry::<NoteSnapshot, export::pdf::v1_4::base::NoteIntoPdf>(NOTE_DIALECT),
+                    deserializer_entry::<NoteSnapshot, import::pdf::v1_4::base::PdfIntoNote>(NOTE_DIALECT),
                     serializer_entry::<NoteSnapshot, export::png::v1_2::any::NoteIntoPng>(NOTE_DIALECT),
                     deserializer_entry::<NoteSnapshot, import::png::v1_2::any::PngIntoNote>(NOTE_DIALECT),
                     serializer_entry::<NoteSnapshot, export::json::v_rfc8259::any::NoteIntoJson>(NOTE_DIALECT),
@@ -570,3 +570,36 @@ pub fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
     }
 }
 //#endregion 🔖️IoDeclaration
+
+
+#[cfg(test)]
+mod pdf_page_contract {
+    use super::*;
+    use semio_framework::io::io_mechanism::{Deserializer, Serializer};
+    use semio_framework::io_schema::IoPayload as ForeignPayload;
+    use semio_s_plugin_stdio::artifacts::pdf::standards::v1_4::subsets::base::{io::{decode_pdf, encode_pdf}, schema::snapshot::PdfSnapshot};
+
+    #[semio_framework_async_macros::async_test]
+    async fn note_pdf14_page_contract_matches_the_json_oracle() {
+        let fixture: Value = serde_json::from_str(include_str!("🧪️fixtures/📖️pdf14-pages.json")).expect("neutral PDF vectors");
+        for row in fixture["cases"].as_array().expect("cases") {
+            let pdf: PdfSnapshot = dsl::os_pack::from_json_str(&serde_json::json!({"schema": semio_s_plugin_stdio::artifacts::pdf::STDIO_PDF_DOCUMENT_SCHEMA, "pages": row["pages"]}).to_string()).expect("owned PDF snapshot");
+            let bytes = encode_pdf(&pdf).expect("PDF 1.4 writer");
+            assert!(bytes.starts_with(b"%PDF-1.4"));
+            let note = crate::artifacts::note::io::import::deserializers::artifacts::pdf::v1_4::base::PdfIntoNote::deserialize(&ForeignPayload::Binary(bytes)).await.expect("PDF import").value;
+            let NoteBlockNode::Text { width, height, content, .. } = &note.blocks[0] else { panic!("PDF page text block") };
+            let text: String = crate::artifacts::note::note_block_text(content).iter().flat_map(|paragraph| paragraph.runs.iter().map(|run| run.text.as_str())).collect();
+            let imported = serde_json::json!({"width": width, "height": height, "text": text});
+            assert_eq!(imported, row["expectedImport"]);
+            let exported = crate::artifacts::note::io::export::serializers::artifacts::pdf::v1_4::base::NoteIntoPdf::serialize(&note).await.expect("PDF export").value;
+            let ForeignPayload::Binary(bytes) = exported else { panic!("binary PDF export") };
+            assert!(bytes.starts_with(b"%PDF-1.4"));
+            let pdf = decode_pdf(&bytes).expect("exported PDF decode");
+            assert_eq!(pdf.pages.len(), 1);
+            let actual: Value = serde_json::from_str(&dsl::os_pack::to_json_string(&pdf.pages[0])).expect("independent page JSON oracle");
+            assert_eq!(actual["text"], row["expectedExport"]["text"]);
+            assert_eq!(actual["width"].as_f64(), row["expectedExport"]["width"].as_f64());
+            assert_eq!(actual["height"].as_f64(), row["expectedExport"]["height"].as_f64());
+        }
+    }
+}

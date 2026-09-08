@@ -1,0 +1,153 @@
+{
+  "schema": "semio.plugin.rust-dep-info-laws/v1",
+  "maximumBytes": 8388608,
+  "cases": [
+    {
+      "id": "unix-two-outputs",
+      "text": "/owned/plugin.d: src/lib.rs mounted/leaf.rs\n\n/owned/libplugin.rlib: src/lib.rs mounted/leaf.rs\n\nsrc/lib.rs:\nmounted/leaf.rs:\n",
+      "expected": {
+        "targets": [
+          "/owned/plugin.d",
+          "/owned/libplugin.rlib"
+        ],
+        "inputs": [
+          "src/lib.rs",
+          "mounted/leaf.rs"
+        ],
+        "environment": []
+      }
+    },
+    {
+      "id": "spaces",
+      "text": "/owned target/plugin.d: source\\ folder/leaf.rs\n\nsource\\ folder/leaf.rs:\n",
+      "expected": {
+        "targets": [
+          "/owned target/plugin.d"
+        ],
+        "inputs": [
+          "source folder/leaf.rs"
+        ],
+        "environment": []
+      }
+    },
+    {
+      "id": "windows",
+      "text": "C:\\target\\plugin.d: C:\\repo\\lib.rs C:\\repo\\a\\ b.rs\n\nC:\\repo\\lib.rs:\nC:\\repo\\a\\ b.rs:\n",
+      "expected": {
+        "targets": [
+          "C:\\target\\plugin.d"
+        ],
+        "inputs": [
+          "C:\\repo\\lib.rs",
+          "C:\\repo\\a b.rs"
+        ],
+        "environment": []
+      }
+    },
+    {
+      "id": "environment",
+      "text": "/owned/plugin.d: src/lib.rs\n\nsrc/lib.rs:\n\n# env-dep:BUILD=a\\nb\\rc\\\\d\n# env-dep:MODE\n",
+      "expected": {
+        "targets": [
+          "/owned/plugin.d"
+        ],
+        "inputs": [
+          "src/lib.rs"
+        ],
+        "environment": [
+          [
+            "BUILD",
+            "a\nb\rc\\d"
+          ],
+          [
+            "MODE",
+            null
+          ]
+        ]
+      }
+    },
+    {
+      "id": "literal-hash-dollar",
+      "text": "/owned/plugin.d: src/a#b$.rs\n\nsrc/a#b$.rs:\n",
+      "expected": {
+        "targets": [
+          "/owned/plugin.d"
+        ],
+        "inputs": [
+          "src/a#b$.rs"
+        ],
+        "environment": []
+      }
+    },
+    {
+      "id": "missing-fake",
+      "text": "/owned/plugin.d: src/lib.rs\n",
+      "expected": null
+    },
+    {
+      "id": "extra-fake",
+      "text": "/owned/plugin.d: src/lib.rs\nsrc/lib.rs:\nextra.rs:\n",
+      "expected": null
+    },
+    {
+      "id": "mismatched-outputs",
+      "text": "/owned/plugin.d: src/lib.rs\n/owned/libplugin.rlib: src/other.rs\nsrc/lib.rs:\nsrc/other.rs:\n",
+      "expected": null
+    },
+    {
+      "id": "duplicate-fake",
+      "text": "/owned/plugin.d: src/lib.rs\nsrc/lib.rs:\nsrc/lib.rs:\n",
+      "expected": null
+    },
+    {
+      "id": "duplicate-output",
+      "text": "/owned/plugin.d: src/lib.rs\n/owned/plugin.d: src/lib.rs\nsrc/lib.rs:\n",
+      "expected": null
+    },
+    {
+      "id": "duplicate-environment",
+      "text": "/owned/plugin.d: src/lib.rs\nsrc/lib.rs:\n# env-dep:MODE=a\n# env-dep:MODE=b\n",
+      "expected": null
+    },
+    {
+      "id": "unknown-comment",
+      "text": "/owned/plugin.d: src/lib.rs\nsrc/lib.rs:\n# unknown:future\n",
+      "expected": null
+    },
+    {
+      "id": "invalid-environment-escape",
+      "text": "/owned/plugin.d: src/lib.rs\nsrc/lib.rs:\n# env-dep:MODE=a\\qb\n",
+      "expected": null
+    },
+    {
+      "id": "truncated",
+      "text": "/owned/plugin.d: src/lib.rs\nsrc/lib.rs:",
+      "expected": null
+    },
+    {
+      "id": "empty",
+      "text": "",
+      "expected": null
+    },
+    {
+      "id": "only-fake",
+      "text": "src/lib.rs:\n",
+      "expected": null
+    },
+    {
+      "id": "nul",
+      "text": "/owned/plugin.d: src/\u0000.rs\nsrc/\u0000.rs:\n",
+      "expected": null
+    },
+    {
+      "id": "recipe",
+      "text": "/owned/plugin.d: src/lib.rs\nsrc/lib.rs:\n\tcommand\n",
+      "expected": null
+    },
+    {
+      "id": "continuation",
+      "text": "/owned/plugin.d: src/lib.rs \\\n src/other.rs\nsrc/lib.rs:\nsrc/other.rs:\n",
+      "expected": null
+    }
+  ]
+}

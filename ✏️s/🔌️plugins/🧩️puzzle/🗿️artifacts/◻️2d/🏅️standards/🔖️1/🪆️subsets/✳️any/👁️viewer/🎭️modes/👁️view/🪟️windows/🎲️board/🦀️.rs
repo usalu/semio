@@ -8,7 +8,7 @@
 //! editor's own board host makes for its canvas, not a new simplification introduced here.
 
 use crate::artifacts::puzzle2d::{Puzzle2dNode, Puzzle2dSnapshot};
-use semio_framework_plugin::{mesh_from_kind, world3d_camera_json, world3d_selection_json, MeshView, MeshWindowKit, UiNode, WindowKindDefinition, WindowKit};
+use semio_framework_plugin::{mesh_from_kind, world3d_camera_json, world3d_selection_json, MeshView, MeshWindowKit, WindowKindDefinition, WindowKit};
 
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = MeshWindowKit::KIND_ID;

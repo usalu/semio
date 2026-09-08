@@ -8,7 +8,11 @@
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts build"
-      }
+      },
+      "cache": true,
+      "outputs": [
+        "{projectRoot}/dist/build"
+      ]
     },
     "test": {
       "executor": "nx:run-commands",
@@ -44,7 +48,11 @@
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts describe",
         "forwardAllArgs": true
-      }
+      },
+      "cache": false,
+      "dependsOn": [
+        "build"
+      ]
     }
   }
 }

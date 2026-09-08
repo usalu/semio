@@ -12,7 +12,7 @@ pub(crate) fn render(labels: &TrinityRewritingLabels) -> semio_framework_plugin:
     PanelTreeBuilder::new("trinity-catalogue")?
         .section(
             "trinity-catalogue.kinds",
-            Some(labels.catalogue.as_str().into()),
+            Some(crate::editor::rewriting::ui_label(labels.catalogue.as_str())?),
             true,
             crate::editor::rewriting::ui_node_list([
                 tree_item("trinity-catalogue.piece", crate::editor::rewriting::ui_label(labels.piece.as_str())?),
@@ -20,10 +20,10 @@ pub(crate) fn render(labels: &TrinityRewritingLabels) -> semio_framework_plugin:
                 tree_item("trinity-catalogue.connector", crate::editor::rewriting::ui_label(labels.connector.as_str())?),
             ])?,
         )?
-        .section("trinity-catalogue.lhs", Some(labels.add_to_lhs.as_str().into()), true, crate::editor::rewriting::ui_node_list([catalogue_add_item("trinity-catalogue.add-where", "Where clause", "where")])?)?
+        .section("trinity-catalogue.lhs", Some(crate::editor::rewriting::ui_label(labels.add_to_lhs.as_str())?), true, crate::editor::rewriting::ui_node_list([catalogue_add_item("trinity-catalogue.add-where", "Where clause", "where")])?)?
         .section(
             "trinity-catalogue.rhs",
-            Some(labels.add_to_rhs.as_str().into()),
+            Some(crate::editor::rewriting::ui_label(labels.add_to_rhs.as_str())?),
             true,
             crate::editor::rewriting::ui_node_list([
                 catalogue_add_item("trinity-catalogue.add-create", "Create pattern", "create"),

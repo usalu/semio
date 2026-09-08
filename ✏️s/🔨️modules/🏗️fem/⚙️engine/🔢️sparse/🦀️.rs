@@ -2664,6 +2664,7 @@ pub fn pcg(a: &Csr, b: &VecD, x0: &mut VecD, tol_rel: f64, max_iter: usize) -> P
 /// 🎯️ Cyclic Jacobi eigenvalue algorithm for a small dense symmetric matrix — returns eigenvalues
 /// (ascending) and the matching eigenvectors as columns of the returned `MatD`. Used internally to
 /// solve the small (`p×p`, `p ≤ ~40`) projected eigenproblem inside `subspace_iteration`.
+#[cfg(test)]
 fn dense_symmetric_eigen_jacobi(a: &MatD) -> (Vec<f64>, MatD) {
     let n = a.rows;
     let mut m = a.clone();
@@ -2739,6 +2740,7 @@ fn dense_symmetric_eigen_jacobi(a: &MatD) -> (Vec<f64>, MatD) {
     (vals, vecs)
 }
 
+#[cfg(test)]
 fn frobenius_norm(m: &MatD) -> f64 {
     let mut sum = 0.0;
     for row in 0..m.rows {
@@ -2749,16 +2751,6 @@ fn frobenius_norm(m: &MatD) -> f64 {
     sum.sqrt()
 }
 
-fn symmetrize(a: &MatD) -> MatD {
-    let n = a.rows;
-    let mut out = MatD::zeros(n, n);
-    for i in 0..n {
-        for j in 0..n {
-            out.set(i, j, 0.5 * (a.get(i, j) + a.get(j, i)));
-        }
-    }
-    out
-}
 // #endregion 🔖️DenseEigen
 
 // #region 🔖️SubspaceIteration
@@ -4817,6 +4809,7 @@ pub fn rcm_order(adjacency: &[Vec<usize>]) -> Vec<usize> {
 // #region 🔖️Tests
 #[cfg(test)]
 mod tests {
+    use crate::numerical_testkit::payload_bytes;
     use super::*;
 
     fn graph_laplacian_plus_identity(n: usize, edges: &[(usize, usize)]) -> Coo {
@@ -5149,7 +5142,7 @@ mod tests {
                     let (solution, stats) = job.solution();
                     return (solution.clone(), stats);
                 }
-                StepOutcome::Fault(fault) => panic!("pcg fault: {}", String::from_utf8_lossy(&fault.detail)),
+                StepOutcome::Fault(fault) => panic!("pcg fault: {}", String::from_utf8_lossy(&payload_bytes(fault.detail))),
                 StepOutcome::Cancelled => panic!("pcg unexpectedly cancelled"),
                 _ => {}
             }
@@ -5230,7 +5223,7 @@ mod tests {
         let checkpoint = loop {
             let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(u64::MAX, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
             if let StepOutcome::CheckpointReady(checkpoint) = job.step(&mut context) {
-                break checkpoint.state;
+                break payload_bytes(checkpoint.state);
             }
         };
         let resumed = PcgJob::from_checkpoint(operation, &checkpoint).expect("pcg checkpoint restores");
@@ -5251,7 +5244,7 @@ mod tests {
             let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(u64::MAX, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
             match job.step(&mut context) {
                 StepOutcome::PreviewReady(bytes) => {
-                    let preview: PcgPreview = decode_value(&bytes).expect("pcg preview decodes");
+                    let preview: PcgPreview = decode_value(&payload_bytes(bytes)).expect("pcg preview decodes");
                     assert_eq!(preview.quality, PcgQuality::Coarse);
                     assert!(preview.residual_norm < 1e-3);
                     assert!(preview.residual_norm >= 1e-12);
@@ -5339,7 +5332,7 @@ mod tests {
             loop {
                 let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(fuel, u64::MAX), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence);
                 match job.step(&mut context) {
-                    StepOutcome::Complete(mut candidate) => {
+                    StepOutcome::Complete(candidate) => {
                         close_payload(candidate.state);
                         close_payload(candidate.output);
                         let factor = job.factor().expect("completed factor owner");
@@ -5610,8 +5603,8 @@ mod tests {
         }
 
         let mut oversized = Vec::<(u32, f64)>::new();
-        oversized.try_reserve_exact(NUMERICAL_OWNER_PAGE_BYTES / std::mem::size_of::<(u32, f64)>() + 1).expect("hostile factor backing");
-        assert!(oversized.capacity() * std::mem::size_of::<(u32, f64)>() > NUMERICAL_OWNER_PAGE_BYTES);
+        oversized.try_reserve_exact(NUMERICAL_OWNER_PAGE_BYTES / size_of::<(u32, f64)>() + 1).expect("hostile factor backing");
+        assert!(oversized.capacity() * size_of::<(u32, f64)>() > NUMERICAL_OWNER_PAGE_BYTES);
         let mut columns = vec![Vec::new(); n];
         columns[0] = oversized;
         let mut refused_owner = SubspaceIterationJob::new(operation, LdltFactor { n, l_cols: columns, d: vec![1.0; n] }, mass.clone(), n, 3, 1);
@@ -5754,7 +5747,7 @@ mod tests {
         }
         assert!(opportunities > 18, "six retained vectors cannot be initialized in one constructor turn");
         let job = construction.take_complete().expect("terminal construction transfers once");
-        assert_eq!(job.a.n, 3);
+        assert_eq!(job.state.a.n, 3);
         assert!(construction.take_complete().is_none());
 
         let matrix = Csr::from_owned_parts(3, vec![0, 1, 2, 3], vec![0, 1, 2], vec![2.0, 3.0, 4.0]);

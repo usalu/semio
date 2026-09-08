@@ -14,9 +14,6 @@ use semio_framework_plugin::plugin_app_close_prelude::SurfaceKind as ContractSur
 pub const WINDOW_KIND_ID: &str = "gis2d-view-map";
 pub const BODY_KEY: &str = "gis2d.view.map";
 const SURFACE_ID: &str = "gis2d.view.composite";
-/// 👁️ Read-only counterpart of the editor's `GIS2D_PLAY_APP_ID` controller id — kept distinct so a
-/// viewer session's tiled-map controller can never be mistaken for an editor session's.
-const GIS_MAP_VIEW_CONTROLLER_ID: &str = "gis2d-view";
 /// 👁️ Matches the editor's `Gis2dConfig::default()` camera — a viewer has no persisted per-session
 /// camera (`Config = NoConfig`), so this is a hardcoded default, not a bug.
 const GIS_MAP_VIEW_DEFAULT_CAMERA_JSON: &str = r#"{"x":0,"y":0,"zoom":1}"#;

@@ -5,6 +5,7 @@ use crate::artifacts::gismap::GisMapSnapshot;
 use crate::artifacts::gismap::diff::GisMapDiff;
 use crate::artifacts::gismap::mutations::GisMapMutation;
 use protocol::{MutationKind, SemanticDescriptor};
+#[cfg(test)]
 use serde::{Deserialize, Serialize};
 use semio_framework_value_derive::{FromValue, ToValue};
 

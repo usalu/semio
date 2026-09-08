@@ -8,8 +8,8 @@ use trinity::lexer::{lex_spanned, SpannedToken, Token};
 
 //#region 🔖️Artifact
 /// 🧬️ Full writer artifact across the artifact, presence and config lanes.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ArtifactSchema, dsl::ToValue, dsl::FromValue)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.writer.writer")]
 pub struct WriterArtifact {
     #[state(artifact)]

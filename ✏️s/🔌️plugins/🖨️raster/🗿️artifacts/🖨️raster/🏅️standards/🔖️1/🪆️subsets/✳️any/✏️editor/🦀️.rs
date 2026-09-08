@@ -425,7 +425,7 @@ impl store::ArtifactStoreOneItemPreparationFactory<RasterSnapshot, RasterMutatio
 
 impl store::ArtifactStoreOneItemPreparation<RasterSnapshot, RasterMutation> for RasterStorePreparation {
     fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {
-        use protocol::{Mutation as _, MutationDiff as _};
+        use protocol::Mutation as _;
         if !grant.permits_one() || self.cancelled {
             return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked);
         }
@@ -565,7 +565,7 @@ impl store::ArtifactStoreOneItemPreparationFactory<RasterConfig, RasterConfigMut
 
 impl store::ArtifactStoreOneItemPreparation<RasterConfig, RasterConfigMutation> for RasterConfigStorePreparation {
     fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {
-        use protocol::{Mutation as _, MutationDiff as _};
+        use protocol::Mutation as _;
         if !grant.permits_one() || self.cancelled {
             return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked);
         }

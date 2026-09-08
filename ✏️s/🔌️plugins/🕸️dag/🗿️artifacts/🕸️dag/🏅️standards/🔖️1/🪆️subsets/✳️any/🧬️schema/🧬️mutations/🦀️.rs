@@ -209,7 +209,7 @@ mod tests {
     use protocol::os_spr::testkit::{assert_fatal_never_applies, assert_missing_target_is_error, assert_mutation_diff_absorb_law, assert_mutation_inverse_law, assert_outcome_deterministic};
     use protocol::Mutation;
     use protocol::SemanticMutation;
-    use vcs::apply_mutation;
+    use store::apply_mutation;
 
     /// 🏷️ The three declarations of this vocabulary — the enum, [`KINDS`] and the committed catalog
     /// — must agree, in spelling AND in order. The framework never parses Rust, so without this

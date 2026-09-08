@@ -3,11 +3,9 @@
 use crate::artifacts::layout::mutations::LayoutMutation;
 use crate::artifacts::layout::LayoutDropPreviewState;
 use crate::artifacts::layout::LayoutSnapshot;
-use crate::editor::layout::canvas::active_page;
 use crate::editor::layout::commands::{add_frame, add_page};
 use crate::editor::layout::config::LayoutConfig;
 use crate::editor::layout::config::LayoutConfigMutation;
-use crate::editor::layout::engine::scene::{build_display_list_for_page, LayoutEngine};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -26,14 +24,6 @@ fn screen_to_world_for_surface(config: &LayoutConfig, blueprint: bool, sx: f64, 
     (world.x, world.y)
 }
 
-#[allow(clippy::too_many_arguments)]
-fn hit_test_at(doc: &LayoutSnapshot, config: &LayoutConfig, sx: f64, sy: f64, width: f64, height: f64, blueprint: bool) -> Option<String> {
-    let page = active_page(doc, config)?;
-    let (wx, wy) = screen_to_world_for_surface(config, blueprint, sx, sy, width, height);
-    let mut engine = LayoutEngine::new();
-    let list = build_display_list_for_page(&mut engine, doc, page, &page.id, &[], None, blueprint);
-    list.hit_test(wx as f32, wy as f32)
-}
 //#endregion 🔖️Shared
 
 //#region 🔖️CanvasPointerDown
@@ -73,10 +63,10 @@ pub struct CanvasDrop {
 pub fn handle(payload: &CanvasDrop, doc: &ArtifactView<'_, LayoutSnapshot>, cfg: &ConfigView<'_, LayoutConfig>) -> Result<Emit<LayoutMutation, LayoutConfigMutation>, Fault> {
     let blueprint = surface_is_blueprint(payload.surface_id.as_deref());
     if !blueprint {
-        return Ok(Emit::config(vec![LayoutConfigMutation::SetDropPreview { preview: LayoutDropPreviewState::default() }]));
+        return Ok(Emit::config(vec![LayoutConfigMutation::SetDropPreview(crate::editor::layout::config::SetDropPreview { preview: LayoutDropPreviewState::default() })]));
     }
     let (wx, wy) = screen_to_world_for_surface(cfg.snapshot, blueprint, payload.x, payload.y, payload.width, payload.height);
     let mut emitted = if payload.kind == "page" { add_page::handle(&add_page::AddPage {}, doc, cfg)? } else { add_frame::handle(&add_frame::AddFrame { kind: payload.kind.clone(), x: Some(wx), y: Some(wy) }, doc, cfg)? };
-    emitted.config_mutations.push(LayoutConfigMutation::SetDropPreview { preview: LayoutDropPreviewState::default() });
+    emitted.config_mutations.push(LayoutConfigMutation::SetDropPreview(crate::editor::layout::config::SetDropPreview { preview: LayoutDropPreviewState::default() }));
     Ok(emitted)
 }

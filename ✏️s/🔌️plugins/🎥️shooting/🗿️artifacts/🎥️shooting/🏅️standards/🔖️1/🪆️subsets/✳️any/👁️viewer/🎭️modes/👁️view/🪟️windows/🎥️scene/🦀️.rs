@@ -10,7 +10,7 @@
 use crate::artifacts::shooting::schema::{active_shot, is_transparent_shooting_background};
 use crate::artifacts::shooting::{shooting_asset_scale, ShootingAsset, ShootingCamera, ShootingShot, ShootingSnapshot};
 use semio_framework_plugin::{
-    build_world_3d_scene, world3d_mesh_id_from_url, world3d_meshes_json_from_kinds_and_urls, world3d_scene, world3d_selection_json, LocalizedLabel, SurfaceKind, UiNode, WindowKindDefinition, WindowOptions, World3dScene, WorldSunConfig,
+    world3d_mesh_id_from_url, world3d_meshes_json_from_kinds_and_urls, world3d_scene, world3d_selection_json, LocalizedLabel, SurfaceKind, WindowKindDefinition, WindowOptions, World3dScene, WorldSunConfig,
 };
 use dsl::json;
 use dsl::os_pack::json::Value;
@@ -30,7 +30,6 @@ pub const BODY_KEY: &str = "shooting.view.scene";
 const SURFACE_ID: &str = "shooting.view.scene3d/scene";
 /// 👁️ Read-only counterpart of the editor's `SHOOTING_PLAY_APP_ID` controller id — kept distinct so a
 /// viewer session's world-3d controller can never be mistaken for an editor session's.
-const SHOOTING_VIEW_CONTROLLER_ID: &str = "shooting-view";
 /// 👁️ Matches the editor's `SHOOTING_FALLBACK_MESH_KIND` literal ("box") — duplicated on purpose rather
 /// than imported through the sibling editor module, which `policyViewerPurityBreaches` forbids outright.
 const SHOOTING_VIEW_FALLBACK_MESH_KIND: &str = "box";
@@ -143,14 +142,14 @@ fn shooting_frame_json(shot: &ShootingShot) -> String {
     json!({ "width": shot.width, "height": shot.height, "shape": shot.shape.as_str(), "badge": true }).to_string()
 }
 
-/// 👁️ Pure `ShootingSnapshot -> UiNode` read: default camera (a viewer has no persisted per-session
+/// 👁️ Pure `ShootingSnapshot -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode>` read: default camera (a viewer has no persisted per-session
 /// camera), real scene lighting/asset placement/active-shot frame straight off the document.
-pub fn render(snapshot: &ShootingSnapshot) -> UiNode {
+pub fn render(snapshot: &ShootingSnapshot) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let camera = ShootingCamera::default();
-    build_world_3d_scene(
+    semio_framework_plugin::scene_surface(
         SURFACE_ID,
-        SHOOTING_VIEW_CONTROLLER_ID,
-        World3dScene {
+        semio_framework_ui_contract::SurfaceKind::World3d,
+        &World3dScene {
             environment_json: Some(shooting_environment_json(snapshot)),
             frame_json: active_shot(snapshot).map(shooting_frame_json),
             ..world3d_scene(camera_json(&camera), world_meshes_json(snapshot), world_instances_json(snapshot), world3d_selection_json("pick", &[], None), &WorldSunConfig::default())
@@ -174,9 +173,11 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn render_produces_a_scene_node_for_the_default_document() {
         let snapshot = crate::artifacts::shooting::schema::default_snapshot();
-        let node = render(&snapshot);
-        let json = serde_json::to_string(&node).unwrap();
-        assert!(json.contains("world-3d"));
+        let node = render(&snapshot).expect("viewer scene");
+        let semio_framework_plugin::Component::Surface(props) = &node.component else { panic!("3D surface") };
+        let scene: World3dScene = semio_framework_ui_scene::decode(props).expect("packed scene");
+        assert!(scene.meshes_json.contains("/mesh/🧊️base.glb"));
+        semio_framework_plugin::testkit::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).expect("retire viewer scene");
     }
 }
 //#endregion 🧪️Tests

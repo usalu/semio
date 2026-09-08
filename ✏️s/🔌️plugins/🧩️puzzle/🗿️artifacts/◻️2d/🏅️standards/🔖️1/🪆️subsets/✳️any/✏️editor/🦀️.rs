@@ -30,9 +30,9 @@ pub use crate::editor::puzzle2d::terminology::{puzzle2d_localized, puzzle2d_loca
 use semio_framework::kernel::UiDirtyScope;
 use semio_framework_plugin::kernel::Effect;
 use semio_framework_plugin::{
-    ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, AppIo, AppLabels, ArtifactEditor, ArtifactPresentation, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView, ConfigView, Dialect, DraftView,
+    ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, AppIo, ArtifactEditor, ArtifactPresentation, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView, ConfigView, Dialect, DraftView,
     Editor, EditorApp, Emit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, InteractionTarget, InteractiveJobClassification, Label, LocalizedLabel, Media, MediaClass, MediaForm,
-    MediaPortDirection, MediaPortSpec, MediaType, MergeMode, NoDraft, NoDraftMutation, PortMultiplicity, SelectionMethod, SelectionMode, SelectionSpec, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError, UiNode, WindowEngagement, WindowMeasure,
+    MediaPortDirection, MediaPortSpec, MediaType, MergeMode, NoDraft, NoDraftMutation, PortMultiplicity, SelectionMethod, SelectionMode, SelectionSpec, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError, WindowEngagement, WindowMeasure,
     INTERACTION_SELECT_ACTION_ID, SET_ACTIVE_UTILITY_ACTION_ID,
 };
 // 🕹️ `InteractionView` — see puzzle3d's identical import comment (missing top-level re-export from
@@ -663,7 +663,7 @@ pub fn apply_brush_place_payload(fixture: &mut Value, payload: &Value) {
 /// every node/handle/edge plus the kind-catalog/kind-compat re-push. Only needed when the fixture
 /// content actually changed — gated by `last_synced_fixture` in `handle`.
 fn sync_host_fixture_content(host: &mut BoardHost, envelope: &Puzzle2dScene) {
-    let _ = host.parse_fixture_v1(&envelope.fixture);
+    let _ = host.parse_fixture_json(&envelope.fixture.to_string());
     if let Some(json) = board_kind_catalogs_json(&envelope.fixture) {
         let _ = host.set_board_kind_catalogs_from_json(&json);
     }
@@ -3587,7 +3587,7 @@ impl ArtifactEditor for Puzzle2dPlayApp {
         _engines: &EngineHandles,
     ) -> Result<Emit<Puzzle2dMutation, Puzzle2dConfigMutation, Self::DraftMutation>, Fault> {
         let config = cfg.snapshot;
-        let (action, args) = (command.action_id(), command.args());
+        let (action, _args) = (command.action_id(), command.args());
         if action == "setActiveExample" {
             return puzzle2d_active_example_emit(command, doc.snapshot, config);
         }

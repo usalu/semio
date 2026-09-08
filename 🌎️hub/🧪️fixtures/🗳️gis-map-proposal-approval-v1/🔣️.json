@@ -2,7 +2,7 @@
   "schema": "semio.hub.gis-map-proposal-approval-fixture/v1",
   "version": 1,
   "binding": {
-    "digest": "435e02065db2d2e0694b6b1c468ee24ae8fe8711432f112f510aaa103a546386",
+    "digest": "24a934f552343221c667cbda44c83ecad1720a13515efb5b789d64af56a2ec0f",
     "catalogGenerationId": "0101010101010101010101010101010101010101010101010101010101010101",
     "packageId": "semio:gis",
     "packageVersion": "0.1.0",
@@ -54,9 +54,16 @@
     "phases": ["ready", "assembly", "journal", "verification", "publishing", "published", "closing"],
     "witnessSource": "sole-committed-wal-event",
     "retryOwner": "same-document-three-store-host",
+    "frontierChain": "canonical-lowercase-hex-with-genesis-zero",
+    "storeIdentities": {
+      "parentDialect": "s.gis.gismap@1/*",
+      "childReferences": ["gismap-drawing!s.stdio.semio@v1/drawing", "gismap-value!s.stdio.semio@v1/value"],
+      "childOwnerRoles": ["drawing", "value"],
+      "childOwnerParent": "exact-document-parent-reference"
+    },
     "publicationOrder": ["committed-wal-event", "actor-frontier", "public-checkpoint", "ledger-applied"],
     "beforePublicAck": { "ledgerApplied": false, "documentWrite": "retained", "state": "publishing" },
-    "publicationFailure": { "ledgerApplied": false, "documentWrite": "retained", "retry": "same-event-same-owner" },
+    "publicationFailure": { "ledgerApplied": false, "documentWrite": "retained", "retry": "same-event-same-owner", "retryDeadline": "process-owned-bounded-attempt" },
     "ingressAuthority": {
       "owner": "hub-private-sorted-binding-guards",
       "bindings": ["user", "session", "space-authority", "membership"],
@@ -67,11 +74,27 @@
     },
     "abandonedRequest": {
       "owner": "runtime-document-maintenance",
-      "abortPhases": ["ready", "preflight", "assembly", "journal-no-receipt"],
+      "preparedOwner": "armed-before-committer-preflight",
+      "driver": "document-write-request-token-single-poller",
+      "cleanupCapacity": 128,
+      "runtimeShutdown": "reinsert-exact-owner-before-task-drop",
+      "terminalClose": "fence-new-admission-until-cleanup-empty",
+      "abortPhases": ["no-runtime-unpolled", "unpolled", "rejected-preflight", "ready", "preflight", "assembly", "journal-no-receipt"],
+      "outbox": "abandoned-until-fresh-identical-retry",
       "commitCutover": "awaiting-ack",
       "postCutover": ["verification", "public-checkpoint", "ledger-applied"]
     },
-    "documentFence": "mounted-actor-generation"
+    "documentFence": "mounted-actor-generation-including-zero",
+    "genesisPublication": "no-active-checkpoint-exact-zero-frontier",
+    "peerNotification": {
+      "after": ["committed-wal-event", "actor-frontier", "public-checkpoint", "ledger-applied"],
+      "frame": "rebootstrap-required",
+      "source": "active-checkpoint",
+      "command": "server-stamped-create-region",
+      "peers": 2,
+      "publicationFailure": "none",
+      "publicationCancellation": "none"
+    }
   },
   "visibility": [
     { "role": "author-owner", "readEvents": true, "readProposal": true, "approve": true, "expectedCode": null },

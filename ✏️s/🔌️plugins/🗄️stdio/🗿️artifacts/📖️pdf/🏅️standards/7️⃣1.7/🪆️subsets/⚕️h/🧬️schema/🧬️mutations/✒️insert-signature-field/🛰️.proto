@@ -1,0 +1,6 @@
+syntax = "proto3";
+package semio.s_stdio_pdf_1_7_h.mutation.insert_signature_field;
+
+message InsertSignatureFieldMutation {
+  string name = 1;
+}

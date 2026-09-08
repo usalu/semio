@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import { spawn as spawnNxProcess, spawnSync as stopNxProcessTree } from "node:child_process";
 import { microsecondsFromMilliseconds } from "./🧰️framework/🔨️modules/🧵️job/⏱️budget/🟨️.js";
 /**
  * 🧭️ Monorepo command router: `bun ./📜️script.ts <verb> [segments…]` (e.g. `📜️script.ts dev`, `📜️script.ts dev mcp`, `📜️script.ts generate neo4j elements`).
@@ -48,6 +49,7 @@ import {
   orchestratorBudgetOpts,
   parseLcov,
   renderLcov,
+  wasmBindgenVersion,
   resolveCliBin,
   resolveMcpBin,
   resolveFrameworkOsPlaygroundPlugin,
@@ -314,6 +316,8 @@ export class SetupScript extends Script {
         postinstall: () => this.runPostinstall(),
         git: () => this.runGit(),
         native: (rest) => new NativeOsScript(this.root).run(rest),
+        deps: (rest) => this.runDependencies(rest[0] ?? ""),
+        prepare: () => console.log("[prepare] Nx prerequisites completed"),
       },
       "bun ./📜️script.ts setup [postinstall|git|native]",
     );
@@ -344,8 +348,6 @@ export class SetupScript extends Script {
 
   private runGit(): void {
     runCmd("git", ["config", "--local", "core.symlinks", "true"], { cwd: this.root });
-    const repoClientPath = buildRepoMcpClient(this.root);
-    runCmd(repoClientPath, ["configure"], { cwd: this.root });
     installMicroCommitGitHooks(this.root);
     const source = "AGENTS.md";
     for (const alias of ["CLAUDE.md", "GEMINI.md"]) {
@@ -360,84 +362,38 @@ export class SetupScript extends Script {
     }
   }
 
-  private runWorkspaceCodegen(): void {
-    console.log("[setup] workspace codegen…");
-    const opts = { cwd: this.root, ...orchestratorBudgetOpts() };
-    const nx = join(this.root, "node_modules", "nx", "bin", "nx.js");
-    const runNx = (target: string) => runCmd("node", [nx, "run", target], opts);
-    runNx("@semio-tech/framework-schema:generate");
-    runNx("@semio-tech/ui-styling-tokens:generate");
-    runCmd("bun", ["./📜️script.ts", "build"], {
-      cwd: join(this.root, "🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript"),
-      ...orchestratorBudgetOpts(),
-    });
-    runNx("@semio-tech/graph-manifest:generate");
-    runNx("@semio-tech/plugin-registry:generate");
-  }
-
   private runFull(): void {
-    if (process.argv.includes("--with-native-os")) {
-      console.log(`[setup] ${process.platform} native bootstrap…`);
-      tryRun(BUN, [join(this.root, "📜️script.ts"), "setup", "native"], { cwd: this.root });
-    }
-
-    console.log("[setup] uv sync…");
-    tryRun("uv", ["sync", "--all-packages", "--all-groups"]);
-    console.log("[setup] neo4j MCP server prefetch (uvx)…");
-    tryRun("uvx", ["--quiet", "mcp-neo4j-cypher", "--help"]);
-    console.log("[setup] cargo fetch…");
-    tryRun("cargo", ["fetch", "--manifest-path", "Cargo.toml"]);
-    console.log("[setup] cargo-nextest…");
-    tryRun("cargo", ["install", "cargo-nextest", "--locked"]);
-    console.log("[setup] C++ toolchain and vcpkg…");
-    tryRun("bun", [join(this.root, "📜️script.ts"), "cpp", "setup"], { cwd: this.root });
-    console.log("[setup] go build repo client…");
-    const clientOut = resolveCliBin(this.root);
-    tryRun("go", ["build", "-o", clientOut, `./${REPO_CLI_ENTRY_GO}`], { env: { ...process.env, GOWORK: join(this.root, "go.work") } });
-    tryRun("go", ["build", "-o", resolveMcpBin(this.root), `./${REPO_MCP_GO}`], { env: { ...process.env, GOWORK: join(this.root, "go.work") } });
-    console.log("[setup] dotnet restore…");
-    tryRun("dotnet", ["restore", "Monorepo.sln"]);
-    console.log("[setup] rustup wasm target…");
-    tryRun("rustup", ["target", "add", "wasm32-unknown-unknown"]);
-    console.log("[setup] cargo-llvm-cov (exhaustive-level coverage)…");
-    tryRun("cargo", ["install", "cargo-llvm-cov", "--locked"]);
-    console.log("[setup] sccache…");
-    try {
-      ensureSccache();
-    } catch (error) {
-      console.warn("[setup] sccache install skipped:", error);
-    }
-
-    const browsersPath = join(this.root, "node_modules", ".cache", "ms-playwright");
-    mkdirSync(browsersPath, { recursive: true });
-    console.log("[setup] Playwright browsers…");
-    tryRun("bunx", ["playwright", "install", "--with-deps", "chromium"], {
-      env: { ...process.env, PLAYWRIGHT_BROWSERS_PATH: browsersPath },
-    });
-
-    if (process.platform === "linux") {
-      const chromeSandbox = join(this.root, "node_modules", "electron", "dist", "chrome-sandbox");
-      if (existsSync(chromeSandbox)) {
-        try {
-          chownSync(chromeSandbox, 0, 0);
-          chmodSync(chromeSandbox, 0o4755);
-          console.log("[setup] Electron chrome-sandbox permissions set.");
-        } catch (e) {
-          console.warn("[setup] chrome-sandbox chmod skipped:", e);
-        }
-      }
-    }
-
-    console.log("[setup] git workspace (symlinks, hook cleanup)…");
-    new SetupScript(this.root).run(["git"]);
-
-    this.runWorkspaceCodegen();
-
-    console.log("[setup] VS Code extension build & package…");
-    tryRun("bun", ["nx", "run", "@semio-tech/repo-vscode:build"], { cwd: this.root });
-    tryRun("bun", ["nx", "run", "@semio-tech/repo-vscode:build-vsix"], { cwd: this.root });
-    console.log("[setup] done.");
+    console.log("[setup] locked dependency environments are ready through the Nx prerequisite graph");
   }
+
+  private ensureCargoTool(crate: string, command: string[], version: string): void {
+    let current = "";
+    try { current = runProbe(command[0]!, [...command.slice(1), "--version"]).stdout; } catch {}
+    if (current.split(/\s+/).includes(version)) return;
+    runCmd("cargo", ["install", crate, "--version", version, "--locked"], { cwd: this.root, ...orchestratorBudgetOpts() });
+  }
+
+  private runDependencies(kind: string): void {
+    const opts = { cwd: this.root, ...orchestratorBudgetOpts() };
+    if (kind === "javascript") runCmd("bun", ["install", "--frozen-lockfile"], opts);
+    else if (kind === "python") runCmd("uv", ["sync", "--locked", "--all-packages", "--all-groups"], opts);
+    else if (kind === "cargo") runCmd("cargo", ["fetch", "--locked", "--manifest-path", "Cargo.toml"], opts);
+    else if (kind === "go") runCmd("go", ["mod", "download"], { ...opts, env: { ...process.env, GOWORK: join(this.root, "go.work") } });
+    else if (kind === "dotnet") console.log("[deps-dotnet] Nx project restores completed");
+    else if (kind === "cpp") console.log("[deps-cpp] Nx native tooling prerequisite completed");
+    else if (kind === "browsers") runCmd("bun", [join(this.root, "node_modules/playwright/cli.js"), "install", "chromium"], { ...opts, env: { ...process.env, PLAYWRIGHT_BROWSERS_PATH: join(this.root, "node_modules/.cache/ms-playwright") } });
+    else if (kind === "wasm") {
+      this.ensureCargoTool("wasm-pack", ["wasm-pack"], "0.15.0");
+      this.ensureCargoTool("wasm-bindgen-cli", ["wasm-bindgen"], wasmBindgenVersion(readFileSync(join(this.root, "Cargo.lock"), "utf8")));
+      this.ensureCargoTool("trunk", ["trunk"], "0.21.14");
+      runCmd("rustup", ["target", "add", "wasm32-unknown-unknown", "wasm32-wasip2"], opts);
+    } else if (kind === "tools") {
+      this.ensureCargoTool("cargo-nextest", ["cargo", "nextest"], "0.9.140");
+      this.ensureCargoTool("cargo-llvm-cov", ["cargo", "llvm-cov"], "0.8.7");
+      ensureSccache();
+    } else throw new Error(`Unknown dependency environment: ${kind}`);
+  }
+
 }
 //#endregion 🔖️SetupScript
 
@@ -695,13 +651,89 @@ export class DevScript extends Script {
 
 //#region 🔖️NxScript
 export class NxScript extends Script {
-  run(segments: string[]): void {
-    runCmd("node", [join(this.root, "node_modules", "nx", "bin", "nx.js"), ...segments], {
+  async run(segments: string[]): Promise<void> {
+    const invocation = resolveNxInvocation(segments);
+    const child = spawnNxProcess("node", [join(this.root, "node_modules", "nx", "bin", "nx.js"), ...invocation.args], {
       cwd: this.root,
-      env: devToolingEnv(),
-      ...orchestratorBudgetOpts(),
+      env: devToolingEnv({ ...invocation.env, npm_lifecycle_event: undefined, npm_lifecycle_script: undefined }),
+      stdio: "inherit",
+      detached: process.platform !== "win32",
     });
+    let cancelled: NodeJS.Signals | undefined;
+    let force: ReturnType<typeof setTimeout> | undefined;
+    const stop = (signal: NodeJS.Signals): void => {
+      if (cancelled || !child.pid) return;
+      cancelled = signal;
+      if (process.platform === "win32") stopNxProcessTree("taskkill", ["/pid", String(child.pid), "/t", "/f"], { stdio: "ignore" });
+      else child.kill(signal);
+      force = setTimeout(() => {
+        if (process.platform !== "win32" && child.pid) try { process.kill(-child.pid, "SIGKILL"); } catch {}
+      }, 5000);
+      force.unref();
+    };
+    const interrupt = (): void => stop("SIGINT"), terminate = (): void => stop("SIGTERM");
+    process.once("SIGINT", interrupt);
+    process.once("SIGTERM", terminate);
+    const budget = orchestratorBudgetOpts().budgetMs ?? 0;
+    const timeout = budget > 0 ? setTimeout(() => { console.error(`[budget] Nx exceeded ${budget}ms`); stop("SIGTERM"); }, budget) : undefined;
+    try {
+      const status = await new Promise<number>((accept, reject) => { child.once("error", reject); child.once("close", (code) => accept(code ?? 1)); });
+      if (cancelled) process.exitCode = cancelled === "SIGINT" ? 130 : 143;
+      else if (status !== 0) process.exitCode = status;
+    } finally {
+      if (force) clearTimeout(force);
+      if (timeout) clearTimeout(timeout);
+      process.removeListener("SIGINT", interrupt);
+      process.removeListener("SIGTERM", terminate);
+    }
   }
+}
+
+/** 🧭️ Resolves public selections before Nx creates the single task graph. */
+export function resolveNxInvocation(segments: string[]): { args: string[]; env: NodeJS.ProcessEnv } {
+  if (segments[0] !== "run") return { args: segments, env: {} };
+  const delimiter = segments.indexOf("--");
+  const selected = delimiter < 0 ? [] : segments.slice(delimiter + 1);
+  const options = segments.slice(2, delimiter < 0 ? undefined : delimiter);
+  const target = segments[1];
+  if (target === "workspace:setup" && selected.length) {
+    const command = selected[0] === "deps" ? `deps-${selected[1]}` : selected[0] === "prepare" ? "prepare" : `setup-${selected[0]}`;
+    return { args: ["run", `workspace:${command}`, ...options], env: {} };
+  }
+  if (target === "workspace:cpp" && selected.length) {
+    const [command, ...args] = selected;
+    if (!["setup", "configure", "build", "test", "all"].includes(command)) throw new Error(`Unknown CMake operation: ${command}`);
+    return { args: ["run", command === "all" ? "workspace:cpp" : `workspace:cpp-${command}`, ...options, ...(args.length ? ["--", ...args] : [])], env: {} };
+  }
+  if (target === "workspace:test") {
+    const { level, rest } = resolveTestLevel(selected);
+    if (!rest.length) return { args: ["run", `workspace:test-${level}`, ...options], env: { SEMIO_TEST_LEVEL: level } };
+    if (rest[0] === "repo-client" || rest[0] === "repo-mcp") {
+      const project = rest[0] === "repo-client" ? "@semio-tech/repo-client" : "@semio-tech/repo-mcp-go";
+      return { args: ["run", `${project}:${testTargetForLevel(level)}`, ...options, ...(rest.length > 1 ? ["--", ...rest.slice(1)] : [])], env: { SEMIO_TEST_LEVEL: level } };
+    }
+    const taxonomy = repoTaxonomy(WORKSPACE_ROOT);
+    if (((taxonomy.testPhases ?? []) as string[]).includes(rest[0])) return { args: ["run", `@semio-tech/repo-test-domain:test-${rest[0]}`, ...options, "--", ...(((taxonomy.testLevellessPhases ?? []) as string[]).includes(rest[0]) ? [] : [level]), ...rest.slice(1)], env: { SEMIO_TEST_LEVEL: level } };
+  }
+  if (target === "workspace:lint" && selected[0] === "repo") return { args: ["run", "workspace:lint-repo", ...options, ...(selected.length > 1 ? ["--", ...selected.slice(1)] : [])], env: {} };
+  if (target === "workspace:dev") {
+    if (selected[0] === "mcp" || selected[0] === "storybook-static") return { args: segments, env: {} };
+    if (selected[0] === "storybook") return { args: ["run", "workspace:dev-storybook", ...options, "--", ...selected.slice(1)], env: {} };
+    if (selected[0] === "multi") return { args: ["run", "@semio-tech/framework-os-dev:dev", ...options, "--", ...selected], env: { S_OS_PORT: process.env.S_OS_PORT ?? "6071", SEMIO_RENDERER: process.env.SEMIO_RENDERER ?? "react" } };
+    const catalog = loadFrameworkOsPlaygroundCatalog();
+    if (catalog.length === 0) throw new Error("The playground catalog must be generated through @semio-tech/plugin-registry:generate before development");
+    const app = resolveFrameworkOsPlaygroundPlugin(catalog, selected.length ? selected : ["s"]);
+    if (!app) throw new Error(`Unknown development selection: ${selected.join(" ")}`);
+    const served = app.rest.includes("served");
+    return { args: ["run", "@semio-tech/framework-os-dev:dev", ...options, "--", app.plugin, ...app.rest.filter((segment) => segment !== "served")], env: frameworkOsPlaygroundDevEnv(catalog, app.plugin, served ? { SEMIO_RENDERER: "react", SKIP_PLUGIN_BUILD: "1", SKIP_ENGINE_BUILD: "1" } : {}) };
+  }
+  if (target === "workspace:build" && selected.length) {
+    const targets: Record<string, string> = { assets: "@semio-tech/assets:build", storybook: "workspace:build-storybook", "repo-cli": "@semio-tech/repo-client:build", "repo-server": "@semio-tech/repo-coordinator:build", "repo-vscode": "@semio-tech/repo-vscode:build-vsix" };
+    const resolved = targets[selected[0]];
+    if (!resolved) throw new Error(`Unknown build selection: ${selected[0]}`);
+    return { args: ["run", resolved, ...options, ...(selected.length > 1 ? ["--", ...selected.slice(1)] : [])], env: semioShipEnv() };
+  }
+  return { args: segments, env: target === "workspace:build" ? semioShipEnv() : {} };
 }
 //#endregion 🔖️NxScript
 
@@ -1023,10 +1055,9 @@ export class LintScript extends Script {
     // nx orchestrators: exempt — total wall time spans every project and legitimately exceeds any single
     // command's budget; each leaf project's own build/test/lint commands are individually budgeted.
     if (segments[0] === "repo") {
-      runCmd("bun", ["nx", "run-many", "-t", "lint", "-p", "@repo/*"], { cwd: this.root, ...orchestratorBudgetOpts() });
+      console.log("[lint] Nx completed the repository lint graph.");
       return;
     }
-    runCmd("bun", ["nx", "run-many", "-t", "lint", "--all", "--exclude", "workspace"], { cwd: this.root, ...orchestratorBudgetOpts() });
     runCmd("bunx", ["dependency-cruiser", "🧰️framework", "✏️s", "🌎️hub", "♻️mit-bestand", "--config", ".dependency-cruiser.cjs", "--output-type", "err"], { cwd: this.root, shell: true });
   }
 }
@@ -18137,7 +18168,7 @@ function dependencyDiscoverJsSourceFiles(repoRoot: string): string[] {
     for (const entry of entries) {
       const child = relDir ? `${relDir}/${entry.name}` : entry.name;
       if (entry.isDirectory()) {
-        if ((POLICY_SKIP_DIRS.has(entry.name) && entry.name !== ".storybook") || entry.name === "compose" || entry.name === ".🧬semio" || entry.name === ".🦑️repo") continue;
+        if ((POLICY_SKIP_DIRS.has(entry.name) && entry.name !== ".storybook") || entry.name === "compose" || entry.name === ".🧬semio") continue;
         walk(child);
       } else if (entry.name !== "package.json" && (DEPENDENCY_JS_SOURCE_EXTENSIONS.has(extname(entry.name)) || dependencyJsIsConfigFile(child))) {
         found.push(child);
@@ -18466,7 +18497,7 @@ function dependencyDiscoverPackageJsonFiles(repoRoot: string): string[] {
     for (const ent of entries) {
       const childRel = relDir ? `${relDir}/${ent.name}` : ent.name;
       if (ent.isDirectory()) {
-        if (POLICY_SKIP_DIRS.has(ent.name) || ent.name === "compose" || ent.name === ".🧬semio" || ent.name === ".🦑️repo") continue;
+        if (POLICY_SKIP_DIRS.has(ent.name) || ent.name === "compose" || ent.name === ".🧬semio") continue;
         walk(childRel);
         continue;
       }
@@ -19065,57 +19096,6 @@ function repoTaxonomy(root: string): Record<string, unknown> {
   return JSON.parse(readFileSync(join(root, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json"), "utf8")) as Record<string, unknown>;
 }
 
-/**
- * 🚫️Nx project names inside an area the taxonomy marks `exempt`. The exemption is DATA
- * (`areas` in `🔣️taxonomy.json`), so marking another area exempt needs no code change and this file
- * never names `compose` — or any other area — itself.
- */
-function exemptProjectNames(root: string): string[] {
-  const taxonomy = repoTaxonomy(root);
-  const areas = (taxonomy.areas ?? {}) as Record<string, string>;
-  const exempt = Object.entries(areas)
-    .filter(([, state]) => state === "exempt")
-    .map(([area]) => area);
-  if (exempt.length === 0) return [];
-  const probe = runProbe("bun", ["nx", "show", "projects", "--json"], { cwd: root, ...orchestratorBudgetOpts() });
-  if ((probe.status ?? 1) !== 0) return [];
-  let names: string[];
-  try {
-    names = JSON.parse(probe.stdout) as string[];
-  } catch {
-    return [];
-  }
-  // 🧭️A project belongs to an exempt area when its manifest lives beneath that area. Resolving each
-  // name through Nx would cost one process per project, so the area's own manifests are read once.
-  const owned = new Set<string>();
-  for (const area of exempt) {
-    const walk = (relDir: string): void => {
-      let entries: ReturnType<typeof readdirSync>;
-      try {
-        entries = readdirSync(join(root, relDir), { withFileTypes: true });
-      } catch {
-        return;
-      }
-      for (const entry of entries) {
-        const childRel = `${relDir}/${entry.name}`;
-        if (entry.isDirectory()) {
-          if (entry.name === "node_modules" || entry.name === ".git" || entry.name === "target" || entry.name === "dist") continue;
-          walk(childRel);
-          continue;
-        }
-        if (entry.name !== "project.json" && entry.name !== "📋️project.json" && entry.name !== "package.json") continue;
-        try {
-          const name = (JSON.parse(readFileSync(join(root, childRel), "utf8")) as { name?: string }).name;
-          if (name) owned.add(name);
-        } catch {
-          /* an unreadable manifest simply contributes no name */
-        }
-      }
-    };
-    walk(area);
-  }
-  return names.filter((name) => owned.has(name));
-}
 
 /**
  * 🧪️Root test router — a thin delegate.
@@ -19164,25 +19144,9 @@ export class TestScript extends Script {
       return;
     }
 
-    const collectingCoverage = level === "exhaustive" && coverageEnabled();
-    if (collectingCoverage) {
-      // Stale reports from a previous run must never leak into this one's percentage — test-exhaustive is
-      // already nx `cache: false`, so this is the only place that needs to clear it.
-      for (const kind of ["js", "rust", "go", "py", "dotnet"] as const) rmSync(coverageDir(this.root, kind), { recursive: true, force: true });
-    }
-
-    // 🧾️ Contract first: a case whose plan is not well formed can never be reported as passing.
-    if (domain !== "") runCmd("bun", [join(this.root, domain, "📜️script.ts"), "contract"], { cwd: join(this.root, domain), ...orchestratorBudgetOpts() });
-
-    // nx orchestrators: exempt — leaves individually budgeted. Generated per-test-case projects are
-    // included by their own `test-<level>` targets, so no manual leveled-target scanner is needed.
-    const exclude = ["workspace", ...exemptProjectNames(this.root)];
-    runCmd("bun", ["nx", "run-many", "-t", testTargetForLevel(level), "--all", "--exclude", exclude.join(",")], { cwd: this.root, ...orchestratorBudgetOpts() });
-    if (TEST_LEVELS.indexOf(level) >= TEST_LEVELS.indexOf("long")) {
-      await this.runStorybookPlaywright();
-    }
-
-    if (collectingCoverage) this.enforceCoverageGate();
+    if (rest.length) throw new Error(`Unknown workspace test selection: ${rest.join(" ")}`);
+    if (level === "exhaustive" && coverageEnabled()) this.enforceCoverageGate();
+    console.log(`[test] ${level} prerequisites completed through Nx`);
   }
 
   /** 📊️Walks every `*.lcov`/`lcov.info`/`coverage.info`/`*.cover` file under `.🧬semio/🦑️repo/📊️metrics/coverage/`, merges them into one repo-wide LCOV, writes `summary.json`, and hard-fails below the 95% threshold — the exhaustive-level gate. */
@@ -19879,7 +19843,7 @@ function assertNoOwnedStorybookMdx(root: string): void {
 /** 📊️ Freezes the UI Storybook's TS/TSX discovery after its owned MDX-transform retirement. */
 function assertUiStorybookDiscovery(root: string): void {
   if ((process.env.STORYBOOK_SCOPE ?? "") !== "ui") return;
-  const index = JSON.parse(readFileSync(join(root, "storybook-static", "index.json"), "utf8")) as { entries?: Record<string, { type?: string; importPath?: string }> };
+  const index = JSON.parse(readFileSync(join(root, process.env.STORYBOOK_OUTPUT_DIR ?? "storybook-static", "index.json"), "utf8")) as { entries?: Record<string, { type?: string; importPath?: string }> };
   const entries = Object.values(index.entries ?? {});
   const stories = entries.filter((entry) => entry.type === "story").length;
   const docs = entries.filter((entry) => entry.type === "docs").length;
@@ -19908,13 +19872,12 @@ export class BuildScript extends Script {
 
     // nx orchestrators: exempt — leaves individually budgeted.
     if (!slice) {
-      runCmd("bun", ["nx", "run-many", "-t", "build", "--all", "--exclude", "workspace"], { cwd: this.root, env: semioShipEnv(), ...orchestratorBudgetOpts() });
-      runCmd("bun", ["nx", "run", "workspace:build-storybook"], { cwd: this.root, env: semioShipEnv(), ...orchestratorBudgetOpts() });
+      console.log("[build] Nx completed the workspace build graph.");
       return;
     }
     if (slice === "storybook") {
       assertNoOwnedStorybookMdx(this.root);
-      runCmd("bunx", ["storybook", "build", "-c", ".storybook", "--output-dir", "storybook-static"], { cwd: this.root });
+      runCmd("bunx", ["storybook", "build", "-c", ".storybook", "--output-dir", process.env.STORYBOOK_OUTPUT_DIR ?? "storybook-static"], { cwd: this.root });
       assertUiStorybookDiscovery(this.root);
       return;
     }
@@ -19958,12 +19921,7 @@ export class CppScript extends Script {
         configure: () => this.runConfigure(preset),
         build: () => this.runBuild(preset),
         test: () => this.runTest(preset),
-        all: () => {
-          this.runSetup();
-          this.runConfigure(preset);
-          this.runBuild(preset);
-          this.runTest(preset);
-        },
+        all: () => console.log("[cpp] Nx configure/build/test prerequisites completed"),
       },
       "bun ./📜️script.ts cpp [setup|configure|build|test|all] [preset]",
       "all",
@@ -19982,12 +19940,10 @@ export class CppScript extends Script {
   private runSetup(): void {
     this.ensureTool("cmake", "cmake");
     if (process.platform !== "win32") this.ensureTool("ninja", "ninja");
-    this.ensureVcpkg();
     if (process.platform === "win32") this.ensureWindowsMsvc();
   }
 
   private runConfigure(preset: string): void {
-    this.runSetup();
     this.purgeStaleCmakeCache(preset);
     runCmd(this.resolveTool("cmake"), ["--preset", preset], { cwd: this.root, env: this.cppEnv(), budgetMs: buildBudgetMs() });
   }
@@ -20024,34 +19980,11 @@ export class CppScript extends Script {
     return candidates.find((candidate) => existsSync(candidate)) ?? command;
   }
 
-  private ensureVcpkg(): void {
-    const vcpkgRoot = this.vcpkgRoot();
-    const vcpkgExe = join(vcpkgRoot, process.platform === "win32" ? "vcpkg.exe" : "vcpkg");
-    if (!existsSync(vcpkgRoot)) {
-      mkdirSync(join(getRepoMetaDir(this.root), "⚡️cache"), { recursive: true });
-      runCmd("git", ["clone", "--depth", "1", "https://github.com/microsoft/vcpkg.git", vcpkgRoot], { cwd: this.root, budgetMs: buildBudgetMs() });
-    }
-    if (!existsSync(vcpkgExe)) {
-      if (process.platform === "win32") {
-        runCmd("cmd.exe", ["/c", join(vcpkgRoot, "bootstrap-vcpkg.bat"), "-disableMetrics"], { cwd: vcpkgRoot, budgetMs: buildBudgetMs() });
-      } else {
-        runCmd("bash", [join(vcpkgRoot, "bootstrap-vcpkg.sh"), "-disableMetrics"], { cwd: vcpkgRoot, budgetMs: buildBudgetMs() });
-      }
-    }
-  }
-
   private cppEnv(): NodeJS.ProcessEnv {
     return {
       ...devToolingEnv(),
       CMAKE_BUILD_PARALLEL_LEVEL: process.env.CMAKE_BUILD_PARALLEL_LEVEL ?? "4",
-      VCPKG_ROOT: this.vcpkgRoot(),
-      VCPKG_DISABLE_METRICS: "1",
-      VCPKG_MAX_CONCURRENCY: process.env.VCPKG_MAX_CONCURRENCY ?? "4",
     };
-  }
-
-  private vcpkgRoot(): string {
-    return process.env.VCPKG_ROOT || join(getRepoMetaDir(this.root), "⚡️cache", "vcpkg");
   }
 
   private ensureWindowsMsvc(): void {
@@ -22946,7 +22879,7 @@ export class Neo4jCypherExport {
 //#region 🔖️Policy
 /**
  * ⚖️ Wave 4 app-plugin consistency policy — the machine-checkable subset of the Wave 4 V1 (duplication),
- * V2 (structure), V3 (coupling) audit findings under `.🦑️repo/🎫️tickets/26/07/18/WAVE-4-*-AUDIT`, wired via
+ * V2 (structure), V3 (coupling) audit findings under `.🧬semio/🦑️repo/🎫️tickets/26/07/18/WAVE-4-*-AUDIT`, wired via
  * `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟨️.mjs` into the synthetic `breach-script_ts` nx lint target (`bun ./📜️script.ts policy`).
  * Judgment-call findings (a real SDK/primitive gap, e.g. the terminology native/reuse Labels axis, or
  * puzzle's icon-based `tree_item_with_action`) are encoded as explicit low-priority allowlisted/tracked
@@ -23304,7 +23237,7 @@ function policyPascalAppStructName(id: string): string {
 
 //#region 🔧️PolicyAllowlists
 /**
- * 🎫️ Wave 4 V1 duplication audit (`.🦑️repo/🎫️tickets/26/07/18/WAVE-4-V1-DUPLICATION-HUNTER-AUDIT`): both crates
+ * 🎫️ Wave 4 V1 duplication audit (`.🧬semio/🦑️repo/🎫️tickets/26/07/18/WAVE-4-V1-DUPLICATION-HUNTER-AUDIT`): both crates
  * resolve a second "terminology" axis (native/reuse) the SDK's locale-only `app_labels!`/`LocaleLabels`
  * primitive can't express. Flagged for a Wave-4 decision (extend the primitive to two axes, or formally
  * accept the gap) — tracked here as a low-priority, non-failing breach until that decision lands.
@@ -23325,7 +23258,7 @@ const POLICY_LABELS_TWO_AXIS_ALLOWLIST = new Set<string>(["cad#CadLabels", "puzz
 const POLICY_TREE_ITEM_REDEFINITION_ALLOWLIST = new Set<string>(["puzzle#3d", "puzzle#5d"]);
 
 /**
- * 🎫️ Wave 4 V3 coupling audit (`.🦑️repo/🎫️tickets/26/07/18/WAVE-4-APP-TO-APP-COUPLING-AND-FRAMEWORK-IDENTITY-LEAK-AUDIT`):
+ * 🎫️ Wave 4 V3 coupling audit (`.🧬semio/🦑️repo/🎫️tickets/26/07/18/WAVE-4-APP-TO-APP-COUPLING-AND-FRAMEWORK-IDENTITY-LEAK-AUDIT`):
  * these crates are neutral shared domain/library crates that also happen to ship their own minimal
  * playground app (documented via each crate's `AGENTS.md`) — depending on them is not app-to-app coupling.
  */
@@ -23343,7 +23276,7 @@ const POLICY_JSON_FIXTURE_ALLOWLIST = new Set<string>([]);
 const POLICY_JSON_FIXTURE_PATH_PREFIX_ALLOWLIST = ["coda/"];
 
 /**
- * 🎫️ pack/ binary-document-layer rollout lock step (`.🦑️repo/🎫️tickets/26/07/27/
+ * 🎫️ pack/ binary-document-layer rollout lock step (`.🧬semio/🦑️repo/🎫️tickets/26/07/27/
  * PACK-BINARY-DOCUMENT-LAYER-ACROSS-ALL-APPS`): every `*.rs` file below that already calls
  * `assert_dsl_round_trip(`/`assert_document_text_round_trip(` but does not yet ALSO call
  * `assert_dsl_pack_equivalence(`/`assert_document_pack_round_trip(` on the same fixtures — seeded at
@@ -23358,7 +23291,7 @@ const POLICY_JSON_FIXTURE_PATH_PREFIX_ALLOWLIST = ["coda/"];
 const POLICY_PACK_COMPLETENESS_ALLOWLIST = new Set<string>([]);
 
 /**
- * 🎫️ CW7 command-envelope law lock step (`.🦑️repo/🎫️tickets/26/07/27/
+ * 🎫️ CW7 command-envelope law lock step (`.🧬semio/🦑️repo/🎫️tickets/26/07/27/
  * INTRODUCE-DB-PROTOCOL-COMMAND-LAYER-AND-VCS-SLIMMING`): every `*.rs` file that already calls
  * `assert_dsl_pack_equivalence(`/`assert_document_pack_round_trip(` but does not yet ALSO call
  * `vcs::test_support::assert_command_envelope_round_trip` (added in CW7) on the same fixtures — seeded
@@ -23856,7 +23789,7 @@ function policyLabelsStructBreaches(crate: PolicyCrateRef, content: string): Bre
       reason: allowed
         ? "Wave 4 V1 duplication audit flagged this for a Wave-4 design decision (extend LocaleLabels/app_labels! to a two-axis resolver, or formally accept the gap) — tracked, not a lint failure."
         : "Wave 4 V1 duplication audit: hand-rolled Labels structs (NATIVE/REUSE-style consts + resolver fn) should route through semio_framework_plugin::app_labels!/LocaleLabels unless there's a documented SDK-primitive gap.",
-      solution: allowed ? `See .🦑️repo/🎫️tickets/26/07/18/WAVE-4-V1-DUPLICATION-HUNTER-AUDIT for the pending decision; if formally accepted, keep this allowlisted with that citation.` : `Route ${structName} through semio_framework_plugin::app_labels! { ... }, or if it needs a second axis, add it to POLICY_LABELS_TWO_AXIS_ALLOWLIST citing a ticket.`,
+      solution: allowed ? `See .🧬semio/🦑️repo/🎫️tickets/26/07/18/WAVE-4-V1-DUPLICATION-HUNTER-AUDIT for the pending decision; if formally accepted, keep this allowlisted with that citation.` : `Route ${structName} through semio_framework_plugin::app_labels! { ... }, or if it needs a second axis, add it to POLICY_LABELS_TWO_AXIS_ALLOWLIST citing a ticket.`,
     });
   }
   return breaches;

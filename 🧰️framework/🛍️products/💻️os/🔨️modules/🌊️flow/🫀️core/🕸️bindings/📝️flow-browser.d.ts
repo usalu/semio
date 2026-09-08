@@ -12,14 +12,6 @@ export interface FlowWasmExports {
   flow_bridge_begin_close(): void;
   flow_bridge_terminal_is_empty(): number;
 }
-export interface FlowHost {
-  readonly state: unknown;
-  start(operation: number, args?: Readonly<Record<string, unknown>>, session?: FlowHandle): FlowTask<Uint8Array>;
-  cancel(requestId: bigint): boolean;
-  closeHandle(handle: FlowHandle): boolean;
-  close(): Promise<void>;
-  terminalIsEmpty(): boolean;
-}
 export interface FlowFeatures {
   readonly lifetime: { readonly session: FlowHandle; close(): Promise<void>; terminalIsEmpty(): boolean; };
   readonly document: { vcsCheckpoint(args: { readonly sessionGeneration: number; readonly baseRevision: number; readonly parentRevision: number }): FlowTask<unknown>; vcsFault(args: { readonly sessionGeneration: number; readonly baseRevision: number; readonly parentRevision: number }): FlowTask<unknown>; vcsRetryCheckpoint(args: { readonly sessionGeneration: number; readonly baseRevision: number; readonly parentRevision: number }): FlowTask<unknown>; catalogueJson(): FlowTask<unknown>; setCatalogueJson(args: { readonly json: string }): FlowTask<unknown>; setNeuronKindInfosJson(args: { readonly json: string }): FlowTask<unknown>; addInputPort(args: { readonly widgetId: string; readonly index: number }): FlowTask<unknown>; removeInputPort(args: { readonly widgetId: string; readonly portId: string }): FlowTask<unknown>; addOutputPort(args: { readonly widgetId: string; readonly index: number }): FlowTask<unknown>; removeOutputPort(args: { readonly widgetId: string; readonly portId: string }): FlowTask<unknown>; connectPorts(args: { readonly fromId: string; readonly fromPort: string; readonly toId: string; readonly toPort: string }): FlowTask<unknown>; compiledWireLiteral(): FlowTask<unknown>; applyEvalOutputsJson(args: { readonly json: string }): FlowTask<unknown>; setComputingProgress(args: { readonly json: string }): FlowTask<unknown>; setNodeStatuses(args: { readonly json: string }): FlowTask<unknown>; clearComputingWidgetIds(): FlowTask<unknown>; previewText(): FlowTask<unknown>; selectedWidgetIds(): FlowTask<unknown>; selectedEdgeIds(): FlowTask<unknown>; selectionDomainsJson(): FlowTask<unknown>; hoveredWidgetId(): FlowTask<unknown>; hoveredChannelJson(): FlowTask<unknown>; selectedChannelsJson(): FlowTask<unknown>; previewOffWidgetIds(): FlowTask<unknown> };
@@ -29,10 +21,10 @@ export interface FlowFeatures {
   readonly drawing: { tessellate(args: { readonly handle: string; readonly tolerance: number }): FlowTask<unknown>; renderDrawingScene(args: { readonly handle: string }): FlowTask<unknown>; exportDrawingSvg(args: { readonly handle: string }): FlowTask<unknown>; exportDrawingPdf(args: { readonly handle: string }): FlowTask<unknown>; traceDrawingBitmap(args: { readonly width: number; readonly height: number; readonly mask: ArrayBufferView | readonly number[]; readonly threshold: number; readonly simplifyEpsilon: number }): FlowTask<unknown>; booleanDrawingSegments(args: { readonly aJson: string; readonly bJson: string; readonly operation: string }): FlowTask<unknown>; dispose(args: { readonly handle: string }): FlowTask<unknown>; documentJson(): FlowTask<unknown>; synchronizeDocumentJson(args: { readonly json: string }): FlowTask<unknown> };
 }
 export interface FlowBrowserOptions { readonly source: unknown; readonly imports?: WebAssembly.Imports; readonly instantiate?: typeof WebAssembly.instantiate; readonly schedule?: (callback: () => void) => void; readonly now?: () => number; readonly maximumInFlight?: number; }
-export declare function createFlowBrowserFeatures(options: FlowBrowserOptions): Promise<{ host: FlowHost; features: FlowFeatures; exports: FlowWasmExports }>;
-export default function init(source: unknown): Promise<FlowWasmExports>;
+export interface FlowBrowserRuntime { openSession(): FlowSession; close(): Promise<void>; terminalIsEmpty(): boolean; }
+export declare function createFlowBrowserRuntime(options: FlowBrowserOptions): Promise<FlowBrowserRuntime>;
 export declare class FlowSession {
-  constructor();
+  private constructor();
   vcsCheckpoint(sessionGeneration: number, baseRevision: number, parentRevision: number): FlowTask<unknown>;
   vcsCheckpoint(args: { readonly sessionGeneration: number; readonly baseRevision: number; readonly parentRevision: number }): FlowTask<unknown>;
   vcsFault(sessionGeneration: number, baseRevision: number, parentRevision: number): FlowTask<unknown>;

@@ -111,7 +111,7 @@ pub(crate) fn seed_before_pane_camera(state: &RewritingSnapshot) -> Camera {
 pub(crate) fn reset_document_effect(state: &RewritingSnapshot) -> semio_framework_plugin::Effect {
     let pack = <RewritingSnapshot as ArtifactPack>::encode_pack(state);
     let envelope = store::create_document_envelope::<RewritingSnapshot, RewriteRuleMutation>(REWRITE_RULE_SCHEMA, "rewriting", state.clone(), None);
-    let spr = store::print_document_spr(&envelope).expect("rewriting document spr encode is infallible for a fresh, edit-free envelope");
+    let spr = semio_framework_plugin::resolve_ready(store::print_document_spr(&envelope)).expect("rewriting document spr encode is infallible for a fresh, edit-free envelope");
     semio_framework_plugin::Effect::LoadDocument { pack, spr }
 }
 
@@ -345,7 +345,7 @@ fn rewriting_lod_json_for_window(cfg: &RewritingConfig, window_id: &str) -> Opti
 
 fn trinity_rewriting_lod_measure(window_id: &str, current_mode: &str) -> WindowMeasure {
     let mut items = vec![semio_framework_plugin::MeasureSelectItem { id: TRINITY_LOD_MODE_AUTOMATIC.into(), value: TRINITY_LOD_MODE_AUTOMATIC.into(), label: "Automatic".into() }];
-    let rows: Vec<pack::JsonValue> = pack::parse_json(&crate::editor::rewriting::world::trinity_lod_scale_json()).ok().and_then(|value| value.as_array().map(<[pack::JsonValue]>::to_vec)).unwrap_or_default();
+    let rows: Vec<pack::JsonValue> = pack::parse_json(&crate::editor::rewriting::world::trinity_lod_scale_json()).ok().and_then(|value| value.as_array().map(|values| values.to_vec())).unwrap_or_default();
     items.extend(rows.into_iter().filter_map(|row| {
         let id = row.get("id")?.as_str()?.to_string();
         let name = row.get("name").and_then(|value| value.as_str()).unwrap_or(&id).to_string();
@@ -843,21 +843,21 @@ mod tests {
     /// 🕹️ Registry-backed (not the bare `testkit::new_app`): `interactionSelect`/`interactionHover`
     /// resolve the dispatching app's declared `AppActionRegistry.interactions`, so any test exercising
     /// domain "graph" selection needs the real manifest's `.interaction(...)` declaration present.
-    fn new_app() -> VcsArtifactApp<EditorApp<TrinityRewritingPlayApp>> {
-        testkit::new_app_with_registry::<EditorApp<TrinityRewritingPlayApp>>(trinity_rewriting_manifest_for_testkit)
+    async fn new_app() -> VcsArtifactApp<EditorApp<TrinityRewritingPlayApp>> {
+        testkit::new_app_with_registry::<EditorApp<TrinityRewritingPlayApp>>(trinity_rewriting_manifest_for_testkit).await
     }
 
     /// 🕹️ Dispatches the framework-injected `interactionSelect` verb against domain "graph" — the
     /// replacement for the deleted `TrinityRewritingCommand::SetSelection`.
-    fn select_graph(app: &mut VcsArtifactApp<EditorApp<TrinityRewritingPlayApp>>, ids: &[&str]) {
+    async fn select_graph(app: &mut VcsArtifactApp<EditorApp<TrinityRewritingPlayApp>>, ids: &[&str]) {
         let targets: Vec<pack::JsonValue> = ids.iter().map(|id| pack::json!({ "granularity": "node", "id": id })).collect();
-        let args = pack::json!({ "domainId": "graph", "targets": pack::to_json_string(&targets) });
-        app.handle_action("interactionSelect", Some(&args), &meta("local")).expect("interactionSelect");
+        let args = pack::json_to_dsl_value(&pack::json!({ "domainId": "graph", "targets": pack::to_json_string(&targets) }));
+        app.handle_action("interactionSelect", Some(&args), &meta("local")).await.expect("interactionSelect");
     }
 
     #[semio_framework_async_macros::async_test]
     async fn context_menu_grouped_disclosure_stays_within_budget_and_keeps_destructive_last() {
-        let mut app = testkit::new_app_with_registry::<EditorApp<TrinityRewritingPlayApp>>(trinity_rewriting_manifest_for_testkit);
+        let mut app = testkit::new_app_with_registry::<EditorApp<TrinityRewritingPlayApp>>(trinity_rewriting_manifest_for_testkit).await;
         let request = ContextMenuRequest {
             menu: semio_framework_plugin::UiMenuRef { id: "nodeGraph".into(), args: None },
             surface: Some(semio_framework_plugin::ContextMenuSurfaceTarget {
@@ -870,7 +870,7 @@ mod tests {
             window_instance_id: None,
             point: None,
         };
-        let menu = app.context_menu(&request);
+        let menu = app.context_menu(&request).await;
         assert!(menu.len() <= 9, "top-level menu (leaves+groups+separator) should stay within the row budget: {menu:?}");
         let last = menu.last().expect("grouped disclosure menu should not be empty");
         let last_is_destructive_leaf = last.id == "delete-selection" && last.destructive == Some(true) && last.action.as_deref() == Some("nodeGraphEdit");
@@ -880,24 +880,24 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn renders_before_and_after_graphs() {
-        let mut app = new_app();
-        let before = app.render(TRINITY_REWRITING_PLAY_BODY_BEFORE, None, &ViewModel::default()).expect("render");
-        let after = app.render(TRINITY_REWRITING_PLAY_BODY_AFTER, None, &ViewModel::default()).expect("render");
-        assert!(pack::to_json_string(&before).contains("node-graph"));
-        assert!(pack::to_json_string(&after).contains("node-graph"));
+        let mut app = new_app().await;
+        let before = app.render(TRINITY_REWRITING_PLAY_BODY_BEFORE, None, &ViewModel::default()).await.expect("render");
+        let after = app.render(TRINITY_REWRITING_PLAY_BODY_AFTER, None, &ViewModel::default()).await.expect("render");
+        assert!(serde_json::to_string(&before.root).expect("serialize semantic UI test tree").contains("node-graph"));
+        assert!(serde_json::to_string(&after.root).expect("serialize semantic UI test tree").contains("node-graph"));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn set_viewport_writes_before_pane_config_camera_without_artifact_mutations() {
-        let mut app = new_app();
+        let mut app = new_app().await;
         let before_state = app.snapshot().unwrap();
         let result = app
             .dispatch_typed(TrinityRewritingCommand::SetViewport { surface_id: Some(TRINITY_REWRITING_PLAY_SURFACE_BEFORE.into()), viewport_json: pack::json!({ "x": 10.0, "y": 20.0, "zoom": 2.5 }).to_string() }, &meta("local"))
-            .expect("viewport");
+            .await.expect("viewport");
         assert!(result.mutations.is_empty(), "camera is a config-only command, no document operations");
         assert_eq!(app.snapshot().unwrap(), before_state, "document is untouched by a viewport pan");
-        let before = app.render(TRINITY_REWRITING_PLAY_BODY_BEFORE, None, &ViewModel::default()).expect("render");
-        assert!(pack::to_json_string(&before).contains("2.5"), "render reads the live config camera");
+        let before = app.render(TRINITY_REWRITING_PLAY_BODY_BEFORE, None, &ViewModel::default()).await.expect("render");
+        assert!(serde_json::to_string(&before.root).expect("serialize semantic UI test tree").contains("2.5"), "render reads the live config camera");
     }
 
     #[semio_framework_async_macros::async_test]
@@ -915,9 +915,9 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn renders_lhs_rhs_graphs() {
-        let mut app = new_app();
-        let lhs_json = pack::to_json_string(&app.render(TRINITY_REWRITING_PLAY_BODY_LHS, None, &ViewModel::default()).expect("render"));
-        let rhs_json = pack::to_json_string(&app.render(TRINITY_REWRITING_PLAY_BODY_RHS, None, &ViewModel::default()).expect("render"));
+        let mut app = new_app().await;
+        let lhs_json = serde_json::to_string(&app.render(TRINITY_REWRITING_PLAY_BODY_LHS, None, &ViewModel::default()).await.expect("render").root).expect("serialize semantic UI test tree");
+        let rhs_json = serde_json::to_string(&app.render(TRINITY_REWRITING_PLAY_BODY_RHS, None, &ViewModel::default()).await.expect("render").root).expect("serialize semantic UI test tree");
         assert!(lhs_json.contains("node-graph"));
         assert!(rhs_json.contains("node-graph"));
         assert!(lhs_json.contains("\"editable\":true"));
@@ -926,24 +926,24 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn set_parameter_emits_one_op_and_is_undoable() {
-        let mut app = new_app();
-        let result = app.dispatch_typed(TrinityRewritingCommand::SetParameter { name: "label".into(), value: "changed".into() }, &meta("local")).expect("set parameter");
+        let mut app = new_app().await;
+        let result = app.dispatch_typed(TrinityRewritingCommand::SetParameter { name: "label".into(), value: "changed".into() }, &meta("local")).await.expect("set parameter");
         assert_eq!(result.mutations.len(), 1, "a single-key parameter edit is one ChangeParameterBinding operation");
         assert_eq!(app.snapshot().unwrap().parameter_bindings.get("label").cloned(), Some(PropertyValue::String("changed".into())));
-        app.handle_action("undo", None, &meta("local")).expect("undo");
+        app.handle_action("undo", None, &meta("local")).await.expect("undo");
         assert_eq!(app.snapshot().unwrap().parameter_bindings.get("label").cloned(), Some(PropertyValue::String("nakagin-core".into())));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn add_and_delete_rhs_set_clause() {
-        let mut app = new_app();
-        app.dispatch_typed(TrinityRewritingCommand::AddRuleClause { kind: "set".into() }, &meta("local")).expect("add clause");
+        let mut app = new_app().await;
+        app.dispatch_typed(TrinityRewritingCommand::AddRuleClause { kind: "set".into() }, &meta("local")).await.expect("add clause");
         let rhs: Rhs = pack::from_json_str(&app.snapshot().unwrap().rhs_json).unwrap();
         assert_eq!(rhs.set.len(), 2);
-        select_graph(&mut app, &["rhs-set-1"]);
+        select_graph(&mut app, &["rhs-set-1"]).await;
         let result = app
             .dispatch_typed(TrinityRewritingCommand::NodeGraphEdit { surface_id: TRINITY_REWRITING_PLAY_SURFACE_RHS.into(), operations_json: pack::json!([{ "operation": "deleteSelection" }]).to_string() }, &meta("local"))
-            .expect("delete selection");
+            .await.expect("delete selection");
         assert!(!result.mutations.is_empty());
         let rhs: Rhs = pack::from_json_str(&app.snapshot().unwrap().rhs_json).unwrap();
         assert_eq!(rhs.set.len(), 1);
@@ -951,16 +951,16 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn jack_view_renders_compiled_query_tokens() {
-        let mut app = new_app();
-        let node = app.render(TRINITY_REWRITING_PLAY_BODY_JACK, None, &ViewModel::default()).expect("render");
-        assert!(pack::to_json_string(&node).contains("tokensJson"));
+        let mut app = new_app().await;
+        let node = app.render(TRINITY_REWRITING_PLAY_BODY_JACK, None, &ViewModel::default()).await.expect("render");
+        assert!(serde_json::to_string(&node.root).expect("serialize semantic UI test tree").contains("tokensJson"));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn graph_scenes_have_lod_json() {
-        let mut app = new_app();
-        let before = app.render(TRINITY_REWRITING_PLAY_BODY_BEFORE, None, &ViewModel::default()).expect("render");
-        assert!(pack::to_json_string(&before).contains("lodJson"));
+        let mut app = new_app().await;
+        let before = app.render(TRINITY_REWRITING_PLAY_BODY_BEFORE, None, &ViewModel::default()).await.expect("render");
+        assert!(serde_json::to_string(&before.root).expect("serialize semantic UI test tree").contains("lodJson"));
     }
 
     #[semio_framework_async_macros::async_test]
@@ -973,24 +973,24 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn trinity_rewriting_labels_resolve_native_by_default() {
-        let mut app = new_app();
-        let json = pack::to_json_string(&app.render(TRINITY_REWRITING_PLAY_BODY_DOCUMENT, None, &ViewModel::default()).expect("render"));
+        let mut app = new_app().await;
+        let json = serde_json::to_string(&app.render(TRINITY_REWRITING_PLAY_BODY_DOCUMENT, None, &ViewModel::default()).await.expect("render").root).expect("serialize semantic UI test tree");
         assert!(json.contains("\"Pieces\""));
         assert!(!json.contains("Stücke"));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn trinity_rewriting_labels_translate_panels_in_german() {
-        let mut app = new_app();
-        app.dispatch_typed(TrinityRewritingCommand::SetLocale { value: "de-DE".into() }, &meta("local")).expect("set locale");
-        let document_json = pack::to_json_string(&app.render(TRINITY_REWRITING_PLAY_BODY_DOCUMENT, None, &ViewModel::default()).expect("render"));
+        let mut app = new_app().await;
+        app.dispatch_typed(TrinityRewritingCommand::SetLocale { value: "de-DE".into() }, &meta("local")).await.expect("set locale");
+        let document_json = serde_json::to_string(&app.render(TRINITY_REWRITING_PLAY_BODY_DOCUMENT, None, &ViewModel::default()).await.expect("render").root).expect("serialize semantic UI test tree");
         assert!(document_json.contains("Stücke"));
         assert!(!document_json.contains("\"Pieces\""));
-        let catalogue_json = pack::to_json_string(&app.render(TRINITY_REWRITING_PLAY_BODY_CATALOGUE, None, &ViewModel::default()).expect("render"));
+        let catalogue_json = serde_json::to_string(&app.render(TRINITY_REWRITING_PLAY_BODY_CATALOGUE, None, &ViewModel::default()).await.expect("render").root).expect("serialize semantic UI test tree");
         assert!(catalogue_json.contains("Katalog"));
         assert!(catalogue_json.contains("Zu LHS hinzufügen"));
         assert!(catalogue_json.contains("Zu RHS hinzufügen"));
-        let parameters_json = pack::to_json_string(&app.render(TRINITY_REWRITING_PLAY_BODY_PARAMETERS, None, &ViewModel::default()).expect("render"));
+        let parameters_json = serde_json::to_string(&app.render(TRINITY_REWRITING_PLAY_BODY_PARAMETERS, None, &ViewModel::default()).await.expect("render").root).expect("serialize semantic UI test tree");
         assert!(parameters_json.contains("\"Parameter\""));
         let definition = create_rewriting_app();
         let reset_rule = definition.window_kinds.iter().flat_map(|window| window.actions.iter()).find(|action| action.id == "resetRule").expect("resetRule action");
@@ -999,21 +999,21 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn set_lhs_json_undo_redo_round_trip() {
-        let mut app = new_app();
+        let mut app = new_app().await;
         let original = app.snapshot().unwrap().lhs_json;
         let next_lhs = r#"{"pattern":{"leftVar":"x","leftKind":"Piece","edgeVar":"r","edgeKind":"Connection","rightVar":"y","rightKind":"Piece"}}"#;
-        app.dispatch_typed(TrinityRewritingCommand::SetLhsJson { value: next_lhs.into() }, &meta("local")).expect("set lhs");
+        app.dispatch_typed(TrinityRewritingCommand::SetLhsJson { value: next_lhs.into() }, &meta("local")).await.expect("set lhs");
         assert_eq!(app.snapshot().unwrap().lhs_json, next_lhs);
-        app.handle_action("undo", None, &meta("local")).expect("undo");
+        app.handle_action("undo", None, &meta("local")).await.expect("undo");
         assert_eq!(app.snapshot().unwrap().lhs_json, original);
-        app.handle_action("redo", None, &meta("local")).expect("redo");
+        app.handle_action("redo", None, &meta("local")).await.expect("redo");
         assert_eq!(app.snapshot().unwrap().lhs_json, next_lhs);
     }
 
     #[semio_framework_async_macros::async_test]
     async fn export_media_graph_out_reflects_rule_applied_fixture() {
-        let mut app = new_app();
-        let graph_out = semio_framework_plugin::resolve_ready(app.export_media("graph:out")).expect("graph:out export");
+        let mut app = new_app().await;
+        let graph_out = app.export_media("graph:out").await.expect("graph:out export");
         let MediaPayload::Structured { json, .. } = graph_out.payload else { panic!("structured payload") };
         let bytes = store::pack_rt::pack_value_from_base64(&json).expect("decode base64");
         let fixture = <JackSnapshot as ArtifactPack>::decode_pack(&bytes).expect("decode pack");

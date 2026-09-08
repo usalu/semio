@@ -3,16 +3,7 @@
   "$id": "semio.hub.invite-redemption-transaction/v1",
   "type": "object",
   "additionalProperties": false,
-  "required": [
-    "schema",
-    "limits",
-    "vectors",
-    "hostiles",
-    "spaceStates",
-    "authorityRaces",
-    "backendOrders",
-    "receiptRelease"
-  ],
+  "required": ["schema", "limits", "vectors", "hostiles", "spaceStates", "authorityRaces", "backendOrders", "receiptRelease"],
   "properties": {
     "schema": {
       "const": "semio.hub.invite-redemption-transaction/v1"
@@ -20,11 +11,7 @@
     "limits": {
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "credentialBytes",
-        "identifierBytes",
-        "maximumContenders"
-      ],
+      "required": ["credentialBytes", "identifierBytes", "maximumContenders"],
       "properties": {
         "credentialBytes": {
           "const": 4096
@@ -68,23 +55,13 @@
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": [
-          "name",
-          "revocation",
-          "order",
-          "status",
-          "appended"
-        ],
+        "required": ["name", "revocation", "order", "status", "appended"],
         "properties": {
           "name": {
             "$ref": "#/$defs/name"
           },
           "revocation": {
-            "enum": [
-              "session",
-              "archive",
-              "delete"
-            ]
+            "enum": ["session", "archive", "delete"]
           },
           "order": {
             "type": "array",
@@ -92,24 +69,14 @@
             "maxItems": 3,
             "uniqueItems": true,
             "items": {
-              "enum": [
-                "hint",
-                "revoke",
-                "fence"
-              ]
+              "enum": ["hint", "revoke", "fence"]
             }
           },
           "status": {
-            "enum": [
-              200,
-              401
-            ]
+            "enum": [200, 401]
           },
           "appended": {
-            "enum": [
-              0,
-              1
-            ]
+            "enum": [0, 1]
           }
         }
       }
@@ -121,37 +88,25 @@
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": [
-          "name",
-          "first",
-          "between",
-          "accepted",
-          "appended"
-        ],
+        "required": ["name", "first", "between", "accepted", "appended", "rebuildWriterExcluded"],
         "properties": {
           "name": {
             "$ref": "#/$defs/name"
           },
           "first": {
-            "enum": [
-              "archive",
-              "member"
-            ]
+            "enum": ["archive", "member"]
           },
           "between": {
-            "enum": [
-              "invite",
-              "archive"
-            ]
+            "enum": ["invite", "archive"]
           },
           "accepted": {
             "type": "boolean"
           },
           "appended": {
-            "enum": [
-              0,
-              1
-            ]
+            "enum": [0, 1]
+          },
+          "rebuildWriterExcluded": {
+            "const": true
           }
         }
       }
@@ -163,13 +118,7 @@
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": [
-          "name",
-          "outcome",
-          "disposition",
-          "digest",
-          "release"
-        ],
+        "required": ["name", "outcome", "disposition", "digest", "release"],
         "properties": {
           "name": {
             "type": "string",
@@ -177,23 +126,13 @@
             "maxLength": 100
           },
           "outcome": {
-            "enum": [
-              "rejected-before-commit",
-              "appended",
-              "uncertain"
-            ]
+            "enum": ["rejected-before-commit", "appended", "uncertain"]
           },
           "disposition": {
-            "enum": [
-              "pending",
-              "completed"
-            ]
+            "enum": ["pending", "completed"]
           },
           "digest": {
-            "enum": [
-              "exact",
-              "different"
-            ]
+            "enum": ["exact", "different"]
           },
           "release": {
             "type": "boolean"
@@ -212,73 +151,36 @@
     "call": {
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "kind",
-        "user",
-        "actor",
-        "credential",
-        "failure"
-      ],
+      "required": ["kind", "user", "actor", "credential", "failure"],
       "properties": {
         "kind": {
-          "enum": [
-            "redeem",
-            "revoke",
-            "append-forged",
-            "restart",
-            "rebuild"
-          ]
+          "enum": ["redeem", "revoke", "append-forged", "restart", "rebuild"]
         },
         "user": {
-          "enum": [
-            "same",
-            "other",
-            "missing"
-          ]
+          "enum": ["same", "other", "missing"]
         },
         "actor": {
-          "enum": [
-            "exact",
-            "different"
-          ]
+          "enum": ["exact", "different"]
         },
         "credential": {
-          "enum": [
-            "exact",
-            "wrong-selector",
-            "wrong-secret"
-          ]
+          "enum": ["exact", "wrong-selector", "wrong-secret"]
         },
         "failure": {
-          "enum": [
-            "none",
-            "after-marker",
-            "after-event",
-            "after-projection"
-          ]
+          "enum": ["none", "after-marker", "after-event", "after-projection"]
         }
       }
     },
     "marker": {
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "acceptedAt",
-        "acceptedEventId"
-      ],
+      "required": ["acceptedAt", "acceptedEventId"],
       "properties": {
         "acceptedAt": {
-          "type": [
-            "integer",
-            "null"
-          ],
+          "type": ["integer", "null"],
           "minimum": 0
         },
         "acceptedEventId": {
-          "type": [
-            "string",
-            "null"
-          ],
+          "type": ["string", "null"],
           "minLength": 1,
           "maxLength": 4096
         }
@@ -287,30 +189,13 @@
     "vector": {
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "name",
-        "initial",
-        "concurrent",
-        "calls",
-        "expected"
-      ],
+      "required": ["name", "initial", "concurrent", "calls", "expected"],
       "properties": {
         "name": {
           "$ref": "#/$defs/name"
         },
         "initial": {
-          "enum": [
-            "fresh",
-            "accepted-same",
-            "accepted-other",
-            "revoked",
-            "expired",
-            "missing",
-            "missing-user",
-            "missing-space",
-            "corrupt-marker",
-            "corrupt-event"
-          ]
+          "enum": ["fresh", "accepted-same", "accepted-other", "revoked", "expired", "missing", "missing-user", "missing-space", "corrupt-marker", "corrupt-event"]
         },
         "concurrent": {
           "type": "boolean"
@@ -326,33 +211,14 @@
         "expected": {
           "type": "object",
           "additionalProperties": false,
-          "required": [
-            "outcomes",
-            "returnedEventIds",
-            "marker",
-            "events",
-            "memberships",
-            "publications",
-            "replayEvents",
-            "revoked"
-          ],
+          "required": ["outcomes", "returnedEventIds", "marker", "events", "memberships", "publications", "replayEvents", "revoked"],
           "properties": {
             "outcomes": {
               "type": "array",
               "minItems": 1,
               "maxItems": 3,
               "items": {
-                "enum": [
-                  "newly-committed",
-                  "already-committed",
-                  "conflict",
-                  "unauthorized",
-                  "backend-error",
-                  "revoked",
-                  "append-denied",
-                  "restarted",
-                  "rebuilt"
-                ]
+                "enum": ["newly-committed", "already-committed", "conflict", "unauthorized", "backend-error", "revoked", "append-denied", "restarted", "rebuilt"]
               }
             },
             "returnedEventIds": {
@@ -360,10 +226,7 @@
               "minItems": 1,
               "maxItems": 3,
               "items": {
-                "type": [
-                  "string",
-                  "null"
-                ],
+                "type": ["string", "null"],
                 "maxLength": 4096
               }
             },
@@ -400,82 +263,41 @@
     "hostile": {
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "name",
-        "mutation"
-      ],
+      "required": ["name", "mutation"],
       "properties": {
         "name": {
           "$ref": "#/$defs/name"
         },
         "mutation": {
-          "enum": [
-            "raw-capability",
-            "client-space",
-            "client-role",
-            "client-event-id",
-            "unknown-field",
-            "oversized-identifier",
-            "client-space-state"
-          ]
+          "enum": ["raw-capability", "client-space", "client-role", "client-event-id", "unknown-field", "oversized-identifier", "client-space-state"]
         }
       }
     },
     "spaceState": {
       "type": "object",
       "additionalProperties": false,
-      "required": [
-        "name",
-        "spaceState",
-        "inviteRole",
-        "accepted",
-        "status",
-        "appended",
-        "membershipRole"
-      ],
+      "required": ["name", "spaceState", "inviteRole", "accepted", "status", "appended", "membershipRole"],
       "properties": {
         "name": {
           "$ref": "#/$defs/name"
         },
         "spaceState": {
-          "enum": [
-            "writable",
-            "archived",
-            "deleted"
-          ]
+          "enum": ["writable", "archived", "deleted"]
         },
         "inviteRole": {
-          "enum": [
-            "author",
-            "spectator"
-          ]
+          "enum": ["author", "spectator"]
         },
         "accepted": {
-          "enum": [
-            "none",
-            "same",
-            "other"
-          ]
+          "enum": ["none", "same", "other"]
         },
         "status": {
-          "enum": [
-            200,
-            401,
-            409
-          ]
+          "enum": [200, 401, 409]
         },
         "appended": {
-          "enum": [
-            0,
-            1
-          ]
+          "enum": [0, 1]
         },
         "membershipRole": {
-          "enum": [
-            "none",
-            "author",
-            "spectator"
-          ]
+          "enum": ["none", "author", "spectator"]
         }
       }
     }

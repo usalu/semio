@@ -1,0 +1,6 @@
+{
+  "schema": "semio.plugin.typed-operation-settlement/v1",
+  "retainedEffects": [{ "tag": "typed-operation-terminal-seen", "val": null }],
+  "status": { "tag": "idle" },
+  "invocation": { "output": null, "requestedEffects": [] }
+}

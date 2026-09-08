@@ -12,7 +12,7 @@
 #[cfg(test)]
 use crate::artifacts::remodeling::ImageAsset;
 use crate::artifacts::remodeling::{CalibrationState, CameraPosePreview, DenseResolution, QcReportSnapshot, ReconstructionParams, ReconstructionStage, RobustLossKind, VideoCodec as DocumentVideoCodec, WatertightReportSnapshot};
-use crate::editor::remodeling::engine::{camera as remodeling_camera, geo as remodeling_geo, images as remodeling_image, mesh as remodeling_mesh, reconstruction as remodeling_engine, sfm as remodeling_sfm, video as remodeling_video};
+use crate::editor::remodeling::engine::{camera as remodeling_camera, geo as remodeling_geo, mesh as remodeling_mesh, reconstruction as remodeling_engine, sfm as remodeling_sfm, video as remodeling_video};
 
 //#region 🔖️EngineMapping
 /// 🔭️ The calibrated focal ratio the engine's own calibration-free intrinsics guess needs, or `None`
@@ -480,3 +480,6 @@ mod tests {
     }
 }
 //#endregion 🧪️Tests
+
+#[cfg(test)]
+use crate::editor::remodeling::engine::images as remodeling_image;

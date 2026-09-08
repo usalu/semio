@@ -13,5 +13,5 @@ pub struct SetLocale {
 }
 
 pub fn handle(payload: &SetLocale, _doc: &ArtifactView<'_, RemodelingSnapshot>, _cfg: &ConfigView<'_, RemodelingConfig>) -> Result<Emit<RemodelingMutation, RemodelingConfigMutation>, Fault> {
-    Ok(Emit::config(vec![RemodelingConfigMutation::SetLocale { value: payload.value.clone() }]))
+    Ok(Emit::config(vec![RemodelingConfigMutation::SetLocale(crate::editor::remodeling::config::SetLocale { value: payload.value.clone() })]))
 }

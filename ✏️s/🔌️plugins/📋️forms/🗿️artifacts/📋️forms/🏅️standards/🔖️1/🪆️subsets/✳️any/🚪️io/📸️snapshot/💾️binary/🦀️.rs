@@ -166,9 +166,9 @@ mod tests {
         use store::{create_document_envelope, ArtifactCommand, ArtifactStore};
 
         let document = crate::artifacts::forms::forms_snapshot_with_state(FORMS_DOCUMENT_SCHEMA.into(), "forms".into(), "1".into(), None, vec![FormStep { id: "s".into(), title: "Inputs".into(), description: None, blocks: Vec::new() }]);
-        let mut store: ArtifactStore<FormsSnapshot, FormMutation> = ArtifactStore::new(create_document_envelope(FORMS_DOCUMENT_SCHEMA, "forms-demo", document, None)).expect("valid artifact store fixture");
+        let mut store: ArtifactStore<FormsSnapshot, FormMutation> = ArtifactStore::new(create_document_envelope(FORMS_DOCUMENT_SCHEMA, "forms-demo", document, None)).await.expect("valid artifact store fixture");
         let step = FormStep { id: "step-2".into(), title: "Review".into(), description: None, blocks: Vec::new() };
-        store.dispatch(ArtifactCommand::Apply { mutations: vec![FormMutation::CreateStep(crate::artifacts::forms::mutations::create_step::mutation::CreateStep { step, index: None })], description: None }).expect("apply");
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![FormMutation::CreateStep(crate::artifacts::forms::mutations::create_step::mutation::CreateStep { step, index: None })], description: None }).await.expect("apply");
         let edit: &Edit<FormMutation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
         store::os_store::test_support::assert_command_envelope_round_trip::<FormsSnapshot, FormMutation>(edit, &ArtifactId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone()));
     }

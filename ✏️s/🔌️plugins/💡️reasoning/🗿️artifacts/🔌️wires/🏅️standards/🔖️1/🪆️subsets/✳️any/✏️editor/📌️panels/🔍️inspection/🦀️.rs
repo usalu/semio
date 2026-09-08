@@ -3,8 +3,9 @@
 
 use crate::artifacts::wires::schema::{fixture_json_string, fixture_nodes};
 use crate::artifacts::wires::{WiresSnapshot, MINDMAP_WIRES_SCHEMA};
-use semio_framework_plugin::{ui_stack_vertical, ui_text, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, UiNode, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL};
+use semio_framework_plugin::{BuiltNode, UiAssemblyResult, PanelTreeBuilder, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL};
 use dsl::os_pack::json::Value;
+use semio_framework_plugin::plugin_app_close_prelude::{Buildable, HasBase};
 
 //#region 🔖️Constants
 pub const WIRES_PLAY_BODY_PROPERTIES: &str = "reasoning.wires.properties";
@@ -30,15 +31,24 @@ pub fn definition() -> PanelTabDefinition {
 /// selection to render against and always falls through to the document summary below — the same gap
 /// layout's/gis2d's/puzzle3d's inspection panels flag (see this ticket's w3b-summary.md). Not fixed
 /// here (framework file, out of this crate's remit).
-pub fn render(document: &WiresSnapshot) -> UiNode {
+pub fn render(document: &WiresSnapshot, labels: &crate::editor::wires::terminology::WiresLabels) -> UiAssemblyResult<BuiltNode> {
     let board = crate::artifacts::wires::wires_working_board(document);
     let extension = DefaultWiresExtension::from_fixture_json(&fixture_json_string(&document.wires_fixture)).ok();
-    ui_stack_vertical(vec![
-        ui_text(Label::data(format!("Schema: {MINDMAP_WIRES_SCHEMA}"))),
-        ui_text(Label::data(format!("Identities: {}", extension.as_ref().map_or(0, |ext| ext.topics.len())))),
-        ui_text(Label::data(format!("Relationships: {}", extension.as_ref().map_or(0, |ext| ext.relationships.len())))),
-        ui_text(Label::data(format!("Board nodes: {}", fixture_nodes(&board).len()))),
-    ])
+    let namespace = PanelTreeBuilder::new("wires-inspection")?;
+    let rows = [
+        format!("{}: {MINDMAP_WIRES_SCHEMA}", labels.schema.as_str()),
+        format!("{}: {}", labels.identities.as_str(), extension.as_ref().map_or(0, |ext| ext.topics.len())),
+        format!("{}: {}", labels.relationships.as_str(), extension.as_ref().map_or(0, |ext| ext.relationships.len())),
+        format!("{}: {}", labels.board_nodes.as_str(), fixture_nodes(&board).len()),
+    ];
+    let mut nodes = semio_framework_plugin::UiFixedList::default();
+    for (index, row) in rows.iter().enumerate() {
+        let node = semio_framework_ui_contract::text(crate::editor::wires::ui_label(row)?).try_id(format!("wires-inspection.summary-{index}"))
+            .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "wires summary id admission failed"))?.try_build()
+            .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "wires summary text admission failed"))?;
+        nodes.try_push(node).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "wires summary admission failed"))?;
+    }
+    namespace.section("wires-inspection.summary", None, true, nodes)?.build()
 }
 //#endregion 🔖️Render
 
@@ -226,8 +236,8 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn empty_selection_shows_document_summary() {
-        let mut app = metabolism_app();
-        let json = render_body(&mut app, WIRES_PLAY_BODY_PROPERTIES);
+        let mut app = metabolism_app().await;
+        let json = render_body(&mut app, WIRES_PLAY_BODY_PROPERTIES).await;
         assert!(json.contains("Schema:"));
         assert!(json.contains("Board nodes:"));
     }
@@ -282,3 +292,44 @@ mod tests {
     }
 }
 //#endregion 🧪️Tests
+
+#[cfg(test)]
+mod semantic_contract {
+    use super::*;
+
+    fn project(node: BuiltNode) -> serde_json::Value {
+        let text = semio_framework_plugin::testkit::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).expect("retire semantic tree");
+        serde_json::from_str(&text).expect("independent UI oracle")
+    }
+
+    #[test]
+    fn wires_semantic_panels_match_the_json_oracle() {
+        let vectors: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🔣️panels.json")).expect("neutral UI vectors");
+        let document = crate::artifacts::wires::empty_wires_snapshot();
+        for row in vectors["cases"].as_array().expect("locales") {
+            let labels = semio_framework_plugin::resolve_labels_for_locale::<crate::editor::wires::terminology::WiresLabels>(row["locale"].as_str().expect("locale"));
+            let tree = project(crate::editor::wires::panels::document::render(&document, labels).expect("document"));
+            assert_eq!(tree["children"][0]["component"]["label"], row["identities"]);
+            assert_eq!(tree["children"][1]["component"]["label"], row["relationships"]);
+            let tree = project(crate::editor::wires::panels::catalogue::render(&document.wires_fixture, labels).expect("catalogue"));
+            assert_eq!(tree["children"][0]["component"]["label"], row["identityKinds"]);
+            assert_eq!(tree["children"][1]["component"]["label"], row["relationshipKinds"]);
+            let tree = project(render(&document, labels).expect("inspection"));
+            let lines = tree["children"][0]["children"].as_array().expect("summary").iter().map(|node| node["component"]["value"].clone()).collect::<Vec<_>>();
+            assert_eq!(serde_json::Value::Array(lines), row["summary"]);
+        }
+        let board = crate::artifacts::wires::wires_working_board(&document);
+        for node in [
+            crate::editor::wires::modes::edit::windows::canvas::render(&board, &document.wires_fixture).expect("editor canvas"),
+            crate::viewer::wires::modes::view::windows::canvas::render(&document).expect("viewer canvas"),
+        ] {
+            let semio_framework_plugin::Component::Surface(props) = &node.component else { panic!("canvas surface") };
+            let scene: semio_framework_plugin::Canvas2dScene = semio_framework_ui_scene::decode(props).expect("packed canvas");
+            assert_eq!(scene.camera_x, vectors["canvas"]["cameraX"].as_f64().expect("camera x"));
+            assert_eq!(scene.camera_y, vectors["canvas"]["cameraY"].as_f64().expect("camera y"));
+            assert_eq!(scene.zoom, vectors["canvas"]["zoom"].as_f64().expect("zoom"));
+            assert_eq!(serde_json::from_str::<serde_json::Value>(&scene.layers_json).expect("independent layers oracle"), vectors["canvas"]["layers"]);
+            project(node);
+        }
+    }
+}

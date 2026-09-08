@@ -1,0 +1,24 @@
+{
+  "cases": [
+    {
+      "locale": "en-US",
+      "steps": "Steps",
+      "edges": "Flow edges",
+      "firstAction": "Set state",
+      "selectedHeading": "Step",
+      "selectedLine": "Kind: log.print",
+      "prompt": "Select a step in the canvas or document.",
+      "missing": "Step not found"
+    },
+    {
+      "locale": "de-DE",
+      "steps": "Schritte",
+      "edges": "Ablaufkanten",
+      "firstAction": "Zustand setzen",
+      "selectedHeading": "Schritt",
+      "selectedLine": "Art: log.print",
+      "prompt": "Wähle einen Schritt in der Zeichenfläche oder im Dokument aus.",
+      "missing": "Schritt nicht gefunden"
+    }
+  ]
+}

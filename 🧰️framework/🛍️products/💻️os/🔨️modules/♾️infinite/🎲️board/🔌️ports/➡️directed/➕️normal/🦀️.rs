@@ -8,7 +8,7 @@ pub mod board_host {
     #![allow(clippy::too_many_arguments, reason = "Immediate-mode paint helpers take one positional arg per geometry/style input; grouping them into structs would obscure call sites more than it clarifies.")]
 
     use crate::infinite::canvas::{Affine, Circle, Color, CubicBez, FillRule, Point, Rect, Scene, Stroke, Vec2};
-    use serde::{Deserialize, Serialize};
+    use serde::Deserialize;
     use std::collections::{BTreeMap, BTreeSet};
 
     use super::{
@@ -1823,24 +1823,6 @@ pub mod board_host {
             payload.finish(kind, None)
         }
 
-        fn select_ids<'a>(ids: impl IntoIterator<Item = &'a str>) -> Result<Self, BoardEventFault> {
-            let mut payload = BoardPayloadBuilder::new();
-            payload.raw("{\"ids\":[")?;
-            let mut count = 0usize;
-            for id in ids {
-                if count == BOARD_POINTER_ITEM_CAPACITY {
-                    return Err(BoardEventFault::ItemCredits);
-                }
-                if count > 0 {
-                    payload.raw(",")?;
-                }
-                payload.string(id)?;
-                count += 1;
-            }
-            payload.raw("],\"exitHighlightIds\":[]}")?;
-            payload.finish(BoardEventKind::Select, None)
-        }
-
         fn preselect_sets(ids: &BTreeSet<String>, removed_ids: &BTreeSet<String>, gesture: Option<&str>) -> Result<Self, BoardEventFault> {
             if ids.len() > BOARD_POINTER_ITEM_CAPACITY || removed_ids.len() > BOARD_POINTER_ITEM_CAPACITY {
                 return Err(BoardEventFault::ItemCredits);
@@ -2906,14 +2888,14 @@ pub mod board_host {
             }
             let frame = self.stack[index].take().expect("property audit frame");
             match frame {
-                BoardPropertyAuditFrame::Array { mut values, mut index, mut pending } => {
+                BoardPropertyAuditFrame::Array { mut values, mut index, pending: _ } => {
                     if index == values.len() {
                         self.depth -= 1;
                         self.completed = Some(graph::manifest::PropertyValue::Array(values));
                     } else {
                         let child_index = index;
                         index += 1;
-                        pending = Some(child_index);
+                        let pending = Some(child_index);
                         self.current = Some(std::mem::replace(&mut values[child_index], graph::manifest::PropertyValue::Null));
                         self.stack[usize::from(self.depth - 1)] = Some(BoardPropertyAuditFrame::Array { values, index, pending });
                     }
@@ -3184,7 +3166,6 @@ pub mod board_host {
             alt: bool,
             commit_old: bool,
         },
-        LeaveIdle,
     }
 
     #[derive(Debug)]
@@ -3291,6 +3272,7 @@ pub mod board_host {
             Ok(())
         }
 
+        #[cfg(test)]
         fn selection_ids(&self) -> impl Iterator<Item = &str> {
             self.deltas[..usize::from(self.delta_len)].iter().flatten().map(|delta| self.id(delta.id))
         }
@@ -3339,22 +3321,6 @@ pub mod board_host {
             self.output_raw("\",\"payload\":")?;
             self.output_raw(event.payload_json())?;
             self.output_raw("}]")
-        }
-
-        fn seal_owned_events(&mut self, events: &[BoardOwnedEvent]) -> Result<(), BoardPointerPlanFault> {
-            self.output_len = 0;
-            self.output_raw("[")?;
-            for (index, event) in events.iter().enumerate() {
-                if index > 0 {
-                    self.output_raw(",")?;
-                }
-                self.output_raw("{\"name\":\"")?;
-                self.output_raw(event.kind().name())?;
-                self.output_raw("\",\"payload\":")?;
-                self.output_raw(event.payload_json())?;
-                self.output_raw("}")?;
-            }
-            self.output_raw("]")
         }
 
         fn seal_optional_events<const N: usize>(&mut self, events: &[Option<BoardOwnedEvent>; N]) -> Result<(), BoardPointerPlanFault> {
@@ -3428,12 +3394,6 @@ pub mod board_host {
             Ok(())
         }
 
-        fn camera(&self) -> [f64; 3] {
-            match self.kind {
-                BoardPointerPlanKind::Pan { camera } | BoardPointerPlanKind::FinishPan { camera } => camera,
-                _ => [0.0, 0.0, 1.0],
-            }
-        }
     }
 
     fn write_json_string(output: &mut String, value: &str) {
@@ -8038,11 +7998,6 @@ pub mod board_host {
                     true
                 }
                 BoardPointerPlanKind::Brush { source, hover, alt, commit_old } => self.step_brush_pointer_commit(operation, source, hover, alt, commit_old),
-                BoardPointerPlanKind::LeaveIdle => {
-                    self.hovered_id = None;
-                    self.hovered_kind = None;
-                    true
-                }
             }
         }
 
@@ -9709,8 +9664,8 @@ pub mod board_host {
             self.selection_exit_highlight.clear();
         }
 
-        pub fn parse_fixture_v1(&mut self, raw: &serde_json::Value) -> bool {
-            let f: FixtureJson = match serde_json::from_value(raw.clone()) {
+        pub fn parse_fixture_json(&mut self, json: &str) -> bool {
+            let f: FixtureJson = match serde_json::from_str(json) {
                 Ok(v) => v,
                 Err(_) => return false,
             };
@@ -11878,10 +11833,6 @@ pub mod board_host {
                     self.interaction = Interaction::None;
                     self.bump_content_scene_generation();
                 }
-                BoardPointerPlanKind::LeaveIdle => {
-                    self.hovered_id = None;
-                    self.hovered_kind = None;
-                }
             }
             self.interaction_revision = plan.revision.wrapping_add(1);
             true
@@ -12776,6 +12727,25 @@ pub mod board_host {
     }
 
     #[cfg(test)]
+    #[test]
+    fn board_fixture_json_vectors_match_the_json_oracle() {
+        let vectors: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🔣️board-ingress.json")).unwrap();
+        for fixture in vectors.as_array().unwrap() {
+            let mut host = BoardHost::default();
+            assert!(host.parse_fixture_json(&fixture.to_string()));
+            assert_eq!(host.nodes.len(), fixture["nodes"].as_array().unwrap().len());
+            for node in fixture["nodes"].as_array().unwrap() {
+                let actual = &host.nodes[node["id"].as_str().unwrap()];
+                assert_eq!(actual.x, node["x"].as_f64().unwrap());
+                assert_eq!(actual.y, node["y"].as_f64().unwrap());
+            }
+            let count = host.nodes.len();
+            assert!(!host.parse_fixture_json("{"));
+            assert_eq!(host.nodes.len(), count);
+        }
+    }
+
+    #[cfg(test)]
     fn deletion_fixture(node_id: &str) -> BoardHost {
         let mut host = BoardHost::default();
         let fixture = serde_json::json!({
@@ -12787,7 +12757,7 @@ pub mod board_host {
             ],
             "edges": [{ "id": "edge-a-b", "source": node_id, "target": "node-b" }]
         });
-        assert!(host.parse_fixture_v1(&fixture));
+        assert!(host.parse_fixture_json(&fixture.to_string()));
         while host.pop_owned_event().is_some() {}
         host.set_selection_ids_silent(&[node_id.to_string()]);
         host

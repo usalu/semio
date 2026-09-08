@@ -1,0 +1,121 @@
+{
+  "cases": [
+    {
+      "question": {
+        "id": "q-text",
+        "label": "Grüße text",
+        "kind": "text"
+      },
+      "component": "input",
+      "interactive": true
+    },
+    {
+      "question": {
+        "id": "q-longText",
+        "label": "Grüße longText",
+        "kind": "longText"
+      },
+      "component": "input",
+      "interactive": true
+    },
+    {
+      "question": {
+        "id": "q-number",
+        "label": "Grüße number",
+        "kind": "number"
+      },
+      "component": "input",
+      "interactive": true
+    },
+    {
+      "question": {
+        "id": "q-slider",
+        "label": "Grüße slider",
+        "kind": "slider"
+      },
+      "component": "slider",
+      "interactive": true
+    },
+    {
+      "question": {
+        "id": "q-boolean",
+        "label": "Grüße boolean",
+        "kind": "boolean"
+      },
+      "component": "toggle",
+      "interactive": true
+    },
+    {
+      "question": {
+        "id": "q-single",
+        "label": "Grüße single",
+        "kind": "single"
+      },
+      "component": "select",
+      "interactive": true
+    },
+    {
+      "question": {
+        "id": "q-multi",
+        "label": "Grüße multi",
+        "kind": "multi"
+      },
+      "component": "container",
+      "interactive": false
+    },
+    {
+      "question": {
+        "id": "q-date",
+        "label": "Grüße date",
+        "kind": "date"
+      },
+      "component": "input",
+      "interactive": true
+    },
+    {
+      "question": {
+        "id": "q-color",
+        "label": "Grüße color",
+        "kind": "color"
+      },
+      "component": "input",
+      "interactive": true
+    },
+    {
+      "question": {
+        "id": "q-file",
+        "label": "Grüße file",
+        "kind": "file"
+      },
+      "component": "input",
+      "interactive": true
+    },
+    {
+      "question": {
+        "id": "q-vector",
+        "label": "Grüße vector",
+        "kind": "vector"
+      },
+      "component": "container",
+      "interactive": false
+    },
+    {
+      "question": {
+        "id": "q-image",
+        "label": "Grüße image",
+        "kind": "image"
+      },
+      "component": "image",
+      "interactive": false
+    },
+    {
+      "question": {
+        "id": "q-note",
+        "label": "Grüße note",
+        "kind": "note"
+      },
+      "component": "text",
+      "interactive": false
+    }
+  ]
+}

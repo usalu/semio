@@ -13,5 +13,5 @@ pub struct SetContributions {
 }
 
 pub fn handle(payload: &SetContributions, _doc: &ArtifactView<'_, ProcedureSnapshot>, _cfg: &ConfigView<'_, ImperativeConfig>) -> Result<Emit<ProcedureMutation, ImperativeConfigMutation>, Fault> {
-    Ok(Emit::config(vec![ImperativeConfigMutation::SetContributions { json: payload.json.clone() }]))
+    Ok(Emit::config(vec![ImperativeConfigMutation::SetContributions(crate::editor::procedure::config::SetContributions { json: payload.json.clone() })]))
 }

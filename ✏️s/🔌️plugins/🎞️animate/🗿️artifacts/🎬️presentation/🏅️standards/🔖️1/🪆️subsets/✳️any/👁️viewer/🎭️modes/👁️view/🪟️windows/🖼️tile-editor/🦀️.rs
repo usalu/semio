@@ -14,8 +14,8 @@
 
 use crate::artifacts::presentation::{FigureTileFrame, PresentationSnapshot};
 use semio_framework_plugin::{LocalizedLabel, SurfaceKind, WindowKindDefinition, WindowOptions};
-use semio_framework_ui_contract::{surface, BuiltNode};
-use semio_framework_ui_scene::{encode, Canvas2dScene};
+use semio_framework_ui_contract::BuiltNode;
+use semio_framework_ui_scene::Canvas2dScene;
 
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = "animate-view-tile-editor";
@@ -93,9 +93,9 @@ fn deck_to_canvas_layers(deck: &PresentationSnapshot) -> String {
 //#endregion 🔖️CanvasLayers
 
 //#region 🔖️Render
-pub fn render(deck: &PresentationSnapshot) -> BuiltNode {
+pub fn render(deck: &PresentationSnapshot) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let scene = Canvas2dScene { camera_x: 0.0, camera_y: 0.0, zoom: 1.0, layers_json: deck_to_canvas_layers(deck), snapshot: None };
-    surface(encode(semio_framework_ui_contract::SurfaceKind::Canvas2d, &scene)).id(SURFACE_ID).build()
+    semio_framework_plugin::scene_surface(SURFACE_ID, semio_framework_ui_contract::SurfaceKind::Canvas2d, &scene)
 }
 //#endregion 🔖️Render
 

@@ -8,6 +8,7 @@ use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType,
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::SemioDrawingSnapshot;
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::image::schema::snapshot::SemioImageSnapshot;
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::value::schema::snapshot::{SemioValue, SemioValueEntry, SemioValueSnapshot, STDIO_SEMIOVALUE_DOCUMENT_SCHEMA};
+#[cfg(test)]
 use serde::{Deserialize, Serialize};
 
 //#region 🔹Constants

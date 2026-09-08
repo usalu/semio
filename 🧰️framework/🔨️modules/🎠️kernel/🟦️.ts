@@ -1184,18 +1184,18 @@ export interface PluginCatalog {
 //#endregion 🗂️PluginCatalog
 
 //#region InvocationResponse
-/** @emoji 🕰️ Hybrid logical clock stamp carried by every kernel operation. */
-export type HybridLogicalTimestamp = { readonly wall: number; readonly counter: number };
+/** @emoji 🕰️ Exact replication HLC carried by every packed kernel operation. */
+export type HybridLogicalTimestamp = { readonly actor: number; readonly physical_ms: number; readonly logical: number };
 
 /** @emoji 🩹️ A schema-tagged artifact mutation payload (forward diff or inverse diff). */
-export type ArtifactDiff = { readonly schemaId: string; readonly payload: unknown };
+export type ArtifactDiff = { readonly schema: string; readonly payload: readonly number[] };
 
 /** @emoji ↩️ Undo semantics for a single kernel operation. */
-export type UndoPolicy = "exactBaseOnly" | "transformAgainstConcurrent" | "semanticUndo" | "compensatingAction";
+export type UndoPolicy = "ExactBaseOnly" | "TransformAgainstConcurrent" | "SemanticUndo" | "CompensatingAction";
 
 /** @emoji ↩️ The true inverse of a kernel operation, recorded from the store's `Edit.backwards`. */
 export type InverseMutation = {
-  readonly targetOperation: string;
+  readonly targetMutation: string;
   readonly inverseDiff: ArtifactDiff;
   readonly baseVersion: number;
   readonly dependencies?: readonly string[];
@@ -1205,7 +1205,7 @@ export type InverseMutation = {
 /** @emoji 🔁️ One typed document operation with its true inverse — the CQRS wire unit. */
 export type KernelMutation = {
   readonly id: string;
-  readonly artifact: number;
+  readonly document: string;
   readonly baseVersion: number;
   readonly invocationId: string;
   readonly diff: ArtifactDiff;
@@ -1218,7 +1218,7 @@ export type KernelMutation = {
 /** @emoji 🧩️ One member edit folded into a group undo — pairs the owning document handle with the
  * edit id inside it (composite/child-document dispatch). Mirrors Rust `kernel::EditRef`. */
 export type EditRef = {
-  readonly document: number;
+  readonly document: string;
   readonly editId: string;
 };
 

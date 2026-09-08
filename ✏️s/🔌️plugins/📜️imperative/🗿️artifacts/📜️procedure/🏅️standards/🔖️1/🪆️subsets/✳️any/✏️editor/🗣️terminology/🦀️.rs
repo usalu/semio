@@ -11,6 +11,9 @@ semio_framework_plugin::app_labels! {
     /// 🗣️ Complete UI label set for the imperative app; one field per label makes every locale
     /// combination compile-checked.
     pub struct ImperativeLabels {
+        document_title: native_en "Document", native_de "Dokument", reuse_en "Document", reuse_de "Dokument";
+        catalogue_title: native_en "Catalogue", native_de "Katalog", reuse_en "Catalogue", reuse_de "Katalog";
+        inspection_title: native_en "Inspection", native_de "Inspektion", reuse_en "Inspection", reuse_de "Inspektion";
         window_main: native_en "Imperative", native_de "Imperativ", reuse_en "Imperative", reuse_de "Imperativ";
         window_script: native_en "Script", native_de "Skript", reuse_en "Script", reuse_de "Skript";
         col_index: native_en "#", native_de "#", reuse_en "#", reuse_de "#";

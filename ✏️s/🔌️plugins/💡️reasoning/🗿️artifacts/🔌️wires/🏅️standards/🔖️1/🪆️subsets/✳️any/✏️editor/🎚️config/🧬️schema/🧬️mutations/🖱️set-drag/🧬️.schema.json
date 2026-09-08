@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Set Drag",
+  "type": "object",
+  "properties": {
+    "nodeId": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "lastX": {
+      "type": "number"
+    },
+    "lastY": {
+      "type": "number"
+    }
+  },
+  "required": [
+    "nodeId",
+    "lastX",
+    "lastY"
+  ],
+  "additionalProperties": false
+}

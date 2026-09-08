@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🧬️mutations/🔄️set-reorganize-epoch",
+  "semanticKind": "set-reorganize-epoch",
+  "displayName": "Set Reorganize Epoch",
+  "emoji": "🔄️",
+  "aggregateVariant": "SetReorganizeEpoch",
+  "payloadSchema": "🧬️.schema.json",
+  "textOpcode": "set-reorganize-epoch",
+  "binaryTag": 8,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "apply-only",
+  "outcomeClasses": [
+    "applied"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "text",
+    "binary",
+    "json-schema"
+  ]
+}

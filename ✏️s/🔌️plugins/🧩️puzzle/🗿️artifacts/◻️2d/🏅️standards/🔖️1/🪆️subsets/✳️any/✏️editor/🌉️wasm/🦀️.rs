@@ -218,11 +218,7 @@ impl BoardSession {
 
     #[wasm_bindgen(js_name = parseFixtureJson)]
     pub fn parse_fixture_json(&mut self, json: &str) -> bool {
-        let raw: serde_json::Value = match serde_json::from_str(json) {
-            Ok(v) => v,
-            Err(_) => return false,
-        };
-        self.state.borrow_mut().host.parse_fixture_v1(&raw)
+        self.state.borrow_mut().host.parse_fixture_json(json)
     }
 
     #[wasm_bindgen(js_name = setCamera)]

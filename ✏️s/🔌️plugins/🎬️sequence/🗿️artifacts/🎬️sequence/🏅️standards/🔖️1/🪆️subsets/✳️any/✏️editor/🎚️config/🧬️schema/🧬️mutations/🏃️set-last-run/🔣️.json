@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🧬️mutations/🏃️set-last-run",
+  "semanticKind": "set-last-run",
+  "displayName": "Set Last Run",
+  "emoji": "🏃️",
+  "aggregateVariant": "SetLastRun",
+  "payloadSchema": "🧬️.schema.json",
+  "textOpcode": "set-last-run",
+  "binaryTag": 0,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "apply-only",
+  "outcomeClasses": [
+    "applied"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "text",
+    "binary",
+    "json-schema"
+  ]
+}

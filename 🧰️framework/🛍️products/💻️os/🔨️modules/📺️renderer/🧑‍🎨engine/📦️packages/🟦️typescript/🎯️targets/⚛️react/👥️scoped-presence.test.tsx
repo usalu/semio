@@ -51,6 +51,7 @@ function event(row: Case): Extract<BackboneWorkerResponse, { readonly kind: "eve
   return {
     kind: "event",
     documentId: row.scope.documentId,
+    clientInstanceId: "33333333-3333-4333-8333-333333333333",
     scope: row.scope,
     verifiedSurfaceId: row.surface,
     event: { kind: "presence", peers: [row.peer] },
@@ -97,13 +98,13 @@ describe("scope-safe Shell presence", () => {
   it("clears only the revoked scope's bootstrap and execution-target rows", () => {
     const [a, b] = fixture.cases;
     const bootstrap = [a, b].reduce(
-      (state, row) => reduceBootstrapUiState(state, { kind: "artifact-bootstrap-progress", documentId: row.scope.documentId, scope: row.scope, receivedBytes: 1, totalBytes: 2, receivedChunks: 1, totalChunks: 2 }),
+      (state, row) => reduceBootstrapUiState(state, { kind: "artifact-bootstrap-progress", documentId: row.scope.documentId, clientInstanceId: "33333333-3333-4333-8333-333333333333", scope: row.scope, receivedBytes: 1, totalBytes: 2, receivedChunks: 1, totalChunks: 2 }),
       {},
     );
     const afterBootstrapClose = reduceBootstrapUiState(bootstrap, { kind: "detached", documentId: a.scope.documentId, scope: a.scope });
     expect(Object.keys(afterBootstrapClose)).toEqual([b.runtimeKey]);
     const execution = [a, b].reduce(
-      (state, row) => reduceExecutionTargetUiState(state, { kind: "execution-target-status", documentId: row.scope.documentId, spaceId: row.scope.spaceId, scope: row.scope as DocumentScope, code: "verifying" }),
+      (state, row) => reduceExecutionTargetUiState(state, { kind: "execution-target-status", documentId: row.scope.documentId, clientInstanceId: "33333333-3333-4333-8333-333333333333", spaceId: row.scope.spaceId, scope: row.scope as DocumentScope, code: "verifying" }),
       {},
     );
     const afterExecutionClose = reduceExecutionTargetUiState(execution, { kind: "execution-target-cleared", documentId: a.scope.documentId, scope: a.scope });

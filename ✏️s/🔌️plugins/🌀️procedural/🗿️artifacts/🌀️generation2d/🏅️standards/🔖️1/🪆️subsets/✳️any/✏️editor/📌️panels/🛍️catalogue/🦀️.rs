@@ -2,7 +2,7 @@
 
 use crate::editor::generation2d::terminology::Generation2dLabels;
 use crate::editor::generation2d::GENERATION2D_PLAY_APP_ID;
-use semio_framework_plugin::{tree_item_with_action, ActionFactory, BuiltNode, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL};
+use semio_framework_plugin::{tree_item_with_action, ActionFactory, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL};
 
 //#region 🔖️Constants
 pub const GENERATION2D_PLAY_BODY_CATALOGUE: &str = "generation2d.play.catalogue";

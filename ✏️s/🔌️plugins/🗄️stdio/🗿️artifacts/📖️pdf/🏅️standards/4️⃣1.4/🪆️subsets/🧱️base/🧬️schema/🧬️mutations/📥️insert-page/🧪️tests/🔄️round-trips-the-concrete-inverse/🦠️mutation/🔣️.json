@@ -1,0 +1,11 @@
+{
+  "mutation": "insert-page",
+  "payload": {
+    "index": 1,
+    "page": {
+      "height": 60,
+      "text": "inserted",
+      "width": 50
+    }
+  }
+}

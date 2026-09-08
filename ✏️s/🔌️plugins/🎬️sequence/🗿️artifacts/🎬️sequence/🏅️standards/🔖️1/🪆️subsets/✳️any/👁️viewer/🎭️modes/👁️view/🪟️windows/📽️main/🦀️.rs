@@ -8,15 +8,12 @@
 //! type) provides, since a viewer never needs to lay anything out interactively.
 
 use crate::artifacts::sequence::{SequenceSnapshot, SequenceStep};
-use semio_framework_plugin::{build_node_graph_scene, LocalizedLabel, NodeGraphEdgeRecord, NodeGraphNodeRecord, NodeGraphScene, NodeGraphViewport, SurfaceKind, UiNode, WindowKindDefinition, WindowOptions};
+use semio_framework_plugin::{LocalizedLabel, NodeGraphEdgeRecord, NodeGraphNodeRecord, NodeGraphScene, NodeGraphViewport, SurfaceKind, BuiltNode, UiAssemblyResult, WindowKindDefinition, WindowOptions};
 
 //#region 🔖️Constants
 pub const SEQUENCE_VIEW_WINDOW_MAIN: &str = "sequence-view-main";
 pub const SEQUENCE_VIEW_BODY_MAIN: &str = "sequence.view.main";
 const SEQUENCE_VIEW_SURFACE_MAIN: &str = "sequence.view.main";
-/// 👁️ Read-only counterpart of the editor's `SEQUENCE_PLAY_APP_ID` controller id — kept distinct so
-/// a viewer session's node-graph controller can never be mistaken for an editor session's.
-const SEQUENCE_VIEW_CONTROLLER_ID: &str = "sequence-view";
 /// 👁️ A viewer has no persisted per-session camera (`Config = NoConfig`) — hardcoded default,
 /// documented as an intentional simplification, not a bug (mirrors `📐️cad`'s viewer camera/sun
 /// defaults).
@@ -63,16 +60,16 @@ fn step_node(step: &SequenceStep) -> NodeGraphNodeRecord {
     }
 }
 
-/// 👁️ Pure `SequenceSnapshot -> UiNode` read: default viewport (a viewer has no persisted
+/// 👁️ Pure `SequenceSnapshot -> UiAssemblyResult<BuiltNode>` read: default viewport (a viewer has no persisted
 /// per-session camera), no selection/drag overlay, `editable: Some(false)` (contract §2.2's
 /// structural read-only guarantee, mirrored here at the scene level too).
-pub fn render(document: &SequenceSnapshot) -> UiNode {
+pub fn render(document: &SequenceSnapshot) -> UiAssemblyResult<BuiltNode> {
     let fixture = document.to_fixture();
     let nodes: Vec<NodeGraphNodeRecord> = fixture.steps.iter().map(step_node).collect();
     let edges: Vec<NodeGraphEdgeRecord> =
         fixture.edges.iter().map(|edge| NodeGraphEdgeRecord { id: edge.id.clone(), source_node_id: edge.from.clone(), source_port_id: String::new(), target_node_id: edge.to.clone(), target_port_id: String::new(), label: None }).collect();
     let viewport = NodeGraphViewport { x: 0.0, y: 0.0, zoom: 1.0 };
-    build_node_graph_scene(SEQUENCE_VIEW_SURFACE_MAIN, SEQUENCE_VIEW_CONTROLLER_ID, NodeGraphScene { editable: Some(false), ..NodeGraphScene::base(nodes, edges, viewport) })
+    semio_framework_plugin::scene_surface(SEQUENCE_VIEW_SURFACE_MAIN, semio_framework_ui_contract::SurfaceKind::NodeGraph, &NodeGraphScene { editable: Some(false), ..NodeGraphScene::base(nodes, edges, viewport) })
 }
 //#endregion 🔖️Render
 
@@ -90,12 +87,13 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn render_produces_a_read_only_scene_for_the_default_document() {
-        let document = crate::artifacts::sequence::default_snapshot();
-        let node = render(&document);
-        let json = serde_json::to_string(&node).unwrap_or_default();
-        assert!(json.contains("\"editable\":false"));
-        assert!(json.contains("step-1"));
-        assert!(json.contains("step-2"));
+        let document = neural_engine::ColdOwner::new(crate::artifacts::sequence::default_snapshot());
+        let node = render(&document).expect("viewer graph");
+        let semio_framework_plugin::Component::Surface(props) = &node.component else { panic!("semantic graph") };
+        let scene: NodeGraphScene = semio_framework_ui_scene::decode(props).expect("packed viewer scene");
+        assert_eq!(scene.editable, Some(false));
+        assert_eq!(scene.nodes.iter().map(|node| node.id.as_str()).collect::<Vec<_>>(), ["step-1", "step-2"]);
+        semio_framework_plugin::testkit::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).expect("retire viewer graph");
     }
 }
 //#endregion 🧪️Tests

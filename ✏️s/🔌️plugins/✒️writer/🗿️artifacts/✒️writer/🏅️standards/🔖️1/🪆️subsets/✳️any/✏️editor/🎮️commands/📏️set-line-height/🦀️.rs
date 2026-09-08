@@ -16,5 +16,5 @@ pub fn handle(payload: &SetLineHeight, _doc: &ArtifactView<'_, WriterSnapshot>, 
     let config = cfg.snapshot;
     let mut settings = config.editor_settings.clone();
     settings.line_height = payload.value;
-    Ok(Emit::config(vec![WriterConfigMutation::SetEditorSettings { settings }, WriterConfigMutation::SetRevision { value: config.revision + 1 }]))
+    Ok(Emit::config(vec![WriterConfigMutation::SetEditorSettings(crate::editor::writer::config::SetEditorSettings { settings }), WriterConfigMutation::SetRevision(crate::editor::writer::config::SetRevision { value: config.revision + 1 })]))
 }

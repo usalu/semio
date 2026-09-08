@@ -3,8 +3,6 @@
 
 //#region 🔖️Types
 pub mod part_1_2 {
-    use super::*;
-
     /// 🏗️ Fire resistance rating.
     #[derive(Clone, Copy, Debug, PartialEq, Eq, dsl::DslScalar, value_derive::ToValue, value_derive::FromValue)]
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
@@ -16,8 +14,6 @@ pub mod part_1_2 {
     }
 }
 pub mod part_3 {
-    use super::*;
-
     /// 💧️ Tightness class per EN 1992-3 Table 7.105: required degree of protection against leakage.
     #[derive(Clone, Copy, Debug, PartialEq, Eq, dsl::DslScalar, value_derive::ToValue, value_derive::FromValue)]
     #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]

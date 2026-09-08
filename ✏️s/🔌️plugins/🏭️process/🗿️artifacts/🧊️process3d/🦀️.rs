@@ -329,18 +329,18 @@ pub trait MachineCatalog {
     fn machines(&self) -> Vec<WorkshopMachine>;
 }
 
-/// 🗃️ The closed set of `MachineCatalog` implementors. Closed HERE, in the same module as `#[dyn_enum]`
-/// (not at the `editor::installed_catalogs` call site that gathers them): the generated
-/// `__semio_dispatch_MachineCatalog!` is `#[macro_export]`ed, and rustc rejects any reference to a
-/// `macro_export`ed macro produced by expansion IN THE SAME CRATE via an absolute/`crate::`-qualified
-/// path (rust-lang/rust#52234) — verified directly against real rustc: even the documented
-/// `use crate::__semio_dispatch_MachineCatalog;` cross-module recipe (`📓️terra-dyn-enum-macro-report.md`
-/// finding 1) still hits this error when the closing site is a genuine sibling module tree (`editor` is
-/// a top-level sibling of `artifacts`, not a descendant of `process3d`), because that `use` is itself an
-/// absolute path. Only a BARE invocation in the trait's OWN literal module resolves it, via ordinary
-/// `macro_rules!` textual scoping — so the enum lives here, and `editor::installed_catalogs` imports
-/// `MachineCatalogs` like any other type.
 semio_framework_dispatch_macros::dyn_enum_close! {
+    /// 🗃️ The closed set of `MachineCatalog` implementors. Closed HERE, in the same module as `#[dyn_enum]`
+    /// (not at the `editor::installed_catalogs` call site that gathers them): the generated
+    /// `__semio_dispatch_MachineCatalog!` is `#[macro_export]`ed, and rustc rejects any reference to a
+    /// `macro_export`ed macro produced by expansion IN THE SAME CRATE via an absolute/`crate::`-qualified
+    /// path (rust-lang/rust#52234) — verified directly against real rustc: even the documented
+    /// `use crate::__semio_dispatch_MachineCatalog;` cross-module recipe (`📓️terra-dyn-enum-macro-report.md`
+    /// finding 1) still hits this error when the closing site is a genuine sibling module tree (`editor` is
+    /// a top-level sibling of `artifacts`, not a descendant of `process3d`), because that `use` is itself an
+    /// absolute path. Only a BARE invocation in the trait's OWN literal module resolves it, via ordinary
+    /// `macro_rules!` textual scoping — so the enum lives here, and `editor::installed_catalogs` imports
+    /// `MachineCatalogs` like any other type.
     pub enum MachineCatalogs: MachineCatalog {
         Generic(crate::artifacts::process3d::schema::GenericCatalog),
         Metal(crate::artifacts::process3d::schema::MetalCatalog),

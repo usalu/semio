@@ -16,10 +16,10 @@ const DIFF: &str = include_str!("🔺️diff/🔣️.json");
 const OUTCOME: &str = include_str!("🎯️outcome/🔣️.json");
 
 fn before() -> ShootingSnapshot {
-    serde_json::from_str(BEFORE).expect("before snapshot decodes")
+    dsl::os_pack::from_json_str(BEFORE).expect("before snapshot decodes")
 }
 fn expected_after() -> ShootingSnapshot {
-    serde_json::from_str(AFTER).expect("after snapshot decodes")
+    dsl::os_pack::from_json_str(AFTER).expect("after snapshot decodes")
 }
 fn mutation() -> ShootingMutation {
     serde_json::from_str(MUTATION).expect("mutation decodes")
@@ -61,8 +61,8 @@ async fn inverse_spins_back_about_the_same_axis() {
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {
-        let decoded: ShootingSnapshot = serde_json::from_str(text).expect("snapshot decodes");
-        let reencoded = serde_json::to_value(&decoded).expect("snapshot encodes");
+        let decoded: ShootingSnapshot = dsl::os_pack::from_json_str(text).expect("snapshot decodes");
+        let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::os_pack::to_json_string(&decoded)).expect("snapshot encodes");
         let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
         assert_eq!(reencoded, original, "rotate-assets/spins-asset-hero-about-z: committed {label} JSON is not canonical");
     }
@@ -90,7 +90,7 @@ async fn declared_outcome_holds_and_a_zero_length_axis_is_the_identity() {
 #[semio_framework_async_macros::async_test]
 async fn produces_committed_diff() {
     let outcome = mutation().diff(&before());
-    let produced = serde_json::to_value(outcome.diff()).expect("produced diff encodes");
+    let produced = serde_json::from_str::<serde_json::Value>(&dsl::os_pack::to_json_string(outcome.diff())).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
     assert_eq!(produced, committed, "rotate-assets/spins-asset-hero-about-z: produced diff differs from the committed 🔺️diff/🔣️.json");
     assert_eq!(committed["assets"]["patched"][0]["patch"]["orientation"][3], (1.5f64 * 0.5).cos(), "rotate-assets/spins-asset-hero-about-z: the stored w is cos(angle/2), i.e. already composed");
@@ -101,8 +101,8 @@ async fn produces_committed_diff() {
 /// 🔣️ The committed diff is itself canonical and decodes to `ShootingDiff` — the committed quaternion patch round-trips through `ShootingDiff` unchanged.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical() {
-    let decoded: ShootingDiff = serde_json::from_str(DIFF).expect("committed diff decodes");
-    let reencoded = serde_json::to_value(&decoded).expect("diff re-encodes");
+    let decoded: ShootingDiff = dsl::os_pack::from_json_str(DIFF).expect("committed diff decodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::os_pack::to_json_string(&decoded)).expect("diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
     assert_eq!(reencoded, original, "rotate-assets/spins-asset-hero-about-z: committed diff JSON is not canonical");
 }
@@ -110,7 +110,7 @@ async fn committed_diff_is_canonical() {
 /// 🩹 Applying the committed diff straight to `before` yields `after` — the single orientation patch is enough to rebuild the after-snapshot.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
-    let decoded: ShootingDiff = serde_json::from_str(DIFF).expect("committed diff decodes");
+    let decoded: ShootingDiff = dsl::os_pack::from_json_str(DIFF).expect("committed diff decodes");
     let produced = decoded.apply(&before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "rotate-assets/spins-asset-hero-about-z: committed diff did not carry before to after");
 }

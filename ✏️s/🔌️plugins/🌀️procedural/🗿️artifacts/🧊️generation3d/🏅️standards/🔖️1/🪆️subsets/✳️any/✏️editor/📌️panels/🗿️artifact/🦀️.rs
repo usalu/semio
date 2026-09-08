@@ -4,7 +4,7 @@ use crate::artifacts::generation3d::widget_id;
 use crate::editor::generation3d::terminology::Generation3dLabels;
 use flow::FlowFixture;
 use semio_framework_plugin::plugin_app_close_prelude::Component;
-use semio_framework_plugin::{tree_item, BuiltNode, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL};
+use semio_framework_plugin::{tree_item, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL};
 
 //#region 🔖️Constants
 pub const GENERATION_3D_PLAY_BODY_DOCUMENT: &str = "procedural.play.document";

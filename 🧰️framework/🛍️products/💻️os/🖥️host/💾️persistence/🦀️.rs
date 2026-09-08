@@ -129,10 +129,12 @@ impl PersistenceEventV1 {
     }
 }
 
+#[cfg(test)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(crate) enum PersistenceObservation { Progress, Terminal, DurablePublication }
 
 /// 🧷️ Receipt consumer only; admission, selected-path ownership and durable commit remain shell duties.
+#[cfg(test)]
 pub(crate) struct PendingPersistenceV1 {
     request: PersistenceRequestV1,
     phase: Option<PersistencePhaseV1>,
@@ -141,6 +143,7 @@ pub(crate) struct PendingPersistenceV1 {
     terminal: bool,
 }
 
+#[cfg(test)]
 impl PendingPersistenceV1 {
     pub(crate) fn new(request: PersistenceRequestV1, owner_scope: &PersistenceScopeV1) -> Result<Self, PersistenceContractError> {
         request.validate()?;

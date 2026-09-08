@@ -22,7 +22,19 @@
       "cache": false,
       "options": {
         "command": "bun ./📜️script.ts setup"
-      }
+      },
+      "outputs": [],
+      "dependsOn": [
+        "deps-javascript",
+        "deps-python",
+        "deps-cargo",
+        "deps-go",
+        "deps-dotnet",
+        "deps-cpp",
+        "deps-browsers",
+        "deps-wasm",
+        "deps-tools"
+      ]
     },
     "start": {
       "executor": "nx:run-commands",
@@ -251,18 +263,36 @@
     },
     "lint": {
       "executor": "nx:run-commands",
-      "dependsOn": [],
+      "dependsOn": [
+        {
+          "target": "lint",
+          "projects": [
+            "*",
+            "!workspace"
+          ]
+        }
+      ],
       "options": {
         "command": "bun ./📜️script.ts lint",
         "forwardAllArgs": true
-      }
+      },
+      "cache": false
     },
     "lint-repo": {
       "executor": "nx:run-commands",
-      "dependsOn": [],
+      "dependsOn": [
+        {
+          "target": "lint",
+          "projects": [
+            "@semio-tech/repo-*",
+            "!workspace"
+          ]
+        }
+      ],
       "options": {
         "command": "bun ./📜️script.ts lint repo"
-      }
+      },
+      "cache": false
     },
     "format": {
       "executor": "nx:run-commands",
@@ -273,11 +303,23 @@
     },
     "test": {
       "executor": "nx:run-commands",
-      "dependsOn": [],
+      "dependsOn": [
+        {
+          "target": "test",
+          "projects": [
+            "*",
+            "!workspace",
+            "!@semio-tech/repo-test-domain"
+          ]
+        },
+        "@semio-tech/repo-test-domain:test-contract"
+      ],
       "options": {
         "command": "bun ./📜️script.ts test",
         "forwardAllArgs": true
-      }
+      },
+      "cache": false,
+      "outputs": []
     },
     "test-discover": {
       "executor": "nx:run-commands",
@@ -432,32 +474,61 @@
     },
     "test-quick": {
       "executor": "nx:run-commands",
-      "dependsOn": [],
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [
+        {
+          "target": "test-quick",
+          "projects": [
+            "*",
+            "!workspace",
+            "!@semio-tech/repo-test-domain"
+          ]
+        },
+        "@semio-tech/repo-test-domain:test-contract"
+      ],
       "options": {
-        "command": "bun ./📜️script.ts test quick",
-        "forwardAllArgs": true
+        "command": "bun ./📜️script.ts test quick"
       }
     },
     "test-long": {
       "executor": "nx:run-commands",
-      "dependsOn": [],
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [
+        {
+          "target": "test-long",
+          "projects": [
+            "*",
+            "!workspace",
+            "!@semio-tech/repo-test-domain"
+          ]
+        },
+        "@semio-tech/repo-test-domain:test-contract",
+        "test-storybook"
+      ],
       "options": {
-        "command": "bun ./📜️script.ts test long",
-        "forwardAllArgs": true,
-        "env": {
-          "STORYBOOK_PORT": "6010"
-        }
+        "command": "bun ./📜️script.ts test long"
       }
     },
     "test-exhaustive": {
       "executor": "nx:run-commands",
-      "dependsOn": [],
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [
+        {
+          "target": "test-exhaustive",
+          "projects": [
+            "*",
+            "!workspace",
+            "!@semio-tech/repo-test-domain"
+          ]
+        },
+        "@semio-tech/repo-test-domain:test-contract",
+        "test-storybook"
+      ],
       "options": {
-        "command": "bun ./📜️script.ts test exhaustive",
-        "forwardAllArgs": true,
-        "env": {
-          "STORYBOOK_PORT": "6010"
-        }
+        "command": "bun ./📜️script.ts test exhaustive"
       }
     },
     "bench-plugins": {
@@ -662,11 +733,22 @@
     },
     "build": {
       "executor": "nx:run-commands",
-      "dependsOn": [],
+      "dependsOn": [
+        {
+          "target": "build",
+          "projects": [
+            "*",
+            "!workspace"
+          ]
+        },
+        "build-storybook"
+      ],
       "options": {
         "command": "bun ./📜️script.ts build",
         "forwardAllArgs": true
-      }
+      },
+      "cache": false,
+      "outputs": []
     },
     "build-storybook": {
       "executor": "nx:run-commands",
@@ -677,7 +759,22 @@
         "env": {
           "STORYBOOK_PORT": "6010"
         }
-      }
+      },
+      "cache": true,
+      "outputs": [
+        "{workspaceRoot}/storybook-static"
+      ],
+      "inputs": [
+        "production",
+        "^production",
+        "{workspaceRoot}/.storybook/**/*",
+        {
+          "env": "STORYBOOK_SCOPE"
+        },
+        {
+          "env": "STORYBOOK_OUTPUT_DIR"
+        }
+      ]
     },
     "cpp": {
       "executor": "nx:run-commands",
@@ -685,7 +782,14 @@
       "options": {
         "command": "bun ./📜️script.ts cpp",
         "forwardAllArgs": true
-      }
+      },
+      "dependsOn": [
+        {
+          "target": "cpp-test",
+          "params": "forward"
+        }
+      ],
+      "outputs": []
     },
     "cpp-setup": {
       "executor": "nx:run-commands",
@@ -693,7 +797,8 @@
       "options": {
         "command": "bun ./📜️script.ts cpp setup",
         "forwardAllArgs": true
-      }
+      },
+      "outputs": []
     },
     "cpp-configure": {
       "executor": "nx:run-commands",
@@ -704,39 +809,49 @@
       "options": {
         "command": "bun ./📜️script.ts cpp configure",
         "forwardAllArgs": true
-      }
+      },
+      "outputs": []
     },
     "cpp-build": {
       "executor": "nx:run-commands",
       "dependsOn": [
-        "cpp-configure"
+        {
+          "target": "cpp-configure",
+          "params": "forward"
+        }
       ],
       "cache": false,
       "options": {
         "command": "bun ./📜️script.ts cpp build",
         "forwardAllArgs": true
-      }
+      },
+      "outputs": []
     },
     "cpp-test": {
       "executor": "nx:run-commands",
       "dependsOn": [
-        "cpp-build"
+        {
+          "target": "cpp-build",
+          "params": "forward"
+        }
       ],
       "cache": false,
       "options": {
         "command": "bun ./📜️script.ts cpp test",
         "forwardAllArgs": true
-      }
+      },
+      "outputs": []
     },
     "setup-storybook": {
       "executor": "nx:run-commands",
       "cache": false,
       "options": {
-        "command": "bunx playwright install --with-deps chromium",
-        "env": {
-          "PLAYWRIGHT_BROWSERS_PATH": "node_modules/.cache/ms-playwright"
-        }
-      }
+        "command": "bun ./📜️script.ts setup prepare"
+      },
+      "dependsOn": [
+        "deps-browsers"
+      ],
+      "outputs": []
     },
     "publish": {
       "executor": "nx:run-commands",
@@ -752,6 +867,144 @@
       "options": {
         "command": "bun ./📜️script.ts purge",
         "forwardAllArgs": true
+      }
+    },
+    "deps-javascript": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "options": {
+        "command": "bun ./📜️script.ts setup deps javascript"
+      }
+    },
+    "deps-python": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "options": {
+        "command": "bun ./📜️script.ts setup deps python"
+      },
+      "dependsOn": [
+        "@semio-tech/ui-styling-py:deps",
+        "@semio-tech/energy-oracle-py:deps"
+      ]
+    },
+    "deps-cargo": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "options": {
+        "command": "bun ./📜️script.ts setup deps cargo"
+      },
+      "parallelism": false
+    },
+    "deps-go": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "options": {
+        "command": "bun ./📜️script.ts setup deps go"
+      }
+    },
+    "deps-dotnet": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "options": {
+        "command": "bun ./📜️script.ts setup deps dotnet"
+      },
+      "dependsOn": [
+        "@semio-tech/repo-test-dotnet:deps"
+      ]
+    },
+    "deps-cpp": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "options": {
+        "command": "bun ./📜️script.ts setup deps cpp"
+      },
+      "dependsOn": [
+        "cpp-setup"
+      ]
+    },
+    "deps-browsers": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "options": {
+        "command": "bun ./📜️script.ts setup deps browsers"
+      },
+      "dependsOn": [
+        "deps-javascript"
+      ]
+    },
+    "deps-wasm": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "options": {
+        "command": "bun ./📜️script.ts setup deps wasm"
+      },
+      "parallelism": false
+    },
+    "deps-tools": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "options": {
+        "command": "bun ./📜️script.ts setup deps tools"
+      },
+      "parallelism": false
+    },
+    "prepare": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [
+        "@semio-tech/framework-schema:generate",
+        "@semio-tech/ui-styling-tokens:generate",
+        "@semio-tech/assets:build",
+        "@semio-tech/framework-graph:generate",
+        "@semio-tech/plugin-registry:generate"
+      ],
+      "options": {
+        "command": "bun ./📜️script.ts setup prepare"
+      }
+    },
+    "setup-git": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "options": {
+        "command": "bun ./📜️script.ts setup git"
+      }
+    },
+    "setup-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "options": {
+        "command": "bun ./📜️script.ts setup native"
+      }
+    },
+    "test-fundamental": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [
+        {
+          "target": "test",
+          "projects": [
+            "*",
+            "!workspace",
+            "!@semio-tech/repo-test-domain"
+          ]
+        },
+        "@semio-tech/repo-test-domain:test-contract"
+      ],
+      "options": {
+        "command": "bun ./📜️script.ts test fundamental"
       }
     }
   }

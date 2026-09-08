@@ -192,6 +192,9 @@ impl RasterDiff {
             if let Some(replacement) = &self.artifact {
                 return Ok((**replacement).clone());
             }
+            if let Some(assets) = &self.assets {
+                validate_assets_delta(&artifact.assets, assets).map_err(|error| error.under(["assets"]))?;
+            }
             let mut next = artifact.clone();
             if let Some(schema) = &self.schema {
                 next.schema = schema.clone();
@@ -206,11 +209,10 @@ impl RasterDiff {
                 next.layers = apply_layers_delta(&next.layers, delta).map_err(|error| error.under(["layers"]))?;
             }
             if let Some(assets) = &self.assets {
-                validate_assets_delta(&next.assets, assets).map_err(|error| error.under(["assets"]))?;
                 for (key, value) in &assets.entries {
                     match value {
                         Some(asset) => {
-                            next.assets.insert(key.clone(), crate::artifacts::raster::mint_raster_asset_child(key, asset));
+                            next.assets.insert(key.clone(), crate::artifacts::raster::mint_raster_asset_child(key, asset)).expect("unique Raster assets fit the preflighted map capacity");
                         }
                         None => unreachable!("Raster asset removal was rejected before snapshot ownership was cloned"),
                     }
@@ -325,6 +327,8 @@ fn apply_layer_patch_entry(layers: &mut [RasterLayerNode], entry: &RasterLayerPa
 }
 
 fn validate_assets_delta<T>(assets: &crate::artifacts::raster::RasterOwnedMap<T>, delta: &RasterAssetsDelta) -> protocol::MutationApplyResult<()> {
+    let additional = delta.entries.iter().filter(|(key, value)| value.is_some() && !assets.contains_key(key)).count();
+    assets.validate_additional_unique_entries(additional).map_err(|reason| protocol::MutationApplyError::new("mutation.apply.capacity", reason))?;
     for (key, value) in &delta.entries {
         if value.is_none() && !assets.contains_key(key) {
             return Err(protocol::MutationApplyError::new("mutation.apply.missing-target", "removed asset does not exist").at([key.as_str()]));
@@ -345,6 +349,9 @@ impl MutationDiff<RasterSnapshot> for RasterDiff {
             if let Some(replacement) = &self.artifact {
                 return Ok(replacement.to_snapshot());
             }
+            if let Some(assets) = &self.assets {
+                validate_assets_delta(&snapshot.assets, assets).map_err(|error| error.under(["assets"]))?;
+            }
             let mut next = snapshot.clone();
             if let Some(schema) = &self.schema {
                 next.schema = schema.clone();
@@ -359,11 +366,10 @@ impl MutationDiff<RasterSnapshot> for RasterDiff {
                 next.layers = apply_layers_delta(&next.layers, delta).map_err(|error| error.under(["layers"]))?;
             }
             if let Some(assets) = &self.assets {
-                validate_assets_delta(&next.assets, assets).map_err(|error| error.under(["assets"]))?;
                 for (key, value) in &assets.entries {
                     match value {
                         Some(asset) => {
-                            next.assets.insert(key.clone(), crate::artifacts::raster::mint_raster_asset_child(key, asset));
+                            next.assets.insert(key.clone(), crate::artifacts::raster::mint_raster_asset_child(key, asset)).expect("unique Raster assets fit the preflighted map capacity");
                         }
                         None => unreachable!("Raster asset removal was rejected before snapshot ownership was cloned"),
                     }
@@ -461,3 +467,49 @@ pub fn diff_remove_asset(asset_id: &str) -> RasterDiff {
     RasterDiff { assets: Some(RasterAssetsDelta { entries }), ..Default::default() }
 }
 //#endregion 🔖️Builders
+
+#[cfg(test)]
+mod asset_capacity_vectors {
+    use super::*;
+    use crate::artifacts::raster::RasterImageAsset;
+    use crate::artifacts::raster::standards::v1::subsets::any::schema::mutations::binary::test_support::retire_raster_snapshot;
+
+    #[test]
+    fn raster_asset_capacity_matches_the_json_oracle() {
+        let vectors: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🔣️asset-capacity.json")).expect("neutral capacity vectors");
+        assert_eq!(vectors["capacity"].as_u64(), Some(crate::artifacts::raster::RASTER_OWNED_MAP_CAPACITY as u64));
+        for vector in vectors["cases"].as_array().expect("cases") {
+            let count = usize::try_from(vector["count"].as_u64().expect("count")).expect("bounded count");
+            let oracle: serde_json::Map<String, serde_json::Value> = (0..count).map(|index| (format!("asset-{index:03}"), serde_json::json!({"mime":"application/octet-stream","data":""}))).collect();
+            let delta: RasterAssetsDelta = dsl::os_pack::from_json_str(&serde_json::json!({"entries":oracle}).to_string()).expect("first-party input");
+            let diff = RasterDiff { assets: Some(delta), ..Default::default() };
+            for full_artifact in [false, true] {
+                let base = RasterSnapshot::default();
+                let result = if full_artifact {
+                    diff.apply_to_artifact(&RasterArtifact::default()).map(|artifact| {
+                        let RasterArtifact { schema, id, title, layers, assets, .. } = artifact;
+                        RasterSnapshot { schema, id, title, layers, assets }
+                    })
+                } else {
+                    diff.apply(&base)
+                };
+                match result {
+                    Ok(snapshot) => {
+                        let observed = snapshot.assets.keys().cloned().collect::<Vec<_>>();
+                        retire_raster_snapshot(snapshot);
+                        assert_eq!(vector["accepted"], true, "oversized input must fail before creating an owner");
+                        assert_eq!(observed, oracle.keys().cloned().collect::<Vec<_>>());
+                    }
+                    Err(error) => {
+                        assert_eq!(vector["accepted"], false, "{error}");
+                        assert!(error.to_string().contains("raster-map.item-capacity"));
+                    }
+                }
+                assert!(base.assets.is_empty());
+            }
+            assert_eq!(diff.assets.as_ref().expect("delta").entries.len(), count);
+        }
+        let unsupported = RasterImageAsset { mime: "application/octet-stream".into(), data: Vec::new() };
+        assert!(crate::artifacts::raster::io::semio_image_snapshot_from_raster_asset(&unsupported).is_err());
+    }
+}

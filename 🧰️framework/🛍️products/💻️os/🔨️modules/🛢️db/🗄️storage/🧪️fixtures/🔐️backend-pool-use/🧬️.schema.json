@@ -2,9 +2,11 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "type": "object",
   "additionalProperties": false,
-  "required": ["version", "cases"],
+  "required": ["version", "cases", "opening"],
   "properties": {
-    "version": { "const": 1 },
+    "version": {
+      "const": 1
+    },
     "cases": {
       "type": "array",
       "minItems": 9,
@@ -28,8 +30,45 @@
               "prepared-post-transfer-refusal-returns-close-owner"
             ]
           },
-          "registeredUses": { "type": "integer", "minimum": 0, "maximum": 2 },
-          "expected": { "enum": ["busy", "registered-pool", "deferred-close", "retained-rejection", "stale-generation", "exact-owner"] }
+          "registeredUses": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 2
+          },
+          "expected": {
+            "enum": ["busy", "registered-pool", "deferred-close", "retained-rejection", "stale-generation", "exact-owner"]
+          }
+        }
+      }
+    },
+    "opening": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["backend", "cause", "closeRequestedBeforeRetry", "poolShutdownAfterDrain", "ledgerBaseline", "reopens"],
+        "properties": {
+          "backend": {
+            "enum": ["fs", "sqlite"]
+          },
+          "cause": {
+            "enum": ["queued-drop", "path-type-conflict"]
+          },
+          "closeRequestedBeforeRetry": {
+            "type": "boolean"
+          },
+          "poolShutdownAfterDrain": {
+            "type": "boolean"
+          },
+          "ledgerBaseline": {
+            "type": "boolean"
+          },
+          "reopens": {
+            "type": "boolean"
+          }
         }
       }
     }

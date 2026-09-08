@@ -4,6 +4,7 @@
 //! like document content, with a true `backwards` per operation. Nothing here is document state — the
 //! map's positions/routes/regions live in `crate::artifacts::gismap`.
 
+#[cfg(test)]
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -130,6 +131,7 @@ pub use configuration_diff::{Gis2dConfigDelta, Gis2dConfigDiff};
 pub mod mutations;
 pub use mutations::*;
 
+#[cfg(test)]
 fn required_nullable<'de, D, T>(deserializer: D) -> Result<Option<T>, D::Error>
 where D: serde::Deserializer<'de>, T: serde::Deserialize<'de> {
     <Option<T> as serde::Deserialize>::deserialize(deserializer)

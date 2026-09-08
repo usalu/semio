@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🧬️mutations/✅️commit-try-values-batch",
+  "semanticKind": "commit-try-values-batch",
+  "displayName": "Commit Try Values Batch",
+  "emoji": "✅️",
+  "aggregateVariant": "CommitTryValuesBatch",
+  "payloadSchema": "🧬️.schema.json",
+  "textOpcode": "commit-try-values-batch",
+  "binaryTag": 8,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "apply-only",
+  "outcomeClasses": [
+    "applied",
+    "error"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "text",
+    "binary",
+    "json-schema"
+  ]
+}

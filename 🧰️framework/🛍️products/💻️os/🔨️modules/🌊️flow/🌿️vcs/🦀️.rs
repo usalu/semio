@@ -18,10 +18,11 @@ use protocol::value::ordered::{Grant as LayoutGrant, UpdateCursor as LayoutUpdat
 // 🧾️ `create_document_envelope`/`ArtifactCommand` are unconditional (not test/wasm-only)
 // because `FlowHost`'s own undo/redo (see `impl FlowHost`'s `🔖️History` region) dispatches through
 // them in every build.
-use crate::os_spr::{Identified, Mutation, MutationApplyError, MutationApplyResult, MutationDiff, Patchable};
+use crate::os_spr::{Identified, MutationApplyError, MutationApplyResult, MutationDiff, Patchable};
 #[cfg(test)]
 use crate::os_spr::{ArtifactId, Edit, SchemaId};
 #[cfg(any(target_arch = "wasm32", test))]
+#[cfg(test)]
 use crate::os_store::create_document_envelope;
 #[cfg(test)]
 use crate::os_store::ArtifactCommand;
@@ -2806,6 +2807,7 @@ pub mod forms_bridge {
 #[cfg(test)]
 mod flow_vcs_tests {
     use super::*;
+    use crate::os_spr::Mutation;
 
     #[derive(Debug, PartialEq)]
     struct FlowOraclePage {
@@ -3064,7 +3066,7 @@ mod flow_vcs_tests {
             match value {
                 crate::os_pack::json::Value::Null => output.push_str("null"),
                 crate::os_pack::json::Value::Bool(value) => output.push_str(if *value { "true" } else { "false" }),
-                crate::os_pack::json::Value::Number(value) => output.push_str(&format!("f64:{:016x}", value.as_f64().expect("oracle finite number").to_bits())),
+                crate::os_pack::json::Value::Number(value) => output.push_str(&format!("f64:{:016x}", value.as_f64().to_bits())),
                 crate::os_pack::json::Value::String(value) => output.push_str(&crate::os_pack::json::to_string(&crate::os_pack::json::Value::String(value.clone()))),
                 crate::os_pack::json::Value::Array(values) => {
                     output.push('[');
@@ -3225,7 +3227,7 @@ mod flow_vcs_tests {
 
     fn flow_hostile_actual_state(session: &FlowRetainedVcs) -> FlowHostileState {
         let fingerprint = session.resource_fingerprint();
-        let document = crate::os_pack::json::from_dsl_value(&crate::os_dsl::ToValue::to_value(session.document.as_ref().expect("hostile retained document").fixture())).expect("hostile actual document");
+        let document = crate::os_pack::json::from_dsl_value(&crate::os_dsl::ToValue::to_value(session.document.as_ref().expect("hostile retained document").fixture()));
         let page = session.operations[0]
             .as_ref()
             .and_then(|operation| operation.page)
@@ -3341,7 +3343,7 @@ mod flow_vcs_tests {
 
     fn flow_oracle_actual_case(feature: &str, session: &FlowRetainedVcs, page: FlowVcsPage) -> FlowOracleCase {
         let fingerprint = session.resource_fingerprint();
-        let document = crate::os_pack::json::from_dsl_value(&crate::os_dsl::ToValue::to_value(session.document.as_ref().expect("oracle retained document").fixture())).expect("oracle actual document");
+        let document = crate::os_pack::json::from_dsl_value(&crate::os_dsl::ToValue::to_value(session.document.as_ref().expect("oracle retained document").fixture()));
         FlowOracleCase {
             feature: feature.to_owned(),
             document: flow_oracle_canonical_json(&document),
@@ -3739,13 +3741,13 @@ mod flow_vcs_tests {
             let mut source = FlowVcsSource::new(<FlowLayoutEntry as crate::os_dsl::FromValue>::from_value(crate::os_pack::json::to_dsl_value(&edit.clone())).unwrap());
             let handle = session.begin_set_layout(session.authority(), &mut source).unwrap();
             publish_and_close(&mut session, handle);
-            assert_eq!(crate::os_pack::json::from_dsl_value(&crate::os_dsl::ToValue::to_value(&session.document.as_ref().unwrap().fixture().layout)).unwrap(), expected);
+            assert_eq!(crate::os_pack::json::from_dsl_value(&crate::os_dsl::ToValue::to_value(&session.document.as_ref().unwrap().fixture().layout)), expected);
             let undo = session.begin_undo(session.authority()).unwrap();
             publish_and_close(&mut session, undo);
-            assert_eq!(crate::os_pack::json::from_dsl_value(&crate::os_dsl::ToValue::to_value(&session.document.as_ref().unwrap().fixture().layout)).unwrap(), previous);
+            assert_eq!(crate::os_pack::json::from_dsl_value(&crate::os_dsl::ToValue::to_value(&session.document.as_ref().unwrap().fixture().layout)), previous);
             let redo = session.begin_redo(session.authority()).unwrap();
             publish_and_close(&mut session, redo);
-            assert_eq!(crate::os_pack::json::from_dsl_value(&crate::os_dsl::ToValue::to_value(&session.document.as_ref().unwrap().fixture().layout)).unwrap(), expected);
+            assert_eq!(crate::os_pack::json::from_dsl_value(&crate::os_dsl::ToValue::to_value(&session.document.as_ref().unwrap().fixture().layout)), expected);
             while !session.close_retired_step(retained_grant()).unwrap() {}
         }
         close_layout_session(&mut session);
@@ -3769,7 +3771,7 @@ mod flow_vcs_tests {
                 } else { session.cancel(handle, retained_grant()).unwrap(); }
                 while !session.close_operation_step(handle, retained_grant()).unwrap() {}
                 if !published {
-                    assert_eq!(crate::os_pack::json::from_dsl_value(&crate::os_dsl::ToValue::to_value(&session.document.as_ref().unwrap().fixture().layout)).unwrap(), fixture["initial"]["layout"], "cancel boundary {boundary}");
+                    assert_eq!(crate::os_pack::json::from_dsl_value(&crate::os_dsl::ToValue::to_value(&session.document.as_ref().unwrap().fixture().layout)), fixture["initial"]["layout"], "cancel boundary {boundary}");
                     assert_eq!(session.credits(), FlowVcsCredits::default());
                 }
                 close_layout_session(&mut session);

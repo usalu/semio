@@ -19,7 +19,8 @@
     },
     "operations": {
       "type": "object",
-      "minProperties": 111,
+      "minProperties": 108,
+      "maxProperties": 108,
       "additionalProperties": {
         "type": "integer",
         "minimum": 2500,
@@ -28,11 +29,12 @@
     },
     "events": {
       "type": "object",
-      "minProperties": 7,
+      "minProperties": 8,
+      "maxProperties": 8,
       "additionalProperties": {
         "type": "integer",
         "minimum": 2650,
-        "maximum": 2656
+        "maximum": 2657
       }
     },
     "limits": {
@@ -49,7 +51,8 @@
     },
     "arguments": {
       "type": "object",
-      "minProperties": 111,
+      "minProperties": 108,
+      "maxProperties": 108,
       "additionalProperties": {
         "type": "array",
         "maxItems": 8,
@@ -200,7 +203,8 @@
     "preview": 2653,
     "surfaceStatus": 2654,
     "output": 2655,
-    "terminal": 2656
+    "terminal": 2656,
+    "sessionTerminal": 2657
   },
   "limits": {
     "requestBytes": 1048576,
@@ -245,6 +249,12 @@
       "operation-generation:u32",
       "total-bytes:u64"
     ],
+    "sessionTerminal": {
+      "origin": "open-request-id-and-generation",
+      "body": ["session-slot:u32", "session-generation:u32"],
+      "publication": "after-children-and-domain-terminal-before-session-release",
+      "acknowledgement": "exact-event-reply"
+    },
     "byteOrder": "little-endian"
   },
   "arguments": {

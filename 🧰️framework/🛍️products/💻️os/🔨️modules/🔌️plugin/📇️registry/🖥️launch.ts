@@ -10,8 +10,8 @@
  * catalog and `check` verifies its freshness (CLAUDE.md: one `script.ts` per bundle). The playground
  * catalog is passed IN rather than imported, so this module never depends on `📜️script.ts` at runtime.
  *
- * @see .🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️05/LAUNCH-JSON-GENERATOR-FROM-PLAYGROUND-REGISTRY
- * @see .🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️06/REGISTRY-SCRIPT-REFACTOR-TO-VOCABULARY-DISCOVERY-LIBRARY
+ * @see .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️05/LAUNCH-JSON-GENERATOR-FROM-PLAYGROUND-REGISTRY
+ * @see .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️06/REGISTRY-SCRIPT-REFACTOR-TO-VOCABULARY-DISCOVERY-LIBRARY
  */
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
@@ -113,7 +113,7 @@ function renderDiscoveredEntry(playground: PlaygroundEntry, namePrefix: string, 
       name: `🛠️dev${namePrefix}🧊️wgpu🖥️native`,
       type: "node-terminal",
       request: "launch",
-      command: `bun ./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/📜️script.ts native ${playground.variant}`,
+      command: `bun nx run @semio-tech/framework-renderer-wgpu:native -- ${playground.variant}`,
       cwd: "${workspaceFolder}",
       env: { SEMIO_PLUGIN: playground.pluginId, ...(playground.app ? { SEMIO_APP: playground.app } : {}) },
       presentation: { group: "3_dev", order },
@@ -123,7 +123,7 @@ function renderDiscoveredEntry(playground: PlaygroundEntry, namePrefix: string, 
     name: `🛠️dev${namePrefix}${renderer === "react" ? "⚛️react" : "🧊️wgpu🌐️wasm"}`,
     type: "node-terminal",
     request: "launch",
-    command: command ?? `bun ./📜️script.ts dev ${playground.variant}`,
+    command: command ?? `bun nx run workspace:dev -- ${playground.variant}`,
     cwd: "${workspaceFolder}",
     env: { S_OS_PORT: String(port), SEMIO_PLUGIN: playground.pluginId, SEMIO_RENDERER: renderer, ...(playground.app ? { SEMIO_APP: playground.app } : {}) },
     presentation: { group: "3_dev", order },

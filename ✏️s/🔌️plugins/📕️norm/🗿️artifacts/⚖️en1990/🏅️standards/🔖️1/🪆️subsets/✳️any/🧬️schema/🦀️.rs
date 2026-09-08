@@ -378,11 +378,7 @@ impl NationalAnnex for NaEn {
 // #endregion 🔖️NaEn
 
 // #region 🔖️NationalAnnexes
-// 🔀️ O1 de-dyn: closes the `NationalAnnex` set (`NaDe`/`NaEn`, the only two impls). Cross-module from
-// the trait's home (`crate::document`) — the closing macro is invoked BARE (never via an absolute
-// path, rustc#52234) but the captured dispatch macro it expands to needs bringing into scope
-// explicitly across the module boundary (see `📓️terra-dyn-enum-macro-report.md` finding 1).
-use crate::__semio_dispatch_NationalAnnex;
+// 🔀️ The document module supplies the captured dispatch macro through lexical macro scope.
 use semio_framework_dispatch_macros::dyn_enum_close;
 dyn_enum_close! {
     pub enum NationalAnnexes: NationalAnnex {

@@ -49,7 +49,7 @@ mod tests {
     async fn render_carries_the_documents_own_text_and_language_read_only() {
         let document = crate::artifacts::writer::schema::empty_writer_snapshot();
         let node = render(&document);
-        let json = serde_json::to_string(&node).unwrap();
+        let json = serde_json::to_string(&node.expect("viewer surface")).unwrap();
         assert!(json.contains("\"readOnly\":true") || json.contains("readOnly"), "viewer text scene must stamp read-only: {json}");
     }
 }

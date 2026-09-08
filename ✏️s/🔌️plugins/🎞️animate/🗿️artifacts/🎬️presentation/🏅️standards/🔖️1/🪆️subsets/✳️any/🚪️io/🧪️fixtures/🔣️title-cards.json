@@ -1,0 +1,22 @@
+{
+  "width": 1280,
+  "height": 720,
+  "cases": [
+    {
+      "document": {
+        "title": "My Deck"
+      },
+      "title": "My Deck"
+    },
+    {
+      "document": {
+        "id": "Deck <&> \"Grüße\""
+      },
+      "title": "Deck <&> \"Grüße\""
+    },
+    {
+      "document": {},
+      "title": "Animate Presentation"
+    }
+  ]
+}

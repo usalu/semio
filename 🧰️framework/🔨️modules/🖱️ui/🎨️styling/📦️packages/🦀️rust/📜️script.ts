@@ -120,7 +120,7 @@ interface StylingPresence {
 }
 
 /** @emoji 🌓️ Knobs driving the formula-derived 6-level UI surface system (`base..menu`); see contract at
- * `.🦑️repo/🎫️tickets/26/07/27/UNIFIED-6-LEVEL-UI-SURFACE-SYSTEM/contract.txt`. */
+ * `.🧬semio/🦑️repo/🎫️tickets/26/07/27/UNIFIED-6-LEVEL-UI-SURFACE-SYSTEM/contract.txt`. */
 interface StylingLevels {
   names: readonly string[];
   shadeStepPercent: number;

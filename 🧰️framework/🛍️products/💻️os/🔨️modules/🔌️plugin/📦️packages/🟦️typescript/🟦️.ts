@@ -435,7 +435,7 @@ self.addEventListener("message", async (event) => {
         inFlightTurnActors.add(actorId);
         try {
           const events = spliceInstanceOpenAssets(actor, result.envelopes.map((envelope) => envelope.payload));
-          reply(requestId, await actor.api.poll(events, undefined, result.budget));
+          reply(requestId, await actor.api.poll(events, undefined, undefined, result.budget));
         } finally {
           inFlightTurnActors.delete(actorId);
         }

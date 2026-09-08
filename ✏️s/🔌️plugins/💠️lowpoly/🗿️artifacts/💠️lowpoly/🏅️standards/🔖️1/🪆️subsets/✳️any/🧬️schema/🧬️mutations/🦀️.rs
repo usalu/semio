@@ -2,7 +2,7 @@
 //! `📸️snapshot/🦀️.rs`'s `LowpolySnapshot` shape (an id-keyed `objects: Vec<LowpolyObject>`,
 //! each with a name/transform/smooth-shading/mesh scalar set plus an index-keyed, anonymous
 //! `paint_layers` sub-collection) per
-//! `.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📓️taxonomy.md`/`📓️derivation-rules.md`.
+//! `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📓️taxonomy.md`/`📓️derivation-rules.md`.
 //! Per-mutation payload/diff/inverse live under each `🧬️mutations/<emoji><name>/` triad leaf, one
 //! `🦀️.rs` mount per leaf (Wave-C trueing pass, `26/08/12/SEMANTIC-MUTATIONS-OVERHAUL`) — the
 //! wave-2 self-wiring workaround and the 8 orphaned pre-migration directories/glue mounts are gone.

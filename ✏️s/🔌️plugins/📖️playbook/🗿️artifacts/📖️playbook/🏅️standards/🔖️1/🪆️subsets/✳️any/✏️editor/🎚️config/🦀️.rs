@@ -9,6 +9,7 @@
 //! `InteractionState` (the "blocks" domain, declared on `PlaybookPlayApp`'s manifest) — this config no
 //! longer carries any selection.
 
+#[cfg(test)]
 use protocol::Mutation;
 use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -83,99 +84,9 @@ impl Default for PlaybookConfig {
 store::impl_whole_record_config!(PlaybookConfig);
 //#endregion 🔖️Config
 
-//#region 🔖️ConfigOperations
-/// 🧮️ B1: `PlaybookConfig`'s operation enum — one variant per settled field write, plus a generic
-/// `Snapshot` every variant's `backwards()` returns — mirrors
-/// `writer_op::WriterConfigMutation`/`forms::config::FormsConfigMutation` exactly
-/// (see either's doc comment for the whole-config-snapshot inverse rationale). Lives here, not in the
-/// kernel `playbook` crate, since `PlaybookConfig` is this app's own config artifact, not shared domain
-/// state.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslOps)]
-pub enum PlaybookConfigMutation {
-    #[dsl(key = "snapshot")]
-    Snapshot {
-        #[dsl(block)]
-        config: PlaybookConfig,
-    },
-    #[dsl(key = "locale")]
-    SetLocale { value: String },
-    #[dsl(key = "contributions")]
-    SetContributions { json: String },
-}
-
-//#region 🔖️OpCodec
-impl protocol::OpText for PlaybookConfigMutation {
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        let variants = <Self as dsl::DslVariants>::variants();
-        for (keyword, spec_fn) in &variants {
-            let probe = format!("{} ", keyword);
-            if line == keyword.as_str() || line.starts_with(&probe) {
-                let record = dsl::parse(line, &spec_fn(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline })?;
-                return <Self as dsl::DslVariants>::from_named_record(keyword, &record);
-            }
-        }
-        Err(dsl::__rt::field_error(format!("unknown mutation line '{line}'")))
-    }
-    fn print_op(&self) -> String {
-        let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
-        let variants = <Self as dsl::DslVariants>::variants();
-        let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
-        dsl::print(&record, &spec_fn(), dsl::JoinMode::Inline)
-    }
-}
-
-/// 🎯️ Handcrafted OpBinary (P6).
-impl protocol::OpBinary for PlaybookConfigMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        const OP_BINARY_FORMAT: u8 = 1;
-        let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
-        let variants = <Self as dsl::DslVariants>::variants();
-        let ordinal = variants.iter().position(|(k, _)| *k == keyword).ok_or(protocol::ProtocolError::Malformed { what: "op variant", offset: 0, detail: format!("keyword {keyword:?} is not a declared variant") })?;
-        let spec = (variants[ordinal].1)();
-        let body = store::pack_rt::encode_record_body(&spec, &record, &store::PackEncodeOptions::default()).map_err(protocol::ProtocolError::from)?;
-        let mut out = Vec::with_capacity(body.len() + 3);
-        out.push(OP_BINARY_FORMAT);
-        store::pack_rt::write_varint_u64(&mut out, ordinal as u64);
-        out.extend_from_slice(&body);
-        Ok(out)
-    }
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        const OP_BINARY_FORMAT: u8 = 1;
-        let mut reader = store::pack_rt::ByteReader::new(bytes);
-        let format = reader.read_u8()?;
-        if format != OP_BINARY_FORMAT {
-            return Err(protocol::ProtocolError::Malformed { what: "op format", offset: 0, detail: format!("unsupported op format {format}") });
-        }
-        let ordinal = reader.read_varint_u64()?;
-        let variants = <Self as dsl::DslVariants>::variants();
-        let (keyword, spec_fn) = variants.get(ordinal as usize).ok_or(protocol::ProtocolError::Malformed { what: "op variant", offset: 1, detail: format!("ordinal {ordinal} out of range for {} declared variants", variants.len()) })?;
-        let spec = spec_fn();
-        let body = &bytes[reader.position()..];
-        let (record, _report) = store::pack_rt::decode_record_body(body, &spec, &store::PackDecodeOptions::default()).map_err(protocol::ProtocolError::from)?;
-        <Self as dsl::DslVariants>::from_named_record(keyword, &record).map_err(|error| protocol::ProtocolError::Malformed { what: "op record", offset: reader.position() as u64, detail: error.to_string() })
-    }
-}
-
-//#endregion 🔖️OpCodec
-
-impl Mutation<PlaybookConfig> for PlaybookConfigMutation {
-    type Diff = PlaybookConfig;
-
-    fn diff(&self, base: &PlaybookConfig) -> protocol::MutationOutcome<PlaybookConfig> {
-        let mut next = base.clone();
-        match self {
-            PlaybookConfigMutation::Snapshot { config } => return protocol::MutationOutcome::new(config.clone()),
-            PlaybookConfigMutation::SetLocale { value } => next.locale = value.clone(),
-            PlaybookConfigMutation::SetContributions { json } => next.contributions_json = json.clone(),
-        }
-        protocol::MutationOutcome::new(next)
-    }
-
-    fn inverse(&self, base: &PlaybookConfig) -> Vec<Self> {
-        vec![PlaybookConfigMutation::Snapshot { config: base.clone() }]
-    }
-}
-//#endregion 🔖️ConfigOperations
+#[path = "🧬️schema/🧬️mutations/🦀️.rs"]
+mod mutations;
+pub use mutations::*;
 
 //#region 🧪️Tests
 #[cfg(test)]
@@ -217,14 +128,39 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn config_mutations_apply_and_restore_every_field() {
         let base = PlaybookConfig::default();
-        assert_eq!(config_round_trip(&base, &PlaybookConfigMutation::SetLocale { value: "de-DE".into() }).locale, "de-DE");
-        assert_eq!(config_round_trip(&base, &PlaybookConfigMutation::SetContributions { json: "[]".into() }).contributions_json, "[]");
+        assert_eq!(config_round_trip(&base, &PlaybookConfigMutation::SetLocale(SetLocale { value: "de-DE".into() })).locale, "de-DE");
+        assert_eq!(config_round_trip(&base, &PlaybookConfigMutation::SetContributions(SetContributions { json: "[]".into() })).contributions_json, "[]");
     }
 
     #[semio_framework_async_macros::async_test]
     async fn playbook_config_operation_binary_matches_text() {
-        store::os_store::test_support::assert_op_text_binary_equivalence(&PlaybookConfigMutation::SetLocale { value: "de-DE".into() });
-        store::os_store::test_support::assert_op_text_binary_equivalence(&PlaybookConfigMutation::Snapshot { config: PlaybookConfig::default() });
+        store::os_store::test_support::assert_op_text_binary_equivalence(&PlaybookConfigMutation::SetLocale(SetLocale { value: "de-DE".into() }));
+        store::os_store::test_support::assert_op_text_binary_equivalence(&PlaybookConfigMutation::ReplaceConfig(ReplaceConfig { config: PlaybookConfig::default() }));
     }
 }
 //#endregion 🧪️Tests
+
+#[cfg(test)]
+mod contract_vectors {
+    use super::*;
+    use dsl::os_pack as pack;
+    use protocol::{Mutation, MutationDiff, OpBinary, OpText};
+
+    #[test]
+    fn configuration_and_presence_contract_vectors_match_the_json_oracle() {
+        let vectors: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🔁️mutation-contracts.json")).unwrap();
+        let base: PlaybookConfig = pack::from_json_str(&vectors["base"].to_string()).unwrap();
+        assert_eq!(<PlaybookConfigMutation as Mutation<PlaybookConfig>>::DESCRIPTORS.len(), vectors["cases"].as_array().unwrap().len());
+        for vector in vectors["cases"].as_array().unwrap() {
+            let mutation: PlaybookConfigMutation = pack::from_json_str(&vector["mutation"].to_string()).unwrap();
+            assert_eq!(serde_json::from_str::<serde_json::Value>(&pack::to_json_string(&mutation)).unwrap(), vector["mutation"]);
+            assert_eq!(mutation.descriptor().semantic_kind, vector["kind"].as_str().unwrap());
+            let next = mutation.diff(&base).diff().apply(&base).unwrap();
+            assert_eq!(serde_json::from_str::<serde_json::Value>(&pack::to_json_string(&next)).unwrap(), vector["expected"]);
+            assert_eq!(PlaybookConfigMutation::parse_op(&mutation.print_op()).unwrap(), mutation);
+            assert_eq!(PlaybookConfigMutation::decode_op(&mutation.encode_op().unwrap()).unwrap(), mutation);
+            let restored = mutation.inverse(&base).into_iter().fold(next, |state, inverse| inverse.diff(&state).diff().apply(&state).unwrap());
+            assert_eq!(restored, base);
+        }
+    }
+}

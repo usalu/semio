@@ -1,0 +1,23 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s.stdio.pdf.1.7/mutation/set-page-media-box.json",
+  "title": "SetPageMediaBox",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "index",
+    "mediaBox"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "setPageMediaBox"
+    },
+    "index": {
+      "type": "integer"
+    },
+    "mediaBox": {
+      "type": "array"
+    }
+  }
+}

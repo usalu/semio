@@ -46,7 +46,17 @@
         "cwd": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/🖍️draw/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts package",
         "forwardAllArgs": true
-      }
+      },
+      "cache": true,
+      "outputs": [
+        "{projectRoot}/dist/flow-extension-draw.sxt"
+      ],
+      "inputs": [
+        "production",
+        "^production",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏪️store/**/*.ts",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🎒️pack/**/*.ts"
+      ]
     },
     "describe": {
       "executor": "nx:run-commands",

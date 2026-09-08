@@ -25,7 +25,7 @@ pub(crate) fn render(state: &RewritingSnapshot, labels: &TrinityRewritingLabels)
     let Ok(rhs) = pack::from_json_str::<Rhs>(&state.rhs_json) else {
         return semio_framework_plugin::built_text_node(Label::data("Invalid RHS")).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("trinity.parameters.invalid", "the fixed invalid-RHS label exceeds its UI bound"));
     };
-    let mut children = semio_framework_plugin::UiFixedList::default();
+    let mut children = semio_framework_plugin::UiFixedList::<semio_framework_plugin::BuiltNode>::default();
     for param in &rhs.parameters {
         let value = state.parameter_bindings.get(&param.name).cloned().unwrap_or_else(|| param.default.clone());
         let display = match value {
@@ -70,7 +70,8 @@ pub(crate) fn render(state: &RewritingSnapshot, labels: &TrinityRewritingLabels)
         .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "parameter column id admission failed"))?
         .try_children(children)
         .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "parameter column children admission failed"))?
-        .accessibility_label(crate::editor::rewriting::ui_label(labels.parameters.as_str())?)
+        .try_label(labels.parameters.as_str())
+        .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "parameter column label admission failed"))?
         .try_build()
         .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "parameter column admission failed"))
 }

@@ -8,14 +8,14 @@
 [workspace]
 
 [package]
-name = "semio-drawing-oracle-probe"
+name = "semio-stdio-drawing-oracle-probe"
 version = "0.1.0"
 edition = "2021"
 publish = false
 description = "🔬️ Third-party carrier readers for s.stdio.semio@v1/🖊️drawing — reads svg/dxf/pdf and reports what it found. Computes no mutation semantics."
 
 [[bin]]
-name = "semio-drawing-oracle-probe"
+name = "semio-stdio-drawing-oracle-probe"
 path = "🦀️.rs"
 
 # 🔮️ TEST-ONLY BY CONSTRUCTION, AND READERS ONLY. Each of the three is an already-approved

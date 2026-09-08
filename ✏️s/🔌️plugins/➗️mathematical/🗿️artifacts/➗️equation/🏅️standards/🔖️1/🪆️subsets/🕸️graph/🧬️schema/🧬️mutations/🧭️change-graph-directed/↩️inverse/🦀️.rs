@@ -1,6 +1,6 @@
 //! ↩️ `change-graph-directed` — undo reconstructed from BASE state.
 
-use crate::artifacts::equation::{equation_graph, EquationMutation, EquationSnapshot};
+use crate::artifacts::equation::{EquationMutation, EquationSnapshot};
 
 //#region 🔖️Inverse
 pub fn inverse(_payload: &super::ChangeGraphDirected, base: &EquationSnapshot) -> Vec<EquationMutation> {

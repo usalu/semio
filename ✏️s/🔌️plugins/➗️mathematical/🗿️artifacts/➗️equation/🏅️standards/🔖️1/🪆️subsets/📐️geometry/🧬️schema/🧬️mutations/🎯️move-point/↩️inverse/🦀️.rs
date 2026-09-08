@@ -1,6 +1,6 @@
 //! ↩️ `move-point` — undo reconstructed from BASE state; out-of-range index ⇒ `Vec::new()`.
 
-use crate::artifacts::equation::{equation_geometry, EquationMutation, EquationSnapshot};
+use crate::artifacts::equation::{EquationMutation, EquationSnapshot};
 
 //#region 🔖️Inverse
 pub fn inverse(payload: &super::MovePoint, base: &EquationSnapshot) -> Vec<EquationMutation> {

@@ -125,7 +125,7 @@ use ui_wgpu::wgpu::ActionDescriptor;
 use semio_framework_async::browser::spawn_local;
 use ui_wgpu::wgpu::{
     apply_window_cursor, fetch_font_bytes, mesh3d_abort, mesh3d_abort_step, mesh3d_allocate_step, mesh3d_begin, mesh3d_begin_close, mesh3d_close_step, mesh3d_read_write_u32, mesh3d_read_write_vec3, mesh3d_seal, mesh3d_update_vec3, mesh3d_write_u32,
-    mesh3d_write_vec2, mesh3d_write_vec3, resolve_semio_cursor, CursorDragState, DrawList, FontAtlas, GpuContext, IconAtlas, InputState, KeyAction, Mesh3dFault, Mesh3dField, Mesh3dItem, Mesh3dLease, Mesh3dSchema, Mesh3dWriteToken, PointerModifiers,
+    mesh3d_write_vec2, mesh3d_write_vec3, resolve_semio_cursor, CursorDragState, DrawList, FontAtlas, GpuContext, IconAtlas, InputState, KeyAction, Mesh3dFault, Mesh3dField, Mesh3dLease, Mesh3dSchema, Mesh3dWriteToken, PointerModifiers,
     SemioCursor, Theme,
 };
 #[cfg(target_arch = "wasm32")]
@@ -9210,7 +9210,7 @@ fn actor_budget_from_turn_budget(budget: semio_framework::kernel::Budget, lane: 
 /// `semio-wgpu-native --scale/--scale-wasm/--shards/--report`.
 #[cfg(not(target_arch = "wasm32"))]
 pub mod scale_bench {
-    use semio_framework::kernel::{AppInstanceId, Budget as TurnBudget, CapabilityChange, CapabilityId, Effect, Event, PluginInstanceId, QuotaSchema, TurnResult};
+    use semio_framework::kernel::{AppInstanceId, Budget as TurnBudget, CapabilityChange, CapabilityId, Effect, Event, QuotaSchema};
     use semio_framework_actor::{ActivationEvent as ActorActivationTrigger, ActorId, ActorKind, Envelope, JobCheckpoint, JobOperation, Kernel, Lane, Origin, PackageHash, PackageId, Payload};
     use semio_framework_plugin_host::shard::ShardOutcome;
     use semio_framework_plugin_host::{CompiledHandle, GuestRuntime, GuestRuntimes, OwnedRuntime, PackageRef};
@@ -11995,7 +11995,7 @@ impl RuntimeMailbox {
         let raster_operation_authority = RuntimeRasterOperationAuthority::new();
         #[cfg(not(target_arch = "wasm32"))]
         let (native_asset_http, native_asset_https, native_asset_http_runtime, native_asset_http_scope, native_asset_http_cancel) = {
-            use semio_framework_async::HostAsyncRuntime;
+            
             let pool = renderer_worker_pool();
             let runtime = Arc::new(semio_framework_os_services::TokioHostRuntime::with_pool(pool.clone()));
             let scope = runtime.open_scope_now(semio_framework_async::ScopeOwner::Service("renderer_asset_http"), None);
@@ -16147,7 +16147,7 @@ pub async fn run_socket_grant_probe() -> i32 {
     use dsl::os_spr::{ActorId, ArtifactDiff, ArtifactId, HybridLogicalTimestamp, InverseMutation, MutationEnvelope, MutationId, SchemaId};
     use dsl::os_store::sync::{ArtifactActorConfig, ArtifactActorMsg, ArtifactDocumentKey, ArtifactEvent, ArtifactHost, CommandAckOutcome, PersistenceBinding};
     use semio_framework_actor::{ActorId as DirectoryActorId, PackageId as DirectoryPackageId};
-    use semio_framework_async::{HostAsyncRuntime, ScopeOwner};
+    use semio_framework_async::ScopeOwner;
     use semio_framework_os_services::{ComputePool, TokioHostRuntime};
 
     const PROBE_SCHEMA: &str = "native.socket-grant.probe/v1";

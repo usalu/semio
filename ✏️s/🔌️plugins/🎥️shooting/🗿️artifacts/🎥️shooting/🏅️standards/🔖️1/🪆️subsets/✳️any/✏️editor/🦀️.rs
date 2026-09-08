@@ -22,16 +22,16 @@ use semio_framework::{ToolExecutionContract, ToolFactoryKey, ToolJobFactoryError
 use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::retained_command::{ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
 use semio_framework_plugin::{
-    tree_item_with_action, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, AppIo, AppOperationContext, ArtifactEditor, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry, ArtifactView, ConfigView, Dialect, DraftView,
+    tree_item_with_action, ActionArgDef, ActionArgOption, ActionDefinition, ActionKind, AppIo, AppOperationContext, ArtifactEditor, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry, ArtifactView, ConfigView, Dialect, DraftView,
     DslValue, Editor, EditorApp, Emit, Fault, FaultCode, FaultOrigin, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, InteractiveJobClassification, Label, LocalizedLabel, Media, MediaClass, MediaError,
-    MediaForm, MediaPayload, MediaType, MergeMode, NoDraft, NoDraftMutation, OsMediaCapability, SelectionMethod, SelectionMode, SelectionSpec, UiNode, UiTreeItemNode, UtilityDefinition, WindowEngagement, WindowMeasure,
+    MediaForm, MediaPayload, MediaType, MergeMode, NoDraft, NoDraftMutation, OsMediaCapability, SelectionMethod, SelectionMode, SelectionSpec, UtilityDefinition, WindowEngagement, WindowMeasure,
 };
 use std::collections::HashMap;
 use store::EngineHandles;
 
 //#region 🔖️Constants
-pub const SHOOTING_PLAY_APP_ID: &str = "shooting-play";
-const SHOOTING_PLAY_CONTROLLER_ID: &str = "shooting-play";
+pub const SHOOTING_PLAY_APP_ID: &str = "s.shooting.shooting@1/*#editor";
+const SHOOTING_PLAY_CONTROLLER_ID: &str = SHOOTING_PLAY_APP_ID;
 /// 🕹️ The framework-owned interaction domain (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM)?
 /// covering asset pick/marquee selection and pointer hover in the 3d scene window — granularity `"asset"`
 /// only, `HierarchyProvider::Flat`. Shot selection is NOT part of this domain — see
@@ -54,6 +54,35 @@ pub fn shooting_action(action: &str, args: Option<semio_framework_plugin::UiValu
     semio_framework_plugin::ActionFactory::new(SHOOTING_PLAY_CONTROLLER_ID).action(action, args)
 }
 
+/// 🎛️ Addresses host window chrome with its native action descriptor.
+pub fn shooting_window_action(action: &str, args: Option<DslValue>) -> semio_framework_plugin::ActionDescriptor {
+    semio_framework_plugin::ActionDescriptor { controller_id: SHOOTING_PLAY_CONTROLLER_ID.into(), action: action.into(), args }
+}
+
+/// 🏷️ Admits localized text into the semantic UI contract.
+pub fn ui_label(value: &str) -> semio_framework_plugin::UiAssemblyResult<semio_framework_ui_contract::Label> {
+    value.try_into().map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.label.capacity", "fixed UI label admission failed"))
+}
+
+/// 📝️ Admits a fixed shooting UI string.
+pub fn ui_text(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_ui_contract::UiText> {
+    semio_framework_ui_contract::UiText::try_from_str(value.as_ref()).ok_or_else(ui_capacity_error)
+}
+
+/// 🧱️ Finalizes a shooting UI node with explicit identity.
+pub fn ui_node<B: semio_framework_ui_contract::HasBase + semio_framework_ui_contract::Buildable>(builder: B, id: &str) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+    builder.try_id(id).map_err(|_| ui_capacity_error())?.try_build().map_err(|_| ui_capacity_error())
+}
+
+/// 👶️ Admits a complete collection of shooting UI children.
+pub fn ui_children<B: semio_framework_ui_contract::HasChildren>(builder: B, children: impl IntoIterator<Item = semio_framework_plugin::BuiltNode>) -> semio_framework_plugin::UiAssemblyResult<B> {
+    builder.try_children(children).map_err(|_| ui_capacity_error())
+}
+
+/// 🚧️ Reports fixed-capacity UI admission failure.
+pub fn ui_capacity_error() -> semio_framework_plugin::PluginAssemblyError {
+    semio_framework_plugin::PluginAssemblyError::new("shooting.ui.capacity", "shooting UI admission failed")
+}
 
 /// 🧱️ Admits one fixed UI text action value without JSON staging.
 pub fn ui_value_text(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiValue> {
@@ -119,7 +148,8 @@ pub fn tree_item_with_icon(
     icon_id: &str,
     action: semio_framework_plugin::UiAssemblyResult<(semio_framework_plugin::ActionId, Option<semio_framework_plugin::UiValue>)>,
 ) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    let mut node = tree_item_with_action(id, label, None, action?)?;
+    let label: Label = label.try_into().map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.tree-item.label", "tree-item label conversion failed"))?;
+    let mut node = tree_item_with_action(id, label.as_str(), None, action?)?;
     if let semio_framework_plugin::Component::TreeItem(props) = &mut node.component {
         props.icon = Some(
             semio_framework_plugin::UiText::try_from_str(icon_id)
@@ -285,7 +315,7 @@ fn shooting_command_id(command: &ShootingCommand) -> &'static str {
 }
 
 fn shooting_bounded_contract() -> ToolExecutionContract {
-    ToolExecutionContract::bounded_first_step(SHOOTING_BOUNDED_RAW_BYTES, 64, SHOOTING_BOUNDED_WORK_ITEMS, 262_144, 7_500)
+    ToolExecutionContract::bounded_first_step(SHOOTING_BOUNDED_RAW_BYTES, 64, SHOOTING_BOUNDED_WORK_ITEMS as u64, 262_144, 7_500)
 }
 
 fn shooting_bounded_extent(command: &ShootingCommand, _snapshot: &ShootingSnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
@@ -542,8 +572,8 @@ impl ArtifactEditor for ShootingPlayApp {
             SHOOTING_PLAY_BODY_DOCUMENT => document_panel::render(snapshot, labels),
             SHOOTING_PLAY_BODY_CATALOGUE => catalogue_panel::render(labels),
             SHOOTING_PLAY_BODY_INSPECTION => inspection_panel::render(snapshot, cfg.snapshot, labels),
-            _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
-        }
+            _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| ui_capacity_error()),
+        }.map(semio_framework_plugin::built_to_component_tree)
     }
 
     fn window_engagements(doc: &ArtifactView<'_, ShootingSnapshot>, cfg: &ConfigView<'_, ShootingConfig>) -> HashMap<String, WindowEngagement> {
@@ -570,7 +600,7 @@ impl ArtifactEditor for ShootingPlayApp {
 pub fn reset_document_effect(scene: &ShootingSnapshot) -> semio_framework_plugin::Effect {
     let pack = <ShootingSnapshot as store::ArtifactPack>::encode_pack(scene);
     let envelope = store::create_document_envelope::<ShootingSnapshot, ShootingMutation>(SHOOTING_DOCUMENT_SCHEMA, "shooting", scene.clone(), None);
-    let spr = store::print_document_spr(&envelope).expect("shooting document spr encode is infallible for a fresh, edit-free envelope");
+    let spr = semio_framework_plugin::resolve_ready(store::print_document_spr(&envelope)).expect("shooting document spr encode is infallible for a fresh, edit-free envelope");
     semio_framework_plugin::Effect::LoadDocument { pack, spr }
 }
 //#endregion 🔖️ResetDocument
@@ -729,8 +759,8 @@ pub(crate) mod testkit {
     /// `PluginBuilder::editor::<ShootingPlayApp>` builds it.
     ///
     /// 🧪️ A bare app instance — no `AppActionRegistry`, so undeclared internal commands dispatch freely.
-    pub fn shooting_app() -> ShootingApp {
-        new_app::<EditorApp<ShootingPlayApp>>()
+    pub async fn shooting_app() -> ShootingApp {
+        new_app::<EditorApp<ShootingPlayApp>>().await
     }
 
     /// ✏️ Adapts `create_shooting_app`'s `AppDefinition` (contract §2.4) into the `App { definition,
@@ -742,24 +772,44 @@ pub(crate) mod testkit {
     }
 
     /// 🧪️ An app wired to the real manifest registry — enforces View/Shell kind discipline.
-    pub fn shooting_app_with_registry() -> ShootingApp {
-        new_app_with_registry::<EditorApp<ShootingPlayApp>>(shooting_app_manifest_for_testkit)
+    pub async fn shooting_app_with_registry() -> ShootingApp {
+        new_app_with_registry::<EditorApp<ShootingPlayApp>>(shooting_app_manifest_for_testkit).await
     }
 
-    pub fn dispatch(app: &mut ShootingApp, command: ShootingCommand) -> InvocationResult {
-        app.dispatch_typed(command, &meta("local")).expect("dispatch")
+    pub async fn dispatch(app: &mut ShootingApp, command: ShootingCommand) -> InvocationResult {
+        app.dispatch_typed(command, &meta("local")).await.expect("dispatch")
     }
 
-    pub fn render(app: &mut ShootingApp, body_key: &str) -> String {
-        serde_json::to_string(&app.render(body_key, None, &ViewModel::default()).expect("render")).expect("render json")
+    pub async fn render(app: &mut ShootingApp, body_key: &str) -> String {
+        semio_framework_plugin::testkit::project_and_retire_fixture_tree(app.render(body_key, None, &ViewModel::default()).await.expect("render")).expect("project and retire semantic tree")
     }
 
-    pub fn scene_window_measures(app: &mut ShootingApp) -> Vec<WindowMeasure> {
-        app.window_measures().get(SHOOTING_PLAY_WINDOW_SCENE).cloned().expect("scene window measures")
+    pub async fn world_scene(app: &mut ShootingApp) -> semio_framework_plugin::World3dScene {
+        let tree = app.render(SHOOTING_PLAY_BODY_SCENE, None, &ViewModel::default()).await.expect("render scene");
+        let decoded = match &tree.root.component {
+            semio_framework_plugin::Component::Surface(props) => semio_framework_ui_scene::decode(props),
+            _ => panic!("3D surface"),
+        };
+        semio_framework_plugin::testkit::project_and_retire_fixture_tree(tree).expect("retire scene tree");
+        decoded.expect("packed 3D scene")
     }
 
-    pub fn icon_window_measures(app: &mut ShootingApp) -> Vec<WindowMeasure> {
-        app.window_measures().get(SHOOTING_PLAY_WINDOW_ICON).cloned().expect("icon window measures")
+    pub async fn icon_scene(app: &mut ShootingApp) -> semio_framework_plugin::IconRenderScene {
+        let tree = app.render(SHOOTING_PLAY_BODY_ICON, None, &ViewModel::default()).await.expect("render icon");
+        let decoded = match &tree.root.component {
+            semio_framework_plugin::Component::Surface(props) => semio_framework_ui_scene::decode(props),
+            _ => panic!("icon surface"),
+        };
+        semio_framework_plugin::testkit::project_and_retire_fixture_tree(tree).expect("retire icon tree");
+        decoded.expect("packed icon scene")
+    }
+
+    pub async fn scene_window_measures(app: &mut ShootingApp) -> Vec<WindowMeasure> {
+        app.window_measures().await.get(SHOOTING_PLAY_WINDOW_SCENE).cloned().expect("scene window measures")
+    }
+
+    pub async fn icon_window_measures(app: &mut ShootingApp) -> Vec<WindowMeasure> {
+        app.window_measures().await.get(SHOOTING_PLAY_WINDOW_ICON).cloned().expect("icon window measures")
     }
 }
 //#endregion 🧪️Testkit
@@ -771,7 +821,7 @@ mod tests {
     use crate::editor::shooting::testkit::{dispatch, shooting_app, shooting_app_with_registry, ShootingApp};
     use semio_framework_plugin::app::EditorApp;
     use semio_framework_plugin::testkit;
-    use semio_framework_plugin::{ActionKind, Effect, PluginApp, ViewModel};
+    use semio_framework_plugin::{Effect, PluginApp};
     use serde_json::{json, Value};
 
     fn default_camera(position: [f64; 3]) -> crate::artifacts::shooting::ShootingCamera {
@@ -800,28 +850,28 @@ mod tests {
 
     impl ShootingRetainedCatalogOracle for SerdeJsonShootingRetainedCatalogOracle {
         fn summarize(&self, fixture: &str) -> ShootingRetainedCatalogSummary {
-            let document: serde_json::Value = serde_json::from_str(fixture).expect("language-neutral retained catalog fixture");
-            let routes = document.get("routes").and_then(serde_json::Value::as_array).expect("routes array");
-            let bounded = routes.iter().filter(|route| route.get("execution").and_then(serde_json::Value::as_str) == Some("bounded")).count();
-            let resumable = routes.iter().filter(|route| route.get("execution").and_then(serde_json::Value::as_str) == Some("resumable")).count();
-            let migrated = routes.iter().filter(|route| route.get("admission").and_then(serde_json::Value::as_str) == Some("migrated")).count();
-            let fail_closed = routes.iter().filter(|route| route.get("admission").and_then(serde_json::Value::as_str) == Some("failClosed")).count();
+            let document: Value = serde_json::from_str(fixture).expect("language-neutral retained catalog fixture");
+            let routes = document.get("routes").and_then(Value::as_array).expect("routes array");
+            let bounded = routes.iter().filter(|route| route.get("execution").and_then(Value::as_str) == Some("bounded")).count();
+            let resumable = routes.iter().filter(|route| route.get("execution").and_then(Value::as_str) == Some("resumable")).count();
+            let migrated = routes.iter().filter(|route| route.get("admission").and_then(Value::as_str) == Some("migrated")).count();
+            let fail_closed = routes.iter().filter(|route| route.get("admission").and_then(Value::as_str) == Some("failClosed")).count();
             let route_ids = routes
                 .iter()
-                .filter_map(|route| route.get("id").and_then(serde_json::Value::as_str).map(str::to_string))
+                .filter_map(|route| route.get("id").and_then(Value::as_str).map(str::to_string))
                 .collect::<std::collections::BTreeSet<_>>();
             let bounded_ids = routes
                 .iter()
-                .filter(|route| route.get("execution").and_then(serde_json::Value::as_str) == Some("bounded"))
-                .filter_map(|route| route.get("id").and_then(serde_json::Value::as_str).map(str::to_string))
+                .filter(|route| route.get("execution").and_then(Value::as_str) == Some("bounded"))
+                .filter_map(|route| route.get("id").and_then(Value::as_str).map(str::to_string))
                 .collect::<std::collections::BTreeSet<_>>();
             let host_only_ids = document
                 .get("publicationContracts")
-                .and_then(serde_json::Value::as_array)
+                .and_then(Value::as_array)
                 .expect("publication contracts array")
                 .iter()
-                .filter(|contract| contract.get("lanes").and_then(serde_json::Value::as_array).is_some_and(|lanes| lanes.as_slice() == [serde_json::Value::String("hostOnly".into())]))
-                .filter_map(|contract| contract.get("toolId").and_then(serde_json::Value::as_str).map(str::to_string))
+                .filter(|contract| contract.get("lanes").and_then(Value::as_array).is_some_and(|lanes| lanes.as_slice() == [Value::String("hostOnly".into())]))
+                .filter_map(|contract| contract.get("toolId").and_then(Value::as_str).map(str::to_string))
                 .collect::<std::collections::BTreeSet<_>>();
             ShootingRetainedCatalogSummary { routes: routes.len(), bounded, resumable, migrated, fail_closed, unique: route_ids.len() == routes.len(), route_ids, bounded_ids, host_only_ids }
         }
@@ -886,7 +936,6 @@ mod tests {
     /// hold.
     #[semio_framework_async_macros::async_test]
     async fn command_ids_are_unique_across_every_row() {
-        let app = ShootingPlayApp;
         let ids: Vec<&str> = every_command().iter().map(shooting_command_id).collect();
         let mut sorted = ids.clone();
         sorted.sort_unstable();
@@ -973,8 +1022,8 @@ mod tests {
         for command in ["loadRequest", "importAssetRequest", "saveDownload", "exportActiveShot", "exportAllShots", "resetFixture", "saveCamera"] {
             assert!(definition.window_kinds.iter().flat_map(|window| window.actions.iter()).any(|action| action.id == command), "registry declares {command}");
         }
-        let mut app = shooting_app();
-        let engagements = app.window_engagements();
+        let mut app = shooting_app().await;
+        let engagements = app.window_engagements().await;
         assert!(engagements[SHOOTING_PLAY_WINDOW_SCENE].options.is_none(), "the gumball selector moved to the host-derived utility bar");
         assert!(engagements[SHOOTING_PLAY_WINDOW_SCENE].status.as_ref().unwrap()[0].text.contains("assets"));
         assert!(engagements[SHOOTING_PLAY_WINDOW_ICON].status.as_ref().unwrap()[0].text.contains("256×256"));
@@ -986,10 +1035,10 @@ mod tests {
     /// instead of a bespoke `worldPick` action.
     #[semio_framework_async_macros::async_test]
     async fn interaction_select_is_reachable_as_a_framework_injected_action_under_registry_enforcement() {
-        let mut app = shooting_app_with_registry();
+        let mut app = shooting_app_with_registry().await;
         let asset_id = app.snapshot().expect("snapshot").assets[0].id.clone();
         let targets = serde_json::to_string(&serde_json::json!([{ "granularity": "asset", "id": asset_id }])).unwrap();
-        app.handle_action("interactionSelect", Some(&json!({ "domainId": SHOOTING_INTERACTION_DOMAIN, "targets": targets, "merge": "replace" })), &testkit::meta("local")).expect("interactionSelect");
+        app.handle_action("interactionSelect", Some(&dsl::os_pack::json::to_dsl_value(&dsl::json!({ "domainId": SHOOTING_INTERACTION_DOMAIN, "targets": targets.as_str(), "merge": "replace" }))), &testkit::meta("local")).await.expect("interactionSelect");
     }
 
     #[semio_framework_async_macros::async_test]
@@ -1007,14 +1056,14 @@ mod tests {
     //#region 🔖️Locale
     #[semio_framework_async_macros::async_test]
     async fn shooting_labels_resolve_native_english_by_default() {
-        let mut app = shooting_app();
-        let document_json = crate::editor::shooting::testkit::render(&mut app, SHOOTING_PLAY_BODY_DOCUMENT);
+        let mut app = shooting_app().await;
+        let document_json = crate::editor::shooting::testkit::render(&mut app, SHOOTING_PLAY_BODY_DOCUMENT).await;
         assert!(document_json.contains("Shots"));
         assert!(document_json.contains("Assets"));
-        let catalogue_json = crate::editor::shooting::testkit::render(&mut app, SHOOTING_PLAY_BODY_CATALOGUE);
+        let catalogue_json = crate::editor::shooting::testkit::render(&mut app, SHOOTING_PLAY_BODY_CATALOGUE).await;
         assert!(catalogue_json.contains("Add Shot"));
         assert!(catalogue_json.contains("SVG Rectangle"));
-        let engagements = app.window_engagements();
+        let engagements = app.window_engagements().await;
         assert_eq!(engagements[SHOOTING_PLAY_WINDOW_SCENE].input.as_ref().unwrap().placeholder.as_deref(), Some("Camera label"));
         assert_eq!(engagements[SHOOTING_PLAY_WINDOW_ICON].input.as_ref().unwrap().placeholder.as_deref(), Some("Shot label"));
     }
@@ -1022,12 +1071,12 @@ mod tests {
     /// 🗣️ B1: locale is now `cfg.locale`, set via the typed `SetLocale` config command.
     #[semio_framework_async_macros::async_test]
     async fn shooting_labels_resolve_native_german() {
-        let mut app = shooting_app();
-        dispatch(&mut app, ShootingCommand::SetLocale(set_locale::SetLocale { value: "de-DE".into() }));
-        let document_json = crate::editor::shooting::testkit::render(&mut app, SHOOTING_PLAY_BODY_DOCUMENT);
+        let mut app = shooting_app().await;
+        dispatch(&mut app, ShootingCommand::SetLocale(set_locale::SetLocale { value: "de-DE".into() })).await;
+        let document_json = crate::editor::shooting::testkit::render(&mut app, SHOOTING_PLAY_BODY_DOCUMENT).await;
         assert!(document_json.contains("Aufnahmen"));
         assert!(document_json.contains("Objekte"));
-        let engagements = app.window_engagements();
+        let engagements = app.window_engagements().await;
         assert_eq!(engagements[SHOOTING_PLAY_WINDOW_SCENE].input.as_ref().unwrap().placeholder.as_deref(), Some("Kamera-Bezeichnung"));
         assert_eq!(engagements[SHOOTING_PLAY_WINDOW_ICON].input.as_ref().unwrap().placeholder.as_deref(), Some("Aufnahme-Bezeichnung"));
     }
@@ -1036,27 +1085,26 @@ mod tests {
     //#region 🔖️CrossCutting
     #[semio_framework_async_macros::async_test]
     async fn undo_redo_round_trip_through_the_wrapper() {
-        let mut app = shooting_app();
-        testkit::assert_undo_redo_round_trip(&mut app, ShootingCommand::AddShot(add_shot::AddShot { format: "png".into(), shape: "rectangle".into() }), |app| app.snapshot().expect("snapshot").shots.len(), 2, 3);
+        let mut app = shooting_app().await;
+        testkit::assert_undo_redo_round_trip(&mut app, ShootingCommand::AddShot(add_shot::AddShot { format: "png".into(), shape: "rectangle".into() }), |app| app.snapshot().expect("snapshot").shots.len(), 2, 3).await;
     }
 
     /// 🎥️ `SetCamera` is config-only — dragging the viewport camera through several ticks must never
     /// create a VCS edit/undo step on the DOCUMENT store at all.
     #[semio_framework_async_macros::async_test]
     async fn camera_drag_never_creates_a_document_undo_step() {
-        let mut app = shooting_app();
+        let mut app = shooting_app().await;
         for position in [[1.0, 0.0, 0.0], [2.0, 0.0, 0.0], [3.0, 0.0, 0.0]] {
-            dispatch(&mut app, ShootingCommand::SetCamera(set_camera::SetCamera { camera: default_camera(position) }));
+            dispatch(&mut app, ShootingCommand::SetCamera(set_camera::SetCamera { camera: default_camera(position) })).await;
         }
-        let camera_position = |app: &mut ShootingApp| -> Value {
-            let node = app.render(SHOOTING_PLAY_BODY_SCENE, None, &ViewModel::default()).expect("render");
-            let payload: Value = serde_json::to_value(&node).unwrap();
-            let camera: Value = serde_json::from_str(payload["world3d"]["cameraJson"].as_str().unwrap()).unwrap();
+        async fn camera_position(app: &mut ShootingApp) -> Value {
+            let scene = crate::editor::shooting::testkit::world_scene(app).await;
+            let camera: Value = serde_json::from_str(&scene.camera_json).unwrap();
             camera["position"].clone()
-        };
-        assert_eq!(camera_position(&mut app), json!([3.0, 0.0, 0.0]), "config camera reflects the last drag tick");
-        app.handle_action("undo", None, &testkit::meta("local")).expect("undo (no-op: nothing on the document store to undo)");
-        assert_eq!(camera_position(&mut app), json!([3.0, 0.0, 0.0]), "document undo has nothing to revert — the drag never touched the document");
+        }
+        assert_eq!(camera_position(&mut app).await, json!([3.0, 0.0, 0.0]), "config camera reflects the last drag tick");
+        app.handle_action("undo", None, &testkit::meta("local")).await.expect("undo (no-op: nothing on the document store to undo)");
+        assert_eq!(camera_position(&mut app).await, json!([3.0, 0.0, 0.0]), "document undo has nothing to revert — the drag never touched the document");
     }
 
     /// 🧪️ The definitional regression proof: two independent instances start from the same fixture,
@@ -1072,20 +1120,20 @@ mod tests {
                 let snapshot = app.snapshot().expect("snapshot");
                 (crate::artifacts::shooting::schema::active_shot(&snapshot).unwrap().label.clone(), snapshot.assets[0].origin)
             },
-        );
+        ).await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn ingest_operations_is_idempotent_for_shooting() {
         testkit::assert_ingest_idempotent::<EditorApp<ShootingPlayApp>, String>(ShootingCommand::SetActiveShotLabel(set_active_shot_label::SetActiveShotLabel { value: "Hero".into() }), |app| {
             crate::artifacts::shooting::schema::active_shot(&app.snapshot().expect("snapshot")).unwrap().label.clone()
-        });
+        }).await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn an_unknown_body_key_renders_a_diagnostic_instead_of_panicking() {
-        let mut app = shooting_app();
-        assert!(crate::editor::shooting::testkit::render(&mut app, "shooting.play.nope").contains("Unknown body"));
+        let mut app = shooting_app().await;
+        assert!(crate::editor::shooting::testkit::render(&mut app, "shooting.play.nope").await.contains("Unknown body"));
     }
     //#endregion 🔖️CrossCutting
 
@@ -1139,17 +1187,17 @@ mod tests {
     //#region 🔖️Export
     #[semio_framework_async_macros::async_test]
     async fn export_import_and_download_operations() {
-        let mut app = shooting_app();
-        let result = dispatch(&mut app, ShootingCommand::LoadRequest(load_request::LoadRequest {}));
+        let mut app = shooting_app().await;
+        let result = dispatch(&mut app, ShootingCommand::LoadRequest(load_request::LoadRequest {})).await;
         match &result.requested_effects[0] {
             Effect::RequestFileOpen { import_action, .. } => assert_eq!(import_action, "importSnapshotJson"),
             other => panic!("expected RequestFileOpen, got {other:?}"),
         }
-        let result = dispatch(&mut app, ShootingCommand::SaveDownload(save_download::SaveDownload {}));
+        let result = dispatch(&mut app, ShootingCommand::SaveDownload(save_download::SaveDownload {})).await;
         match &result.requested_effects[0] {
             Effect::DownloadMediaExport { filename, data, .. } => {
                 assert_eq!(filename, "shooting.shooting.ops");
-                let round_trip: ShootingSnapshot = serde_json::from_str(data).unwrap();
+                let round_trip: ShootingSnapshot = dsl::os_pack::from_json_str(data).unwrap();
                 assert_eq!(round_trip.schema, SHOOTING_DOCUMENT_SCHEMA);
             }
             other => panic!("expected DownloadMediaExport, got {other:?}"),
@@ -1158,3 +1206,32 @@ mod tests {
     //#endregion 🔖️Export
 }
 //#endregion 🧪️Tests
+
+#[cfg(test)]
+mod window_action_contract {
+    use super::*;
+
+    #[test]
+    fn shooting_window_actions_match_the_json_oracle() {
+        let vectors: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🔣️window-actions.json")).expect("neutral window vectors");
+        let document = crate::artifacts::shooting::schema::default_snapshot();
+        let config = ShootingConfig::default();
+        for locale in ["en-US", "de-DE"] {
+            let labels = semio_framework_plugin::resolve_labels_for_locale::<crate::editor::shooting::terminology::ShootingLabels>(locale);
+            for (kind, measures) in [("scene", scene_window::window_measures(&document, labels)), ("icon", icon_window::window_measures(&document, labels))] {
+                let json = serde_json::to_value(measures).expect("independent window oracle");
+                let actions = json.as_array().expect("measures").iter().map(|measure| {
+                    assert_eq!(measure["onChange"]["controllerId"], vectors["controller"]);
+                    measure["onChange"]["action"].clone()
+                }).collect::<Vec<_>>();
+                assert_eq!(serde_json::Value::Array(actions), vectors[kind]);
+            }
+            let scene = scene_window::engagement(&document, &config, labels);
+            let scene_input = scene.input.expect("camera input");
+            assert_eq!(scene_input.on_change.expect("camera change").action, vectors["sceneChange"].as_str().expect("scene change"));
+            assert_eq!(scene_input.on_submit.expect("camera submit").action, vectors["sceneSubmit"].as_str().expect("scene submit"));
+            let icon = icon_window::engagement(&document, labels);
+            assert_eq!(icon.input.expect("shot input").on_change.expect("shot change").action, vectors["iconChange"].as_str().expect("icon change"));
+        }
+    }
+}

@@ -168,9 +168,9 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn every_authored_action_is_localized_in_english_and_german() {
         for action in actions() {
-            assert_ne!(action.label.native(), action.label.secondary(), "action {} is not really translated", action.id);
+            assert!(semio_framework::Terminology::ALL.iter().all(|&terminology| action.label.resolve(terminology, semio_framework::Locale::En) != action.label.resolve(terminology, semio_framework::Locale::De)), "action {} is not really translated", action.id);
             for arg in &action.args {
-                assert_ne!(arg.label.native(), arg.label.secondary(), "arg {} of action {} is not really translated", arg.id, action.id);
+                assert!(semio_framework::Terminology::ALL.iter().all(|&terminology| arg.label.resolve(terminology, semio_framework::Locale::En) != arg.label.resolve(terminology, semio_framework::Locale::De)), "arg {} of action {} is not really translated", arg.id, action.id);
             }
         }
     }
@@ -179,11 +179,11 @@ mod tests {
     async fn render_lists_name_version_and_every_collection_count() {
         let document = EnergyModelSnapshot::default();
         let tree = render(&document).expect("the tree window assembles");
-        assert_eq!(tree.key, WINDOW_KIND_ID);
+        assert_eq!(tree.key.as_str(), WINDOW_KIND_ID);
         let root = &tree.children[0].children[0];
-        assert!(root.children.iter().any(|item| item.key == "name"));
-        assert!(root.children.iter().any(|item| item.key == "version"));
-        assert!(root.children.iter().any(|item| item.key == "zones"));
+        assert!(root.children.iter().any(|item| item.key.as_str() == "name"));
+        assert!(root.children.iter().any(|item| item.key.as_str() == "version"));
+        assert!(root.children.iter().any(|item| item.key.as_str() == "zones"));
     }
 }
 //#endregion 🧪️Tests

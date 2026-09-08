@@ -9,8 +9,9 @@ use crate::directory::error::{DirectoryError, DirectoryResult};
 use crate::directory::model::*;
 use crate::directory::{
     active_capability, auth_audit, bounded_event_read, checkpoint_projection_rebuild, decode_auth_digest_hex, directory_command_result_kind_from_str, directory_command_result_kind_str, directory_projection_rejection_v1,
-    directory_projection_space_v1, encode_capability_bytes, invite_redemption_preflight, kind_to_str, prepare_auth_session, prepare_invite, prepare_share_token, role_from_wire, role_to_wire, same_admin_operation_request,
-    validate_admin_operation_audit, validate_bounded_auth_text, validate_checkpoint_publication_claim, validate_checkpoint_publication_completion, validate_directory_command_claim, validate_verified_checkpoint_append, verify_invite_redemption_event,
+    admin_operation_effect_receipt_v1, directory_projection_space_v1, encode_capability_bytes, invite_redemption_preflight, kind_to_str, prepare_auth_session, prepare_invite, prepare_share_token, role_from_wire, role_to_wire,
+    same_admin_operation_request, validate_admin_operation_audit, validate_admin_operation_effect_receipt, validate_bounded_auth_text, validate_checkpoint_publication_claim, validate_checkpoint_publication_completion,
+    validate_directory_command_claim, validate_verified_checkpoint_append, verify_invite_redemption_event,
     verify_invite_redemption_scope_hint, visibility_to_str, ArtifactCasSweepCandidatePage, DirectoryAppendOutcomeV1, DirectoryProjectionRejectionV1, HubClock, HubDirectory, InviteCapability, InviteRedemptionPreflight, InviteRedemptionScopeHintV1,
     InviteRedemptionSpaceStateV1, NewDirectoryEvent, ProjectionRebuildControl, SessionCapability, ShareCapability, ADMIN_PAGE_MAX, ARTIFACT_CAS_RESERVATION_MAX_TTL_MS, ARTIFACT_CAS_SWEEP_PAGE_MAX, ARTIFACT_CHECKPOINT_LINEAGE_MAX,
     AUTH_AUDIT_PAGE_MAX, AUTH_TEXT_MAX_BYTES, DIRECTORY_WIRE_INTEGER_MAX, UNCONTROLLED_PROJECTION_REBUILD,
@@ -33,6 +34,44 @@ fn backend<E: std::fmt::Display>(err: E) -> DirectoryError {
     DirectoryError::Backend(err.to_string())
 }
 
+enum AdminEffectPreflightFailure {
+    RejectedBeforeCommit,
+    Indeterminate,
+}
+
+impl<T> From<AdminEffectPreflightFailure> for AdminEffectCommitV1<T> {
+    fn from(value: AdminEffectPreflightFailure) -> Self {
+        match value {
+            AdminEffectPreflightFailure::RejectedBeforeCommit => Self::RejectedBeforeCommit,
+            AdminEffectPreflightFailure::Indeterminate => Self::Indeterminate,
+        }
+    }
+}
+
+fn admin_effect_preflight<T>(result: DirectoryResult<T>) -> Result<T, AdminEffectPreflightFailure> {
+    match result {
+        Ok(value) => Ok(value),
+        Err(DirectoryError::Backend(_)) => Err(AdminEffectPreflightFailure::Indeterminate),
+        Err(_) => Err(AdminEffectPreflightFailure::RejectedBeforeCommit),
+    }
+}
+
+async fn admin_effect_rollback<T>(txn: Txn) -> AdminEffectCommitV1<T> {
+    match txn.rollback().await {
+        Ok(()) => AdminEffectCommitV1::RejectedBeforeCommit,
+        Err(_) => AdminEffectCommitV1::Indeterminate,
+    }
+}
+
+macro_rules! admin_effect_try {
+    ($txn:ident, $result:expr) => {
+        match $result {
+            Ok(value) => value,
+            Err(_) => return admin_effect_rollback($txn).await,
+        }
+    };
+}
+
 async fn insert_auth_audit(txn: &mut Txn, event: &AuthAuditRecord) -> DirectoryResult<()> {
     txn.run(
         query("CREATE (:AuthAudit {id: $id, occurredAt: $occurred_at, eventKind: $event_kind, authSessionId: $auth_session_id, targetUserId: $target_user_id, actorUserId: $actor_user_id, provider: $provider, outcomeCode: $outcome_code, reasonCode: $reason_code, correlationId: $correlation_id, peerClass: $peer_class})")
@@ -51,6 +90,48 @@ async fn insert_auth_audit(txn: &mut Txn, event: &AuthAuditRecord) -> DirectoryR
     .await
     .map_err(backend)?;
     Ok(())
+}
+
+async fn insert_admin_operation_effect_receipt(txn: &mut Txn, receipt: &AdminOperationEffectReceiptV1) -> DirectoryResult<()> {
+    validate_admin_operation_effect_receipt(receipt)?;
+    let mut result = txn
+        .execute(
+            query(
+                "MERGE (r:AdminOperationEffectReceipt {operationId: $operation_id})
+                 ON CREATE SET r.intentDigest = $intent_digest, r.committedAt = $committed_at, r.outcomeCode = $outcome_code, r.eventSeqFirst = $event_seq_first, r.eventSeqLast = $event_seq_last
+                 RETURN r AS r",
+            )
+        .param("operation_id", receipt.operation_id.clone())
+        .param("intent_digest", receipt.intent_digest.clone())
+        .param("committed_at", receipt.committed_at)
+        .param("outcome_code", receipt.outcome_code.clone())
+        .param("event_seq_first", receipt.event_seq_first.map(|value| i64::try_from(value).map_err(backend)).transpose()?.unwrap_or(0))
+        .param("event_seq_last", receipt.event_seq_last.map(|value| i64::try_from(value).map_err(backend)).transpose()?.unwrap_or(0)),
+        )
+        .await
+        .map_err(backend)?;
+    let row = result.next(txn.handle()).await.map_err(backend)?.ok_or_else(|| DirectoryError::Conflict("admin operation effect receipt disappeared".into()))?;
+    let node: neo4rs::Node = row.get("r").map_err(backend)?;
+    let established = AdminOperationEffectReceiptV1 {
+        operation_id: node.get("operationId").map_err(backend)?,
+        intent_digest: node.get("intentDigest").map_err(backend)?,
+        committed_at: node.get("committedAt").map_err(backend)?,
+        outcome_code: node.get("outcomeCode").map_err(backend)?,
+        event_seq_first: match node.get::<i64>("eventSeqFirst").map_err(backend)? {
+            0 => None,
+            value => Some(u64::try_from(value).map_err(backend)?),
+        },
+        event_seq_last: match node.get::<i64>("eventSeqLast").map_err(backend)? {
+            0 => None,
+            value => Some(u64::try_from(value).map_err(backend)?),
+        },
+    };
+    drop(result);
+    if &established == receipt {
+        Ok(())
+    } else {
+        Err(DirectoryError::Conflict("admin operation effect receipt identity changed".into()))
+    }
 }
 
 fn actor_kind_to_str(kind: DirectoryActorKind) -> &'static str {
@@ -194,6 +275,7 @@ const CONSTRAINTS: &[&str] = &[
     "CREATE CONSTRAINT IF NOT EXISTS FOR (a:AuthAudit) REQUIRE a.id IS UNIQUE",
     "CREATE CONSTRAINT IF NOT EXISTS FOR (a:AdminOperationAudit) REQUIRE a.sequence IS UNIQUE",
     "CREATE CONSTRAINT IF NOT EXISTS FOR (a:AdminOperationAudit) REQUIRE a.requestTerminalKey IS UNIQUE",
+    "CREATE CONSTRAINT IF NOT EXISTS FOR (r:AdminOperationEffectReceipt) REQUIRE r.operationId IS UNIQUE",
     "CREATE INDEX IF NOT EXISTS FOR (a:AdminOperationAudit) ON (a.operationId)",
     "CREATE CONSTRAINT IF NOT EXISTS FOR (c:AdminOperationAuditCounter) REQUIRE c.id IS UNIQUE",
     "CREATE CONSTRAINT IF NOT EXISTS FOR (e:DirectoryEvent) REQUIRE e.id IS UNIQUE",
@@ -219,7 +301,16 @@ impl Neo4jDirectory {
         Ok(Self { graph })
     }
 
-    async fn revoke_auth_sessions_by(&self, field: &str, key: &str, subject_digest: Option<[u8; 32]>, reason: &str, actor_user_id: Option<&str>, correlation_id: &str) -> DirectoryResult<Vec<RevokedAuthSession>> {
+    async fn revoke_auth_sessions_by(
+        &self,
+        field: &str,
+        key: &str,
+        subject_digest: Option<[u8; 32]>,
+        reason: &str,
+        actor_user_id: Option<&str>,
+        correlation_id: &str,
+        admin_effect: Option<&NewAdminOperationEffectReceiptV1>,
+    ) -> DirectoryResult<Vec<RevokedAuthSession>> {
         validate_bounded_auth_text(reason, "session revoke reason", AUTH_TEXT_MAX_BYTES)?;
         let revoked_at = now_ms();
         let mut txn = self.graph.start_txn().await.map_err(backend)?;
@@ -273,8 +364,61 @@ impl Neo4jDirectory {
             insert_auth_audit(&mut txn, &audit).await?;
             revoked.push(RevokedAuthSession { id, authorization_generation: u64::try_from(generation).map_err(backend)?, revoked_at });
         }
+        if let Some(effect) = admin_effect {
+            insert_admin_operation_effect_receipt(&mut txn, &admin_operation_effect_receipt_v1(effect, &[])?).await?;
+        }
         txn.commit().await.map_err(backend)?;
         Ok(revoked)
+    }
+
+    async fn revoke_auth_sessions_by_user_with_admin_effect(
+        &self,
+        key: &str,
+        reason: &str,
+        actor_user_id: Option<&str>,
+        correlation_id: &str,
+        effect: &NewAdminOperationEffectReceiptV1,
+    ) -> AdminEffectCommitV1<Vec<RevokedAuthSession>> {
+        if let Err(outcome) = admin_effect_preflight(validate_bounded_auth_text(reason, "session revoke reason", AUTH_TEXT_MAX_BYTES)) {
+            return outcome.into();
+        }
+        let revoked_at = now_ms();
+        let mut txn = match self.graph.start_txn().await {
+            Ok(txn) => txn,
+            Err(_) => return AdminEffectCommitV1::Indeterminate,
+        };
+        let rows_result: DirectoryResult<Vec<(String, String, String, i64)>> = async {
+            let mut result = txn
+                .execute(
+                    query("MATCH (a:AuthSession)-[:BELONGS_TO]->(u:User {id: $key}) WHERE a.revokedAt IS NULL SET a.revokedAt = $revoked_at, a.revokedReason = $reason, a.authorizationGeneration = a.authorizationGeneration + 1 RETURN a.id AS id, u.id AS userId, a.authorizationGeneration AS generation, a.identityProvider AS provider")
+                        .param("key", key)
+                        .param("revoked_at", revoked_at)
+                        .param("reason", reason),
+                )
+                .await
+                .map_err(backend)?;
+            let mut rows = Vec::new();
+            while let Some(row) = result.next(txn.handle()).await.map_err(backend)? {
+                rows.push((row.get("id").map_err(backend)?, row.get("userId").map_err(backend)?, row.get("provider").map_err(backend)?, row.get("generation").map_err(backend)?));
+            }
+            drop(result);
+            Ok(rows)
+        }
+        .await;
+        let rows = admin_effect_try!(txn, rows_result);
+        let mut revoked = Vec::with_capacity(rows.len());
+        for (id, user_id, provider, generation) in rows {
+            let audit = admin_effect_try!(txn, auth_audit(revoked_at, "session-revoked", Some(&id), Some(&user_id), actor_user_id, Some(&provider), "success", Some(reason), correlation_id, "server"));
+            admin_effect_try!(txn, insert_auth_audit(&mut txn, &audit).await);
+            let Ok(authorization_generation) = u64::try_from(generation) else { return admin_effect_rollback(txn).await };
+            revoked.push(RevokedAuthSession { id, authorization_generation, revoked_at });
+        }
+        let receipt = admin_effect_try!(txn, admin_operation_effect_receipt_v1(effect, &[]));
+        admin_effect_try!(txn, insert_admin_operation_effect_receipt(&mut txn, &receipt).await);
+        match txn.commit().await {
+            Ok(()) => AdminEffectCommitV1::Applied(revoked),
+            Err(_) => AdminEffectCommitV1::Indeterminate,
+        }
     }
 
     /// @emoji 🌱️ Seeds a default `studio`/`private` space authored by a `seed` system user node,
@@ -531,21 +675,77 @@ impl HubDirectory for Neo4jDirectory {
         let issued = prepare_share_token(scope, ttl_secs, now_ms())?;
         let audit = auth_audit(issued.record.created_at, "share-issued", Some(&issued.record.id), None, actor_user_id, None, "success", None, correlation_id, "server")?;
         let mut txn = self.graph.start_txn().await.map_err(backend)?;
-        txn.run(
-            query("CREATE (g:ShareGrant {id: $id, selector: $selector, secretDigest: $secret_digest, spaceId: $space_id, documentId: $document_id, createdAt: $created_at, expiresAt: $expires_at})")
+        let scope_key = document_scope_key_v1(scope);
+        let mut result = txn
+            .execute(
+                query(
+                    "MATCH (s:Space {id: $space_id}), (d:DocumentDescriptor {scopeKey: $scope_key, spaceId: $space_id, documentId: $document_id})
+                 CREATE (s)-[:HAS_SHARE_GRANT]->(g:ShareGrant {id: $id, selector: $selector, secretDigest: $secret_digest, spaceId: $space_id, documentId: $document_id, createdAt: $created_at, expiresAt: $expires_at})-[:GRANTS_DOCUMENT]->(d)
+                 RETURN count(g) AS c",
+                )
                 .param("id", issued.record.id.clone())
                 .param("selector", issued.record.selector.clone())
                 .param("secret_digest", encode_capability_bytes(&issued.record.secret_digest))
                 .param("space_id", scope.space_id.clone())
                 .param("document_id", scope.document_id.clone())
+                .param("scope_key", scope_key)
                 .param("created_at", issued.record.created_at)
                 .param("expires_at", issued.record.expires_at),
-        )
-        .await
-        .map_err(backend)?;
+            )
+            .await
+            .map_err(backend)?;
+        let changed: i64 = result.next(txn.handle()).await.map_err(backend)?.and_then(|row| row.get("c").ok()).unwrap_or(0);
+        if changed != 1 {
+            return Err(DirectoryError::NotFound(format!("document descriptor {}/{}", scope.space_id, scope.document_id)));
+        }
         insert_auth_audit(&mut txn, &audit).await?;
         txn.commit().await.map_err(backend)?;
         Ok(issued)
+    }
+
+    async fn issue_share_token_as_with_admin_effect(&self, scope: &DocumentScope, ttl_secs: i64, actor_user_id: Option<&str>, correlation_id: &str, effect: &NewAdminOperationEffectReceiptV1) -> AdminEffectCommitV1<IssuedShareToken> {
+        let issued = match admin_effect_preflight(prepare_share_token(scope, ttl_secs, now_ms())) {
+            Ok(value) => value,
+            Err(outcome) => return outcome.into(),
+        };
+        let audit = match admin_effect_preflight(auth_audit(issued.record.created_at, "share-issued", Some(&issued.record.id), None, actor_user_id, None, "success", None, correlation_id, "server")) {
+            Ok(value) => value,
+            Err(outcome) => return outcome.into(),
+        };
+        let mut txn = match self.graph.start_txn().await {
+            Ok(txn) => txn,
+            Err(_) => return AdminEffectCommitV1::Indeterminate,
+        };
+        let changed_result: DirectoryResult<i64> = async {
+            let mut result = txn.execute(
+                query("MATCH (s:Space {id: $space_id}), (d:DocumentDescriptor {scopeKey: $scope_key, spaceId: $space_id, documentId: $document_id}) CREATE (s)-[:HAS_SHARE_GRANT]->(g:ShareGrant {id: $id, selector: $selector, secretDigest: $secret_digest, spaceId: $space_id, documentId: $document_id, createdAt: $created_at, expiresAt: $expires_at})-[:GRANTS_DOCUMENT]->(d) RETURN count(g) AS c")
+                    .param("id", issued.record.id.clone())
+                    .param("selector", issued.record.selector.clone())
+                    .param("secret_digest", encode_capability_bytes(&issued.record.secret_digest))
+                    .param("space_id", scope.space_id.clone())
+                    .param("document_id", scope.document_id.clone())
+                    .param("scope_key", document_scope_key_v1(scope))
+                    .param("created_at", issued.record.created_at)
+                    .param("expires_at", issued.record.expires_at),
+            )
+            .await
+            .map_err(backend)?;
+            let changed = result.next(txn.handle()).await.map_err(backend)?.and_then(|row| row.get("c").ok()).unwrap_or(0);
+            drop(result);
+            Ok(changed)
+        }
+        .await;
+        let changed = admin_effect_try!(txn, changed_result);
+        if changed != 1 {
+            return admin_effect_rollback(txn).await;
+        }
+        admin_effect_try!(txn, insert_auth_audit(&mut txn, &audit).await);
+        let receipt = admin_effect_try!(txn, admin_operation_effect_receipt_v1(effect, &[]));
+        admin_effect_try!(txn, insert_admin_operation_effect_receipt(&mut txn, &receipt).await);
+        match txn.commit().await {
+            Ok(()) => AdminEffectCommitV1::Applied(issued),
+            Err(_) => AdminEffectCommitV1::Indeterminate,
+        }
     }
 
     async fn revoke_share_token_as(&self, scope: &DocumentScope, share_id: &str, reason: &str, actor_user_id: Option<&str>, correlation_id: &str) -> DirectoryResult<()> {
@@ -574,6 +774,46 @@ impl HubDirectory for Neo4jDirectory {
         }
     }
 
+    async fn revoke_share_token_as_with_admin_effect(&self, scope: &DocumentScope, share_id: &str, reason: &str, actor_user_id: Option<&str>, correlation_id: &str, effect: &NewAdminOperationEffectReceiptV1) -> AdminEffectCommitV1<()> {
+        if let Err(outcome) = admin_effect_preflight(validate_bounded_auth_text(reason, "share revoke reason", AUTH_TEXT_MAX_BYTES)) {
+            return outcome.into();
+        }
+        let revoked_at = now_ms();
+        let audit = match admin_effect_preflight(auth_audit(revoked_at, "share-revoked", Some(share_id), None, actor_user_id, None, "success", Some(reason), correlation_id, "server")) {
+            Ok(value) => value,
+            Err(outcome) => return outcome.into(),
+        };
+        let mut txn = match self.graph.start_txn().await {
+            Ok(txn) => txn,
+            Err(_) => return AdminEffectCommitV1::Indeterminate,
+        };
+        let changed_result: DirectoryResult<i64> = async {
+            let mut result = txn.execute(query("MATCH (g:ShareGrant {id: $id, spaceId: $space_id, documentId: $document_id}) WHERE g.revokedAt IS NULL SET g.revokedAt = $revoked_at, g.revokedReason = $reason RETURN count(g) AS c")
+                .param("id", share_id)
+                .param("space_id", scope.space_id.clone())
+                .param("document_id", scope.document_id.clone())
+                .param("revoked_at", revoked_at)
+                .param("reason", reason))
+            .await
+            .map_err(backend)?;
+            let changed = result.next(txn.handle()).await.map_err(backend)?.and_then(|row| row.get("c").ok()).unwrap_or(0);
+            drop(result);
+            Ok(changed)
+        }
+        .await;
+        let changed = admin_effect_try!(txn, changed_result);
+        if changed != 1 {
+            return admin_effect_rollback(txn).await;
+        }
+        admin_effect_try!(txn, insert_auth_audit(&mut txn, &audit).await);
+        let receipt = admin_effect_try!(txn, admin_operation_effect_receipt_v1(effect, &[]));
+        admin_effect_try!(txn, insert_admin_operation_effect_receipt(&mut txn, &receipt).await);
+        match txn.commit().await {
+            Ok(()) => AdminEffectCommitV1::Applied(()),
+            Err(_) => AdminEffectCommitV1::Indeterminate,
+        }
+    }
+
     async fn authenticate_share(&self, scope: &DocumentScope, capability: &ShareCapability) -> DirectoryResult<bool> {
         Ok(self.authenticate_share_binding(scope, capability).await?.is_some())
     }
@@ -582,10 +822,14 @@ impl HubDirectory for Neo4jDirectory {
         let mut result = self
             .graph
             .execute(
-                query("MATCH (g:ShareGrant {selector: $selector, spaceId: $space_id, documentId: $document_id}) RETURN g AS g")
-                    .param("selector", capability.selector())
-                    .param("space_id", scope.space_id.clone())
-                    .param("document_id", scope.document_id.clone()),
+                query(
+                    "MATCH (:Space {id: $space_id})-[:HAS_SHARE_GRANT]->(g:ShareGrant {selector: $selector, spaceId: $space_id, documentId: $document_id})-[:GRANTS_DOCUMENT]->(:DocumentDescriptor {scopeKey: $scope_key})
+                     RETURN g AS g",
+                )
+                .param("selector", capability.selector())
+                .param("space_id", scope.space_id.clone())
+                .param("document_id", scope.document_id.clone())
+                .param("scope_key", document_scope_key_v1(scope)),
             )
             .await
             .map_err(backend)?;
@@ -598,11 +842,15 @@ impl HubDirectory for Neo4jDirectory {
         let mut result = self
             .graph
             .execute(
-                query("MATCH (g:ShareGrant {id: $id, selector: $selector, spaceId: $space_id, documentId: $document_id}) RETURN g AS g")
-                    .param("id", share_id)
-                    .param("selector", selector)
-                    .param("space_id", scope.space_id.clone())
-                    .param("document_id", scope.document_id.clone()),
+                query(
+                    "MATCH (:Space {id: $space_id})-[:HAS_SHARE_GRANT]->(g:ShareGrant {id: $id, selector: $selector, spaceId: $space_id, documentId: $document_id})-[:GRANTS_DOCUMENT]->(:DocumentDescriptor {scopeKey: $scope_key})
+                     RETURN g AS g",
+                )
+                .param("id", share_id)
+                .param("selector", selector)
+                .param("space_id", scope.space_id.clone())
+                .param("document_id", scope.document_id.clone())
+                .param("scope_key", document_scope_key_v1(scope)),
             )
             .await
             .map_err(backend)?;
@@ -1012,16 +1260,20 @@ impl HubDirectory for Neo4jDirectory {
     }
 
     async fn revoke_auth_session(&self, id: &str, reason: &str, actor_user_id: Option<&str>, correlation_id: &str) -> DirectoryResult<Option<RevokedAuthSession>> {
-        let mut revoked = self.revoke_auth_sessions_by("id", id, None, reason, actor_user_id, correlation_id).await?;
+        let mut revoked = self.revoke_auth_sessions_by("id", id, None, reason, actor_user_id, correlation_id, None).await?;
         Ok(revoked.pop())
     }
 
     async fn revoke_auth_sessions_for_user(&self, user_id: &str, reason: &str, actor_user_id: Option<&str>, correlation_id: &str) -> DirectoryResult<Vec<RevokedAuthSession>> {
-        self.revoke_auth_sessions_by("user", user_id, None, reason, actor_user_id, correlation_id).await
+        self.revoke_auth_sessions_by("user", user_id, None, reason, actor_user_id, correlation_id, None).await
+    }
+
+    async fn revoke_auth_sessions_for_user_with_admin_effect(&self, user_id: &str, reason: &str, actor_user_id: Option<&str>, correlation_id: &str, effect: &NewAdminOperationEffectReceiptV1) -> AdminEffectCommitV1<Vec<RevokedAuthSession>> {
+        self.revoke_auth_sessions_by_user_with_admin_effect(user_id, reason, actor_user_id, correlation_id, effect).await
     }
 
     async fn revoke_auth_sessions_for_identity(&self, provider: &str, subject_digest: [u8; 32], reason: &str, actor_user_id: Option<&str>, correlation_id: &str) -> DirectoryResult<Vec<RevokedAuthSession>> {
-        self.revoke_auth_sessions_by("identity", provider, Some(subject_digest), reason, actor_user_id, correlation_id).await
+        self.revoke_auth_sessions_by("identity", provider, Some(subject_digest), reason, actor_user_id, correlation_id, None).await
     }
 
     async fn list_auth_audit(&self, limit: usize, offset: usize) -> DirectoryResult<Vec<AuthAuditRecord>> {
@@ -1256,6 +1508,32 @@ impl HubDirectory for Neo4jDirectory {
         Ok(records)
     }
 
+    async fn admin_operation_effect_receipt(&self, operation_id: &str, intent_digest: &str) -> DirectoryResult<Option<AdminOperationEffectReceiptV1>> {
+        validate_bounded_auth_text(operation_id, "admin effect operation id", AUTH_TEXT_MAX_BYTES)?;
+        if intent_digest.len() != 64 || !intent_digest.bytes().all(|byte| byte.is_ascii_hexdigit() && !byte.is_ascii_uppercase()) {
+            return Err(DirectoryError::Conflict("admin effect intent digest must be 64 lowercase hex digits".into()));
+        }
+        let mut result = self
+            .graph
+            .execute(query("MATCH (r:AdminOperationEffectReceipt {operationId: $operation_id, intentDigest: $intent_digest}) RETURN r AS r LIMIT 1").param("operation_id", operation_id).param("intent_digest", intent_digest))
+            .await
+            .map_err(backend)?;
+        let Some(row) = result.next().await.map_err(backend)? else { return Ok(None) };
+        let node: neo4rs::Node = row.get("r").map_err(backend)?;
+        let first = node.get::<i64>("eventSeqFirst").ok().filter(|value| *value > 0).map(u64::try_from).transpose().map_err(backend)?;
+        let last = node.get::<i64>("eventSeqLast").ok().filter(|value| *value > 0).map(u64::try_from).transpose().map_err(backend)?;
+        let receipt = AdminOperationEffectReceiptV1 {
+            operation_id: node.get("operationId").map_err(backend)?,
+            intent_digest: node.get("intentDigest").map_err(backend)?,
+            committed_at: node.get("committedAt").map_err(backend)?,
+            outcome_code: node.get("outcomeCode").map_err(backend)?,
+            event_seq_first: first,
+            event_seq_last: last,
+        };
+        validate_admin_operation_effect_receipt(&receipt)?;
+        Ok(Some(receipt))
+    }
+
     async fn list_admin_operation_audit(&self, after_sequence: u64, limit: usize) -> DirectoryResult<Vec<AdminOperationAuditRecord>> {
         if limit == 0 || limit > ADMIN_PAGE_MAX {
             return Err(DirectoryError::Conflict(format!("admin audit limit must be 1..={ADMIN_PAGE_MAX}")));
@@ -1295,6 +1573,50 @@ impl HubDirectory for Neo4jDirectory {
         insert_auth_audit(&mut txn, &audit).await?;
         txn.commit().await.map_err(backend)?;
         Ok(issued)
+    }
+
+    async fn issue_invite_as_with_admin_effect(&self, space_id: &str, role: SpaceRole, ttl_secs: i64, actor_user_id: Option<&str>, correlation_id: &str, effect: &NewAdminOperationEffectReceiptV1) -> AdminEffectCommitV1<IssuedInvite> {
+        let issued = match admin_effect_preflight(prepare_invite(space_id, role, ttl_secs, now_ms())) {
+            Ok(value) => value,
+            Err(outcome) => return outcome.into(),
+        };
+        let audit = match admin_effect_preflight(auth_audit(issued.record.created_at, "invite-issued", Some(&issued.record.id), None, actor_user_id, None, "success", None, correlation_id, "server")) {
+            Ok(value) => value,
+            Err(outcome) => return outcome.into(),
+        };
+        let mut txn = match self.graph.start_txn().await {
+            Ok(txn) => txn,
+            Err(_) => return AdminEffectCommitV1::Indeterminate,
+        };
+        let changed_result: DirectoryResult<i64> = async {
+            let mut result = txn.execute(
+                query("MATCH (s:Space {id: $space_id}) CREATE (i:SpaceInvite {id: $id, selector: $selector, secretDigest: $secret_digest, spaceId: $space_id, role: $role, createdAt: $created_at, expiresAt: $expires_at}) RETURN count(i) AS c")
+                .param("id", issued.record.id.clone())
+                .param("selector", issued.record.selector.clone())
+                .param("secret_digest", encode_capability_bytes(&issued.record.secret_digest))
+                .param("space_id", space_id)
+                .param("role", role.as_str())
+                .param("created_at", issued.record.created_at)
+                .param("expires_at", issued.record.expires_at),
+            )
+            .await
+            .map_err(backend)?;
+            let changed = result.next(txn.handle()).await.map_err(backend)?.and_then(|row| row.get("c").ok()).unwrap_or(0);
+            drop(result);
+            Ok(changed)
+        }
+        .await;
+        let changed = admin_effect_try!(txn, changed_result);
+        if changed != 1 {
+            return admin_effect_rollback(txn).await;
+        }
+        admin_effect_try!(txn, insert_auth_audit(&mut txn, &audit).await);
+        let receipt = admin_effect_try!(txn, admin_operation_effect_receipt_v1(effect, &[]));
+        admin_effect_try!(txn, insert_admin_operation_effect_receipt(&mut txn, &receipt).await);
+        match txn.commit().await {
+            Ok(()) => AdminEffectCommitV1::Applied(issued),
+            Err(_) => AdminEffectCommitV1::Indeterminate,
+        }
     }
 
     async fn invite_redemption_scope_hint(&self, capability: &InviteCapability, actor: &DirectoryActor, user_id: &str) -> DirectoryResult<InviteRedemptionScopeHintV1> {
@@ -1395,7 +1717,10 @@ impl HubDirectory for Neo4jDirectory {
         )
         .await
         .map_err(backend)?;
-        self.project(&mut txn, &persisted).await?;
+        if let Err(error) = self.project(&mut txn, &persisted).await {
+            txn.rollback().await.map_err(backend)?;
+            return Err(error);
+        }
         txn.commit().await.map_err(backend)?;
         Ok(InviteRedemptionCommit::NewlyCommitted { event: persisted })
     }
@@ -1426,6 +1751,45 @@ impl HubDirectory for Neo4jDirectory {
         insert_auth_audit(&mut txn, &audit).await?;
         txn.commit().await.map_err(backend)?;
         Ok(())
+    }
+
+    async fn revoke_invite_as_with_admin_effect(&self, space_id: &str, invite_id: &str, reason: &str, actor_user_id: Option<&str>, correlation_id: &str, effect: &NewAdminOperationEffectReceiptV1) -> AdminEffectCommitV1<()> {
+        if let Err(outcome) = admin_effect_preflight(validate_bounded_auth_text(reason, "invite revoke reason", AUTH_TEXT_MAX_BYTES)) {
+            return outcome.into();
+        }
+        let revoked_at = now_ms();
+        let audit = match admin_effect_preflight(auth_audit(revoked_at, "invite-revoked", Some(invite_id), None, actor_user_id, None, "success", Some(reason), correlation_id, "server")) {
+            Ok(value) => value,
+            Err(outcome) => return outcome.into(),
+        };
+        let mut txn = match self.graph.start_txn().await {
+            Ok(txn) => txn,
+            Err(_) => return AdminEffectCommitV1::Indeterminate,
+        };
+        let changed_result: DirectoryResult<i64> = async {
+            let mut result = txn.execute(query("MATCH (i:SpaceInvite {spaceId: $space_id, id: $id}) WHERE i.revokedAt IS NULL AND i.acceptedAt IS NULL SET i.revokedAt = $revoked_at, i.revokedReason = $reason RETURN count(i) AS c")
+                .param("id", invite_id)
+                .param("space_id", space_id)
+                .param("revoked_at", revoked_at)
+                .param("reason", reason))
+            .await
+            .map_err(backend)?;
+            let changed = result.next(txn.handle()).await.map_err(backend)?.and_then(|row| row.get("c").ok()).unwrap_or(0);
+            drop(result);
+            Ok(changed)
+        }
+        .await;
+        let changed = admin_effect_try!(txn, changed_result);
+        if changed != 1 {
+            return admin_effect_rollback(txn).await;
+        }
+        admin_effect_try!(txn, insert_auth_audit(&mut txn, &audit).await);
+        let receipt = admin_effect_try!(txn, admin_operation_effect_receipt_v1(effect, &[]));
+        admin_effect_try!(txn, insert_admin_operation_effect_receipt(&mut txn, &receipt).await);
+        match txn.commit().await {
+            Ok(()) => AdminEffectCommitV1::Applied(()),
+            Err(_) => AdminEffectCommitV1::Indeterminate,
+        }
     }
 
     async fn list_invites(&self, space_id: &str) -> DirectoryResult<Vec<InviteRecord>> {
@@ -2054,6 +2418,95 @@ impl HubDirectory for Neo4jDirectory {
         Ok(DirectoryAppendOutcomeV1::Appended(persisted))
     }
 
+    async fn append_decided_events_with_admin_effect(&self, events: &[NewDirectoryEvent], effect: &NewAdminOperationEffectReceiptV1) -> AdminEffectCommitV1<Vec<DirectoryEvent>> {
+        if events.is_empty() || events.iter().any(|event| matches!(&event.body, DirectoryEventBody::ArtifactCheckpointPublished { .. } | DirectoryEventBody::InviteRedeemed { .. })) {
+            return AdminEffectCommitV1::RejectedBeforeCommit;
+        }
+        let mut txn = match self.graph.start_txn().await {
+            Ok(txn) => txn,
+            Err(_) => return AdminEffectCommitV1::Indeterminate,
+        };
+        let persisted_result: DirectoryResult<Vec<DirectoryEvent>> = async {
+            let mut persisted = Vec::with_capacity(events.len());
+            for event in events {
+            let id = time_ordered_id();
+            let recorded_at_ms = now_ms();
+            let payload_value = serde_json::Value::from(&event.body.to_value());
+            let kind = payload_value.get("kind").and_then(|value| value.as_str()).unwrap_or_default().to_string();
+            let mut counter = txn.execute(query("MERGE (c:DirectoryCounter {id: 'singleton'}) ON CREATE SET c.seq = 0 SET c.seq = c.seq + 1 RETURN c.seq AS seq")).await.map_err(backend)?;
+            let seq: i64 = counter.next(txn.handle()).await.map_err(backend)?.ok_or_else(|| DirectoryError::Backend("directory counter query returned no row".into()))?.get("seq").map_err(backend)?;
+            drop(counter);
+            let seq = u64::try_from(seq).map_err(backend)?;
+            if self.projection_rejection(&mut txn, &event.body).await?.is_some() {
+                return Err(DirectoryError::Conflict("administrator event projection was rejected".into()));
+            }
+            if seq > DIRECTORY_WIRE_INTEGER_MAX {
+                return Err(DirectoryError::Conflict("directory event sequence exceeds the public integer boundary".into()));
+            }
+            let full = DirectoryEvent { seq, id: id.clone(), hlc: event.hlc, actor: event.actor.clone(), space_id: event.space_id.clone(), user_id: event.user_id.clone(), body: event.body.clone(), recorded_at_ms };
+            validate_directory_event_page_event(&full).map_err(|_| DirectoryError::Conflict("directory event violates the bounded event-page contract".into()))?;
+            txn.run(
+                query("CREATE (e:DirectoryEvent {seq: $seq, id: $id, hlcPhysical: $hlc_physical, hlcLogical: $hlc_logical, actorKind: $actor_kind, actorId: $actor_id, spaceId: $space_id, userId: $user_id, kind: $kind, payload: $payload, recordedAt: $recorded_at})")
+                    .param("seq", i64::try_from(seq).map_err(backend)?)
+                    .param("id", id)
+                    .param("hlc_physical", event.hlc.physical_ms)
+                    .param("hlc_logical", i64::from(event.hlc.logical))
+                    .param("actor_kind", actor_kind_to_str(event.actor.kind))
+                    .param("actor_id", event.actor.id.clone())
+                    .param("space_id", event.space_id.clone())
+                    .param("user_id", event.user_id.clone())
+                    .param("kind", kind)
+                    .param("payload", payload_value.to_string())
+                    .param("recorded_at", recorded_at_ms),
+            )
+            .await
+            .map_err(backend)?;
+            self.project(&mut txn, &full).await?;
+            match &full.body {
+                DirectoryEventBody::ArtifactRetentionAdvanced { retention } => {
+                    let generation = cas_generation(&mut txn).await?;
+                    txn.run(
+                        query("CREATE (:ArtifactCasLedgerEvent {generation: $generation, operation: 'retention', spaceId: $space_id, documentId: $document_id, checkpointId: $checkpoint_id, eventSeq: $event_seq})")
+                            .param("generation", generation)
+                            .param("space_id", retention.scope.space_id.clone())
+                            .param("document_id", retention.scope.document_id.clone())
+                            .param("checkpoint_id", hex_lower(&retention.retained_checkpoint_id.0))
+                            .param("event_seq", i64::try_from(seq).map_err(backend)?),
+                    )
+                    .await
+                    .map_err(backend)?;
+                    cas_project_release(&mut txn, "retention", &retention.scope.space_id, Some(&retention.scope), Some(retention.retained_checkpoint_id)).await?;
+                }
+                DirectoryEventBody::SpaceDeleted { space_id } => {
+                    let generation = cas_generation(&mut txn).await?;
+                    txn.run(
+                        query("CREATE (:ArtifactCasLedgerEvent {generation: $generation, operation: 'space-delete', spaceId: $space_id, eventSeq: $event_seq})")
+                            .param("generation", generation)
+                            .param("space_id", space_id.clone())
+                            .param("event_seq", i64::try_from(seq).map_err(backend)?),
+                    )
+                    .await
+                    .map_err(backend)?;
+                    cas_project_release(&mut txn, "space-delete", space_id, None, None).await?;
+                }
+                _ => {}
+            }
+                persisted.push(full);
+            }
+            insert_admin_operation_effect_receipt(&mut txn, &admin_operation_effect_receipt_v1(effect, &persisted)?).await?;
+            Ok(persisted)
+        }
+        .await;
+        let persisted = match persisted_result {
+            Ok(persisted) => persisted,
+            Err(_) => return admin_effect_rollback(txn).await,
+        };
+        match txn.commit().await {
+            Ok(()) => AdminEffectCommitV1::Applied(persisted),
+            Err(_) => AdminEffectCommitV1::Indeterminate,
+        }
+    }
+
     async fn events_since(&self, since_seq: u64, limit: usize) -> DirectoryResult<Vec<DirectoryEvent>> {
         let (since_seq, limit) = bounded_event_read(since_seq, limit)?;
         let mut result = self.graph.execute(query("MATCH (e:DirectoryEvent) WHERE e.seq > $since_seq RETURN e AS e ORDER BY e.seq LIMIT $limit").param("since_seq", since_seq).param("limit", limit)).await.map_err(backend)?;
@@ -2078,6 +2531,9 @@ impl HubDirectory for Neo4jDirectory {
 
     async fn rebuild_projections_controlled(&self, control: &dyn ProjectionRebuildControl) -> DirectoryResult<u64> {
         let mut txn = self.graph.start_txn().await.map_err(backend)?;
+        let mut writer = txn.execute(query("MERGE (c:DirectoryCounter {id: 'singleton'}) ON CREATE SET c.seq = 0 SET c.claimNonce = coalesce(c.claimNonce, 0) + 1 RETURN c.seq AS seq")).await.map_err(backend)?;
+        writer.next(txn.handle()).await.map_err(backend)?.ok_or_else(|| DirectoryError::Backend("directory rebuild writer lock returned no row".into()))?;
+        drop(writer);
         let mut count_result = txn.execute(query("MATCH (e:DirectoryEvent) RETURN count(e) AS count")).await.map_err(backend)?;
         let count: i64 = count_result.next(txn.handle()).await.map_err(backend)?.ok_or_else(|| DirectoryError::Backend("directory event count returned no row".into()))?.get("count").map_err(backend)?;
         drop(count_result);
@@ -2105,7 +2561,10 @@ impl HubDirectory for Neo4jDirectory {
             }
             for event in &events {
                 cursor = i64::try_from(event.seq).map_err(backend)?;
-                self.project(&mut txn, event).await?;
+                if let Err(error) = self.project(&mut txn, event).await {
+                    txn.rollback().await.map_err(backend)?;
+                    return Err(DirectoryError::Backend(format!("Neo4j projection rebuild event {}: {error}", event.seq)));
+                }
                 if matches!(&event.body, DirectoryEventBody::ArtifactCheckpointPublished { .. }) {
                     let mut private = txn.execute(query("MATCH (a:ArtifactAuthorityEvent {eventSeq: $event_seq}) RETURN a.payload AS payload").param("event_seq", cursor)).await.map_err(backend)?;
                     let row = private.next(txn.handle()).await.map_err(backend)?.ok_or_else(|| DirectoryError::Backend(format!("missing private authority journal for checkpoint event {}", event.seq)))?;

@@ -1,0 +1,109 @@
+{
+  "schema": "semio.hub.gis-map-approval-undo-fixture/v1",
+  "target": {
+    "schema": "semio.hub.gis-map-approval-undo-target/v1",
+    "targetId": "11111111111111111111111111111111",
+    "scope": { "spaceId": "space-a", "documentId": "map-a" },
+    "originalJobId": "22222222222222222222222222222222",
+    "originalMutationId": "33333333333333333333333333333333",
+    "originalCommandHash": "4444444444444444444444444444444444444444444444444444444444444444",
+    "proposalHash": "5555555555555555555555555555555555555555555555555555555555555555",
+    "committedWitnessDigest": "6666666666666666666666666666666666666666666666666666666666666666",
+    "beforeFrontier": {
+      "documentId": "map-a",
+      "headEditOrdinal": 3,
+      "headEditId": "edit-before",
+      "lastCommitSeq": 3,
+      "chainSha256": "7777777777777777777777777777777777777777777777777777777777777777"
+    },
+    "afterFrontier": {
+      "documentId": "map-a",
+      "headEditOrdinal": 4,
+      "headEditId": "33333333333333333333333333333333",
+      "lastCommitSeq": 4,
+      "chainSha256": "8888888888888888888888888888888888888888888888888888888888888888"
+    },
+    "ownerUserId": "author-a",
+    "ownerSessionId": "session-a",
+    "authorizationGeneration": 7
+  },
+  "request": {
+    "schema": "semio.hub.gis-map-approval-undo/v1",
+    "version": 1,
+    "targetId": "11111111111111111111111111111111",
+    "idempotencyKey": "99999999999999999999999999999999",
+    "expectedCurrent": {
+      "documentId": "map-a",
+      "headEditOrdinal": 4,
+      "headEditId": "33333333333333333333333333333333",
+      "lastCommitSeq": 4,
+      "chainSha256": "8888888888888888888888888888888888888888888888888888888888888888"
+    }
+  },
+  "traces": [
+    {
+      "name": "owner-exact-tail-applies",
+      "actor": "owner",
+      "current": "after",
+      "idempotency": "fresh",
+      "expected": { "outcome": "applied", "walEvents": 1, "publications": 1, "replayed": false }
+    },
+    {
+      "name": "duplicate-idempotency-replays",
+      "actor": "owner",
+      "current": "undone",
+      "idempotency": "same",
+      "expected": { "outcome": "applied", "walEvents": 0, "publications": 0, "replayed": true }
+    },
+    {
+      "name": "foreign-author-denied",
+      "actor": "foreign",
+      "current": "after",
+      "idempotency": "fresh",
+      "expected": { "outcome": "denied", "walEvents": 0, "publications": 0, "replayed": false }
+    },
+    {
+      "name": "replacement-session-denied",
+      "actor": "replacement-session",
+      "current": "after",
+      "idempotency": "fresh",
+      "expected": { "outcome": "denied", "walEvents": 0, "publications": 0, "replayed": false }
+    },
+    {
+      "name": "peer-edit-makes-target-stale",
+      "actor": "owner",
+      "current": "peer-edit",
+      "idempotency": "fresh",
+      "expected": { "outcome": "conflict", "walEvents": 0, "publications": 0, "replayed": false }
+    },
+    {
+      "name": "different-idempotency-after-undo-conflicts",
+      "actor": "owner",
+      "current": "undone",
+      "idempotency": "fresh",
+      "expected": { "outcome": "conflict", "walEvents": 0, "publications": 0, "replayed": false }
+    }
+  ],
+  "historyMembers": [
+    { "tag": "localGuestTransaction", "instance": 4, "transactionId": "txn-a", "dispatch": "plugin-channel" },
+    {
+      "tag": "hubGisMapApproval",
+      "hubOrigin": "https://hub.example.test",
+      "spaceId": "space-a",
+      "documentId": "map-a",
+      "targetId": "11111111111111111111111111111111",
+      "idempotencyKey": "99999999999999999999999999999999",
+      "dispatch": "history-undo-port"
+    }
+  ],
+  "sourceHostiles": [
+    "client-inverse-bytes",
+    "missing-witness-digest",
+    "foreign-owner-accepted",
+    "stale-frontier-accepted",
+    "duplicate-second-event",
+    "publication-before-wal-witness",
+    "local-channel-coercion",
+    "missing-peer-rebootstrap"
+  ]
+}

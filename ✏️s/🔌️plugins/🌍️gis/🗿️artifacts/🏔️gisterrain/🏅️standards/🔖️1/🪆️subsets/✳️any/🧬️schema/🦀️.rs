@@ -5,6 +5,7 @@ use crate::artifacts::gisterrain::{gis_terrain_mesh_child_handle, gis_terrain_me
 use framework_surface::terrain::tiles;
 use schema::ArtifactSchema;
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
+#[cfg(test)]
 use serde::{Deserialize, Serialize};
 use semio_framework_value_derive::{FromValue, ToValue};
 

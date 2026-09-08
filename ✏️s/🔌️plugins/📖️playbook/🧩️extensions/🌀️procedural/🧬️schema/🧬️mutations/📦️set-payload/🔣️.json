@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/📖️playbook/🧩️extensions/🌀️procedural/🧬️schema/🧬️mutations/📦️set-payload",
+  "semanticKind": "set-payload",
+  "displayName": "Set Payload",
+  "emoji": "📦️",
+  "aggregateVariant": "SetPayload",
+  "payloadSchema": "🧬️.schema.json",
+  "textOpcode": "set-payload",
+  "binaryTag": 0,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "apply-only",
+  "outcomeClasses": [
+    "applied"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "text",
+    "binary",
+    "json-schema"
+  ]
+}

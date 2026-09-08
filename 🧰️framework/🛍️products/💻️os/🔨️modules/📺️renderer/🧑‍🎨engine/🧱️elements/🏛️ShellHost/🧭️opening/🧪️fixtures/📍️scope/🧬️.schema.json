@@ -1,0 +1,171 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio.renderer.document-opening-scope.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "cases", "firstOpen"],
+  "properties": {
+    "schema": {
+      "const": "semio.renderer.document-opening-scope.v1"
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 6,
+      "maxItems": 6,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "ref", "context"],
+        "oneOf": [
+          {
+            "required": ["expected"],
+            "properties": {
+              "expected": {}
+            }
+          },
+          {
+            "required": ["error"],
+            "properties": {
+              "error": {}
+            }
+          }
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "ref": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["documentId", "schema"],
+            "properties": {
+              "documentId": {
+                "type": "string",
+                "minLength": 1
+              },
+              "schema": {
+                "type": "string",
+                "minLength": 1
+              },
+              "spaceId": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          },
+          "context": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["currentSpaceId", "identity"],
+            "properties": {
+              "currentSpaceId": {
+                "type": ["string", "null"]
+              },
+              "identity": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": ["hubBaseUrl"],
+                    "properties": {
+                      "hubBaseUrl": {
+                        "type": "string",
+                        "minLength": 1
+                      }
+                    }
+                  }
+                ]
+              },
+              "dataDir": {
+                "type": "string",
+                "minLength": 1
+              },
+              "surface": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          },
+          "expected": {
+            "type": "array",
+            "maxItems": 2,
+            "items": {
+              "oneOf": [
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["kind", "baseUrl", "spaceId", "requestedSurfaceId"],
+                  "properties": {
+                    "kind": {
+                      "const": "hub"
+                    },
+                    "baseUrl": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "spaceId": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "requestedSurfaceId": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  }
+                },
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["kind", "path"],
+                  "properties": {
+                    "kind": {
+                      "const": "folder"
+                    },
+                    "path": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          "error": {
+            "enum": ["opening.identity-required", "opening.surface-required"]
+          }
+        }
+      }
+    },
+    "firstOpen": {
+      "const": {
+        "requestedSurfaceOnly": true,
+        "requestStages": ["open-plan", "manifest", "component", "descriptor", "socket-grants"],
+        "socketCount": 1,
+        "localSocketFailures": 0,
+        "unselectedSocketFailures": 1,
+        "hostile": [
+          {
+            "id": "foreign-plan-scope",
+            "requestStages": ["open-plan", "manifest"]
+          },
+          {
+            "id": "corrupt-component",
+            "requestStages": ["open-plan", "manifest", "component", "descriptor"]
+          },
+          {
+            "id": "cancel-at-manifest",
+            "requestStages": ["open-plan", "manifest"]
+          },
+          {
+            "id": "retire-at-component",
+            "requestStages": ["open-plan", "manifest", "component"]
+          }
+        ]
+      }
+    }
+  }
+}

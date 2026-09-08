@@ -1,0 +1,39 @@
+{
+  "cases": [
+    {
+      "field": "label",
+      "value": "Übersicht",
+      "expected": "Übersicht"
+    },
+    {
+      "field": "width",
+      "value": "640",
+      "expected": 640
+    },
+    {
+      "field": "height",
+      "value": "480",
+      "expected": 480
+    },
+    {
+      "field": "width",
+      "value": "-1",
+      "expected": null
+    },
+    {
+      "field": "height",
+      "value": "4294967296",
+      "expected": null
+    },
+    {
+      "field": "width",
+      "value": "12.5",
+      "expected": null
+    },
+    {
+      "field": "height",
+      "value": "invalid",
+      "expected": null
+    }
+  ]
+}

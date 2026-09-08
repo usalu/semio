@@ -27,16 +27,16 @@ const DIFF: &str = include_str!("🔺️diff/🔣️.json");
 const OUTCOME: &str = include_str!("🎯️outcome/🔣️.json");
 
 fn mutation() -> FormMutation {
-    serde_json::from_str(MUTATION).expect("mutation decodes")
+    dsl::os_pack::json::from_json_str(MUTATION).expect("mutation decodes")
 }
 fn expected_after() -> FormsSnapshot {
-    serde_json::from_str(AFTER).expect("after snapshot decodes")
+    dsl::os_pack::json::from_json_str(AFTER).expect("after snapshot decodes")
 }
 
 /// 🌱 The committed `⬅️before`, with its composed children resolved to a scene holding exactly one
 /// step whose id and title are the committed payload's own `id`/`new_title`.
 fn before() -> FormsSnapshot {
-    let mut snapshot: FormsSnapshot = serde_json::from_str(BEFORE).expect("before snapshot decodes");
+    let mut snapshot: FormsSnapshot = dsl::os_pack::json::from_json_str(BEFORE).expect("before snapshot decodes");
     let FormMutation::RenameStep(payload) = mutation() else {
         panic!("no-ops-when-the-step-already-carries-that-title's committed mutation must be a rename-step");
     };
@@ -51,7 +51,7 @@ async fn applies_to_committed_after() {
     let base = before();
     let snapshot = apply_form_edit_mutation(&base, &mutation()).expect("an identity diff still applies cleanly");
     assert_eq!(snapshot, expected_after(), "rename-step/no-ops-when-the-step-already-carries-that-title: applied state differs from committed after-snapshot");
-    assert_eq!((&mut snapshot.structure, &snapshot.results.child_id), (&base.structure.child_id, &base.results.child_id), "a refused rename must not re-mint the structure/results handles");
+    assert_eq!((&snapshot.structure.child_id, &snapshot.results.child_id), (&base.structure.child_id, &base.results.child_id), "a refused rename must not re-mint the structure/results handles");
     assert_eq!(forms_steps(&snapshot).first().map(|step| step.title.clone()), Some("Basics".to_string()), "the step keeps the title it already carried");
 }
 
@@ -80,12 +80,12 @@ async fn inverse_restores_before() {
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {
-        let decoded: FormsSnapshot = serde_json::from_str(text).expect("snapshot decodes");
-        let reencoded = serde_json::to_value(&decoded).expect("snapshot encodes");
+        let decoded: FormsSnapshot = dsl::os_pack::json::from_json_str(text).expect("snapshot decodes");
+        let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::os_pack::json::to_json_string(&decoded)).expect("snapshot encodes");
         let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
         assert_eq!(reencoded, original, "rename-step/no-ops-when-the-step-already-carries-that-title: committed {label} JSON is not canonical");
     }
-    let reencoded = serde_json::to_value(mutation()).expect("mutation encodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::os_pack::json::to_json_string(&mutation())).expect("mutation encodes");
     let original: serde_json::Value = serde_json::from_str(MUTATION).expect("mutation reparses");
     assert_eq!(reencoded, original, "rename-step/no-ops-when-the-step-already-carries-that-title: committed mutation JSON is not canonical");
 }
@@ -114,7 +114,7 @@ async fn declared_outcome_holds() {
 #[semio_framework_async_macros::async_test]
 async fn produces_committed_diff() {
     let outcome = <FormMutation as protocol::Mutation<FormsSnapshot>>::diff(&mutation(), &before());
-    let produced = serde_json::to_value(outcome.diff()).expect("produced diff encodes");
+    let produced = serde_json::from_str::<serde_json::Value>(&dsl::os_pack::json::to_json_string(outcome.diff())).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
     assert_eq!(produced, committed, "rename-step/no-ops-when-the-step-already-carries-that-title: produced diff differs from the committed 🔺️diff/🔣️.json");
     assert_eq!(outcome.diff(), &FormsDiff::default(), "a refused rename-step must carry the identity diff");
@@ -125,8 +125,8 @@ async fn produces_committed_diff() {
 /// eleven fields are written out as `null`.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical() {
-    let decoded: FormsDiff = serde_json::from_str(DIFF).expect("committed diff decodes");
-    let reencoded = serde_json::to_value(&decoded).expect("diff re-encodes");
+    let decoded: FormsDiff = dsl::os_pack::json::from_json_str(DIFF).expect("committed diff decodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::os_pack::json::to_json_string(&decoded)).expect("diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
     assert_eq!(reencoded, original, "rename-step/no-ops-when-the-step-already-carries-that-title: committed diff JSON is not canonical");
 }
@@ -134,7 +134,7 @@ async fn committed_diff_is_canonical() {
 /// 🩹 Applying the committed identity diff directly to `before` yields the committed `after`.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
-    let decoded: FormsDiff = serde_json::from_str(DIFF).expect("committed diff decodes");
+    let decoded: FormsDiff = dsl::os_pack::json::from_json_str(DIFF).expect("committed diff decodes");
     let produced = <FormsDiff as protocol::MutationDiff<FormsSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "rename-step/no-ops-when-the-step-already-carries-that-title: committed diff did not carry before to after");
 }

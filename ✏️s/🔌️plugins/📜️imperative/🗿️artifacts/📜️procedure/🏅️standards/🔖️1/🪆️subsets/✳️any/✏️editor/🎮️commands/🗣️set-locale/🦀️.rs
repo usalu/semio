@@ -15,5 +15,5 @@ pub struct SetLocale {
 }
 
 pub fn handle(payload: &SetLocale, _doc: &ArtifactView<'_, ProcedureSnapshot>, _cfg: &ConfigView<'_, ImperativeConfig>) -> Result<Emit<ProcedureMutation, ImperativeConfigMutation>, Fault> {
-    Ok(Emit::config(vec![ImperativeConfigMutation::SetLocale { value: payload.value.clone() }]))
+    Ok(Emit::config(vec![ImperativeConfigMutation::SetLocale(crate::editor::procedure::config::SetLocale { value: payload.value.clone() })]))
 }

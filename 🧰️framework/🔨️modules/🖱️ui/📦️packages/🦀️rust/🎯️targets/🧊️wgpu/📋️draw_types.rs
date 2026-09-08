@@ -2,7 +2,7 @@
 //! 🧩 Target-neutral draw-list and value types split out of `draw.rs` — CPU-side accumulation
 //! buffers, geometry math, and fault/id types with zero reference to the `wgpu` GPU crate, so
 //! they compile under the light `wgpu` feature (no `wgpu-engine`) for `wasm32-wasip2` program
-//! components. See `.🦑️repo/🎫️tickets/26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS/🔍️research/📓️wgpu-tier-split.md`.
+//! components. See `.🧬semio/🦑️repo/🎫️tickets/26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS/🔍️research/📓️wgpu-tier-split.md`.
 //! `draw.rs` (the real `wgpu`-crate-touching GPU pipeline, still `wgpu-engine`-gated) re-exports
 //! this module wholesale so every pre-existing `crate::wgpu::draw::{DrawList, ...}` import path
 //! keeps resolving unchanged.
@@ -677,7 +677,7 @@ impl DrawList {
 
     /// 🧊️ Pushes a glass region rendered with an already-resolved `style` — callers derive `style`
     /// from `Theme::glass(level)` themselves (see
-    /// `.🦑️repo/🎫️tickets/26/07/27/UNIFIED-6-LEVEL-UI-SURFACE-SYSTEM/contract.txt`) rather than this method
+    /// `.🧬semio/🦑️repo/🎫️tickets/26/07/27/UNIFIED-6-LEVEL-UI-SURFACE-SYSTEM/contract.txt`) rather than this method
     /// picking a per-tier lookup.
     pub fn push_glass(&mut self, rect: [f32; 4], radius: f32, style: GlassStyle) -> usize {
         if !self.claim_retained_output(1, size_of::<GlassRegion>()) {

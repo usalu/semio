@@ -16,7 +16,8 @@ use crate::directory::error::{DirectoryError, DirectoryResult};
 use crate::directory::model::*;
 use crate::directory::{
     active_capability, auth_audit, bounded_event_read, checkpoint_projection_rebuild, directory_command_result_kind_from_str, directory_command_result_kind_str, directory_projection_rejection_v1, directory_projection_space_v1,
-    invite_redemption_preflight, kind_to_str, prepare_auth_session, prepare_invite, prepare_share_token, role_from_wire, role_to_wire, same_admin_operation_request, validate_admin_operation_audit, validate_bounded_auth_text,
+    admin_operation_effect_receipt_v1, invite_redemption_preflight, kind_to_str, prepare_auth_session, prepare_invite, prepare_share_token, role_from_wire, role_to_wire, same_admin_operation_request, validate_admin_operation_audit,
+    validate_admin_operation_effect_receipt, validate_bounded_auth_text,
     validate_checkpoint_publication_claim, validate_checkpoint_publication_completion, validate_directory_command_claim, validate_verified_checkpoint_append, verify_invite_redemption_event, verify_invite_redemption_scope_hint, visibility_to_str,
     ArtifactCasSweepCandidatePage, DirectoryAppendOutcomeV1, DirectoryProjectionRejectionV1, HubClock, HubDirectory, InviteCapability, InviteRedemptionPreflight, InviteRedemptionScopeHintV1, InviteRedemptionSpaceStateV1, NewDirectoryEvent,
     ProjectionRebuildControl, SessionCapability, ShareCapability, ACTIVE_SYNC_SESSION_READ_MAX, ADMIN_PAGE_MAX, ARTIFACT_CAS_RESERVATION_MAX_TTL_MS, ARTIFACT_CAS_SWEEP_PAGE_MAX, ARTIFACT_CHECKPOINT_LINEAGE_MAX, AUTH_AUDIT_PAGE_MAX,
@@ -43,7 +44,8 @@ CREATE TABLE IF NOT EXISTS hub_share_grant (
     created_at INTEGER NOT NULL,
     expires_at INTEGER NOT NULL,
     revoked_at INTEGER,
-    revoked_reason TEXT
+    revoked_reason TEXT,
+    FOREIGN KEY (space_id, document_id) REFERENCES hub_document_descriptor(space_id, document_id) ON DELETE CASCADE
 );
 CREATE TABLE IF NOT EXISTS hub_user (
     id TEXT PRIMARY KEY,
@@ -206,6 +208,17 @@ CREATE TABLE IF NOT EXISTS hub_admin_operation_audit (
     reason_code TEXT,
     UNIQUE (request_id, terminal)
 );
+CREATE TABLE IF NOT EXISTS hub_admin_operation_effect_receipt (
+    operation_id TEXT NOT NULL,
+    intent_digest TEXT NOT NULL CHECK (length(intent_digest) = 64),
+    committed_at INTEGER NOT NULL,
+    outcome_code TEXT NOT NULL,
+    event_seq_first INTEGER,
+    event_seq_last INTEGER,
+    PRIMARY KEY (operation_id, intent_digest),
+    UNIQUE (operation_id),
+    CHECK ((event_seq_first IS NULL) = (event_seq_last IS NULL))
+);
 CREATE TABLE IF NOT EXISTS hub_directory_command_receipt (
     actor_user_id TEXT NOT NULL,
     request_id TEXT NOT NULL CHECK (length(request_id) = 32),
@@ -352,6 +365,44 @@ fn backend<E: std::fmt::Display>(err: E) -> DirectoryError {
     DirectoryError::Backend(err.to_string())
 }
 
+enum AdminEffectPreflightFailure {
+    RejectedBeforeCommit,
+    Indeterminate,
+}
+
+impl<T> From<AdminEffectPreflightFailure> for AdminEffectCommitV1<T> {
+    fn from(value: AdminEffectPreflightFailure) -> Self {
+        match value {
+            AdminEffectPreflightFailure::RejectedBeforeCommit => Self::RejectedBeforeCommit,
+            AdminEffectPreflightFailure::Indeterminate => Self::Indeterminate,
+        }
+    }
+}
+
+fn admin_effect_preflight<T>(result: DirectoryResult<T>) -> Result<T, AdminEffectPreflightFailure> {
+    match result {
+        Ok(value) => Ok(value),
+        Err(DirectoryError::Backend(_)) => Err(AdminEffectPreflightFailure::Indeterminate),
+        Err(_) => Err(AdminEffectPreflightFailure::RejectedBeforeCommit),
+    }
+}
+
+fn admin_effect_rollback<T>(tx: Transaction<'_>) -> AdminEffectCommitV1<T> {
+    match tx.rollback() {
+        Ok(()) => AdminEffectCommitV1::RejectedBeforeCommit,
+        Err(_) => AdminEffectCommitV1::Indeterminate,
+    }
+}
+
+macro_rules! admin_effect_try {
+    ($tx:ident, $result:expr) => {
+        match $result {
+            Ok(value) => value,
+            Err(_) => return admin_effect_rollback($tx),
+        }
+    };
+}
+
 fn blob32(row: &rusqlite::Row<'_>, index: usize) -> rusqlite::Result<[u8; 32]> {
     let bytes: Vec<u8> = row.get(index)?;
     bytes.try_into().map_err(|bytes: Vec<u8>| rusqlite::Error::FromSqlConversionFailure(index, rusqlite::types::Type::Blob, format!("expected 32 bytes, got {}", bytes.len()).into()))
@@ -368,6 +419,7 @@ fn insert_auth_audit(conn: &Connection, event: &AuthAuditRecord) -> DirectoryRes
 
 const ADMIN_OPERATION_AUDIT_SELECT: &str =
     "sequence, request_id, intent_digest, operation_id, occurred_at, phase, terminal, intent_kind, target_kind, target_id, principal_user_id, principal_session_id, principal_generation, correlation_id, event_seq_first, event_seq_last, outcome_code, reason_code";
+const ADMIN_OPERATION_EFFECT_RECEIPT_SELECT: &str = "operation_id, intent_digest, committed_at, outcome_code, event_seq_first, event_seq_last";
 
 const DIRECTORY_COMMAND_RECEIPT_SELECT: &str = "actor_user_id, request_id, command_sha256, result_kind, disposition, event_seq_first, event_seq_last, receipt_sha256, claimed_at, completed_at";
 
@@ -436,6 +488,46 @@ fn admin_operation_audit_row(row: &rusqlite::Row<'_>) -> rusqlite::Result<AdminO
             reason_code: row.get(17)?,
         },
     })
+}
+
+fn admin_operation_effect_receipt_row(row: &rusqlite::Row<'_>) -> rusqlite::Result<AdminOperationEffectReceiptV1> {
+    let first: Option<i64> = row.get(4)?;
+    let last: Option<i64> = row.get(5)?;
+    Ok(AdminOperationEffectReceiptV1 {
+        operation_id: row.get(0)?,
+        intent_digest: row.get(1)?,
+        committed_at: row.get(2)?,
+        outcome_code: row.get(3)?,
+        event_seq_first: first.map(u64::try_from).transpose().map_err(|error| rusqlite::Error::FromSqlConversionFailure(4, rusqlite::types::Type::Integer, Box::new(error)))?,
+        event_seq_last: last.map(u64::try_from).transpose().map_err(|error| rusqlite::Error::FromSqlConversionFailure(5, rusqlite::types::Type::Integer, Box::new(error)))?,
+    })
+}
+
+fn insert_admin_operation_effect_receipt(tx: &Connection, receipt: &AdminOperationEffectReceiptV1) -> DirectoryResult<()> {
+    validate_admin_operation_effect_receipt(receipt)?;
+    let changed = tx
+        .execute(
+            "INSERT OR IGNORE INTO hub_admin_operation_effect_receipt (operation_id, intent_digest, committed_at, outcome_code, event_seq_first, event_seq_last) VALUES (?1, ?2, ?3, ?4, ?5, ?6)",
+            rusqlite::params![
+                receipt.operation_id,
+                receipt.intent_digest,
+                receipt.committed_at,
+                receipt.outcome_code,
+                receipt.event_seq_first.map(i64::try_from).transpose().map_err(backend)?,
+                receipt.event_seq_last.map(i64::try_from).transpose().map_err(backend)?,
+            ],
+        )
+        .map_err(backend)?;
+    if changed == 1 {
+        return Ok(());
+    }
+    let sql = format!("SELECT {ADMIN_OPERATION_EFFECT_RECEIPT_SELECT} FROM hub_admin_operation_effect_receipt WHERE operation_id = ?1");
+    let established = tx.query_row(&sql, [&receipt.operation_id], admin_operation_effect_receipt_row).map_err(backend)?;
+    if &established == receipt {
+        Ok(())
+    } else {
+        Err(DirectoryError::Conflict("admin operation effect receipt identity changed".into()))
+    }
 }
 
 fn actor_kind_to_str(kind: DirectoryActorKind) -> &'static str {
@@ -507,7 +599,16 @@ impl SqliteDirectory {
         self.lock()?.execute("UPDATE hub_space_invite SET accepted_event_id = ?1 WHERE id = ?2", rusqlite::params![event_id, invite_id]).map(|_| ()).map_err(backend)
     }
 
-    fn revoke_auth_sessions_matching(&self, predicate: &str, key: &str, subject_digest: Option<[u8; 32]>, reason: &str, actor_user_id: Option<&str>, correlation_id: &str) -> DirectoryResult<Vec<RevokedAuthSession>> {
+    fn revoke_auth_sessions_matching(
+        &self,
+        predicate: &str,
+        key: &str,
+        subject_digest: Option<[u8; 32]>,
+        reason: &str,
+        actor_user_id: Option<&str>,
+        correlation_id: &str,
+        admin_effect: Option<&NewAdminOperationEffectReceiptV1>,
+    ) -> DirectoryResult<Vec<RevokedAuthSession>> {
         validate_bounded_auth_text(reason, "session revoke reason", AUTH_TEXT_MAX_BYTES)?;
         let revoked_at = now_ms();
         let mut conn = self.lock()?;
@@ -529,8 +630,56 @@ impl SqliteDirectory {
             insert_auth_audit(&tx, &audit)?;
             revoked.push(RevokedAuthSession { id, authorization_generation: u64::try_from(next_generation).map_err(backend)?, revoked_at });
         }
+        if let Some(effect) = admin_effect {
+            insert_admin_operation_effect_receipt(&tx, &admin_operation_effect_receipt_v1(effect, &[])?)?;
+        }
         tx.commit().map_err(backend)?;
         Ok(revoked)
+    }
+
+    fn revoke_auth_sessions_matching_with_admin_effect(
+        &self,
+        predicate: &str,
+        key: &str,
+        reason: &str,
+        actor_user_id: Option<&str>,
+        correlation_id: &str,
+        effect: &NewAdminOperationEffectReceiptV1,
+    ) -> AdminEffectCommitV1<Vec<RevokedAuthSession>> {
+        if let Err(outcome) = admin_effect_preflight(validate_bounded_auth_text(reason, "session revoke reason", AUTH_TEXT_MAX_BYTES)) {
+            return outcome.into();
+        }
+        let revoked_at = now_ms();
+        let mut conn = match self.lock() {
+            Ok(conn) => conn,
+            Err(_) => return AdminEffectCommitV1::Indeterminate,
+        };
+        let tx = match conn.transaction() {
+            Ok(tx) => tx,
+            Err(_) => return AdminEffectCommitV1::Indeterminate,
+        };
+        let rows_result: DirectoryResult<Vec<(String, String, i64, String)>> = (|| {
+            let sql = format!("SELECT id, user_id, authorization_generation, identity_provider FROM hub_auth_session WHERE {predicate} AND revoked_at IS NULL ORDER BY id");
+            let mut statement = tx.prepare(&sql).map_err(backend)?;
+            let rows = statement.query_map([key], |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?, row.get(3)?))).map_err(backend)?;
+            rows.collect::<Result<Vec<_>, _>>().map_err(backend)
+        })();
+        let rows = admin_effect_try!(tx, rows_result);
+        let mut revoked = Vec::with_capacity(rows.len());
+        for (id, user_id, generation, provider) in rows {
+            let Some(next_generation) = generation.checked_add(1) else { return admin_effect_rollback(tx) };
+            admin_effect_try!(tx, tx.execute("UPDATE hub_auth_session SET revoked_at = ?2, revoked_reason = ?3, authorization_generation = ?4 WHERE id = ?1 AND revoked_at IS NULL", rusqlite::params![id, revoked_at, reason, next_generation]).map_err(backend));
+            let audit = admin_effect_try!(tx, auth_audit(revoked_at, "session-revoked", Some(&id), Some(&user_id), actor_user_id, Some(&provider), "success", Some(reason), correlation_id, "server"));
+            admin_effect_try!(tx, insert_auth_audit(&tx, &audit));
+            let Ok(authorization_generation) = u64::try_from(next_generation) else { return admin_effect_rollback(tx) };
+            revoked.push(RevokedAuthSession { id, authorization_generation, revoked_at });
+        }
+        let receipt = admin_effect_try!(tx, admin_operation_effect_receipt_v1(effect, &[]));
+        admin_effect_try!(tx, insert_admin_operation_effect_receipt(&tx, &receipt));
+        match tx.commit() {
+            Ok(()) => AdminEffectCommitV1::Applied(revoked),
+            Err(_) => AdminEffectCommitV1::Indeterminate,
+        }
     }
 
     fn persist_event_with_identity(&self, tx: &Transaction<'_>, event: &NewDirectoryEvent, id: String, recorded_at_ms: i64) -> DirectoryResult<DirectoryEvent> {
@@ -822,15 +971,59 @@ impl HubDirectory for SqliteDirectory {
         let issued = prepare_share_token(scope, ttl_secs, now_ms())?;
         let audit = auth_audit(issued.record.created_at, "share-issued", Some(&issued.record.id), None, actor_user_id, None, "success", None, correlation_id, "server")?;
         let mut conn = self.lock()?;
-        let tx = conn.transaction().map_err(backend)?;
-        tx.execute(
-            "INSERT INTO hub_share_grant (id, selector, secret_digest, space_id, document_id, created_at, expires_at, revoked_at, revoked_reason) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, NULL, NULL)",
-            rusqlite::params![issued.record.id, issued.record.selector, issued.record.secret_digest.as_slice(), scope.space_id, scope.document_id, issued.record.created_at, issued.record.expires_at],
-        )
-        .map_err(backend)?;
+        let tx = conn.transaction_with_behavior(rusqlite::TransactionBehavior::Immediate).map_err(backend)?;
+        let changed = tx
+            .execute(
+                "INSERT INTO hub_share_grant (id, selector, secret_digest, space_id, document_id, created_at, expires_at, revoked_at, revoked_reason)
+             SELECT ?1, ?2, ?3, ?4, ?5, ?6, ?7, NULL, NULL
+             FROM hub_space AS s JOIN hub_document_descriptor AS d ON d.space_id = s.id
+             WHERE s.id = ?4 AND d.space_id = ?4 AND d.document_id = ?5",
+                rusqlite::params![issued.record.id, issued.record.selector, issued.record.secret_digest.as_slice(), scope.space_id, scope.document_id, issued.record.created_at, issued.record.expires_at],
+            )
+            .map_err(backend)?;
+        if changed != 1 {
+            return Err(DirectoryError::NotFound(format!("document descriptor {}/{}", scope.space_id, scope.document_id)));
+        }
         insert_auth_audit(&tx, &audit)?;
         tx.commit().map_err(backend)?;
         Ok(issued)
+    }
+
+    async fn issue_share_token_as_with_admin_effect(&self, scope: &DocumentScope, ttl_secs: i64, actor_user_id: Option<&str>, correlation_id: &str, effect: &NewAdminOperationEffectReceiptV1) -> AdminEffectCommitV1<IssuedShareToken> {
+        let issued = match admin_effect_preflight(prepare_share_token(scope, ttl_secs, now_ms())) {
+            Ok(value) => value,
+            Err(outcome) => return outcome.into(),
+        };
+        let audit = match admin_effect_preflight(auth_audit(issued.record.created_at, "share-issued", Some(&issued.record.id), None, actor_user_id, None, "success", None, correlation_id, "server")) {
+            Ok(value) => value,
+            Err(outcome) => return outcome.into(),
+        };
+        let mut conn = match self.lock() {
+            Ok(conn) => conn,
+            Err(_) => return AdminEffectCommitV1::Indeterminate,
+        };
+        let tx = match conn.transaction_with_behavior(rusqlite::TransactionBehavior::Immediate) {
+            Ok(tx) => tx,
+            Err(_) => return AdminEffectCommitV1::Indeterminate,
+        };
+        let changed = admin_effect_try!(tx, tx
+            .execute(
+                "INSERT INTO hub_share_grant (id, selector, secret_digest, space_id, document_id, created_at, expires_at, revoked_at, revoked_reason)
+                 SELECT ?1, ?2, ?3, ?4, ?5, ?6, ?7, NULL, NULL FROM hub_space AS s JOIN hub_document_descriptor AS d ON d.space_id = s.id
+                 WHERE s.id = ?4 AND d.space_id = ?4 AND d.document_id = ?5",
+                rusqlite::params![issued.record.id, issued.record.selector, issued.record.secret_digest.as_slice(), scope.space_id, scope.document_id, issued.record.created_at, issued.record.expires_at],
+            )
+            .map_err(backend));
+        if changed != 1 {
+            return admin_effect_rollback(tx);
+        }
+        admin_effect_try!(tx, insert_auth_audit(&tx, &audit));
+        let receipt = admin_effect_try!(tx, admin_operation_effect_receipt_v1(effect, &[]));
+        admin_effect_try!(tx, insert_admin_operation_effect_receipt(&tx, &receipt));
+        match tx.commit() {
+            Ok(()) => AdminEffectCommitV1::Applied(issued),
+            Err(_) => AdminEffectCommitV1::Indeterminate,
+        }
     }
 
     async fn revoke_share_token_as(&self, scope: &DocumentScope, share_id: &str, reason: &str, actor_user_id: Option<&str>, correlation_id: &str) -> DirectoryResult<()> {
@@ -848,6 +1041,39 @@ impl HubDirectory for SqliteDirectory {
             insert_auth_audit(&tx, &audit)?;
             tx.commit().map_err(backend)?;
             Ok(())
+        }
+    }
+
+    async fn revoke_share_token_as_with_admin_effect(&self, scope: &DocumentScope, share_id: &str, reason: &str, actor_user_id: Option<&str>, correlation_id: &str, effect: &NewAdminOperationEffectReceiptV1) -> AdminEffectCommitV1<()> {
+        if let Err(outcome) = admin_effect_preflight(validate_bounded_auth_text(reason, "share revoke reason", AUTH_TEXT_MAX_BYTES)) {
+            return outcome.into();
+        }
+        let revoked_at = now_ms();
+        let audit = match admin_effect_preflight(auth_audit(revoked_at, "share-revoked", Some(share_id), None, actor_user_id, None, "success", Some(reason), correlation_id, "server")) {
+            Ok(value) => value,
+            Err(outcome) => return outcome.into(),
+        };
+        let mut conn = match self.lock() {
+            Ok(conn) => conn,
+            Err(_) => return AdminEffectCommitV1::Indeterminate,
+        };
+        let tx = match conn.transaction() {
+            Ok(tx) => tx,
+            Err(_) => return AdminEffectCommitV1::Indeterminate,
+        };
+        if admin_effect_try!(tx, tx
+            .execute("UPDATE hub_share_grant SET revoked_at = ?4, revoked_reason = ?5 WHERE id = ?1 AND space_id = ?2 AND document_id = ?3 AND revoked_at IS NULL", rusqlite::params![share_id, scope.space_id, scope.document_id, revoked_at, reason])
+            .map_err(backend))
+            != 1
+        {
+            return admin_effect_rollback(tx);
+        }
+        admin_effect_try!(tx, insert_auth_audit(&tx, &audit));
+        let receipt = admin_effect_try!(tx, admin_operation_effect_receipt_v1(effect, &[]));
+        admin_effect_try!(tx, insert_admin_operation_effect_receipt(&tx, &receipt));
+        match tx.commit() {
+            Ok(()) => AdminEffectCommitV1::Applied(()),
+            Err(_) => AdminEffectCommitV1::Indeterminate,
         }
     }
 
@@ -1232,11 +1458,15 @@ impl HubDirectory for SqliteDirectory {
     }
 
     async fn revoke_auth_sessions_for_user(&self, user_id: &str, reason: &str, actor_user_id: Option<&str>, correlation_id: &str) -> DirectoryResult<Vec<RevokedAuthSession>> {
-        self.revoke_auth_sessions_matching("user_id = ?1", user_id, None, reason, actor_user_id, correlation_id)
+        self.revoke_auth_sessions_matching("user_id = ?1", user_id, None, reason, actor_user_id, correlation_id, None)
+    }
+
+    async fn revoke_auth_sessions_for_user_with_admin_effect(&self, user_id: &str, reason: &str, actor_user_id: Option<&str>, correlation_id: &str, effect: &NewAdminOperationEffectReceiptV1) -> AdminEffectCommitV1<Vec<RevokedAuthSession>> {
+        self.revoke_auth_sessions_matching_with_admin_effect("user_id = ?1", user_id, reason, actor_user_id, correlation_id, effect)
     }
 
     async fn revoke_auth_sessions_for_identity(&self, provider: &str, subject_digest: [u8; 32], reason: &str, actor_user_id: Option<&str>, correlation_id: &str) -> DirectoryResult<Vec<RevokedAuthSession>> {
-        self.revoke_auth_sessions_matching("identity_provider = ?1 AND identity_subject_digest = ?2", provider, Some(subject_digest), reason, actor_user_id, correlation_id)
+        self.revoke_auth_sessions_matching("identity_provider = ?1 AND identity_subject_digest = ?2", provider, Some(subject_digest), reason, actor_user_id, correlation_id, None)
     }
 
     async fn list_auth_audit(&self, limit: usize, offset: usize) -> DirectoryResult<Vec<AuthAuditRecord>> {
@@ -1433,6 +1663,15 @@ impl HubDirectory for SqliteDirectory {
         rows.collect::<Result<Vec<_>, _>>().map_err(backend)
     }
 
+    async fn admin_operation_effect_receipt(&self, operation_id: &str, intent_digest: &str) -> DirectoryResult<Option<AdminOperationEffectReceiptV1>> {
+        validate_bounded_auth_text(operation_id, "admin effect operation id", AUTH_TEXT_MAX_BYTES)?;
+        if intent_digest.len() != 64 || !intent_digest.bytes().all(|byte| byte.is_ascii_hexdigit() && !byte.is_ascii_uppercase()) {
+            return Err(DirectoryError::Conflict("admin effect intent digest must be 64 lowercase hex digits".into()));
+        }
+        let sql = format!("SELECT {ADMIN_OPERATION_EFFECT_RECEIPT_SELECT} FROM hub_admin_operation_effect_receipt WHERE operation_id = ?1 AND intent_digest = ?2");
+        self.lock()?.query_row(&sql, rusqlite::params![operation_id, intent_digest], admin_operation_effect_receipt_row).optional().map_err(backend)
+    }
+
     async fn list_admin_operation_audit(&self, after_sequence: u64, limit: usize) -> DirectoryResult<Vec<AdminOperationAuditRecord>> {
         if limit == 0 || limit > ADMIN_PAGE_MAX {
             return Err(DirectoryError::Conflict(format!("admin audit limit must be 1..={ADMIN_PAGE_MAX}")));
@@ -1459,6 +1698,37 @@ impl HubDirectory for SqliteDirectory {
         insert_auth_audit(&tx, &audit)?;
         tx.commit().map_err(backend)?;
         Ok(issued)
+    }
+
+    async fn issue_invite_as_with_admin_effect(&self, space_id: &str, role: SpaceRole, ttl_secs: i64, actor_user_id: Option<&str>, correlation_id: &str, effect: &NewAdminOperationEffectReceiptV1) -> AdminEffectCommitV1<IssuedInvite> {
+        let issued = match admin_effect_preflight(prepare_invite(space_id, role, ttl_secs, now_ms())) {
+            Ok(value) => value,
+            Err(outcome) => return outcome.into(),
+        };
+        let audit = match admin_effect_preflight(auth_audit(issued.record.created_at, "invite-issued", Some(&issued.record.id), None, actor_user_id, None, "success", None, correlation_id, "server")) {
+            Ok(value) => value,
+            Err(outcome) => return outcome.into(),
+        };
+        let mut conn = match self.lock() {
+            Ok(conn) => conn,
+            Err(_) => return AdminEffectCommitV1::Indeterminate,
+        };
+        let tx = match conn.transaction() {
+            Ok(tx) => tx,
+            Err(_) => return AdminEffectCommitV1::Indeterminate,
+        };
+        admin_effect_try!(tx, tx.execute(
+            "INSERT INTO hub_space_invite (id, selector, secret_digest, space_id, role, created_at, expires_at, revoked_at, revoked_reason, accepted_at, accepted_event_id) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, NULL, NULL, NULL, NULL)",
+            rusqlite::params![issued.record.id, issued.record.selector, issued.record.secret_digest.as_slice(), space_id, role.as_str(), issued.record.created_at, issued.record.expires_at],
+        )
+        .map_err(backend));
+        admin_effect_try!(tx, insert_auth_audit(&tx, &audit));
+        let receipt = admin_effect_try!(tx, admin_operation_effect_receipt_v1(effect, &[]));
+        admin_effect_try!(tx, insert_admin_operation_effect_receipt(&tx, &receipt));
+        match tx.commit() {
+            Ok(()) => AdminEffectCommitV1::Applied(issued),
+            Err(_) => AdminEffectCommitV1::Indeterminate,
+        }
     }
 
     async fn invite_redemption_scope_hint(&self, capability: &InviteCapability, actor: &DirectoryActor, user_id: &str) -> DirectoryResult<InviteRedemptionScopeHintV1> {
@@ -1520,7 +1790,10 @@ impl HubDirectory for SqliteDirectory {
             body: DirectoryEventBody::InviteRedeemed { space_id: invite.space_id, user_id: user_id.to_string(), invite_id: invite.id, role: role_to_wire(invite.role) },
         };
         let persisted = self.persist_event_with_identity(&tx, &event, event_id, accepted_at_ms)?;
-        self.project(&tx, &persisted)?;
+        if let Err(error) = self.project(&tx, &persisted) {
+            tx.rollback().map_err(backend)?;
+            return Err(error);
+        }
         tx.commit().map_err(backend)?;
         Ok(InviteRedemptionCommit::NewlyCommitted { event: persisted })
     }
@@ -1540,6 +1813,38 @@ impl HubDirectory for SqliteDirectory {
         insert_auth_audit(&tx, &audit)?;
         tx.commit().map_err(backend)?;
         Ok(())
+    }
+
+    async fn revoke_invite_as_with_admin_effect(&self, space_id: &str, invite_id: &str, reason: &str, actor_user_id: Option<&str>, correlation_id: &str, effect: &NewAdminOperationEffectReceiptV1) -> AdminEffectCommitV1<()> {
+        if let Err(outcome) = admin_effect_preflight(validate_bounded_auth_text(reason, "invite revoke reason", AUTH_TEXT_MAX_BYTES)) {
+            return outcome.into();
+        }
+        let revoked_at = now_ms();
+        let audit = match admin_effect_preflight(auth_audit(revoked_at, "invite-revoked", Some(invite_id), None, actor_user_id, None, "success", Some(reason), correlation_id, "server")) {
+            Ok(value) => value,
+            Err(outcome) => return outcome.into(),
+        };
+        let mut conn = match self.lock() {
+            Ok(conn) => conn,
+            Err(_) => return AdminEffectCommitV1::Indeterminate,
+        };
+        let tx = match conn.transaction() {
+            Ok(tx) => tx,
+            Err(_) => return AdminEffectCommitV1::Indeterminate,
+        };
+        let changed = admin_effect_try!(tx, tx
+            .execute("UPDATE hub_space_invite SET revoked_at = ?2, revoked_reason = ?3 WHERE space_id = ?4 AND id = ?1 AND revoked_at IS NULL AND accepted_at IS NULL", rusqlite::params![invite_id, revoked_at, reason, space_id])
+            .map_err(backend));
+        if changed == 0 {
+            return admin_effect_rollback(tx);
+        }
+        admin_effect_try!(tx, insert_auth_audit(&tx, &audit));
+        let receipt = admin_effect_try!(tx, admin_operation_effect_receipt_v1(effect, &[]));
+        admin_effect_try!(tx, insert_admin_operation_effect_receipt(&tx, &receipt));
+        match tx.commit() {
+            Ok(()) => AdminEffectCommitV1::Applied(()),
+            Err(_) => AdminEffectCommitV1::Indeterminate,
+        }
     }
 
     async fn list_invites(&self, space_id: &str) -> DirectoryResult<Vec<InviteRecord>> {
@@ -2011,6 +2316,40 @@ impl HubDirectory for SqliteDirectory {
         Ok(DirectoryAppendOutcomeV1::Appended(persisted))
     }
 
+    async fn append_decided_events_with_admin_effect(&self, events: &[NewDirectoryEvent], effect: &NewAdminOperationEffectReceiptV1) -> AdminEffectCommitV1<Vec<DirectoryEvent>> {
+        if events.is_empty() || events.iter().any(|event| matches!(&event.body, DirectoryEventBody::ArtifactCheckpointPublished { .. } | DirectoryEventBody::InviteRedeemed { .. })) {
+            return AdminEffectCommitV1::RejectedBeforeCommit;
+        }
+        let mut conn = match self.lock() {
+            Ok(conn) => conn,
+            Err(_) => return AdminEffectCommitV1::Indeterminate,
+        };
+        let tx = match conn.transaction_with_behavior(rusqlite::TransactionBehavior::Immediate) {
+            Ok(tx) => tx,
+            Err(_) => return AdminEffectCommitV1::Indeterminate,
+        };
+        let mut persisted = Vec::with_capacity(events.len());
+        for event in events {
+            if admin_effect_try!(tx, self.projection_rejection(&tx, &event.body)).is_some() {
+                return admin_effect_rollback(tx);
+            }
+            let full = admin_effect_try!(tx, self.persist_event(&tx, event));
+            admin_effect_try!(tx, self.project(&tx, &full));
+            admin_effect_try!(tx, self.append_cas_release(&tx, &full));
+            persisted.push(full);
+        }
+        let receipt = admin_effect_try!(tx, admin_operation_effect_receipt_v1(effect, &persisted));
+        admin_effect_try!(tx, insert_admin_operation_effect_receipt(&tx, &receipt));
+        if tx.commit().is_err() {
+            return AdminEffectCommitV1::Indeterminate;
+        }
+        #[cfg(test)]
+        if self.append_commit_ack_failure.swap(false, std::sync::atomic::Ordering::SeqCst) {
+            return AdminEffectCommitV1::Indeterminate;
+        }
+        AdminEffectCommitV1::Applied(persisted)
+    }
+
     async fn events_since(&self, since_seq: u64, limit: usize) -> DirectoryResult<Vec<DirectoryEvent>> {
         let (since_seq, limit) = bounded_event_read(since_seq, limit)?;
         let conn = self.lock()?;
@@ -2030,7 +2369,7 @@ impl HubDirectory for SqliteDirectory {
 
     async fn rebuild_projections_controlled(&self, control: &dyn ProjectionRebuildControl) -> DirectoryResult<u64> {
         let mut conn = self.lock()?;
-        let tx = conn.transaction().map_err(backend)?;
+        let tx = conn.transaction_with_behavior(rusqlite::TransactionBehavior::Immediate).map_err(backend)?;
         let event_count: i64 = tx.query_row("SELECT COUNT(*) FROM hub_directory_event", [], |row| row.get(0)).map_err(backend)?;
         let total = u64::try_from(event_count).map_err(backend)?;
         checkpoint_projection_rebuild(control, 0, total)?;
@@ -2306,6 +2645,33 @@ mod tests {
         DirectoryActor { kind: DirectoryActorKind::User, id: id.to_string() }
     }
 
+    fn share_descriptor(scope: &DocumentScope) -> DocumentDescriptor {
+        DocumentDescriptor {
+            space_id: scope.space_id.clone(),
+            document_id: scope.document_id.clone(),
+            artifact_kind: "s.gis.gismap".into(),
+            artifact_schema: "s.gis.gismap@1/*".into(),
+            owner: DocumentOwner { plugin_id: "gis".into(), package_id: "semio:gis".into(), version: "1.0.0".into(), package_hash: "11".repeat(32) },
+            pack_schema_hash: "22".repeat(32),
+            bootstrap_version: 1,
+            bootstrap_frontier: DocumentFrontier { head_seq: 1, commit_seq: 1, epoch: 1 },
+            bootstrap_snapshot_hash: "33".repeat(32),
+        }
+    }
+
+    async fn announce_share_document(directory: &SqliteDirectory, clock: &mut HubClock, scope: &DocumentScope, actor_user_id: &str) {
+        directory
+            .append_events(&[NewDirectoryEvent {
+                hlc: clock.tick(),
+                actor: actor(actor_user_id),
+                space_id: Some(scope.space_id.clone()),
+                user_id: Some(actor_user_id.to_string()),
+                body: DirectoryEventBody::DocumentAnnounced { descriptor: share_descriptor(scope) },
+            }])
+            .await
+            .expect("announce share document");
+    }
+
     /// 🌱️ `create_space`/`upsert_membership` were removed (writes now go through
     /// `append_events` — see the module root's `//#region 🔖️Decider`); this recreates just enough
     /// of a `create-space` decision by hand so backend tests do not need a full `DirectoryService`.
@@ -2409,10 +2775,12 @@ mod tests {
     async fn share_token_lifecycle_and_scope() {
         let directory = SqliteDirectory::connect(":memory:").await.expect("connect");
         directory.seed().await.expect("seed");
+        let mut clock = HubClock::new();
         let vectors: ShareTokenVectors = serde_json::from_str(include_str!("../🧪️tests/🔑️share-token-vectors.json")).expect("share-token vectors");
         let grant_scope = DocumentScope::new(vectors.scope.grant.space_id, vectors.scope.grant.document_id);
         let allowed_scope = DocumentScope::new(vectors.scope.allowed.space_id, vectors.scope.allowed.document_id);
         let denied_scope = DocumentScope::new(vectors.scope.denied.space_id, vectors.scope.denied.document_id);
+        announce_share_document(&directory, &mut clock, &grant_scope, "seed").await;
 
         let grant = directory.issue_share_token(&grant_scope, 60, "share-lifecycle").await.expect("mint token");
         assert!(grant.capability.expose_once().starts_with("share.v1."));
@@ -2423,11 +2791,72 @@ mod tests {
         assert!(!directory.authenticate_share(&allowed_scope, &grant.capability).await.unwrap());
         assert!(matches!(directory.revoke_share_token(&grant_scope, &grant.record.id, "test-revoke", "share-lifecycle").await, Err(DirectoryError::NotFound(_))));
 
-        let expiring_scope = DocumentScope::new("space-a", "expiring");
+        let expiring_scope = DocumentScope::new("default", "expiring");
+        announce_share_document(&directory, &mut clock, &expiring_scope, "seed").await;
         let expiring = directory.issue_share_token(&expiring_scope, 60, "share-expiry").await.expect("mint expiring token");
         directory.lock().unwrap().execute("UPDATE hub_share_grant SET expires_at = ?2 WHERE id = ?1", rusqlite::params![expiring.record.id, now_ms() - 1]).unwrap();
         assert!(!directory.authenticate_share(&expiring_scope, &expiring.capability).await.unwrap());
         assert!(matches!(directory.issue_share_token(&expiring_scope, 0, "share-invalid").await, Err(DirectoryError::Conflict(_))));
+    }
+
+    #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+    async fn share_issuance_atomically_requires_the_persisted_scope_and_preserves_archived_spectator_read() {
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧪️tests/🔐️share-issuance-atomicity/🔣️.json")).expect("share issuance fixture");
+        assert_eq!(fixture["cases"].as_array().expect("share cases").len(), 7);
+        assert_eq!(fixture["sourceHostiles"].as_array().expect("share hostiles").len(), 7);
+        let directory = SqliteDirectory::connect(":memory:").await.expect("connect");
+        directory.seed().await.expect("seed");
+        let mut clock = HubClock::new();
+        let live = DocumentScope::new("default", "share-atomic-live");
+        announce_share_document(&directory, &mut clock, &live, "seed").await;
+        let issued = directory.issue_share_token_as(&live, 60, Some("seed"), "share-atomic-live").await.expect("live share");
+        assert!(directory.authenticate_share(&live, &issued.capability).await.expect("live auth"));
+
+        let archived_space = seed_space(&directory, &mut clock, "seed", DirectorySpaceKind::Archive).await;
+        let archived = DocumentScope::new(&archived_space, "share-atomic-archive");
+        announce_share_document(&directory, &mut clock, &archived, "seed").await;
+        assert_eq!(directory.get_role(&archived_space, "seed").await.expect("archived role"), Some(SpaceRole::Spectator));
+        let archived_share = directory.issue_share_token_as(&archived, 60, Some("seed"), "share-atomic-archive").await.expect("archived spectator read share");
+        assert!(directory.authenticate_share(&archived, &archived_share.capability).await.expect("archived share auth"));
+
+        let before: (i64, i64) = directory
+            .lock()
+            .expect("precondition inspection")
+            .query_row("SELECT (SELECT count(*) FROM hub_share_grant), (SELECT count(*) FROM hub_auth_audit WHERE event_kind = 'share-issued')", [], |row| Ok((row.get(0)?, row.get(1)?)))
+            .expect("precondition counts");
+        for scope in [DocumentScope::new("missing-space", "missing-document"), DocumentScope::new("default", "missing-document"), DocumentScope::new(&archived_space, "foreign-document")] {
+            assert!(matches!(directory.issue_share_token_as(&scope, 60, Some("seed"), "share-atomic-denied").await, Err(DirectoryError::NotFound(_))));
+        }
+        let after: (i64, i64) = directory
+            .lock()
+            .expect("postcondition inspection")
+            .query_row("SELECT (SELECT count(*) FROM hub_share_grant), (SELECT count(*) FROM hub_auth_audit WHERE event_kind = 'share-issued')", [], |row| Ok((row.get(0)?, row.get(1)?)))
+            .expect("postcondition counts");
+        assert_eq!(after, before);
+
+        let root = std::env::var_os("SEMIO_TEST_ARTIFACT_DIR").map_or_else(std::env::temp_dir, std::path::PathBuf::from);
+        std::fs::create_dir_all(&root).expect("share race artifact root");
+        let path = root.join(format!("share-issuance-race-{}.sqlite", time_ordered_id()));
+        let issuer = SqliteDirectory::connect(path.to_str().expect("share race path")).await.expect("race issuer");
+        issuer.seed().await.expect("race seed");
+        let race = DocumentScope::new("default", "share-race-document");
+        announce_share_document(&issuer, &mut clock, &race, "seed").await;
+        let deletion = Connection::open(&path).expect("independent deletion writer");
+        deletion.busy_timeout(std::time::Duration::from_secs(2)).expect("deletion timeout");
+        deletion.execute_batch("PRAGMA foreign_keys = ON; BEGIN IMMEDIATE; DELETE FROM hub_space WHERE id = 'default';").expect("hold independent deletion");
+        let (started_tx, started_rx) = std::sync::mpsc::sync_channel(0);
+        let issue = std::thread::spawn(move || {
+            started_tx.send(()).expect("signal issue start");
+            tokio::runtime::Builder::new_current_thread().enable_all().build().expect("issue runtime").block_on(issuer.issue_share_token_as(&race, 60, Some("seed"), "share-race"))
+        });
+        started_rx.recv().expect("issue started");
+        std::thread::sleep(std::time::Duration::from_millis(25));
+        deletion.execute_batch("COMMIT;").expect("commit independent deletion");
+        assert!(matches!(issue.join().expect("join issue"), Err(DirectoryError::NotFound(_))));
+        let counts: (i64, i64) = deletion.query_row("SELECT (SELECT count(*) FROM hub_share_grant), (SELECT count(*) FROM hub_auth_audit WHERE correlation_id = 'share-race')", [], |row| Ok((row.get(0)?, row.get(1)?))).expect("race counts");
+        assert_eq!(counts, (0, 0));
+        drop(deletion);
+        std::fs::remove_file(path).expect("remove share race database");
     }
 
     #[tokio::test]
@@ -2459,6 +2888,8 @@ mod tests {
         assert_eq!(directory.socket_session_binding(&issued.record.id, "seed", issued.record.authorization_generation, Some("missing"), at_ms).await.expect("lost membership status"), SocketSessionBindingStatus::MembershipLost,);
 
         let scope = DocumentScope::new("default", "socket-share");
+        let mut clock = HubClock::new();
+        announce_share_document(&directory, &mut clock, &scope, "seed").await;
         let share = directory.issue_share_token(&scope, 60, "socket-share").await.expect("issue share");
         assert_eq!(directory.socket_share_binding(&share.record.id, share.capability.selector(), &scope, share.record.created_at).await.expect("share status"), SocketShareBindingStatus::Active { expires_at_ms: share.record.expires_at },);
         assert_eq!(directory.socket_share_binding("wrong", share.capability.selector(), &scope, share.record.created_at).await.expect("share id status"), SocketShareBindingStatus::Unavailable);
@@ -2489,7 +2920,10 @@ mod tests {
             peer_class: "loopback-test".into(),
         };
         let issued = directory.issue_auth_session(&issue).await.expect("issue session");
-        let share = directory.issue_share_token(&DocumentScope::new("default", "auth-storage-test"), 60, "share-storage").await.expect("issue share");
+        let share_scope = DocumentScope::new("default", "auth-storage-test");
+        let mut clock = HubClock::new();
+        announce_share_document(&directory, &mut clock, &share_scope, "seed").await;
+        let share = directory.issue_share_token(&share_scope, 60, "share-storage").await.expect("issue share");
         let invite = directory.issue_invite("default", SpaceRole::Spectator, 60, "invite-storage").await.expect("issue invite");
         let raw = issued.capability.expose_once();
         let secret_hex = raw.rsplit('.').next().expect("raw secret");

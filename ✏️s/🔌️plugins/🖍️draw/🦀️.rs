@@ -6,8 +6,8 @@ use semio_framework_plugin::plugin_app_close_prelude::*;
 use semio_framework_plugin::{ExecutionMode, Plugin, PluginApp};
 
 //#region 🗃️Apps
-/// 🗃️ Closed runtime app fleet for the draw editor and viewer.
 semio_framework_dispatch_macros::dyn_enum_close! {
+    /// 🗃️ Closed runtime app fleet for the draw editor and viewer.
     pub enum DrawApps: PluginApp {
         Editor(VcsArtifactApp<EditorApp<crate::editor::drawing::DrawingPlayApp>>),
         Viewer(VcsArtifactApp<ViewerApp<crate::viewer::drawing::DrawingViewer>>),

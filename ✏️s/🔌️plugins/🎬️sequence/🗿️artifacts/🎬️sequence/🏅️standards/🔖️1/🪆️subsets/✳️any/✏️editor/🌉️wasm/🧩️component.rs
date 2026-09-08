@@ -25,7 +25,7 @@ impl SequenceDomain for SequenceDomainAdapter {
         use protocol::*;
         match operation {
             SEQUENCE_OPERATION_LOAD_FIXTURE => {
-                let fixture: SequenceFixture = serde_json::from_slice(payload).map_err(domain_error)?;
+                let fixture: SequenceFixture = dsl::os_pack::from_json_str(std::str::from_utf8(payload).map_err(domain_error)?).map_err(domain_error)?;
                 self.host.replace_snapshot(fixture).map(|_| Vec::new()).map_err(domain_error)
             }
             SEQUENCE_OPERATION_FIXTURE => {
@@ -59,7 +59,7 @@ impl SequenceDomain for SequenceDomainAdapter {
             SEQUENCE_OPERATION_COMPILED_WIRE => Ok(self.host.compiled_wire_literal().into_bytes()),
             SEQUENCE_OPERATION_RUN => {
                 let result = self.host.run();
-                serde_json::to_vec(&result).map_err(domain_error)
+                Ok(dsl::os_pack::to_json_string(&result).into_bytes())
             }
             SEQUENCE_OPERATION_SET_SIZE => self.set_size(payload),
             SEQUENCE_OPERATION_RENDER_FRAME => self.render_frame(),
@@ -69,7 +69,7 @@ impl SequenceDomain for SequenceDomainAdapter {
             SEQUENCE_OPERATION_POINTER_UP => self.pointer_up(payload),
             SEQUENCE_OPERATION_WHEEL => self.wheel(payload),
             SEQUENCE_OPERATION_REORGANIZE => {
-                let options: DagLayoutOptions = serde_json::from_slice(payload).map_err(domain_error)?;
+                let options: DagLayoutOptions = dsl::os_pack::from_json_str(std::str::from_utf8(payload).map_err(domain_error)?).map_err(domain_error)?;
                 self.host.dag.reorganize(&options).map_err(domain_error)?;
                 self.host.sync_from_dag();
                 self.host.layout_expanded_slots();

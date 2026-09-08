@@ -4,7 +4,7 @@
 //! (26/08/12/DISSOLVE-KERNELS-AND-MODULES-INTO-EVENT-SOURCED-ARTIFACTS, wave M3a's `roots`
 //! vertical slice).
 
-use crate::artifacts::equation::standards::v1::subsets::any::schema::snapshot::{EquationNodeKind, EquationNodeLabel};
+use crate::artifacts::equation::standards::v1::subsets::any::schema::snapshot::EquationNodeLabel;
 use crate::artifacts::equation::{EquationMutation, EquationSnapshot};
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 

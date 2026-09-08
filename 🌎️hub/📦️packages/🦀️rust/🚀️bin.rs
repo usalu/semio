@@ -23,23 +23,23 @@ use axum::routing::{get, post};
 use axum::{Json, Router};
 use db::db_storage::PayloadStorage as _;
 use directory::os_directory::{
-    self, descriptor_digest_v1, directory_command_sha256, same_lease_fields_v1, validate_directory_event_page_event, AdminConnectionSnapshotV1, AdminIntentOutcomeV1, AdminIntentReceiptV1, AdminIntentResultV1, AdminIntentStateV1, AdminIntentV1,
-    AdminOperationAuditPhaseV1, AdminOperationAuditV1, AdminOperationProgressV1, AdminOperationStatusV1, AdminPageV1, AdminRecordedConnectionV1, ArtifactFrontier, ArtifactHash, CheckpointPublicationBlobV1, CheckpointPublicationCommandV1,
-    CheckpointPublicationCurrentV1, CheckpointPublicationFrontierV1, CheckpointPublicationReceiptV1, ConnectionView, DirectoryActor, DirectoryActorKind, DirectoryCommand, DirectoryCommandReceiptV1, DirectoryCommandRequestV1,
-    DirectoryConnectionPhase, DirectoryEvent, DirectoryEventPageErrorV1, DirectoryEventPageV1, DirectoryPresenceActor, DirectoryReadModel, DirectorySpaceAdministrationCapabilitiesV1, DirectorySpaceAdministrationDocumentWindowV1,
-    DirectorySpaceAdministrationInviteRowV1, DirectorySpaceAdministrationInviteWindowV1, DirectorySpaceAdministrationMemberRowV1, DirectorySpaceAdministrationMemberWindowV1, DirectorySpaceAdministrationPageV1,
-    DirectorySpaceAdministrationPublicDocumentWindowV1, DirectorySpaceAdministrationSectionV1, DirectorySpaceListEntryV1, DirectorySpaceRole, DirectorySpaceVisibility, DirectoryStreamMessage, DocumentDescriptor, DocumentExecutionTargetComponentV1,
-    DocumentExecutionTargetDescriptorV1, DocumentExecutionTargetLeaseFieldsV1, DocumentOpenArtifactV1, DocumentOpenCatalogV1, DocumentOpenCheckpointV1, DocumentOpenGrantV1, DocumentOpenIntentV1, DocumentOpenPackageV1, DocumentOpenParentDialectV1,
-    DocumentOpenPlanErrorCodeV1, DocumentOpenPlanErrorV1, DocumentOpenPlanV1, DocumentOpenRevalidationV1, DocumentOpenSurfaceV1, DocumentPlanSocketGrantIntentV1, DocumentView, MemberSpaceViewV1, MemberView, PublicDocumentCatalogEntryV1,
-    PublicSpaceViewV1, PublishedArtifactCheckpoint, SpaceView, CHECKPOINT_PUBLICATION_COMMAND_MAX_BYTES, CHECKPOINT_PUBLICATION_DEADLINE_MS, CHECKPOINT_PUBLICATION_PAIR_MAX_BYTES, DIRECTORY_COMMAND_REQUEST_MAX_BYTES, DIRECTORY_EVENT_PAGE_MAX_BYTES,
+    self, AdminConnectionSnapshotV1, AdminIntentOutcomeV1, AdminIntentReceiptV1, AdminIntentResultV1, AdminIntentStateV1, AdminIntentV1, AdminOperationAuditPhaseV1, AdminOperationAuditV1, AdminOperationProgressV1, AdminOperationStatusV1,
+    AdminPageV1, AdminRecordedConnectionV1, ArtifactFrontier, ArtifactHash, CHECKPOINT_PUBLICATION_COMMAND_MAX_BYTES, CHECKPOINT_PUBLICATION_DEADLINE_MS, CHECKPOINT_PUBLICATION_PAIR_MAX_BYTES, CheckpointPublicationBlobV1,
+    CheckpointPublicationCommandV1, CheckpointPublicationCurrentV1, CheckpointPublicationFrontierV1, CheckpointPublicationReceiptV1, ConnectionView, DIRECTORY_COMMAND_REQUEST_MAX_BYTES, DIRECTORY_EVENT_PAGE_MAX_BYTES,
     DIRECTORY_EVENT_PAGE_MAX_RAW_ROWS, DIRECTORY_SPACE_ADMINISTRATION_CURSOR_MAX_BYTES, DIRECTORY_SPACE_ADMINISTRATION_PAGE_MAX_BYTES, DIRECTORY_SPACE_ADMINISTRATION_PAGE_SCHEMA, DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES,
-    DOCUMENT_EXECUTION_TARGET_DESCRIPTOR_MAX_BYTES, DOCUMENT_OPEN_MAX_SAFE_INTEGER, DOCUMENT_OPEN_PLAN_MAX_TTL_MS,
+    DOCUMENT_EXECUTION_TARGET_DESCRIPTOR_MAX_BYTES, DOCUMENT_OPEN_MAX_SAFE_INTEGER, DOCUMENT_OPEN_PLAN_MAX_TTL_MS, DirectoryActor, DirectoryActorKind, DirectoryCommand, DirectoryCommandReceiptV1, DirectoryCommandRequestV1, DirectoryConnectionPhase,
+    DirectoryEvent, DirectoryEventPageErrorV1, DirectoryEventPageV1, DirectoryPresenceActor, DirectoryReadModel, DirectorySpaceAdministrationCapabilitiesV1, DirectorySpaceAdministrationDocumentWindowV1, DirectorySpaceAdministrationInviteRowV1,
+    DirectorySpaceAdministrationInviteWindowV1, DirectorySpaceAdministrationMemberRowV1, DirectorySpaceAdministrationMemberWindowV1, DirectorySpaceAdministrationPageV1, DirectorySpaceAdministrationPublicDocumentWindowV1,
+    DirectorySpaceAdministrationSectionV1, DirectorySpaceListEntryV1, DirectorySpaceRole, DirectorySpaceVisibility, DirectoryStreamMessage, DocumentDescriptor, DocumentExecutionTargetComponentV1, DocumentExecutionTargetDescriptorV1,
+    DocumentExecutionTargetLeaseFieldsV1, DocumentOpenArtifactV1, DocumentOpenCatalogV1, DocumentOpenCheckpointV1, DocumentOpenGrantV1, DocumentOpenIntentV1, DocumentOpenPackageV1, DocumentOpenParentDialectV1, DocumentOpenPlanErrorCodeV1,
+    DocumentOpenPlanErrorV1, DocumentOpenPlanV1, DocumentOpenRevalidationV1, DocumentOpenSurfaceV1, DocumentPlanSocketGrantIntentV1, DocumentView, MemberSpaceViewV1, MemberView, PublicDocumentCatalogEntryV1, PublicSpaceViewV1,
+    PublishedArtifactCheckpoint, SpaceView, descriptor_digest_v1, directory_command_sha256, same_lease_fields_v1, validate_directory_event_page_event,
 };
 use directory::os_spr::channel::{PRESENCE_ROSTER_MAXIMUM_BYTES, PRESENCE_ROSTER_MAXIMUM_ENTRY_BYTES, PRESENCE_ROSTER_MAXIMUM_ITEMS};
 use directory::{DslValue, FromValue, ToValue};
 use futures::stream::SplitSink;
 use futures::{SinkExt, StreamExt};
-use protocol::{decode_client_frame, encode_server_frame, AckStage, ActorId, ApplyOutcome, ArtifactId as ProtocolArtifactId, ClientFrame, Lane, MutationEnvelope, RuntimeFrontierSummary, ServerFrame};
+use protocol::{AckStage, ActorId, ApplyOutcome, ArtifactId as ProtocolArtifactId, ClientFrame, Lane, MutationEnvelope, RuntimeFrontierSummary, ServerFrame, decode_client_frame, encode_server_frame};
 use semio_framework_async::ShardedMap;
 use semio_framework_hash::Sha256;
 #[cfg(feature = "neo4j")]
@@ -48,9 +48,9 @@ use semio_hub::artifact_authority::chunk_cas::Neo4jArtifactChunkCasStorage;
 use semio_hub::artifact_authority::chunk_cas::PostgresArtifactChunkCasStorage;
 #[cfg(feature = "sqlite")]
 use semio_hub::artifact_authority::chunk_cas::SqliteArtifactChunkCasStorage;
-#[cfg(test)]
-use semio_hub::artifact_authority::chunk_cas::{artifact_cas_manifest_locator_v1, prepare_artifact_cas_manifest_v1, prepare_artifact_cas_ownership_v1, MemoryArtifactChunkCasStorage};
 use semio_hub::artifact_authority::chunk_cas::{ArtifactChunkBlobStore, ArtifactChunkCasStorage, ArtifactChunkCasStores, FsArtifactChunkCasStorage};
+#[cfg(test)]
+use semio_hub::artifact_authority::chunk_cas::{MemoryArtifactChunkCasStorage, artifact_cas_manifest_locator_v1, prepare_artifact_cas_manifest_v1, prepare_artifact_cas_ownership_v1};
 #[cfg(feature = "native-artifact-execution")]
 use semio_hub::artifact_authority::native_openable_provider::NativeCodecProviderSetV1;
 use semio_hub::artifact_authority::trusted_catalog::{NativeCodecProviderSourceV1, TrustedCatalogLoader, VerifiedDocumentOpenSelectionV1, VerifiedExecutionTargetAssets, VerifiedTrustedCatalog};
@@ -64,18 +64,18 @@ use semio_hub::directory::error::DirectoryError;
 #[cfg(test)]
 use semio_hub::directory::model::AuthSessionIssue;
 use semio_hub::directory::model::{
-    AdminOperationAuditRecord, AuthSessionKind, CheckpointPublicationClaimV1, CheckpointPublicationCompletionV1, CheckpointPublicationDispositionV1, DirectoryCommandClaimV1, DirectoryCommandDispositionV1, DirectoryCommandReceiptCompletion,
-    DirectoryCommandReceiptRecord, DirectoryCommandResultKindV1, DocumentScope, NewAdminOperationAuditRecord, NewCheckpointPublicationClaimV1, NewDirectoryCommandReceipt, SocketSessionBindingStatus, SocketShareBindingStatus, SpaceRole,
-    SyncSessionRecord,
+    AdminEffectCommitV1, AdminOperationAuditRecord, AuthSessionKind, CheckpointPublicationClaimV1, CheckpointPublicationCompletionV1, CheckpointPublicationDispositionV1, DirectoryCommandClaimV1, DirectoryCommandDispositionV1, DirectoryCommandReceiptCompletion,
+    DirectoryCommandReceiptRecord, DirectoryCommandResultKindV1, DocumentScope, NewAdminOperationAuditRecord, NewAdminOperationEffectReceiptV1, NewCheckpointPublicationClaimV1, NewDirectoryCommandReceipt,
+    SocketSessionBindingStatus, SocketShareBindingStatus, SpaceRole, SyncSessionRecord,
 };
 #[cfg(feature = "sqlite")]
 use semio_hub::directory::sqlite::SqliteDirectory;
 use semio_hub::directory::{
-    directory_command_result_kind, published_artifact_checkpoint, replay_directory_command_receipt, ArtifactCasSweepContinuation, ArtifactCasSweepRequest, ArtifactCasSweepResult, CommandResult, DirectoryCommandExecutionV1, DirectoryService,
-    HubDirectories, HubDirectory, HubVerifiedCheckpointPublisher, ProjectionRebuildControl, ProjectionRebuildProgress, ACTIVE_SYNC_SESSION_READ_MAX, ADMIN_INTENT_REQUEST_MAX_BYTES, ADMIN_PAGE_MAX, ADMIN_RESPONSE_MAX_BYTES, CAPABILITY_MAX_TTL_SECS,
-    DIRECTORY_EVENT_READ_MAX, DIRECTORY_PROJECTION_REBUILD_MAX_EVENTS, SPACE_ADMINISTRATION_PAGE_FETCH_MAX, SPACE_ADMINISTRATION_PAGE_MAX,
+    ACTIVE_SYNC_SESSION_READ_MAX, ADMIN_INTENT_REQUEST_MAX_BYTES, ADMIN_PAGE_MAX, ADMIN_RESPONSE_MAX_BYTES, ArtifactCasSweepContinuation, ArtifactCasSweepRequest, ArtifactCasSweepResult, CAPABILITY_MAX_TTL_SECS, CommandResult,
+    DIRECTORY_EVENT_READ_MAX, DIRECTORY_PROJECTION_REBUILD_MAX_EVENTS, DirectoryCommandExecutionV1, DirectoryService, HubDirectories, HubDirectory, HubVerifiedCheckpointPublisher, ProjectionRebuildControl, ProjectionRebuildProgress,
+    SPACE_ADMINISTRATION_PAGE_FETCH_MAX, SPACE_ADMINISTRATION_PAGE_MAX, directory_command_result_kind, published_artifact_checkpoint, replay_directory_command_receipt,
 };
-use semio_hub::directory::{identity_subject_digest, HubCapability, IdentityAssertionVerifier, IdentityVerificationControl, InviteCapability, LocalBootstrapTransport, SessionCapability, SocketGrantCapability, AUTH_TEXT_MAX_BYTES};
+use semio_hub::directory::{AUTH_TEXT_MAX_BYTES, HubCapability, IdentityAssertionVerifier, IdentityVerificationControl, InviteCapability, LocalBootstrapTransport, SessionCapability, SocketGrantCapability, identity_subject_digest};
 #[cfg(all(test, feature = "sqlite", feature = "test-support"))]
 use semio_hub::inference::runtime::UnavailableGisMapApprovalCommitterV1;
 #[cfg(all(feature = "sqlite", feature = "native-artifact-execution"))]
@@ -86,14 +86,14 @@ use semio_hub::inference::runtime::{
 #[cfg(all(feature = "sqlite", feature = "native-artifact-execution"))]
 use semio_hub::inference::sqlite::InferenceJobLedgerV1;
 #[cfg(feature = "native-artifact-execution")]
-use semio_hub::inference::{verified_gis_map_binding, VerifiedGisMapArtifactBindingV1};
+use semio_hub::inference::{VerifiedGisMapArtifactBindingV1, verified_gis_map_binding};
 #[cfg(test)]
 use semio_hub::lag_rebootstrap::decode_canonical_checkpoint_pair;
 use semio_hub::lag_rebootstrap::{
-    append_canonical_pair_data, append_canonical_pair_header, append_canonical_pair_terminal, canonical_pair_etag, CanonicalPairTerminal, RebootstrapContext, RebootstrapError, RebootstrapProgress, RebootstrapProgressStage,
-    RebootstrapTransferControl, VerifiedRebootstrapSource, CANONICAL_CHECKPOINT_PAIR_MEDIA_TYPE, REBOOTSTRAP_DEADLINE_MS,
+    CANONICAL_CHECKPOINT_PAIR_MEDIA_TYPE, CanonicalPairTerminal, REBOOTSTRAP_DEADLINE_MS, RebootstrapContext, RebootstrapError, RebootstrapProgress, RebootstrapProgressStage, RebootstrapTransferControl, VerifiedRebootstrapSource,
+    append_canonical_pair_data, append_canonical_pair_header, append_canonical_pair_terminal, canonical_pair_etag,
 };
-use semio_hub::local_bootstrap::{serve_local_bootstrap, InheritedLocalBootstrapTransport, LOCAL_BOOTSTRAP_EXCHANGE_DEADLINE_MS};
+use semio_hub::local_bootstrap::{InheritedLocalBootstrapTransport, LOCAL_BOOTSTRAP_EXCHANGE_DEADLINE_MS, serve_local_bootstrap};
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet};
 use std::net::SocketAddr;
@@ -572,6 +572,10 @@ struct TestLiveGate {
     socket_directory_release: tokio::sync::Semaphore,
     socket_admin_revoke_admitted: tokio::sync::Semaphore,
     socket_admin_revoke_release: tokio::sync::Semaphore,
+    socket_global_send_pause: Mutex<Option<(String, u8)>>,
+    socket_global_send_admitted: tokio::sync::Semaphore,
+    socket_session_revoke_attempted: tokio::sync::Semaphore,
+    socket_global_send_release: tokio::sync::Semaphore,
     socket_scoped_send_mode: std::sync::atomic::AtomicU8,
     socket_scoped_send_admitted: tokio::sync::Semaphore,
     socket_scoped_send_release: tokio::sync::Semaphore,
@@ -582,6 +586,9 @@ struct TestLiveGate {
     directory_command_attempted: tokio::sync::Semaphore,
     directory_command_admitted: tokio::sync::Semaphore,
     directory_command_release: tokio::sync::Semaphore,
+    admin_effect_pause_enabled: std::sync::atomic::AtomicBool,
+    admin_effect_admitted: tokio::sync::Semaphore,
+    admin_effect_release: tokio::sync::Semaphore,
     directory_event_page_fence_enabled: std::sync::atomic::AtomicBool,
     directory_event_page_read_admitted: tokio::sync::Semaphore,
     directory_event_page_read_release: tokio::sync::Semaphore,
@@ -614,6 +621,10 @@ impl Default for TestLiveGate {
             socket_directory_release: tokio::sync::Semaphore::new(0),
             socket_admin_revoke_admitted: tokio::sync::Semaphore::new(0),
             socket_admin_revoke_release: tokio::sync::Semaphore::new(0),
+            socket_global_send_pause: Mutex::new(None),
+            socket_global_send_admitted: tokio::sync::Semaphore::new(0),
+            socket_session_revoke_attempted: tokio::sync::Semaphore::new(0),
+            socket_global_send_release: tokio::sync::Semaphore::new(0),
             socket_scoped_send_mode: std::sync::atomic::AtomicU8::new(0),
             socket_scoped_send_admitted: tokio::sync::Semaphore::new(0),
             socket_scoped_send_release: tokio::sync::Semaphore::new(0),
@@ -624,6 +635,9 @@ impl Default for TestLiveGate {
             directory_command_attempted: tokio::sync::Semaphore::new(0),
             directory_command_admitted: tokio::sync::Semaphore::new(0),
             directory_command_release: tokio::sync::Semaphore::new(0),
+            admin_effect_pause_enabled: std::sync::atomic::AtomicBool::new(false),
+            admin_effect_admitted: tokio::sync::Semaphore::new(0),
+            admin_effect_release: tokio::sync::Semaphore::new(0),
             directory_event_page_fence_enabled: std::sync::atomic::AtomicBool::new(false),
             directory_event_page_read_admitted: tokio::sync::Semaphore::new(0),
             directory_event_page_read_release: tokio::sync::Semaphore::new(0),
@@ -696,6 +710,12 @@ const SOCKET_PROTOCOL_V1: &str = "semio.socket.v1";
 const DOCUMENT_OPEN_PLAN_REQUEST_MAX_BYTES: usize = 8 * 1024;
 const DOCUMENT_OPEN_PLAN_DEADLINE_MS: u64 = 10_000;
 const DOCUMENT_OPEN_PLAN_EXCHANGE_REQUEST_MAX_BYTES: usize = 8 * 1024;
+const ADMIN_OPERATION_DEADLINE: std::time::Duration = std::time::Duration::from_secs(10);
+const ADMIN_OPERATION_SHUTDOWN_DEADLINE: std::time::Duration = std::time::Duration::from_secs(11);
+const ADMIN_TERMINAL_RETRY_DEADLINE: std::time::Duration = std::time::Duration::from_secs(2);
+const ADMIN_EFFECT_PRE_EFFECT: u8 = 0;
+const ADMIN_EFFECT_ADMITTED: u8 = 1;
+const ADMIN_EFFECT_CANCELLED: u8 = 2;
 
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
 enum SocketBindingKeyV1 {
@@ -1519,7 +1539,11 @@ impl Drop for SocketLiveLeaseV1 {
 }
 
 async fn socket_live_authority(state: &HubState, record: &SocketGrantRecordV1, live_id: &str) -> Result<Vec<tokio::sync::OwnedMutexGuard<()>>, SocketBindingValidityV1> {
-    let admission = tokio::time::timeout(std::time::Duration::from_secs(2), state.socket_binding_gates.acquire_record(&record.subject, &record.audience)).await.map_err(|_| SocketBindingValidityV1::Unavailable)?;
+    socket_live_authority_with_bindings(state, record, live_id, record.bindings()).await
+}
+
+async fn socket_live_authority_with_bindings(state: &HubState, record: &SocketGrantRecordV1, live_id: &str, bindings: Vec<SocketBindingKeyV1>) -> Result<Vec<tokio::sync::OwnedMutexGuard<()>>, SocketBindingValidityV1> {
+    let admission = tokio::time::timeout(std::time::Duration::from_secs(2), state.socket_binding_gates.acquire_bindings(bindings)).await.map_err(|_| SocketBindingValidityV1::Unavailable)?;
     let validity = socket_binding_validity(state, &record.subject, &record.audience).await;
     if validity != SocketBindingValidityV1::Active {
         return Err(validity);
@@ -1563,6 +1587,7 @@ struct HubState {
     space_administration_cursor_key: [u8; 32],
     admin_operations: Arc<ShardedMap<String, Arc<AdminOperationRuntime>>>,
     admin_operation_slots: Arc<tokio::sync::Semaphore>,
+    admin_operation_tasks: Arc<AdminOperationTaskOwner>,
     readiness: Arc<HubReadinessV1>,
     /// @emoji 🛡️ Contract §C0 `OS_HUB_ADMIN_DIR`: the admin SPA's static asset root. Lane 2-E owns
     /// the actual `/admin` file-serving handler (and its 503-if-missing stub) — this lane only
@@ -3382,6 +3407,8 @@ struct GisMapApprovalCheckpointPublisherV1Impl {
     directory_service: Arc<DirectoryService>,
     artifact_cas: Arc<ArtifactChunkCasStores>,
     authority: Arc<HubArtifactAuthority>,
+    fanout: Arc<ShardedMap<String, broadcast::Sender<ServerFrame>>>,
+    fanout_capacity: usize,
 }
 
 #[cfg(all(feature = "sqlite", feature = "native-artifact-execution"))]
@@ -3396,6 +3423,16 @@ impl GisMapApprovalCheckpointPublisherV1Impl {
             && checkpoint.spr.sha256 == ArtifactHash(Sha256::digest(&request.pair.spr))
             && checkpoint.spr.byte_length == request.pair.spr.len() as u64
     }
+
+    fn current_matches_base(scope: &DocumentScope, base: &ArtifactFrontier, current: Option<&PublishedArtifactCheckpoint>) -> bool {
+        if base.document_id != scope.document_id {
+            return false;
+        }
+        match current {
+            Some(checkpoint) => checkpoint.scope == *scope && checkpoint.baseline_frontier == *base,
+            None => base.head_edit_ordinal == 0 && base.head_edit_id.is_empty() && base.last_commit_seq == 0 && base.chain_hash == ArtifactHash([0; 32]),
+        }
+    }
 }
 
 #[cfg(all(feature = "sqlite", feature = "native-artifact-execution"))]
@@ -3404,8 +3441,8 @@ impl GisMapApprovalCheckpointPublisherV1 for GisMapApprovalCheckpointPublisherV1
         &'a self,
         request: GisMapApprovalCheckpointRequestV1,
         document_write: Arc<GisMapDocumentWriteAuthorityV1>,
-        deadline_ms: u64,
-        _now_ms: u64,
+        attempt_lifetime_ms: u64,
+        _decision_now_ms: u64,
     ) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<PublishedArtifactCheckpoint, GisMapApprovalCommitErrorV1>> + Send + 'a>> {
         Box::pin(async move {
             let _document_write = document_write;
@@ -3418,10 +3455,14 @@ impl GisMapApprovalCheckpointPublisherV1 for GisMapApprovalCheckpointPublisherV1
             if current.as_ref().is_some_and(|checkpoint| Self::matches_published(&request, checkpoint)) {
                 return Ok(current.expect("matching active checkpoint exists"));
             }
-            if current.as_ref().map(|checkpoint| &checkpoint.baseline_frontier) != Some(&request.base_frontier) {
+            if !Self::current_matches_base(&request.scope, &request.base_frontier, current.as_ref()) {
                 return Err(GisMapApprovalCommitErrorV1::Conflict);
             }
             let post_frontier = checkpoint_publication_artifact_frontier(&request.scope, &request.actor_snapshot).ok_or(GisMapApprovalCommitErrorV1::Conflict)?;
+            if attempt_lifetime_ms == 0 || attempt_lifetime_ms > semio_hub::inference::schema::JOB_MAX_LIFETIME_MS {
+                return Err(GisMapApprovalCommitErrorV1::Rejected);
+            }
+            let deadline_ms = SystemTime::now().duration_since(UNIX_EPOCH).map_or(0, |duration| u64::try_from(duration.as_millis()).unwrap_or(u64::MAX)).saturating_add(attempt_lifetime_ms);
             let control = GisMapApprovalPublicationControlV1 { deadline_ms };
             let context = OperationContext::new(deadline_ms, AuthorityLimits { max_operations: 1, max_operation_bytes: 1, max_pair_bytes: CHECKPOINT_PUBLICATION_PAIR_MAX_BYTES }, &control);
             let candidate = self
@@ -3455,6 +3496,28 @@ impl GisMapApprovalCheckpointPublisherV1 for GisMapApprovalCheckpointPublisherV1
             Ok(published_artifact_checkpoint(&published.checkpoint))
         })
     }
+
+    fn checkpoint_applied(&self, checkpoint: &PublishedArtifactCheckpoint) -> Result<(), GisMapApprovalCommitErrorV1> {
+        publish_gis_map_checkpoint_change(self.fanout.as_ref(), self.fanout_capacity, checkpoint);
+        Ok(())
+    }
+}
+
+#[cfg(all(feature = "sqlite", feature = "native-artifact-execution"))]
+fn publish_gis_map_checkpoint_change(
+    fanout: &ShardedMap<String, broadcast::Sender<ServerFrame>>,
+    fanout_capacity: usize,
+    checkpoint: &PublishedArtifactCheckpoint,
+) {
+    let key = document_scope_key_v1(&checkpoint.scope);
+    let sender = fanout.get_or_insert_with_cloned(key, || broadcast::channel(fanout_capacity).0);
+    let control = os_directory::RebootstrapRequired {
+        scope: checkpoint.scope.clone(),
+        checkpoint_id: checkpoint.checkpoint_id,
+        descriptor_digest_v1: checkpoint.descriptor_digest_v1,
+        baseline_frontier: checkpoint.baseline_frontier.clone(),
+    };
+    let _ = sender.send(ServerFrame::RebootstrapRequired { control: wire_rebootstrap(&control) });
 }
 
 fn checkpoint_publication_response<'a>(
@@ -4679,11 +4742,7 @@ async fn authorize_directory_command(state: &HubState, actor_user_id: &str, admi
         DirectoryCommand::CreateSpace { .. } => Ok(()),
         DirectoryCommand::DeleteSpace { space_id } | DirectoryCommand::ArchiveSpace { space_id } => {
             let space = state.directory.get_space(space_id).await.map_err(directory_error_status)?.ok_or(StatusCode::NOT_FOUND)?;
-            if space.owner_user_id == actor_user_id {
-                Ok(())
-            } else {
-                Err(StatusCode::FORBIDDEN)
-            }
+            if space.owner_user_id == actor_user_id { Ok(()) } else { Err(StatusCode::FORBIDDEN) }
         }
         DirectoryCommand::RenameSpace { space_id, .. }
         | DirectoryCommand::SetVisibility { space_id, .. }
@@ -4786,6 +4845,20 @@ async fn pause_directory_command_membership_fence(state: &HubState) {
 #[cfg(not(test))]
 async fn pause_directory_command_membership_fence(_state: &HubState) {}
 
+#[cfg(test)]
+async fn pause_admin_effect_started(state: &HubState) {
+    if let Some(gate) = &state.live_gate {
+        if gate.admin_effect_pause_enabled.load(std::sync::atomic::Ordering::Acquire) {
+            gate.admin_effect_admitted.add_permits(1);
+            gate.admin_effect_release.acquire().await.expect("administrator effect test release").forget();
+        }
+    }
+}
+
+#[cfg(not(test))]
+async fn pause_admin_effect_started(_state: &HubState) {}
+
+#[cfg(test)]
 async fn execute_directory_command_fenced(state: &HubState, actor: DirectoryActor, command: DirectoryCommand) -> Result<(Vec<DirectoryEvent>, Option<CommandResult>), FencedDirectoryCommandErrorV1> {
     let _authority = acquire_directory_command_fence(state, Vec::new(), &command).await?;
     if matches!(&command, DirectoryCommand::RemoveMember { .. }) {
@@ -5329,11 +5402,7 @@ impl DirectoryEventPageHttpControl {
     }
 
     fn checkpoint(&self) -> Result<(), StatusCode> {
-        if self.cancelled.load(std::sync::atomic::Ordering::Acquire) {
-            Err(StatusCode::SERVICE_UNAVAILABLE)
-        } else {
-            Ok(())
-        }
+        if self.cancelled.load(std::sync::atomic::Ordering::Acquire) { Err(StatusCode::SERVICE_UNAVAILABLE) } else { Ok(()) }
     }
 
     fn cancel(&self) {
@@ -5566,26 +5635,46 @@ async fn get_directory_events(axum::extract::Query(query): axum::extract::Query<
     Ok(DirectoryJson(visibility_filter_events(&state, events, caller.as_ref()).await))
 }
 
-async fn socket_directory_message_visible(state: &HubState, record: &SocketGrantRecordV1, message: &DirectoryStreamMessage) -> SocketBindingValidityV1 {
-    let validity = record.subject.revalidate(state.directory.as_ref(), &record.audience, now_ms()).await;
-    if validity != SocketBindingValidityV1::Active {
-        return validity;
+/// 🌐️ Outbound global telemetry borrows a space authority without indexing the global lease by it.
+fn directory_stream_message_space(message: &DirectoryStreamMessage) -> Option<&str> {
+    match message {
+        DirectoryStreamMessage::Event { event } => event.space_id.as_deref(),
+        DirectoryStreamMessage::Connection { connection, .. } => Some(&connection.space_id),
+        DirectoryStreamMessage::Presence { space_id, .. } => Some(space_id),
+        DirectoryStreamMessage::RebootstrapRequired { control } => Some(&control.scope.space_id),
+        DirectoryStreamMessage::Heartbeat { .. } => None,
     }
+}
+
+fn directory_space_message_bindings(record: &SocketGrantRecordV1, space_id: Option<&str>) -> Vec<SocketBindingKeyV1> {
+    let mut bindings = record.bindings();
+    if let (SocketAudienceV1::Directory { .. }, SocketSubjectV1::Session { user_id, .. }, Some(space_id)) = (&record.audience, &record.subject, space_id) {
+        bindings.push(SocketBindingKeyV1::DirectorySpaceAuthority { space_id: space_id.to_owned() });
+        bindings.push(SocketBindingKeyV1::Membership { user_id: user_id.clone(), space_id: space_id.to_owned() });
+    }
+    bindings.sort();
+    bindings.dedup();
+    bindings
+}
+
+fn directory_message_bindings(record: &SocketGrantRecordV1, message: &DirectoryStreamMessage) -> Vec<SocketBindingKeyV1> {
+    directory_space_message_bindings(record, directory_stream_message_space(message))
+}
+
+async fn socket_directory_membership_visibility(state: &HubState, record: &SocketGrantRecordV1, message: &DirectoryStreamMessage) -> SocketBindingValidityV1 {
     let SocketSubjectV1::Session { user_id, .. } = &record.subject else { return SocketBindingValidityV1::Unauthorized };
-    let visible = match message {
-        DirectoryStreamMessage::Event { event } => match event.space_id.as_deref() {
-            Some(space_id) => directory_space_access_for_user(state, space_id, Some(user_id)).await.is_member(),
-            None => event.user_id.as_deref() == Some(user_id.as_str()),
-        },
-        DirectoryStreamMessage::Connection { connection, .. } => directory_space_access_for_user(state, &connection.space_id, Some(user_id)).await.is_member(),
-        DirectoryStreamMessage::Presence { space_id, .. } => directory_space_access_for_user(state, space_id, Some(user_id)).await.is_member(),
-        DirectoryStreamMessage::Heartbeat { .. } => false,
-        DirectoryStreamMessage::RebootstrapRequired { control } => directory_space_access_for_user(state, &control.scope.space_id, Some(user_id)).await.is_member(),
+    let Some(space_id) = directory_stream_message_space(message) else {
+        return if matches!(message, DirectoryStreamMessage::Event { event } if event.user_id.as_deref() == Some(user_id.as_str())) { SocketBindingValidityV1::Active } else { SocketBindingValidityV1::Unauthorized };
     };
-    if visible {
-        SocketBindingValidityV1::Active
-    } else {
-        SocketBindingValidityV1::Unauthorized
+    match state.directory.get_space(space_id).await {
+        Ok(Some(_)) => {}
+        Ok(None) => return SocketBindingValidityV1::Unauthorized,
+        Err(_) => return SocketBindingValidityV1::Unavailable,
+    }
+    match state.directory.get_role(space_id, user_id).await {
+        Ok(Some(_)) => SocketBindingValidityV1::Active,
+        Ok(None) => SocketBindingValidityV1::Unauthorized,
+        Err(_) => SocketBindingValidityV1::Unavailable,
     }
 }
 
@@ -5666,7 +5755,20 @@ async fn send_directory_message(sender: &mut SplitSink<WebSocket, Message>, mess
     sender.send(Message::Text(text.into())).await.is_ok()
 }
 
+#[cfg(test)]
+async fn pause_global_directory_send_for_test(state: &HubState, record: &SocketGrantRecordV1, mode: u8) {
+    let Some(gate) = &state.live_gate else { return };
+    let SocketSubjectV1::Session { user_id, .. } = &record.subject else { return };
+    let pause = gate.socket_global_send_pause.lock().expect("global send pause").clone();
+    if matches!(&record.audience, SocketAudienceV1::Directory { .. }) && pause.as_ref().is_some_and(|(recipient, point)| recipient == user_id && *point == mode) {
+        gate.socket_global_send_admitted.add_permits(1);
+        gate.socket_global_send_release.acquire().await.expect("global send release").forget();
+    }
+}
+
 async fn send_socket_directory_message(sender: &mut SplitSink<WebSocket, Message>, state: &HubState, record: &SocketGrantRecordV1, live_id: &str, message: &DirectoryStreamMessage) -> ScopedDirectoryFrameDecisionV1 {
+    #[cfg(test)]
+    pause_global_directory_send_for_test(state, record, 1).await;
     #[cfg(test)]
     if matches!(&record.audience, SocketAudienceV1::DirectoryScoped(_)) {
         if let Some(gate) = &state.live_gate {
@@ -5676,7 +5778,7 @@ async fn send_socket_directory_message(sender: &mut SplitSink<WebSocket, Message
             }
         }
     }
-    let _admission = match socket_live_authority(state, record, live_id).await {
+    let _admission = match socket_live_authority_with_bindings(state, record, live_id, directory_message_bindings(record, message)).await {
         Ok(admission) => admission,
         Err(SocketBindingValidityV1::Unauthorized) => return ScopedDirectoryFrameDecisionV1::CloseUnauthorized,
         Err(SocketBindingValidityV1::Unavailable | SocketBindingValidityV1::Active) => return ScopedDirectoryFrameDecisionV1::CloseUnavailable,
@@ -5698,7 +5800,7 @@ async fn send_socket_directory_message(sender: &mut SplitSink<WebSocket, Message
                 ScopedDirectoryFrameDecisionV1::SkipUnrelated
             }
         }
-        SocketAudienceV1::Directory { .. } => match tokio::time::timeout(std::time::Duration::from_secs(2), socket_directory_message_visible(state, record, message)).await.unwrap_or(SocketBindingValidityV1::Unavailable) {
+        SocketAudienceV1::Directory { .. } => match tokio::time::timeout(std::time::Duration::from_secs(2), socket_directory_membership_visibility(state, record, message)).await.unwrap_or(SocketBindingValidityV1::Unavailable) {
             SocketBindingValidityV1::Active => ScopedDirectoryFrameDecisionV1::Deliver,
             SocketBindingValidityV1::Unauthorized => ScopedDirectoryFrameDecisionV1::SkipUnrelated,
             SocketBindingValidityV1::Unavailable => ScopedDirectoryFrameDecisionV1::CloseUnavailable,
@@ -5708,6 +5810,8 @@ async fn send_socket_directory_message(sender: &mut SplitSink<WebSocket, Message
     if decision != ScopedDirectoryFrameDecisionV1::Deliver {
         return decision;
     }
+    #[cfg(test)]
+    pause_global_directory_send_for_test(state, record, 2).await;
     match tokio::time::timeout(std::time::Duration::from_secs(2), send_directory_message(sender, message)).await {
         Ok(true) => ScopedDirectoryFrameDecisionV1::Deliver,
         _ => ScopedDirectoryFrameDecisionV1::CloseUnavailable,
@@ -5715,7 +5819,7 @@ async fn send_socket_directory_message(sender: &mut SplitSink<WebSocket, Message
 }
 
 async fn send_socket_directory_rebootstrap(sender: &mut SplitSink<WebSocket, Message>, state: &HubState, record: &SocketGrantRecordV1, live_id: &str, scope: &DocumentScope) -> SocketBindingValidityV1 {
-    let _admission = match socket_live_authority(state, record, live_id).await {
+    let _admission = match socket_live_authority_with_bindings(state, record, live_id, directory_space_message_bindings(record, Some(&scope.space_id))).await {
         Ok(admission) => admission,
         Err(validity) => return validity,
     };
@@ -5918,6 +6022,10 @@ async fn delete_session_me(headers: HeaderMap, State(state): State<HubState>) ->
     };
     let binding = SocketBindingKeyV1::Session(session.id.clone());
     let gate = state.socket_binding_gates.gate(binding.clone());
+    #[cfg(test)]
+    if let Some(gate) = &state.live_gate {
+        gate.socket_session_revoke_attempted.add_permits(1);
+    }
     let _admission = match tokio::time::timeout(std::time::Duration::from_secs(2), gate.lock_owned()).await {
         Ok(admission) => admission,
         Err(_) => return StatusCode::SERVICE_UNAVAILABLE,
@@ -6263,6 +6371,14 @@ fn admin_audit_receipt(rows: &[AdminOperationAuditRecord]) -> Option<AdminIntent
     })
 }
 
+fn admin_audit_visibility(mut receipt: AdminIntentReceiptV1, resolver_live: bool) -> AdminIntentReceiptV1 {
+    if receipt.state == AdminIntentStateV1::Accepted && !resolver_live {
+        receipt.state = AdminIntentStateV1::Indeterminate;
+        receipt.outcome = AdminIntentOutcomeV1 { code: "admin-effect-outcome-indeterminate".into(), durable: false, kick_attempted: None, kick_signalled: None };
+    }
+    receipt
+}
+
 fn public_admin_audit(row: AdminOperationAuditRecord) -> Result<AdminOperationAuditV1, StatusCode> {
     let phase = match row.fact.phase.as_str() {
         "accepted" => AdminOperationAuditPhaseV1::Accepted,
@@ -6291,32 +6407,61 @@ fn public_admin_audit(row: AdminOperationAuditRecord) -> Result<AdminOperationAu
 }
 
 async fn reconcile_stale_admin_acceptance(state: &HubState, rows: Vec<AdminOperationAuditRecord>) -> Result<Vec<AdminOperationAuditRecord>, StatusCode> {
-    let Some(accepted) = rows.first() else {
-        return Ok(rows);
-    };
-    if rows.iter().any(|row| row.fact.phase != "accepted") || state.admin_operations.with(&accepted.fact.operation_id, |runtime| runtime.is_some()) || now_ms().saturating_sub(accepted.fact.occurred_at) <= 15_000 {
+    if rows.iter().any(|row| row.fact.phase != "accepted") {
         return Ok(rows);
     }
-    let terminal = NewAdminOperationAuditRecord {
-        request_id: accepted.fact.request_id.clone(),
-        intent_digest: accepted.fact.intent_digest.clone(),
-        operation_id: accepted.fact.operation_id.clone(),
-        occurred_at: now_ms(),
-        phase: "cancelled".into(),
-        intent_kind: accepted.fact.intent_kind.clone(),
-        target_kind: accepted.fact.target_kind.clone(),
-        target_id: accepted.fact.target_id.clone(),
-        principal_user_id: accepted.fact.principal_user_id.clone(),
-        principal_session_id: accepted.fact.principal_session_id.clone(),
-        principal_generation: accepted.fact.principal_generation,
-        correlation_id: accepted.fact.correlation_id.clone(),
-        event_seq_first: None,
-        event_seq_last: None,
-        outcome_code: "interrupted-before-terminal".into(),
-        reason_code: accepted.fact.reason_code.clone(),
+    let Some(accepted) = rows.iter().find(|row| row.fact.phase == "accepted") else {
+        return Ok(rows);
     };
-    state.directory.append_admin_operation_audit(&terminal).await.map_err(directory_error_status)?;
-    state.directory.admin_operation_audit_for_request(&accepted.fact.request_id).await.map_err(directory_error_status)
+    let Some(effect) = state.directory.admin_operation_effect_receipt(&accepted.fact.operation_id, &accepted.fact.intent_digest).await.map_err(directory_error_status)? else {
+        return Ok(rows);
+    };
+    let expected_outcome = match accepted.fact.intent_kind.as_str() {
+        "create-space" | "rename-space" | "set-space-visibility" | "archive-space" | "delete-space" | "upsert-space-member" | "remove-space-member" | "create-space-invite" | "revoke-space-invite" => "directory-events-appended",
+        "issue-document-share" => "share-issued",
+        "revoke-document-share" => "share-revoked",
+        "revoke-user-sessions" => "sessions-revoked",
+        _ => return Ok(rows),
+    };
+    if effect.outcome_code != expected_outcome {
+        return Ok(rows);
+    }
+    match (accepted.fact.intent_kind.as_str(), accepted.fact.target_kind.as_str()) {
+        ("revoke-document-share", "share") => {
+            let binding = SocketBindingKeyV1::Share(accepted.fact.target_id.clone());
+            state.socket_grants.invalidate_binding(binding.clone());
+            state.document_open_plans.invalidate_binding(&binding);
+        }
+        ("revoke-user-sessions", "user") => {
+            let binding = SocketBindingKeyV1::User(accepted.fact.target_id.clone());
+            state.socket_grants.invalidate_binding(binding.clone());
+            state.document_open_plans.invalidate_binding(&binding);
+        }
+        _ => {}
+    }
+    let mut terminal = accepted.fact.clone();
+    terminal.occurred_at = effect.committed_at;
+    terminal.phase = "succeeded".into();
+    terminal.event_seq_first = effect.event_seq_first;
+    terminal.event_seq_last = effect.event_seq_last;
+    terminal.outcome_code = effect.outcome_code;
+    if !append_admin_terminal_with_retry(state, &terminal).await {
+        return Ok(rows);
+    }
+    state.directory.admin_operation_audit_for_operation(&accepted.fact.operation_id).await.map_err(directory_error_status)
+}
+
+async fn append_admin_terminal_with_retry(state: &HubState, terminal: &NewAdminOperationAuditRecord) -> bool {
+    let deadline = tokio::time::Instant::now() + ADMIN_TERMINAL_RETRY_DEADLINE;
+    loop {
+        if state.directory.append_admin_operation_audit(terminal).await.is_ok() {
+            return true;
+        }
+        if tokio::time::Instant::now() >= deadline {
+            return false;
+        }
+        tokio::time::sleep(std::time::Duration::from_millis(10)).await;
+    }
 }
 
 async fn admin_operation(Path(operation_id): Path<String>, headers: HeaderMap, axum::extract::ConnectInfo(peer): axum::extract::ConnectInfo<SocketAddr>, State(state): State<HubState>) -> Result<DirectoryJson<AdminOperationStatusV1>, StatusCode> {
@@ -6326,6 +6471,7 @@ async fn admin_operation(Path(operation_id): Path<String>, headers: HeaderMap, a
     let rows = reconcile_stale_admin_acceptance(&state, rows).await?;
     let receipt = admin_audit_receipt(&rows).ok_or(StatusCode::NOT_FOUND)?;
     let progress = state.admin_operations.with(&receipt.operation_id, |runtime| runtime.map(|runtime| runtime.progress()));
+    let receipt = admin_audit_visibility(receipt, progress.is_some());
     Ok(DirectoryJson(AdminOperationStatusV1 { receipt, progress }))
 }
 
@@ -6340,7 +6486,7 @@ async fn cancel_admin_operation(
     let rows = state.directory.admin_operation_audit_for_operation(&operation_id).await.map_err(directory_error_status)?;
     let receipt = admin_audit_receipt(&rows).ok_or(StatusCode::NOT_FOUND)?;
     let runtime = state.admin_operations.get_cloned(&receipt.operation_id).ok_or(StatusCode::CONFLICT)?;
-    runtime.cancel_requested.store(true, std::sync::atomic::Ordering::Release);
+    runtime.request_cancel();
     Ok(DirectoryJson(AdminOperationStatusV1 { receipt, progress: Some(runtime.progress()) }))
 }
 
@@ -6367,30 +6513,80 @@ async fn admin_operation_audit(
 struct AdminIntentExecution {
     phase: &'static str,
     event_range: Option<(u64, u64)>,
-    result: Option<AdminIntentResultV1>,
+    secret: Option<AdminIntentSecretResult>,
     outcome: AdminIntentOutcomeV1,
 }
+
+enum AdminIntentSecretResult {
+    Invite(String),
+    Share(String),
+}
+
+impl AdminIntentSecretResult {
+    fn into_public(mut self) -> AdminIntentResultV1 {
+        match &mut self {
+            Self::Invite(value) => AdminIntentResultV1 { invite_token: Some(std::mem::take(value)), share_token: None },
+            Self::Share(value) => AdminIntentResultV1 { invite_token: None, share_token: Some(std::mem::take(value)) },
+        }
+    }
+}
+
+impl Drop for AdminIntentSecretResult {
+    fn drop(&mut self) {
+        let value = match self {
+            Self::Invite(value) | Self::Share(value) => value,
+        };
+        let bytes = unsafe { value.as_bytes_mut() };
+        for byte in bytes {
+            unsafe { std::ptr::write_volatile(byte, 0) };
+            #[cfg(test)]
+            ADMIN_SECRET_WIPE_BYTES.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+        }
+    }
+}
+
+#[cfg(test)]
+static ADMIN_SECRET_WIPE_BYTES: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
 
 struct AdminOperationRuntime {
     deadline: std::time::Instant,
     completed: std::sync::atomic::AtomicU64,
     total: std::sync::atomic::AtomicU64,
-    cancel_requested: std::sync::atomic::AtomicBool,
+    effect_state: std::sync::atomic::AtomicU8,
+    cooperative_cancel_requested: std::sync::atomic::AtomicBool,
 }
 
 impl AdminOperationRuntime {
+    fn request_cancel(&self) -> bool {
+        match self.effect_state.compare_exchange(ADMIN_EFFECT_PRE_EFFECT, ADMIN_EFFECT_CANCELLED, std::sync::atomic::Ordering::AcqRel, std::sync::atomic::Ordering::Acquire) {
+            Ok(_) | Err(ADMIN_EFFECT_CANCELLED) => true,
+            Err(_) => {
+                self.cooperative_cancel_requested.store(true, std::sync::atomic::Ordering::Release);
+                false
+            }
+        }
+    }
+
+    fn admit_effect(&self) -> bool {
+        self.effect_state.compare_exchange(ADMIN_EFFECT_PRE_EFFECT, ADMIN_EFFECT_ADMITTED, std::sync::atomic::Ordering::AcqRel, std::sync::atomic::Ordering::Acquire).is_ok()
+    }
+
+    fn cancelled_before_effect(&self) -> bool {
+        self.effect_state.load(std::sync::atomic::Ordering::Acquire) == ADMIN_EFFECT_CANCELLED
+    }
+
     fn progress(&self) -> AdminOperationProgressV1 {
         AdminOperationProgressV1 {
             completed_events: self.completed.load(std::sync::atomic::Ordering::Acquire),
             total_events: self.total.load(std::sync::atomic::Ordering::Acquire),
-            cancel_requested: self.cancel_requested.load(std::sync::atomic::Ordering::Acquire),
+            cancel_requested: self.cancelled_before_effect() || self.cooperative_cancel_requested.load(std::sync::atomic::Ordering::Acquire),
         }
     }
 }
 
 impl ProjectionRebuildControl for AdminOperationRuntime {
     fn is_cancelled(&self) -> bool {
-        self.cancel_requested.load(std::sync::atomic::Ordering::Acquire) || std::time::Instant::now() >= self.deadline
+        self.cancelled_before_effect() || self.cooperative_cancel_requested.load(std::sync::atomic::Ordering::Acquire) || std::time::Instant::now() >= self.deadline
     }
 
     fn report(&self, progress: ProjectionRebuildProgress) {
@@ -6400,110 +6596,258 @@ impl ProjectionRebuildControl for AdminOperationRuntime {
 }
 
 struct AdminOperationCleanup {
-    directory: Arc<HubDirectories>,
     operations: Arc<ShardedMap<String, Arc<AdminOperationRuntime>>>,
     operation_id: String,
-    terminal: Option<NewAdminOperationAuditRecord>,
     _permit: tokio::sync::OwnedSemaphorePermit,
-}
-
-impl AdminOperationCleanup {
-    fn terminal(&self) -> &NewAdminOperationAuditRecord {
-        self.terminal.as_ref().expect("admin operation cleanup terminal is armed")
-    }
-
-    fn disarm(&mut self) {
-        self.terminal = None;
-    }
 }
 
 impl Drop for AdminOperationCleanup {
     fn drop(&mut self) {
         self.operations.remove(&self.operation_id);
-        let Some(terminal) = self.terminal.take() else {
-            return;
-        };
-        let directory = self.directory.clone();
-        if let Ok(runtime) = tokio::runtime::Handle::try_current() {
-            runtime.spawn(async move {
-                let _ = directory.append_admin_operation_audit(&terminal).await;
-            });
-        }
     }
 }
 
-async fn execute_admin_intent(state: &HubState, principal: &AdminPrincipalV1, intent: AdminIntentV1, operation_runtime: Option<Arc<AdminOperationRuntime>>) -> AdminIntentExecution {
+struct AdminOperationTask {
+    task: tokio::task::JoinHandle<()>,
+    runtime: Arc<AdminOperationRuntime>,
+}
+
+struct AdminOperationTaskOwnerState {
+    closing: bool,
+    tasks: BTreeMap<String, AdminOperationTask>,
+}
+
+struct AdminOperationTaskOwner {
+    state: Mutex<AdminOperationTaskOwnerState>,
+    shutdown_deadline: std::time::Duration,
+}
+
+impl AdminOperationTaskOwner {
+    fn new(shutdown_deadline: std::time::Duration) -> Self {
+        Self { state: Mutex::new(AdminOperationTaskOwnerState { closing: false, tasks: BTreeMap::new() }), shutdown_deadline }
+    }
+
+    fn spawn<F>(&self, operation_id: String, runtime: Arc<AdminOperationRuntime>, future: F) -> Result<(), F>
+    where
+        F: std::future::Future<Output = ()> + Send + 'static,
+    {
+        let mut state = self.state.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        state.tasks.retain(|_, task| !task.task.is_finished());
+        if state.closing || state.tasks.contains_key(&operation_id) {
+            return Err(future);
+        }
+        let task = tokio::spawn(future);
+        state.tasks.insert(operation_id, AdminOperationTask { task, runtime });
+        Ok(())
+    }
+
+    async fn shutdown(&self) {
+        let mut tasks = {
+            let mut state = self.state.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+            state.closing = true;
+            for task in state.tasks.values() {
+                task.runtime.request_cancel();
+            }
+            std::mem::take(&mut state.tasks).into_values().map(|task| task.task).collect::<Vec<_>>()
+        };
+        if tokio::time::timeout(self.shutdown_deadline, futures::future::join_all(tasks.iter_mut())).await.is_err() {
+            for task in &tasks {
+                task.abort();
+            }
+            for task in tasks {
+                let _ = task.await;
+            }
+        }
+    }
+
+    #[cfg(test)]
+    fn task_count(&self) -> usize {
+        self.state.lock().unwrap_or_else(std::sync::PoisonError::into_inner).tasks.values().filter(|task| !task.task.is_finished()).count()
+    }
+}
+
+/// 🗝️ Derives one sorted authority union from the closed short intent before any gate is acquired.
+fn admin_intent_bindings(principal: &AdminPrincipalV1, intent: &AdminIntentV1) -> Option<Vec<SocketBindingKeyV1>> {
+    let mut bindings = vec![SocketBindingKeyV1::User(principal.user_id.clone()), SocketBindingKeyV1::Session(principal.auth_session_id.clone())];
+    match intent {
+        AdminIntentV1::CreateSpace { request_id, .. } => bindings.push(SocketBindingKeyV1::DirectorySpaceAuthority { space_id: admin_create_space_id(request_id) }),
+        AdminIntentV1::RenameSpace { space_id, .. }
+        | AdminIntentV1::SetSpaceVisibility { space_id, .. }
+        | AdminIntentV1::ArchiveSpace { space_id, .. }
+        | AdminIntentV1::DeleteSpace { space_id, .. }
+        | AdminIntentV1::UpsertSpaceMember { space_id, .. }
+        | AdminIntentV1::CreateSpaceInvite { space_id, .. }
+        | AdminIntentV1::RevokeSpaceInvite { space_id, .. } => bindings.push(SocketBindingKeyV1::DirectorySpaceAuthority { space_id: space_id.clone() }),
+        AdminIntentV1::RemoveSpaceMember { space_id, user_id, .. } => {
+            bindings.push(SocketBindingKeyV1::DirectorySpaceAuthority { space_id: space_id.clone() });
+            bindings.push(SocketBindingKeyV1::Membership { user_id: user_id.clone(), space_id: space_id.clone() });
+        }
+        AdminIntentV1::IssueDocumentShare { scope, .. } => bindings.push(SocketBindingKeyV1::DirectorySpaceAuthority { space_id: scope.space_id.clone() }),
+        AdminIntentV1::RevokeDocumentShare { scope, share_id, .. } => {
+            bindings.push(SocketBindingKeyV1::DirectorySpaceAuthority { space_id: scope.space_id.clone() });
+            bindings.push(SocketBindingKeyV1::Share(share_id.clone()));
+        }
+        AdminIntentV1::RevokeUserSessions { user_id, .. } => bindings.push(SocketBindingKeyV1::User(user_id.clone())),
+        AdminIntentV1::KickConnection { .. } => {}
+        AdminIntentV1::RebuildDirectoryProjections { .. } => return None,
+    }
+    bindings.sort_unstable();
+    bindings.dedup();
+    Some(bindings)
+}
+
+/// 🏛️ A configured administrator retains its exact durable principal through a short side effect.
+async fn acquire_admin_intent_authority(state: &HubState, principal: &AdminPrincipalV1, bindings: Vec<SocketBindingKeyV1>) -> Result<Vec<tokio::sync::OwnedMutexGuard<()>>, FencedDirectoryCommandErrorV1> {
+    let admission = tokio::time::timeout(std::time::Duration::from_secs(2), state.socket_binding_gates.acquire_bindings(bindings)).await.map_err(|_| FencedDirectoryCommandErrorV1::Unavailable)?;
+    let provider_digest = admin_provider_digest(&principal.identity_provider);
+    if principal.expires_at_ms <= now_ms()
+        || !state
+            .admin_subjects
+            .iter()
+            .any(|subject| semio_hub::directory::constant_time_digest_eq(&subject.provider_digest, &provider_digest) && semio_hub::directory::constant_time_digest_eq(&subject.subject_digest, &principal.identity_subject_digest))
+    {
+        return Err(FencedDirectoryCommandErrorV1::Denied(StatusCode::UNAUTHORIZED));
+    }
+    let binding = tokio::time::timeout(std::time::Duration::from_secs(2), state.directory.socket_session_binding(&principal.auth_session_id, &principal.user_id, principal.authorization_generation, None, now_ms())).await;
+    match binding {
+        Ok(Ok(SocketSessionBindingStatus::Active { role: None, expires_at_ms })) if expires_at_ms == principal.expires_at_ms => {}
+        Ok(Ok(SocketSessionBindingStatus::Unavailable)) | Ok(Err(_)) | Err(_) => return Err(FencedDirectoryCommandErrorV1::Unavailable),
+        _ => return Err(FencedDirectoryCommandErrorV1::Denied(StatusCode::UNAUTHORIZED)),
+    }
+    pause_directory_command_authority(state, &principal.user_id, true).await;
+    Ok(admission)
+}
+
+fn admin_directory_authority_refusal(error: FencedDirectoryCommandErrorV1) -> AdminIntentExecution {
+    let code = if matches!(error, FencedDirectoryCommandErrorV1::Denied(_)) { "admin-authority-changed" } else { "admin-authority-unavailable" };
+    AdminIntentExecution { phase: "cancelled", event_range: None, secret: None, outcome: AdminIntentOutcomeV1 { code: code.into(), durable: false, kick_attempted: None, kick_signalled: None } }
+}
+
+fn admin_effect_receipt_claim(operation_id: &str, intent_digest: &str, outcome_code: &str) -> NewAdminOperationEffectReceiptV1 {
+    NewAdminOperationEffectReceiptV1 { operation_id: operation_id.into(), intent_digest: intent_digest.into(), committed_at: now_ms(), outcome_code: outcome_code.into() }
+}
+
+fn admin_effect_uncertain() -> AdminIntentExecution {
+    AdminIntentExecution {
+        phase: "uncertain",
+        event_range: None,
+        secret: None,
+        outcome: AdminIntentOutcomeV1 { code: "admin-effect-outcome-uncertain".into(), durable: false, kick_attempted: None, kick_signalled: None },
+    }
+}
+
+fn admin_effect_rejected_before_commit() -> AdminIntentExecution {
+    AdminIntentExecution {
+        phase: "failed",
+        event_range: None,
+        secret: None,
+        outcome: AdminIntentOutcomeV1 { code: "admin-effect-rejected-before-commit".into(), durable: false, kick_attempted: None, kick_signalled: None },
+    }
+}
+
+async fn execute_admin_intent(
+    state: &HubState,
+    principal: &AdminPrincipalV1,
+    operation_id: &str,
+    intent_digest: &str,
+    intent: AdminIntentV1,
+    operation_runtime: Option<Arc<AdminOperationRuntime>>,
+    authority_owner: &mut Option<Vec<tokio::sync::OwnedMutexGuard<()>>>,
+) -> AdminIntentExecution {
+    *authority_owner = None;
+    if operation_runtime.as_ref().is_some_and(|runtime| runtime.cancelled_before_effect()) {
+        return AdminIntentExecution { phase: "cancelled", event_range: None, secret: None, outcome: AdminIntentOutcomeV1 { code: "admin-operation-cancelled-before-effect".into(), durable: false, kick_attempted: None, kick_signalled: None } };
+    }
+    *authority_owner = if let Some(bindings) = admin_intent_bindings(principal, &intent) {
+        pause_directory_command_authority(state, &principal.user_id, false).await;
+        if operation_runtime.as_ref().is_some_and(|runtime| runtime.cancelled_before_effect()) {
+            return AdminIntentExecution { phase: "cancelled", event_range: None, secret: None, outcome: AdminIntentOutcomeV1 { code: "admin-operation-cancelled-before-effect".into(), durable: false, kick_attempted: None, kick_signalled: None } };
+        }
+        match acquire_admin_intent_authority(state, principal, bindings).await {
+            Ok(authority) => Some(authority),
+            Err(error) => return admin_directory_authority_refusal(error),
+        }
+    } else {
+        None
+    };
+    if operation_runtime.as_ref().is_some_and(|runtime| !runtime.admit_effect()) {
+        return AdminIntentExecution { phase: "cancelled", event_range: None, secret: None, outcome: AdminIntentOutcomeV1 { code: "admin-operation-cancelled-before-effect".into(), durable: false, kick_attempted: None, kick_signalled: None } };
+    }
+    pause_admin_effect_started(state).await;
     if let AdminIntentV1::CreateSpace { request_id, name, space_kind, visibility } = &intent {
         let target_id = admin_create_space_id(request_id);
-        return match state.directory_service.execute_create_space_with_id(principal.event_actor(), target_id, name.clone(), *space_kind, *visibility).await {
-            Ok(events) => AdminIntentExecution {
+        let effect = admin_effect_receipt_claim(operation_id, intent_digest, "directory-events-appended");
+        return match state.directory_service.execute_create_space_with_id_and_admin_effect(principal.event_actor(), target_id, name.clone(), *space_kind, *visibility, &effect).await {
+            AdminEffectCommitV1::Applied(events) => AdminIntentExecution {
                 phase: "succeeded",
                 event_range: events.first().zip(events.last()).map(|(first, last)| (first.seq, last.seq)),
-                result: None,
+                secret: None,
                 outcome: AdminIntentOutcomeV1 { code: "directory-events-appended".into(), durable: true, kick_attempted: None, kick_signalled: None },
             },
-            Err(_) => AdminIntentExecution { phase: "failed", event_range: None, result: None, outcome: AdminIntentOutcomeV1 { code: "directory-command-rejected".into(), durable: false, kick_attempted: None, kick_signalled: None } },
+            AdminEffectCommitV1::RejectedBeforeCommit => admin_effect_rejected_before_commit(),
+            AdminEffectCommitV1::Indeterminate => admin_effect_uncertain(),
         };
     }
     if let Some(command) = admin_directory_command(&intent) {
         if authorize_directory_command(state, &principal.user_id, true, &command).await.is_err() {
-            return AdminIntentExecution { phase: "failed", event_range: None, result: None, outcome: AdminIntentOutcomeV1 { code: "directory-command-denied".into(), durable: false, kick_attempted: None, kick_signalled: None } };
+            return AdminIntentExecution { phase: "failed", event_range: None, secret: None, outcome: AdminIntentOutcomeV1 { code: "directory-command-denied".into(), durable: false, kick_attempted: None, kick_signalled: None } };
         }
-        return match execute_directory_command_fenced(state, principal.event_actor(), command).await {
-            Ok((events, result)) => AdminIntentExecution {
-                phase: "succeeded",
-                event_range: events.first().zip(events.last()).map(|(first, last)| (first.seq, last.seq)),
-                result: result.and_then(|result| result.invite_token).map(|invite_token| AdminIntentResultV1 { invite_token: Some(invite_token), share_token: None }),
-                outcome: AdminIntentOutcomeV1 { code: "directory-events-appended".into(), durable: true, kick_attempted: None, kick_signalled: None },
-            },
-            Err(_) => AdminIntentExecution { phase: "failed", event_range: None, result: None, outcome: AdminIntentOutcomeV1 { code: "directory-command-rejected".into(), durable: false, kick_attempted: None, kick_signalled: None } },
+        if matches!(&command, DirectoryCommand::RemoveMember { .. }) {
+            pause_directory_command_membership_fence(state).await;
+        }
+        let effect = admin_effect_receipt_claim(operation_id, intent_digest, "directory-events-appended");
+        return match state.directory_service.execute_with_admin_effect(principal.event_actor(), command, &effect).await {
+            AdminEffectCommitV1::Applied((events, result)) => {
+                invalidate_directory_event_authority(state, &events);
+                AdminIntentExecution {
+                    phase: "succeeded",
+                    event_range: events.first().zip(events.last()).map(|(first, last)| (first.seq, last.seq)),
+                    secret: result.and_then(|result| result.invite_token).map(AdminIntentSecretResult::Invite),
+                    outcome: AdminIntentOutcomeV1 { code: "directory-events-appended".into(), durable: true, kick_attempted: None, kick_signalled: None },
+                }
+            }
+            AdminEffectCommitV1::RejectedBeforeCommit => admin_effect_rejected_before_commit(),
+            AdminEffectCommitV1::Indeterminate => admin_effect_uncertain(),
         };
     }
     match intent {
         AdminIntentV1::IssueDocumentShare { scope, ttl_secs, .. } => {
-            if !matches!(state.directory.get_document_descriptor(&scope).await, Ok(Some(_))) {
-                return AdminIntentExecution { phase: "failed", event_range: None, result: None, outcome: AdminIntentOutcomeV1 { code: "document-unavailable".into(), durable: false, kick_attempted: None, kick_signalled: None } };
-            }
-            match state.directory.issue_share_token_as(&scope, i64::from(ttl_secs), Some(&principal.user_id), &principal.correlation_id).await {
-                Ok(issued) => AdminIntentExecution {
+            let effect = admin_effect_receipt_claim(operation_id, intent_digest, "share-issued");
+            match state.directory.issue_share_token_as_with_admin_effect(&scope, i64::from(ttl_secs), Some(&principal.user_id), &principal.correlation_id, &effect).await {
+                AdminEffectCommitV1::Applied(issued) => AdminIntentExecution {
                     phase: "succeeded",
                     event_range: None,
-                    result: Some(AdminIntentResultV1 { invite_token: None, share_token: Some(issued.capability.expose_once()) }),
+                    secret: Some(AdminIntentSecretResult::Share(issued.capability.expose_once())),
                     outcome: AdminIntentOutcomeV1 { code: "share-issued".into(), durable: true, kick_attempted: None, kick_signalled: None },
                 },
-                Err(_) => AdminIntentExecution { phase: "failed", event_range: None, result: None, outcome: AdminIntentOutcomeV1 { code: "share-issue-rejected".into(), durable: false, kick_attempted: None, kick_signalled: None } },
+                AdminEffectCommitV1::RejectedBeforeCommit => admin_effect_rejected_before_commit(),
+                AdminEffectCommitV1::Indeterminate => admin_effect_uncertain(),
             }
         }
         AdminIntentV1::RevokeDocumentShare { scope, share_id, reason_code, .. } => {
             let binding = SocketBindingKeyV1::Share(share_id.clone());
-            let gate = state.socket_binding_gates.gate(binding.clone());
-            let Ok(admission) = tokio::time::timeout(std::time::Duration::from_secs(2), gate.lock_owned()).await else {
-                return AdminIntentExecution { phase: "cancelled", event_range: None, result: None, outcome: AdminIntentOutcomeV1 { code: "share-revoke-timeout".into(), durable: false, kick_attempted: None, kick_signalled: None } };
-            };
-            let revoked = tokio::time::timeout(std::time::Duration::from_secs(2), state.directory.revoke_share_token_as(&scope, &share_id, &reason_code, Some(&principal.user_id), &principal.correlation_id)).await;
-            if !matches!(revoked, Ok(Ok(()))) {
-                return AdminIntentExecution { phase: "failed", event_range: None, result: None, outcome: AdminIntentOutcomeV1 { code: "share-revoke-rejected".into(), durable: false, kick_attempted: None, kick_signalled: None } };
+            let effect = admin_effect_receipt_claim(operation_id, intent_digest, "share-revoked");
+            match state.directory.revoke_share_token_as_with_admin_effect(&scope, &share_id, &reason_code, Some(&principal.user_id), &principal.correlation_id, &effect).await {
+                AdminEffectCommitV1::Applied(()) => {}
+                AdminEffectCommitV1::RejectedBeforeCommit => return admin_effect_rejected_before_commit(),
+                AdminEffectCommitV1::Indeterminate => return admin_effect_uncertain(),
             }
             state.socket_grants.invalidate_binding(binding.clone());
             state.document_open_plans.invalidate_binding(&binding);
-            drop(admission);
-            AdminIntentExecution { phase: "succeeded", event_range: None, result: None, outcome: AdminIntentOutcomeV1 { code: "share-revoked".into(), durable: true, kick_attempted: None, kick_signalled: None } }
+            AdminIntentExecution { phase: "succeeded", event_range: None, secret: None, outcome: AdminIntentOutcomeV1 { code: "share-revoked".into(), durable: true, kick_attempted: None, kick_signalled: None } }
         }
         AdminIntentV1::RevokeUserSessions { user_id, reason_code, .. } => {
-            let user_gate = state.socket_binding_gates.gate(SocketBindingKeyV1::User(user_id.clone()));
-            let Ok(admission) = tokio::time::timeout(std::time::Duration::from_secs(2), user_gate.lock_owned()).await else {
-                return AdminIntentExecution { phase: "cancelled", event_range: None, result: None, outcome: AdminIntentOutcomeV1 { code: "session-revoke-timeout".into(), durable: false, kick_attempted: None, kick_signalled: None } };
-            };
-            let revoked = tokio::time::timeout(std::time::Duration::from_secs(2), state.directory.revoke_auth_sessions_for_user(&user_id, &reason_code, Some(&principal.user_id), &principal.correlation_id)).await;
-            let Ok(Ok(revoked)) = revoked else {
-                return AdminIntentExecution { phase: "failed", event_range: None, result: None, outcome: AdminIntentOutcomeV1 { code: "session-revoke-rejected".into(), durable: false, kick_attempted: None, kick_signalled: None } };
+            let effect = admin_effect_receipt_claim(operation_id, intent_digest, "sessions-revoked");
+            let revoked = match state.directory.revoke_auth_sessions_for_user_with_admin_effect(&user_id, &reason_code, Some(&principal.user_id), &principal.correlation_id, &effect).await {
+                AdminEffectCommitV1::Applied(revoked) => revoked,
+                AdminEffectCommitV1::RejectedBeforeCommit => return admin_effect_rejected_before_commit(),
+                AdminEffectCommitV1::Indeterminate => return admin_effect_uncertain(),
             };
             for session in &revoked {
                 let binding = SocketBindingKeyV1::Session(session.id.clone());
                 state.socket_grants.invalidate_binding(binding.clone());
                 state.document_open_plans.invalidate_binding(&binding);
             }
-            drop(admission);
             let revoked_ids: BTreeSet<&str> = revoked.iter().map(|session| session.id.as_str()).collect();
             let sessions = state.directory.list_active_sync_sessions(None, ACTIVE_SYNC_SESSION_READ_MAX).await.unwrap_or_default();
             let mut attempted = 0u32;
@@ -6515,36 +6859,53 @@ async fn execute_admin_intent(state: &HubState, principal: &AdminPrincipalV1, in
                     signalled = signalled.saturating_add(1);
                 }
             }
-            AdminIntentExecution { phase: "succeeded", event_range: None, result: None, outcome: AdminIntentOutcomeV1 { code: "sessions-revoked".into(), durable: true, kick_attempted: Some(attempted), kick_signalled: Some(signalled) } }
+            AdminIntentExecution { phase: "succeeded", event_range: None, secret: None, outcome: AdminIntentOutcomeV1 { code: "sessions-revoked".into(), durable: true, kick_attempted: Some(attempted), kick_signalled: Some(signalled) } }
         }
         AdminIntentV1::KickConnection { sync_session_id, .. } => match state.session_kicks.get_cloned(&sync_session_id) {
             Some(notify) => {
                 notify.notify_one();
-                AdminIntentExecution { phase: "succeeded", event_range: None, result: None, outcome: AdminIntentOutcomeV1 { code: "connection-kick-signalled".into(), durable: false, kick_attempted: Some(1), kick_signalled: Some(1) } }
+                AdminIntentExecution { phase: "succeeded", event_range: None, secret: None, outcome: AdminIntentOutcomeV1 { code: "connection-kick-signalled".into(), durable: false, kick_attempted: Some(1), kick_signalled: Some(1) } }
             }
-            None => AdminIntentExecution { phase: "failed", event_range: None, result: None, outcome: AdminIntentOutcomeV1 { code: "connection-not-live".into(), durable: false, kick_attempted: Some(1), kick_signalled: Some(0) } },
+            None => AdminIntentExecution { phase: "failed", event_range: None, secret: None, outcome: AdminIntentOutcomeV1 { code: "connection-not-live".into(), durable: false, kick_attempted: Some(1), kick_signalled: Some(0) } },
         },
         AdminIntentV1::RebuildDirectoryProjections { expected_head_seq, .. } => {
             if !matches!(state.directory.head_seq().await, Ok(head) if head == expected_head_seq) {
-                return AdminIntentExecution { phase: "failed", event_range: None, result: None, outcome: AdminIntentOutcomeV1 { code: "directory-head-changed".into(), durable: false, kick_attempted: None, kick_signalled: None } };
+                return AdminIntentExecution { phase: "failed", event_range: None, secret: None, outcome: AdminIntentOutcomeV1 { code: "directory-head-changed".into(), durable: false, kick_attempted: None, kick_signalled: None } };
             }
             let control = operation_runtime.unwrap_or_else(|| {
                 Arc::new(AdminOperationRuntime {
-                    deadline: std::time::Instant::now() + std::time::Duration::from_secs(10),
+                    deadline: std::time::Instant::now() + ADMIN_OPERATION_DEADLINE,
                     completed: std::sync::atomic::AtomicU64::new(0),
                     total: std::sync::atomic::AtomicU64::new(0),
-                    cancel_requested: std::sync::atomic::AtomicBool::new(false),
+                    effect_state: std::sync::atomic::AtomicU8::new(ADMIN_EFFECT_ADMITTED),
+                    cooperative_cancel_requested: std::sync::atomic::AtomicBool::new(false),
                 })
             });
             match state.directory.rebuild_projections_controlled(control.as_ref()).await {
-                Ok(_) => AdminIntentExecution { phase: "succeeded", event_range: None, result: None, outcome: AdminIntentOutcomeV1 { code: "directory-projections-rebuilt".into(), durable: true, kick_attempted: None, kick_signalled: None } },
+                Ok(_) => AdminIntentExecution { phase: "succeeded", event_range: None, secret: None, outcome: AdminIntentOutcomeV1 { code: "directory-projections-rebuilt".into(), durable: true, kick_attempted: None, kick_signalled: None } },
                 Err(_) if control.is_cancelled() => {
-                    AdminIntentExecution { phase: "cancelled", event_range: None, result: None, outcome: AdminIntentOutcomeV1 { code: "directory-rebuild-cancelled".into(), durable: false, kick_attempted: None, kick_signalled: None } }
+                    AdminIntentExecution { phase: "cancelled", event_range: None, secret: None, outcome: AdminIntentOutcomeV1 { code: "directory-rebuild-cancelled".into(), durable: false, kick_attempted: None, kick_signalled: None } }
                 }
-                Err(_) => AdminIntentExecution { phase: "failed", event_range: None, result: None, outcome: AdminIntentOutcomeV1 { code: "directory-rebuild-rejected".into(), durable: false, kick_attempted: None, kick_signalled: None } },
+                Err(_) => AdminIntentExecution { phase: "failed", event_range: None, secret: None, outcome: AdminIntentOutcomeV1 { code: "directory-rebuild-rejected".into(), durable: false, kick_attempted: None, kick_signalled: None } },
             }
         }
         _ => unreachable!("closed admin directory intents were handled before dispatch"),
+    }
+}
+
+fn admin_execution_receipt(operation_id: String, correlation_id: String, execution: AdminIntentExecution) -> AdminIntentReceiptV1 {
+    AdminIntentReceiptV1 {
+        operation_id,
+        correlation_id,
+        state: match execution.phase {
+            "succeeded" => AdminIntentStateV1::Succeeded,
+            "cancelled" => AdminIntentStateV1::Cancelled,
+            _ => AdminIntentStateV1::Failed,
+        },
+        event_seq_first: execution.event_range.map(|range| range.0),
+        event_seq_last: execution.event_range.map(|range| range.1),
+        result: execution.secret.map(AdminIntentSecretResult::into_public),
+        outcome: execution.outcome,
     }
 }
 
@@ -6565,77 +6926,86 @@ async fn admin_intents(headers: HeaderMap, axum::extract::ConnectInfo(peer): axu
         let same = prior
             .first()
             .is_some_and(|row| row.fact.intent_digest == digest && row.fact.principal_user_id == principal.user_id && row.fact.principal_session_id == principal.auth_session_id && row.fact.principal_generation == principal.authorization_generation);
-        return if same { Ok((StatusCode::OK, DirectoryJson(receipt))) } else { Err(StatusCode::CONFLICT) };
+        let resolver_live = state.admin_operations.get_cloned(&receipt.operation_id).is_some();
+        return if same { Ok((StatusCode::OK, DirectoryJson(admin_audit_visibility(receipt, resolver_live)))) } else { Err(StatusCode::CONFLICT) };
     }
     let proposed_operation_id = directory::os_identity::time_ordered_id();
     let accepted = new_admin_audit_fact(&principal, &request_id, &digest, &proposed_operation_id, &metadata, "accepted", None, "accepted");
     let established = state.directory.append_admin_operation_audit(&accepted).await.map_err(directory_error_status)?;
     if established.fact.operation_id != proposed_operation_id {
         let joined = state.directory.admin_operation_audit_for_request(&request_id).await.map_err(directory_error_status)?;
-        return admin_audit_receipt(&joined).map(|receipt| (StatusCode::OK, DirectoryJson(receipt))).ok_or(StatusCode::CONFLICT);
+        return admin_audit_receipt(&joined)
+            .map(|receipt| {
+                let resolver_live = state.admin_operations.get_cloned(&receipt.operation_id).is_some();
+                (StatusCode::OK, DirectoryJson(admin_audit_visibility(receipt, resolver_live)))
+            })
+            .ok_or(StatusCode::CONFLICT);
     }
-    let still_authorized = authenticate_admin_principal(&state, &headers, Some(peer)).await.ok().is_some_and(|fresh| principal.same_authority(&fresh));
-    if !still_authorized {
-        let execution = AdminIntentExecution { phase: "cancelled", event_range: None, result: None, outcome: AdminIntentOutcomeV1 { code: "admin-authority-changed".into(), durable: false, kick_attempted: None, kick_signalled: None } };
+    let operation_permit = match state.admin_operation_slots.clone().try_acquire_owned() {
+        Ok(permit) => permit,
+        Err(_) => {
+            let execution = AdminIntentExecution { phase: "failed", event_range: None, secret: None, outcome: AdminIntentOutcomeV1 { code: "admin-operation-capacity".into(), durable: false, kick_attempted: None, kick_signalled: None } };
+            let terminal = new_admin_audit_fact(&principal, &request_id, &digest, &proposed_operation_id, &metadata, execution.phase, None, &execution.outcome.code);
+            state.directory.append_admin_operation_audit(&terminal).await.map_err(directory_error_status)?;
+            return Ok((StatusCode::OK, DirectoryJson(admin_execution_receipt(proposed_operation_id, principal.correlation_id, execution))));
+        }
+    };
+    let runtime = Arc::new(AdminOperationRuntime {
+        deadline: std::time::Instant::now() + ADMIN_OPERATION_DEADLINE,
+        completed: std::sync::atomic::AtomicU64::new(0),
+        total: std::sync::atomic::AtomicU64::new(0),
+        effect_state: std::sync::atomic::AtomicU8::new(ADMIN_EFFECT_PRE_EFFECT),
+        cooperative_cancel_requested: std::sync::atomic::AtomicBool::new(false),
+    });
+    state.admin_operations.insert(proposed_operation_id.clone(), runtime.clone());
+    let (response_tx, response_rx) = tokio::sync::oneshot::channel();
+    let task_state = state.clone();
+    let task_principal = principal.clone();
+    let task_request_id = request_id.clone();
+    let task_digest = digest.clone();
+    let task_operation_id = proposed_operation_id.clone();
+    let task_metadata = metadata.clone();
+    let task_runtime = runtime.clone();
+    let task_headers = headers.clone();
+    let asynchronous = matches!(&intent, AdminIntentV1::RebuildDirectoryProjections { .. });
+    let retained = async move {
+        let _cleanup = AdminOperationCleanup { operations: task_state.admin_operations.clone(), operation_id: task_operation_id.clone(), _permit: operation_permit };
+        let mut authority = None;
+        let execution = match authenticate_admin_principal(&task_state, &task_headers, Some(peer)).await {
+            Ok(fresh) if task_principal.same_authority(&fresh) => Some(execute_admin_intent(&task_state, &task_principal, &task_operation_id, &task_digest, intent, Some(task_runtime.clone()), &mut authority).await),
+            _ => Some(AdminIntentExecution { phase: "cancelled", event_range: None, secret: None, outcome: AdminIntentOutcomeV1 { code: "admin-authority-changed".into(), durable: false, kick_attempted: None, kick_signalled: None } }),
+        };
+        let Some(execution) = execution else {
+            let _ = response_tx.send(None);
+            return;
+        };
+        if execution.phase == "uncertain" {
+            drop(authority);
+            let _ = response_tx.send(None);
+            return;
+        }
+        let terminal = new_admin_audit_fact(&task_principal, &task_request_id, &task_digest, &task_operation_id, &task_metadata, execution.phase, execution.event_range, &execution.outcome.code);
+        if !append_admin_terminal_with_retry(&task_state, &terminal).await {
+            let _ = response_tx.send(None);
+            return;
+        }
+        drop(authority);
+        if response_tx.is_closed() {
+            drop(execution);
+            return;
+        }
+        if let Err(mut execution) = response_tx.send(Some(execution)) {
+            execution.take();
+        }
+    };
+    if state.admin_operation_tasks.spawn(proposed_operation_id.clone(), runtime.clone(), retained).is_err() {
+        state.admin_operations.remove(&proposed_operation_id);
+        let execution = AdminIntentExecution { phase: "failed", event_range: None, secret: None, outcome: AdminIntentOutcomeV1 { code: "admin-operation-shutting-down".into(), durable: false, kick_attempted: None, kick_signalled: None } };
         let terminal = new_admin_audit_fact(&principal, &request_id, &digest, &proposed_operation_id, &metadata, execution.phase, None, &execution.outcome.code);
         state.directory.append_admin_operation_audit(&terminal).await.map_err(directory_error_status)?;
-        return Ok((
-            StatusCode::OK,
-            DirectoryJson(AdminIntentReceiptV1 {
-                operation_id: proposed_operation_id,
-                correlation_id: principal.correlation_id,
-                state: AdminIntentStateV1::Cancelled,
-                event_seq_first: None,
-                event_seq_last: None,
-                result: None,
-                outcome: execution.outcome,
-            }),
-        ));
+        return Ok((StatusCode::OK, DirectoryJson(admin_execution_receipt(proposed_operation_id, principal.correlation_id, execution))));
     }
-    if matches!(&intent, AdminIntentV1::RebuildDirectoryProjections { .. }) {
-        let operation_permit = match state.admin_operation_slots.clone().try_acquire_owned() {
-            Ok(permit) => permit,
-            Err(_) => {
-                let execution = AdminIntentExecution { phase: "failed", event_range: None, result: None, outcome: AdminIntentOutcomeV1 { code: "admin-operation-capacity".into(), durable: false, kick_attempted: None, kick_signalled: None } };
-                let terminal = new_admin_audit_fact(&principal, &request_id, &digest, &proposed_operation_id, &metadata, execution.phase, None, &execution.outcome.code);
-                state.directory.append_admin_operation_audit(&terminal).await.map_err(directory_error_status)?;
-                return Ok((
-                    StatusCode::OK,
-                    DirectoryJson(AdminIntentReceiptV1 {
-                        operation_id: proposed_operation_id,
-                        correlation_id: principal.correlation_id,
-                        state: AdminIntentStateV1::Failed,
-                        event_seq_first: None,
-                        event_seq_last: None,
-                        result: None,
-                        outcome: execution.outcome,
-                    }),
-                ));
-            }
-        };
-        let runtime = Arc::new(AdminOperationRuntime {
-            deadline: std::time::Instant::now() + std::time::Duration::from_secs(10),
-            completed: std::sync::atomic::AtomicU64::new(0),
-            total: std::sync::atomic::AtomicU64::new(0),
-            cancel_requested: std::sync::atomic::AtomicBool::new(false),
-        });
-        state.admin_operations.insert(proposed_operation_id.clone(), runtime.clone());
-        let task_state = state.clone();
-        let task_principal = principal.clone();
-        let task_request_id = request_id.clone();
-        let task_digest = digest.clone();
-        let task_operation_id = proposed_operation_id.clone();
-        let task_metadata = metadata.clone();
-        tokio::spawn(async move {
-            let interrupted = new_admin_audit_fact(&task_principal, &task_request_id, &task_digest, &task_operation_id, &task_metadata, "cancelled", None, "interrupted-before-terminal");
-            let mut cleanup = AdminOperationCleanup { directory: task_state.directory.clone(), operations: task_state.admin_operations.clone(), operation_id: task_operation_id.clone(), terminal: Some(interrupted), _permit: operation_permit };
-            let execution = execute_admin_intent(&task_state, &task_principal, intent, Some(runtime)).await;
-            let terminal = new_admin_audit_fact(&task_principal, &task_request_id, &task_digest, &task_operation_id, &task_metadata, execution.phase, execution.event_range, &execution.outcome.code);
-            cleanup.terminal = Some(terminal);
-            if task_state.directory.append_admin_operation_audit(cleanup.terminal()).await.is_ok() {
-                cleanup.disarm();
-            }
-        });
+    if asynchronous {
         return Ok((
             StatusCode::ACCEPTED,
             DirectoryJson(AdminIntentReceiptV1 {
@@ -6649,25 +7019,10 @@ async fn admin_intents(headers: HeaderMap, axum::extract::ConnectInfo(peer): axu
             }),
         ));
     }
-    let execution = execute_admin_intent(&state, &principal, intent, None).await;
-    let terminal = new_admin_audit_fact(&principal, &request_id, &digest, &proposed_operation_id, &metadata, execution.phase, execution.event_range, &execution.outcome.code);
-    state.directory.append_admin_operation_audit(&terminal).await.map_err(directory_error_status)?;
-    Ok((
-        StatusCode::OK,
-        DirectoryJson(AdminIntentReceiptV1 {
-            operation_id: proposed_operation_id,
-            correlation_id: principal.correlation_id,
-            state: match execution.phase {
-                "succeeded" => AdminIntentStateV1::Succeeded,
-                "cancelled" => AdminIntentStateV1::Cancelled,
-                _ => AdminIntentStateV1::Failed,
-            },
-            event_seq_first: execution.event_range.map(|range| range.0),
-            event_seq_last: execution.event_range.map(|range| range.1),
-            result: execution.result,
-            outcome: execution.outcome,
-        }),
-    ))
+    match tokio::time::timeout_at(tokio::time::Instant::from_std(runtime.deadline), response_rx).await {
+        Ok(Ok(Some(execution))) => Ok((StatusCode::OK, DirectoryJson(admin_execution_receipt(proposed_operation_id, principal.correlation_id, execution)))),
+        Ok(Ok(None)) | Ok(Err(_)) | Err(_) => Err(StatusCode::SERVICE_UNAVAILABLE),
+    }
 }
 
 async fn admin_overview(headers: HeaderMap, axum::extract::ConnectInfo(peer): axum::extract::ConnectInfo<SocketAddr>, State(state): State<HubState>) -> Result<Json<serde_json::Value>, StatusCode> {
@@ -7379,6 +7734,7 @@ async fn connect_directory(data_dir: &std::path::Path) -> Result<Arc<HubDirector
 
 #[tokio::main]
 async fn main() -> Result<(), HubError> {
+    if trusted_catalog_command::dispatch(&std::env::args_os().skip(1).collect::<Vec<_>>()).await? { return Ok(()); }
     let port: u16 = std::env::var("OS_HUB_PORT").ok().and_then(|value| value.parse().ok()).unwrap_or(8787);
     let bind: std::net::IpAddr = std::env::var("OS_HUB_BIND").unwrap_or_else(|_| "0.0.0.0".into()).parse().map_err(|_| HubError::UnsafeAuthConfiguration("OS_HUB_BIND must be an IP address".into()))?;
     let mode = HubMode::from_environment(bind)?;
@@ -7436,6 +7792,8 @@ async fn main() -> Result<(), HubError> {
     };
     let openable_catalog = artifact_authority.as_ref().map(|configured| -> Arc<dyn DocumentOpenCatalogAuthorityV1> { configured.catalog.clone() });
     let socket_binding_gates = Arc::new(SocketBindingGatesV1::default());
+    let fanout = Arc::new(ShardedMap::new());
+    let fanout_capacity = 256;
     #[cfg(all(feature = "sqlite", feature = "native-artifact-execution"))]
     let inference_runtime = match gis_map_binding.as_ref() {
         Some(binding) => {
@@ -7443,8 +7801,14 @@ async fn main() -> Result<(), HubError> {
             std::fs::create_dir_all(&root)?;
             let ledger = Arc::new(InferenceJobLedgerV1::open(&root.join("gis-map-jobs.sqlite3")).map_err(|error| AuthorityError::Catalog(format!("inference job ledger unavailable: {error:?}")))?);
             let configured = artifact_authority.as_ref().ok_or_else(|| AuthorityError::Catalog("GIS Map approval requires the configured canonical artifact authority".into()))?;
-            let publisher: Arc<dyn GisMapApprovalCheckpointPublisherV1> =
-                Arc::new(GisMapApprovalCheckpointPublisherV1Impl { directory: directory.clone(), directory_service: directory_service.clone(), artifact_cas: artifact_cas.clone(), authority: configured.authority.clone() });
+            let publisher: Arc<dyn GisMapApprovalCheckpointPublisherV1> = Arc::new(GisMapApprovalCheckpointPublisherV1Impl {
+                directory: directory.clone(),
+                directory_service: directory_service.clone(),
+                artifact_cas: artifact_cas.clone(),
+                authority: configured.authority.clone(),
+                fanout: fanout.clone(),
+                fanout_capacity,
+            });
             let committer = Arc::new(RetainedGisMapApprovalCommitterV1::new(db.clone(), db.storage().await, ledger.clone(), publisher));
             Some(Arc::new(HubInferenceRuntimeV1::new(binding.clone(), ledger, committer)))
         }
@@ -7477,10 +7841,11 @@ async fn main() -> Result<(), HubError> {
         space_administration_cursor_key,
         admin_operations: Arc::new(ShardedMap::new()),
         admin_operation_slots: Arc::new(tokio::sync::Semaphore::new(64)),
+        admin_operation_tasks: Arc::new(AdminOperationTaskOwner::new(ADMIN_OPERATION_SHUTDOWN_DEADLINE)),
         readiness,
         admin_dir,
-        fanout: Arc::new(ShardedMap::new()),
-        fanout_capacity: 256,
+        fanout,
+        fanout_capacity,
         #[cfg(test)]
         live_gate: None,
         #[cfg(test)]
@@ -7507,6 +7872,7 @@ async fn main() -> Result<(), HubError> {
     };
     let addr = SocketAddr::new(bind, port);
     let listener = tokio::net::TcpListener::bind(addr).await?;
+    let admin_operation_tasks = state.admin_operation_tasks.clone();
     let bootstrap_task = local_bootstrap.clone().map(|transport| {
         let control: Arc<dyn IdentityVerificationControl> = bootstrap_control.clone();
         tokio::spawn(serve_local_bootstrap(transport, directory, control))
@@ -7537,6 +7903,7 @@ async fn main() -> Result<(), HubError> {
     } else {
         server.await.map_err(HubError::Io)
     };
+    admin_operation_tasks.shutdown().await;
     #[cfg(all(feature = "sqlite", feature = "native-artifact-execution"))]
     let inference_close_result = match inference_runtime {
         Some(inference_runtime) => inference_runtime.close().await.map_err(HubError::InferenceShutdown),
@@ -7549,6 +7916,9 @@ async fn main() -> Result<(), HubError> {
     inference_close_result
 }
 //#endregion 🔖️Main
+
+#[path = "../../🗿️artifact-authority/🔏️trusted-catalog/📤️command/🦀️.rs"]
+mod trusted_catalog_command;
 
 //#region 🔖️Tests
 // 🪶️ Gated on the `sqlite` feature (not just `test`): every test below constructs a `HubState`
@@ -7679,7 +8049,7 @@ mod tests {
         assert!(examined > 16);
     }
     use tokio_tungstenite::connect_async;
-    use tokio_tungstenite::tungstenite::{client::IntoClientRequest, Message as WsMessage};
+    use tokio_tungstenite::tungstenite::{Message as WsMessage, client::IntoClientRequest};
 
     /// @emoji 🏛️ The seeded space id every test routes against (see `SqliteDirectory::seed`).
     const STUDIO: &str = "default";
@@ -7730,6 +8100,7 @@ mod tests {
             capability_requests: Vec::new(),
             extension_points: Vec::new(),
             execution: semio_framework::ExecutionMode::Isolated,
+            execution_protocol: semio_framework::ExecutionProtocol { app_channel_version: directory::os_spr::CHANNEL_VERSION },
             quotas: semio_framework::kernel::QuotaSchema::default(),
             contributions: semio_framework::ContributionSet::default(),
             assets: Vec::new(),
@@ -7819,7 +8190,7 @@ mod tests {
         std::fs::rename(stage, generations.join(generation)).expect("publish trusted generation");
         let bundle_sha256 = os_directory::hex_lower(&Sha256::digest(&bundle_bytes));
         let current_bytes = format!(
-            r#"{{"profileId":"stdio-native-openable-v1","generationId":"{generation}","bundleSha256":"{bundle_sha256}"}}
+            r#"{{"profileId":"stdio-native-openable-v1","generationId":"{generation}","bundleSha256":"{bundle_sha256}","publicationRevision":"1"}}
 "#
         )
         .into_bytes();
@@ -7958,6 +8329,7 @@ mod tests {
             space_administration_cursor_key: [0xa5; 32],
             admin_operations: Arc::new(ShardedMap::new()),
             admin_operation_slots: Arc::new(tokio::sync::Semaphore::new(64)),
+            admin_operation_tasks: Arc::new(AdminOperationTaskOwner::new(ADMIN_OPERATION_SHUTDOWN_DEADLINE)),
             readiness: Arc::new(hub_readiness(HubMode::Development, "loopback", "00112233445566778899aabbccddeeff".into(), true, false, false, true, true, false, false)),
             admin_dir: dir.join("admin-dist"),
             fanout: Arc::new(ShardedMap::new()),
@@ -8018,6 +8390,7 @@ mod tests {
             space_administration_cursor_key: [0xa5; 32],
             admin_operations: Arc::new(ShardedMap::new()),
             admin_operation_slots: Arc::new(tokio::sync::Semaphore::new(64)),
+            admin_operation_tasks: Arc::new(AdminOperationTaskOwner::new(ADMIN_OPERATION_SHUTDOWN_DEADLINE)),
             readiness: Arc::new(hub_readiness(HubMode::Development, "loopback", "00112233445566778899aabbccddeeff".into(), true, false, false, true, true, false, false)),
             admin_dir: dir.join("admin-dist"),
             fanout: Arc::new(ShardedMap::new()),
@@ -8239,7 +8612,7 @@ mod tests {
         std::fs::write(
             stage.join("data/trusted-catalog/current.json"),
             format!(
-                r#"{{"profileId":"{}","generationId":"{generation_id}","bundleSha256":"{bundle_sha256}"}}
+                r#"{{"profileId":"{}","generationId":"{generation_id}","bundleSha256":"{bundle_sha256}","publicationRevision":"1"}}
 "#,
                 test_support::GIS_MAP_TEST_PROFILE_ID
             ),
@@ -8431,6 +8804,72 @@ mod tests {
 
     #[cfg(all(feature = "sqlite", feature = "native-artifact-execution"))]
     #[tokio::test]
+    async fn gis_map_applied_checkpoint_notifies_two_peers_with_one_exact_rebootstrap_pair() {
+        let fanout = ShardedMap::new();
+        let fanout_capacity = 8;
+        let scope = DocumentScope::new("gis-map-space", "gis-map-document");
+        let sender = fanout.get_or_insert_with_cloned(document_scope_key_v1(&scope), || broadcast::channel(fanout_capacity).0);
+        let mut first = sender.subscribe();
+        let mut second = sender.subscribe();
+        assert!(matches!(first.try_recv(), Err(broadcast::error::TryRecvError::Empty)));
+        assert!(matches!(second.try_recv(), Err(broadcast::error::TryRecvError::Empty)));
+        let checkpoint = PublishedArtifactCheckpoint {
+            scope: scope.clone(),
+            checkpoint_id: ArtifactHash([0x41; 32]),
+            parent_checkpoint_id: Some(ArtifactHash([0x40; 32])),
+            descriptor_digest_v1: ArtifactHash([0x42; 32]),
+            baseline_frontier: ArtifactFrontier {
+                document_id: scope.document_id.clone(),
+                head_edit_ordinal: 7,
+                head_edit_id: "gis-map-create-region".into(),
+                last_commit_seq: 5,
+                chain_hash: ArtifactHash([0x43; 32]),
+            },
+            pack: os_directory::PublishedArtifactBlob { sha256: ArtifactHash([0x44; 32]), byte_length: 11 },
+            spr: os_directory::PublishedArtifactBlob { sha256: ArtifactHash([0x45; 32]), byte_length: 13 },
+            aggregate_sha256: ArtifactHash([0x46; 32]),
+            published_at_ms: 17,
+        };
+        let genesis = ArtifactFrontier { document_id: scope.document_id.clone(), head_edit_ordinal: 0, head_edit_id: String::new(), last_commit_seq: 0, chain_hash: ArtifactHash([0; 32]) };
+        assert!(GisMapApprovalCheckpointPublisherV1Impl::current_matches_base(&scope, &genesis, None));
+        for hostile in [
+            ArtifactFrontier { document_id: "substituted-document".into(), ..genesis.clone() },
+            ArtifactFrontier { head_edit_ordinal: 1, ..genesis.clone() },
+            ArtifactFrontier { head_edit_id: "non-genesis".into(), ..genesis.clone() },
+            ArtifactFrontier { last_commit_seq: 1, ..genesis.clone() },
+            ArtifactFrontier { chain_hash: ArtifactHash([1; 32]), ..genesis.clone() },
+        ] {
+            assert!(!GisMapApprovalCheckpointPublisherV1Impl::current_matches_base(&scope, &hostile, None), "a missing Directory checkpoint accepts only the exact actor genesis frontier");
+        }
+        assert!(GisMapApprovalCheckpointPublisherV1Impl::current_matches_base(&scope, &checkpoint.baseline_frontier, Some(&checkpoint)));
+        let substituted_scope = DocumentScope::new("substituted-space", scope.document_id.clone());
+        assert!(!GisMapApprovalCheckpointPublisherV1Impl::current_matches_base(&substituted_scope, &checkpoint.baseline_frontier, Some(&checkpoint)));
+        for hostile in [
+            ArtifactFrontier { document_id: "substituted-document".into(), ..checkpoint.baseline_frontier.clone() },
+            ArtifactFrontier { head_edit_ordinal: checkpoint.baseline_frontier.head_edit_ordinal + 1, ..checkpoint.baseline_frontier.clone() },
+            ArtifactFrontier { head_edit_id: "substituted-edit".into(), ..checkpoint.baseline_frontier.clone() },
+            ArtifactFrontier { last_commit_seq: checkpoint.baseline_frontier.last_commit_seq + 1, ..checkpoint.baseline_frontier.clone() },
+            ArtifactFrontier { chain_hash: ArtifactHash([0x47; 32]), ..checkpoint.baseline_frontier.clone() },
+        ] {
+            assert!(!GisMapApprovalCheckpointPublisherV1Impl::current_matches_base(&scope, &hostile, Some(&checkpoint)), "an active Directory checkpoint requires the exact scope and base frontier");
+        }
+        publish_gis_map_checkpoint_change(&fanout, fanout_capacity, &checkpoint);
+        let expected = ServerFrame::RebootstrapRequired {
+            control: wire_rebootstrap(&os_directory::RebootstrapRequired {
+                scope,
+                checkpoint_id: checkpoint.checkpoint_id,
+                descriptor_digest_v1: checkpoint.descriptor_digest_v1,
+                baseline_frontier: checkpoint.baseline_frontier.clone(),
+            }),
+        };
+        assert_eq!(first.recv().await.expect("first peer checkpoint change"), expected);
+        assert_eq!(second.recv().await.expect("second peer checkpoint change"), expected);
+        assert!(matches!(first.try_recv(), Err(broadcast::error::TryRecvError::Empty)), "one applied checkpoint emits exactly one control per peer");
+        assert!(matches!(second.try_recv(), Err(broadcast::error::TryRecvError::Empty)), "one applied checkpoint emits exactly one control per peer");
+    }
+
+    #[cfg(all(feature = "sqlite", feature = "native-artifact-execution"))]
+    #[tokio::test]
     async fn gis_map_proposal_routes_fail_closed_without_a_trusted_map_binding() {
         let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧪️fixtures/🗳️gis-map-proposal-approval-v1/🔣️.json")).expect("proposal fixture");
         let unavailable = fixture["errors"].as_array().expect("error vocabulary").iter().find(|row| row["name"] == "no-binding").expect("no-binding row");
@@ -8567,6 +9006,23 @@ mod tests {
     }
 
     #[cfg(all(feature = "sqlite", feature = "test-support"))]
+    async fn wait_for_inference_state(addr: SocketAddr, space_id: &str, document_id: &str, job_id: &str, headers: &[(&str, &str)], expected: &str) -> serde_json::Value {
+        tokio::time::timeout(std::time::Duration::from_secs(5), async {
+            loop {
+                let response = raw_http_get(addr, &inference_route(space_id, document_id, &format!("/{job_id}/events?after=0")), headers).await;
+                assert_eq!(response.status, 200, "inference event poll failed: {}", String::from_utf8_lossy(&response.body));
+                let page: serde_json::Value = serde_json::from_slice(&response.body).expect("inference event page");
+                if page["state"] == expected {
+                    return page;
+                }
+                tokio::task::yield_now().await;
+            }
+        })
+        .await
+        .expect("inference reaches its bounded terminal state")
+    }
+
+    #[cfg(all(feature = "sqlite", feature = "test-support"))]
     fn proposal_fixture() -> serde_json::Value {
         serde_json::from_str(include_str!("../../🧪️fixtures/🗳️gis-map-proposal-approval-v1/🔣️.json")).expect("proposal fixture")
     }
@@ -8577,6 +9033,9 @@ mod tests {
         let fixture = proposal_fixture();
         let (bound, author, _spectator) = gis_map_inference_fixture("map-owner@example.test", "map-watcher@example.test").await;
         let (space_id, document_id) = (bound.space_id.clone(), bound.document_id.clone());
+        let runtime = bound.state.inference_runtime.as_ref().expect("GIS inference runtime").clone();
+        let checkpoint = Arc::new(semio_hub::inference::runtime::InferenceCheckpointTestGateV1::new());
+        runtime.install_checkpoint_test_gate(checkpoint.clone()).expect("one actual codec checkpoint gate");
         let addr = spawn_server(bound.state.clone()).await;
         let bearer = format!("Bearer {}", author.token);
         let headers = [("Authorization", bearer.as_str()), ("Content-Type", "application/json")];
@@ -8584,30 +9043,109 @@ mod tests {
         assert_eq!(accepted.status, 200, "an Author with a bound Map may submit: {}", String::from_utf8_lossy(&accepted.body));
         let receipt: serde_json::Value = serde_json::from_slice(&accepted.body).expect("closed job receipt");
         assert_eq!(receipt["schema"], "semio.hub.inference-job-receipt/v1");
-        assert_eq!(receipt["state"], "succeeded");
-        assert_eq!(receipt["proposalState"], "offered");
+        assert_eq!(receipt["state"], "running", "the submit response returns before retained compute completes");
+        assert_eq!(receipt["proposalState"], "none");
+        assert_eq!(receipt["proposalHash"], serde_json::Value::Null);
         let job_id = receipt["jobId"].as_str().expect("server-minted job id").to_owned();
-        let expected_proposal = fixture["proposalCanonical"].as_str().expect("canonical proposal").replace(fixture["sampleJobId"].as_str().expect("sample job"), &job_id);
-        assert_eq!(receipt["proposalHash"].as_str().expect("offered proposal hash"), semio_hub::inference::sha256(expected_proposal.as_bytes()), "the server's canonical CreateRegion bytes must equal the neutral corpus literal for this job");
+        tokio::time::timeout(std::time::Duration::from_secs(5), checkpoint.entered()).await.expect("real GIS codec reached its cancellation checkpoint");
         let page: serde_json::Value = serde_json::from_slice(&raw_http_get(addr, &inference_route(&space_id, &document_id, &format!("/{job_id}/events?after=0")), &headers).await.body).expect("owner event page");
         assert_eq!(page["schema"], "semio.hub.inference-job-events/v1");
         assert_eq!(page["stale"], false);
         assert_eq!(page["cancelRequested"], false);
         let kinds: Vec<&str> = page["events"].as_array().expect("events").iter().map(|row| row["kind"].as_str().expect("kind")).collect();
-        assert_eq!(kinds, vec!["accepted", "running", "succeeded"], "the private stream is ordered and dense");
+        assert_eq!(kinds, vec!["accepted", "running"], "the private stream exposes Running while actual compute is paused");
         let cursors: Vec<u64> = page["progress"].as_array().expect("progress").iter().map(|row| row["cursor"].as_u64().expect("cursor")).collect();
         assert!(cursors.windows(2).all(|pair| pair[1] == pair[0] + 1), "the progress cursor is monotonic and dense: {cursors:?}");
         assert!(cursors.len() as u64 <= fixture["limits"]["progressMaxCursor"].as_u64().expect("cursor bound"), "progress is bounded");
         assert_eq!(page["nextCursor"].as_u64().expect("next cursor"), cursors.last().copied().unwrap_or(0));
         let cancelled: serde_json::Value = serde_json::from_slice(&raw_http_request(addr, "POST", &inference_route(&space_id, &document_id, &format!("/{job_id}/cancel")), &headers, &[]).await.body).expect("cancel page");
+        checkpoint.release();
         assert_eq!(cancelled["cancelRequested"], true, "cancellation is durably requested before any terminal effect");
-        assert_eq!(cancelled["proposalState"], "cancelled", "a cancelled offer retires its private proposal");
+        assert_eq!(cancelled["proposalState"], "none", "a cancelled running job never publishes a private proposal");
         assert_eq!(cancelled["proposalHash"], serde_json::Value::Null, "no private proposal survives cancellation");
+        tokio::time::timeout(std::time::Duration::from_secs(5), async {
+            loop {
+                if runtime.retained_operation_count_for_test().await.expect("retained worker count") == 0 {
+                    break;
+                }
+                tokio::task::yield_now().await;
+            }
+        })
+        .await
+        .expect("the cancelled blocking worker is joined and released");
         let after: serde_json::Value = serde_json::from_slice(&raw_http_get(addr, &inference_route(&space_id, &document_id, &format!("/{job_id}/events?after=0")), &headers).await.body).expect("retired page");
         assert!(after["events"].as_array().expect("events").iter().any(|row| row["kind"] == "cancel-requested"));
-        let approval = serde_json::json!({ "schema": "semio.hub.inference-approval/v1", "version": 1, "jobId": job_id, "proposalHash": receipt["proposalHash"] }).to_string();
+        assert_eq!(after["events"].as_array().expect("events").iter().filter(|row| row["kind"] == "cancelled").count(), 1, "late codec completion cannot append a second terminal");
+        let approval = serde_json::json!({ "schema": "semio.hub.inference-approval/v1", "version": 1, "jobId": job_id, "proposalHash": "9".repeat(64) }).to_string();
         let denied = raw_http_request(addr, "POST", &inference_route(&space_id, &document_id, &format!("/{job_id}/approval")), &headers, approval.as_bytes()).await;
         assert_eq!(denied.status, 409, "a cancelled offer can never be approved afterwards");
+    }
+
+    #[cfg(all(feature = "sqlite", feature = "test-support"))]
+    #[tokio::test]
+    async fn gis_map_inference_runtime_close_signals_and_joins_actual_codec_work() {
+        let (bound, author, _spectator) = gis_map_inference_fixture("close-owner@example.test", "close-watcher@example.test").await;
+        let (space_id, document_id) = (bound.space_id.clone(), bound.document_id.clone());
+        let runtime = bound.state.inference_runtime.as_ref().expect("GIS inference runtime").clone();
+        let checkpoint = Arc::new(semio_hub::inference::runtime::InferenceCheckpointTestGateV1::new());
+        runtime.install_checkpoint_test_gate(checkpoint.clone()).expect("one actual codec checkpoint gate");
+        let addr = spawn_server(bound.state.clone()).await;
+        let bearer = format!("Bearer {}", author.token);
+        let headers = [("Authorization", bearer.as_str()), ("Content-Type", "application/json")];
+        let submitted = raw_http_request(addr, "POST", &inference_route(&space_id, &document_id, ""), &headers, inference_intent("12121212121212121212121212121212").as_bytes()).await;
+        assert_eq!(submitted.status, 200);
+        let receipt: serde_json::Value = serde_json::from_slice(&submitted.body).expect("running job receipt");
+        assert_eq!(receipt["state"], "running");
+        tokio::time::timeout(std::time::Duration::from_secs(5), checkpoint.entered()).await.expect("real GIS codec reached the shutdown checkpoint");
+        assert_eq!(runtime.retained_operation_count_for_test().await.expect("retained worker count"), 1);
+        tokio::time::timeout(std::time::Duration::from_secs(5), runtime.close()).await.expect("runtime close deadline").expect("runtime close");
+        assert_eq!(runtime.retained_operation_count_for_test().await.expect("retained worker count"), 0, "close joins the outer and blocking worker before returning");
+    }
+
+    #[cfg(all(feature = "sqlite", feature = "test-support"))]
+    #[tokio::test]
+    async fn gis_map_inference_revocation_after_compute_refuses_late_publication() {
+        let (bound, author, _spectator) = gis_map_inference_fixture("revoked-owner@example.test", "revoked-watcher@example.test").await;
+        let (space_id, document_id) = (bound.space_id.clone(), bound.document_id.clone());
+        let runtime = bound.state.inference_runtime.as_ref().expect("GIS inference runtime").clone();
+        let checkpoint = Arc::new(semio_hub::inference::runtime::InferenceCheckpointTestGateV1::new());
+        runtime.install_checkpoint_test_gate(checkpoint.clone()).expect("one actual codec checkpoint gate");
+        let session = match HubCapability::parse(&author.token).expect("session capability") {
+            HubCapability::Session(capability) => bound.state.directory.authenticate_session(&capability).await.expect("session lookup").expect("live session"),
+            _ => panic!("test issuer returned a non-session capability"),
+        };
+        let addr = spawn_server(bound.state.clone()).await;
+        let bearer = format!("Bearer {}", author.token);
+        let headers = [("Authorization", bearer.as_str()), ("Content-Type", "application/json")];
+        let submitted = raw_http_request(addr, "POST", &inference_route(&space_id, &document_id, ""), &headers, inference_intent("13131313131313131313131313131313").as_bytes()).await;
+        assert_eq!(submitted.status, 200);
+        let receipt: serde_json::Value = serde_json::from_slice(&submitted.body).expect("running job receipt");
+        let job_id = receipt["jobId"].as_str().expect("job id").to_owned();
+        tokio::time::timeout(std::time::Duration::from_secs(5), checkpoint.entered()).await.expect("real GIS codec reached the revocation checkpoint");
+        let owner = semio_hub::inference::sqlite::InferenceReaderV1 {
+            user_id: &session.user_id,
+            session_id: &session.id,
+            authorization_generation: session.authorization_generation,
+            space_id: &space_id,
+            document_id: &document_id,
+        };
+        let identity = runtime.ledger().identity_of(&job_id, &owner).expect("retained owner identity");
+        bound.state.directory.revoke_auth_sessions_for_user(&author.user_id, "test-revocation", None, "gis-map-inference-test").await.expect("revoke the retained owner");
+        checkpoint.release();
+        tokio::time::timeout(std::time::Duration::from_secs(5), async {
+            loop {
+                if runtime.retained_operation_count_for_test().await.expect("retained worker count") == 0 {
+                    break;
+                }
+                tokio::task::yield_now().await;
+            }
+        })
+        .await
+        .expect("revoked worker reaches terminal");
+        let page = runtime.ledger().events(&job_id, &semio_hub::inference::runtime::reader(&identity), 0, u64::try_from(now_ms()).expect("test clock")).expect("private terminal page");
+        assert_eq!(page.state, semio_hub::inference::schema::InferenceJobStateV1::Cancelled);
+        assert_eq!(page.proposal_state, semio_hub::inference::schema::InferenceProposalStateV1::None);
+        assert!(page.proposal_hash.is_none(), "revocation before the final authority fence publishes no proposal");
     }
 
     #[cfg(all(feature = "sqlite", feature = "test-support"))]
@@ -8626,7 +9164,8 @@ mod tests {
         assert_eq!(accepted.status, 200, "{}", String::from_utf8_lossy(&accepted.body));
         let receipt: serde_json::Value = serde_json::from_slice(&accepted.body).expect("job receipt");
         let job_id = receipt["jobId"].as_str().expect("job id").to_owned();
-        let approval = serde_json::json!({ "schema": "semio.hub.inference-approval/v1", "version": 1, "jobId": job_id, "proposalHash": receipt["proposalHash"] }).to_string();
+        let terminal = wait_for_inference_state(addr, &space_id, &document_id, &job_id, &owner_headers, "succeeded").await;
+        let approval = serde_json::json!({ "schema": "semio.hub.inference-approval/v1", "version": 1, "jobId": job_id, "proposalHash": terminal["proposalHash"] }).to_string();
         let peer_bearer = format!("Bearer {}", peer.token);
         let spectator_bearer = format!("Bearer {}", spectator.token);
         let denied_code = fixture["visibility"].as_array().expect("visibility").iter().find(|row| row["role"] == "peer-author-same-space").expect("peer row")["expectedCode"].clone();
@@ -8660,9 +9199,11 @@ mod tests {
         let addr = spawn_server(bound.state.clone()).await;
         let bearer = format!("Bearer {}", author.token);
         let headers = [("Authorization", bearer.as_str()), ("Content-Type", "application/json")];
-        let receipt: serde_json::Value =
+        let running: serde_json::Value =
             serde_json::from_slice(&raw_http_request(addr, "POST", &inference_route(&space_id, &document_id, ""), &headers, inference_intent("33333333333333333333333333333333").as_bytes()).await.body).expect("job receipt");
-        let job_id = receipt["jobId"].as_str().expect("job id").to_owned();
+        let job_id = running["jobId"].as_str().expect("job id").to_owned();
+        assert_eq!(running["state"], "running");
+        let receipt = wait_for_inference_state(addr, &space_id, &document_id, &job_id, &headers, "succeeded").await;
         let proposal_hash = receipt["proposalHash"].as_str().expect("offered hash").to_owned();
         let wrong = serde_json::json!({ "schema": "semio.hub.inference-approval/v1", "version": 1, "jobId": job_id, "proposalHash": "9".repeat(64) }).to_string();
         let rejected = raw_http_request(addr, "POST", &inference_route(&space_id, &document_id, &format!("/{job_id}/approval")), &headers, wrong.as_bytes()).await;
@@ -8688,16 +9229,24 @@ mod tests {
     async fn gis_map_approval_is_idempotent_across_duplicate_requests_and_restart() {
         let (bound, author, _spectator) = gis_map_inference_fixture("idempotent-owner@example.test", "idempotent-watcher@example.test").await;
         let (space_id, document_id) = (bound.space_id.clone(), bound.document_id.clone());
+        let runtime = bound.state.inference_runtime.as_ref().expect("GIS inference runtime").clone();
+        let checkpoint = Arc::new(semio_hub::inference::runtime::InferenceCheckpointTestGateV1::new());
+        runtime.install_checkpoint_test_gate(checkpoint.clone()).expect("one actual codec checkpoint gate");
         let addr = spawn_server(bound.state.clone()).await;
         let bearer = format!("Bearer {}", author.token);
         let headers = [("Authorization", bearer.as_str()), ("Content-Type", "application/json")];
         let first: serde_json::Value = serde_json::from_slice(&raw_http_request(addr, "POST", &inference_route(&space_id, &document_id, ""), &headers, inference_intent("55555555555555555555555555555555").as_bytes()).await.body).expect("job receipt");
+        assert_eq!(first["state"], "running");
+        tokio::time::timeout(std::time::Duration::from_secs(5), checkpoint.entered()).await.expect("real GIS codec reached the duplicate-submit gate");
         let repeated: serde_json::Value =
             serde_json::from_slice(&raw_http_request(addr, "POST", &inference_route(&space_id, &document_id, ""), &headers, inference_intent("55555555555555555555555555555555").as_bytes()).await.body).expect("repeated job receipt");
         assert_eq!(first["jobId"], repeated["jobId"], "one scoped request id can only ever mint one job");
-        assert_eq!(first["proposalHash"], repeated["proposalHash"], "a replayed request never re-executes the service");
+        assert_eq!(repeated["state"], "running", "the duplicate observes the installed owner instead of replacing it");
+        assert_eq!(runtime.retained_operation_count_for_test().await.expect("retained worker count"), 1, "one idempotency identity owns exactly one retained worker");
         let job_id = first["jobId"].as_str().expect("job id").to_owned();
-        let approval = serde_json::json!({ "schema": "semio.hub.inference-approval/v1", "version": 1, "jobId": job_id, "proposalHash": first["proposalHash"] }).to_string();
+        checkpoint.release();
+        let terminal = wait_for_inference_state(addr, &space_id, &document_id, &job_id, &headers, "succeeded").await;
+        let approval = serde_json::json!({ "schema": "semio.hub.inference-approval/v1", "version": 1, "jobId": job_id, "proposalHash": terminal["proposalHash"] }).to_string();
         for attempt in 0..3 {
             let response = raw_http_request(addr, "POST", &inference_route(&space_id, &document_id, &format!("/{job_id}/approval")), &headers, approval.as_bytes()).await;
             assert_eq!(response.status, 503, "attempt {attempt} must reach the same fail-closed publication boundary");
@@ -9238,6 +9787,7 @@ mod tests {
             component_sha256: descriptor.owner.package_hash.clone(),
             component_blake3: "44".repeat(32),
             descriptor_byte_sha256: "55".repeat(32),
+            execution_protocol: os_directory::DocumentExecutionProtocolV1 { app_channel_version: directory::os_spr::CHANNEL_VERSION },
         };
         let artifact = DocumentOpenArtifactV1 { kind: descriptor.artifact_kind.clone(), schema: descriptor.artifact_schema.clone(), pack_schema_hash: descriptor.pack_schema_hash.clone() };
         Arc::new(TestDocumentOpenCatalog {
@@ -10113,7 +10663,11 @@ mod tests {
             expires_at_ms: session_record.expires_at,
         };
         let session_plan = state.document_open_plans.issue_with_capability(session_authority.clone(), session_now, session_now + 100, DocumentOpenPlanCapabilityV1::from_secret(document_open_plan_secret(20))).expect("session plan");
-        let session_revoke = execute_admin_intent(&state, &principal, AdminIntentV1::RevokeUserSessions { request_id: "request:open-plan-session-revoke".into(), user_id: session_record.user_id, reason_code: "test-revoke".into() }, None).await;
+        let session_intent = AdminIntentV1::RevokeUserSessions { request_id: "request:open-plan-session-revoke".into(), user_id: session_record.user_id, reason_code: "test-revoke".into() };
+        let session_digest = admin_intent_digest(&session_intent);
+        let mut session_revoke_authority = None;
+        let session_revoke = execute_admin_intent(&state, &principal, "operation:open-plan-session-revoke", &session_digest, session_intent, None, &mut session_revoke_authority).await;
+        drop(session_revoke_authority);
         assert_eq!(session_revoke.phase, "succeeded");
         assert_eq!(state.document_open_plans.exchange(&session_plan.receipt, &session_authority, session_now + 1, "socket-after-session-revoke"), Err(DocumentOpenPlanErrorCodeV1::Stale));
 
@@ -10126,13 +10680,16 @@ mod tests {
         share_authority.subject = SocketSubjectV1::Share { share_id: issued_share.record.id.clone(), selector: issued_share.record.selector.clone(), scope: issued_share.record.scope.clone(), expires_at_ms: issued_share.record.expires_at };
         let share_now = u64::try_from(now_ms()).expect("nonnegative share time");
         let share_plan = state.document_open_plans.issue_with_capability(share_authority.clone(), share_now, share_now + 100, DocumentOpenPlanCapabilityV1::from_secret(document_open_plan_secret(21))).expect("share plan");
-        let share_revoke = execute_admin_intent(
-            &state,
-            &principal,
-            AdminIntentV1::RevokeDocumentShare { request_id: "request:open-plan-share-revoke".into(), scope: issued_share.record.scope, share_id: issued_share.record.id, reason_code: "test-revoke".into() },
-            None,
-        )
-        .await;
+        let share_intent = AdminIntentV1::RevokeDocumentShare {
+            request_id: "request:open-plan-share-revoke".into(),
+            scope: issued_share.record.scope,
+            share_id: issued_share.record.id,
+            reason_code: "test-revoke".into(),
+        };
+        let share_digest = admin_intent_digest(&share_intent);
+        let mut share_revoke_authority = None;
+        let share_revoke = execute_admin_intent(&state, &principal, "operation:open-plan-share-revoke", &share_digest, share_intent, None, &mut share_revoke_authority).await;
+        drop(share_revoke_authority);
         assert_eq!(share_revoke.phase, "succeeded");
         assert_eq!(state.document_open_plans.exchange(&share_plan.receipt, &share_authority, share_now + 1, "socket-after-share-revoke"), Err(DocumentOpenPlanErrorCodeV1::Stale));
     }
@@ -10525,6 +11082,7 @@ mod tests {
     async fn stop_recovery_server(state: HubState, shutdown: tokio::sync::oneshot::Sender<()>, task: tokio::task::JoinHandle<()>) {
         shutdown.send(()).expect("shutdown signal");
         tokio::time::timeout(std::time::Duration::from_secs(5), task).await.expect("server shutdown deadline").expect("server shutdown join");
+        state.admin_operation_tasks.shutdown().await;
         let directory = Arc::downgrade(&state.directory);
         let database = state.db.clone();
         drop(state);
@@ -10761,6 +11319,339 @@ mod tests {
     }
 
     #[test]
+    fn admin_intent_binding_wire_matrix_is_exact_sorted_and_self_deduplicated() {
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🏛️admin-directory-authority-v1/🔣️.json")).unwrap();
+        let principal = AdminPrincipalV1 {
+            user_id: "admin".into(),
+            auth_session_id: "admin-session".into(),
+            authorization_generation: 1,
+            identity_provider: "fixture".into(),
+            identity_subject_digest: [0; 32],
+            expires_at_ms: i64::MAX,
+            correlation_id: "binding-fixture".into(),
+            peer_class: "test",
+        };
+        for row in fixture["bindings"].as_array().unwrap() {
+            let intent: AdminIntentV1 = directory::os_pack::json::from_json_str(row["intentJson"].as_str().unwrap()).expect("actual closed administrator intent wire");
+            let keys = admin_intent_bindings(&principal, &intent).map(|bindings| {
+                bindings
+                    .into_iter()
+                    .map(|binding| match binding {
+                        SocketBindingKeyV1::User(id) => format!("user:{id}"),
+                        SocketBindingKeyV1::Session(id) => format!("session:{id}"),
+                        SocketBindingKeyV1::DirectorySpaceAuthority { space_id } => format!("space:{space_id}"),
+                        SocketBindingKeyV1::Membership { user_id, space_id } => format!("membership:{user_id}/{space_id}"),
+                        SocketBindingKeyV1::Share(id) => format!("share:{id}"),
+                        SocketBindingKeyV1::DocumentWrite(_) => panic!("administrator short authority cannot acquire a document writer"),
+                    })
+                    .collect::<Vec<_>>()
+            });
+            assert_eq!(serde_json::to_value(&keys).unwrap(), row["keys"], "exact sorted binding union: {}", row["name"]);
+            eprintln!("[DEBUG] admin-intent-bindings: {} keys={keys:?}", row["name"]);
+        }
+    }
+
+    #[test]
+    fn admin_short_effects_retain_principal_until_their_actual_side_effect() {
+        run_socket_test(|| async {
+            let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🏛️admin-directory-authority-v1/🔣️.json")).expect("admin short effect fixture");
+            let root = tempdir("admin-short-authority");
+            std::fs::create_dir_all(&root).expect("physical directory parent");
+            let path = root.join("directory.sqlite");
+            let directory = SqliteDirectory::connect(path.to_str().unwrap()).await.expect("physical directory");
+            let mut state = tokio::time::timeout(std::time::Duration::from_secs(5), test_state_with_directory(root.join("db"), directory, 1024, 256)).await.expect("admin effect state open deadline");
+            let physical = rusqlite::Connection::open(&path).expect("independent physical directory reader");
+            let gate = Arc::new(TestLiveGate::default());
+            state.live_gate = Some(gate.clone());
+            let email = "admin-short-authority@example.test";
+            let _headers = authorize_test_admin(&mut state, email).await;
+            let owner = issue_test_session(&state, "admin-short-owner@example.test").await;
+            let (addr, shutdown, server) = spawn_restartable_server(state.clone()).await;
+            for (index, row) in fixture["shortActions"].as_array().unwrap().iter().enumerate() {
+                let admin = issue_test_session(&state, email).await;
+                let target = issue_test_session(&state, &format!("admin-short-target-{index}@example.test")).await;
+                let space = create_space_for_test(&state, &owner.user_id, "Short Authority", os_directory::DirectorySpaceKind::Studio, DirectorySpaceVisibility::Private).await;
+                let scope = DocumentScope::new(space, format!("admin-short-document-{index}"));
+                announce_document_for_test(&state, &scope.space_id, &scope.document_id).await;
+                let request_id = format!("request:admin-short-{index}");
+                let sync_id = format!("sync:admin-short-{index}");
+                let kick = Arc::new(tokio::sync::Notify::new());
+                state.session_kicks.insert(sync_id.clone(), kick.clone());
+                let action = row["action"].as_str().unwrap();
+                let existing_share = if action == "revoke-share" { Some(state.directory.issue_share_token(&scope, 600, "fixture:existing-share").await.expect("existing target share")) } else { None };
+                let intent = match action {
+                    "issue-share" => AdminIntentV1::IssueDocumentShare { request_id, scope: scope.clone(), ttl_secs: 600 },
+                    "revoke-share" => AdminIntentV1::RevokeDocumentShare { request_id, scope: scope.clone(), share_id: existing_share.as_ref().unwrap().record.id.clone(), reason_code: "test-revoke".into() },
+                    "revoke-user" => AdminIntentV1::RevokeUserSessions { request_id, user_id: target.user_id.clone(), reason_code: "test-revoke".into() },
+                    "kick" => AdminIntentV1::KickConnection { request_id, sync_session_id: sync_id.clone(), reason_code: "test-kick".into() },
+                    other => panic!("unknown short action {other}"),
+                };
+                let principal = authenticate_admin_principal(&state, &bearer_headers(&admin.token), None).await.expect("short action principal");
+                let bindings = admin_intent_bindings(&principal, &intent).expect("short effect owns an authority union");
+                assert_eq!(bindings.len() as u64, row["keys"].as_u64().unwrap(), "closed short action authority keys");
+                let action_first = row["first"] == "action";
+                *gate.directory_command_pause_user.lock().unwrap() = Some((admin.user_id.clone(), action_first));
+                let command = tokio::spawn({
+                    let authorization = format!("Bearer {}", admin.token);
+                    let body = directory::os_pack::json::to_json_string(&intent);
+                    async move { raw_http_request(addr, "POST", "/admin/api/intents", &[("Authorization", &authorization), ("Content-Type", "application/json")], body.as_bytes()).await }
+                });
+                tokio::time::timeout(std::time::Duration::from_secs(5), gate.directory_command_admitted.acquire()).await.expect("short action pause deadline").expect("short action pause").forget();
+                let mut revoke = tokio::spawn({
+                    let state = state.clone();
+                    let token = admin.token.clone();
+                    async move { delete_session_me(bearer_headers(&token), State(state)).await }
+                });
+                tokio::time::timeout(std::time::Duration::from_secs(5), gate.socket_session_revoke_attempted.acquire()).await.expect("short action revoke attempt deadline").expect("short action revoke attempt").forget();
+                if action_first {
+                    assert!(tokio::time::timeout(std::time::Duration::from_millis(100), &mut revoke).await.is_err(), "admitted {} must own the principal authority", row["name"]);
+                    for binding in bindings {
+                        assert!(state.socket_binding_gates.gate(binding).try_lock_owned().is_err(), "every short effect key stays owned through its physical side effect");
+                    }
+                } else {
+                    assert_eq!(tokio::time::timeout(std::time::Duration::from_secs(2), &mut revoke).await.expect("winning short action revoke deadline").expect("winning short action revoke"), StatusCode::NO_CONTENT);
+                }
+                *gate.directory_command_pause_user.lock().unwrap() = None;
+                gate.directory_command_release.add_permits(1);
+                let response = tokio::time::timeout(std::time::Duration::from_secs(5), command).await.expect("short action completion deadline").expect("short action task");
+                assert_eq!(response.status, 200);
+                let receipt: AdminIntentReceiptV1 = directory::os_pack::json::from_json_str(std::str::from_utf8(&response.body).unwrap()).expect("short action receipt");
+                assert_eq!(receipt.state, if row["effect"] == true { AdminIntentStateV1::Succeeded } else { AdminIntentStateV1::Cancelled }, "principal authority decides {}", row["name"]);
+                if action_first {
+                    assert_eq!(tokio::time::timeout(std::time::Duration::from_secs(2), revoke).await.expect("trailing short action revoke deadline").expect("trailing short action revoke"), StatusCode::NO_CONTENT);
+                }
+                let effect: i64 = match action {
+                    "issue-share" => physical.query_row("SELECT count(*) FROM hub_share_grant WHERE space_id = ?1 AND document_id = ?2", rusqlite::params![scope.space_id, scope.document_id], |row| row.get(0)).unwrap(),
+                    "revoke-share" => physical.query_row("SELECT count(*) FROM hub_share_grant WHERE id = ?1 AND revoked_at IS NOT NULL", [existing_share.as_ref().unwrap().record.id.as_str()], |row| row.get(0)).unwrap(),
+                    "revoke-user" => physical.query_row("SELECT count(*) FROM hub_auth_session WHERE user_id = ?1 AND revoked_at IS NOT NULL", [target.user_id.as_str()], |row| row.get(0)).unwrap(),
+                    "kick" => i64::from(tokio::time::timeout(std::time::Duration::from_millis(30), kick.notified()).await.is_ok()),
+                    _ => unreachable!(),
+                };
+                assert_eq!(effect, i64::from(row["effect"].as_bool().unwrap()), "exact physical effect: {}", row["name"]);
+                let audit_count: i64 = physical.query_row("SELECT count(*) FROM hub_auth_audit WHERE correlation_id = ?1", [&receipt.correlation_id], |row| row.get(0)).unwrap();
+                assert_eq!(audit_count, if action == "kick" { 0 } else { effect }, "no auth side-effect audit under revoked authority");
+                let secret = receipt.result.as_ref().and_then(|result| result.share_token.as_ref());
+                assert_eq!(secret.is_some(), row["secret"].as_bool().unwrap(), "plaintext share result follows the exact admitted effect");
+                if let Some(secret) = secret {
+                    let capability = semio_hub::directory::ShareCapability::parse(secret).expect("minted share capability");
+                    assert!(state.directory.authenticate_share(&scope, &capability).await.expect("minted share authentication"));
+                }
+                state.session_kicks.remove(&sync_id);
+                eprintln!("[DEBUG] admin-short-authority: {} state={:?} physical-effects={effect} auth-audits={audit_count} secret={}", row["name"], receipt.state, secret.is_some());
+            }
+            drop(physical);
+            stop_recovery_server(state, shutdown, server).await;
+        });
+    }
+
+    #[test]
+    fn admin_directory_commands_hold_exact_principal_without_confusing_space_role() {
+        run_socket_test(|| async {
+            let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🏛️admin-directory-authority-v1/🔣️.json")).expect("admin authority fixture");
+            let mut state = tokio::time::timeout(std::time::Duration::from_secs(5), test_state()).await.expect("admin authority state open deadline");
+            let gate = Arc::new(TestLiveGate::default());
+            state.live_gate = Some(gate.clone());
+            let email = "directory-admin-authority@example.test";
+            let _headers = authorize_test_admin(&mut state, email).await;
+            let owner = issue_test_session(&state, "directory-admin-target-owner@example.test").await;
+            let (addr, shutdown, server) = spawn_restartable_server(state.clone()).await;
+            for (index, row) in fixture["vectors"].as_array().unwrap().iter().enumerate() {
+                let admin = issue_test_session(&state, email).await;
+                let headers = bearer_headers(&admin.token);
+                let principal = authenticate_admin_principal(&state, &headers, None).await.expect("configured administrator");
+                let space = create_space_for_test(&state, &owner.user_id, "Admin Target", os_directory::DirectorySpaceKind::Studio, DirectorySpaceVisibility::Private).await;
+                upsert_member_for_test(&state, &space, email, DirectorySpaceRole::Author).await;
+                let request_id = format!("request:admin-directory-authority-{index}");
+                let name = format!("Admin Mutation {index}");
+                let create = row["command"] == "create";
+                let command_first = row["first"] == "command";
+                let intent = if create {
+                    AdminIntentV1::CreateSpace { request_id: request_id.clone(), name: name.clone(), space_kind: os_directory::DirectorySpaceKind::Studio, visibility: DirectorySpaceVisibility::Private }
+                } else {
+                    AdminIntentV1::RenameSpace { request_id: request_id.clone(), space_id: space.clone(), name: name.clone() }
+                };
+                let target = if create { admin_create_space_id(&request_id) } else { space.clone() };
+                let before = state.directory.head_seq().await.expect("admin head before intent");
+                *gate.directory_command_pause_user.lock().unwrap() = Some((admin.user_id.clone(), command_first));
+                let mut command = tokio::spawn({
+                    let authorization = format!("Bearer {}", admin.token);
+                    let body = directory::os_pack::json::to_json_string(&intent);
+                    async move { raw_http_request(addr, "POST", "/admin/api/intents", &[("Authorization", &authorization), ("Content-Type", "application/json")], body.as_bytes()).await }
+                });
+                tokio::time::timeout(std::time::Duration::from_secs(5), gate.directory_command_admitted.acquire()).await.expect("admin pause deadline").expect("admin pause").forget();
+                let mut trailing_revoke = None;
+                if row["transition"] == "session" {
+                    let mut revoke = tokio::spawn({
+                        let state = state.clone();
+                        let token = admin.token.clone();
+                        async move { delete_session_me(bearer_headers(&token), State(state)).await }
+                    });
+                    tokio::time::timeout(std::time::Duration::from_secs(5), gate.socket_session_revoke_attempted.acquire()).await.expect("admin revoke attempt deadline").expect("admin revoke attempt").forget();
+                    if command_first {
+                        assert!(tokio::time::timeout(std::time::Duration::from_millis(100), &mut revoke).await.is_err(), "admitted admin command retains the exact session");
+                        assert!(state.socket_binding_gates.gate(SocketBindingKeyV1::User(principal.user_id.clone())).try_lock_owned().is_err(), "admitted admin command also retains user-wide revocation authority");
+                        trailing_revoke = Some(revoke);
+                    } else {
+                        assert_eq!(tokio::time::timeout(std::time::Duration::from_secs(2), revoke).await.expect("admin revoke deadline").expect("admin revoke"), StatusCode::NO_CONTENT);
+                    }
+                } else {
+                    upsert_member_for_test(&state, &space, email, DirectorySpaceRole::Spectator).await;
+                    assert_eq!(state.directory.get_role(&space, &admin.user_id).await.unwrap(), Some(SpaceRole::Spectator));
+                }
+                *gate.directory_command_pause_user.lock().unwrap() = None;
+                gate.directory_command_release.add_permits(1);
+                let response = tokio::time::timeout(std::time::Duration::from_secs(5), &mut command).await.expect("admin intent completion deadline").expect("admin intent task");
+                assert_eq!(response.status, 200);
+                let receipt: AdminIntentReceiptV1 = directory::os_pack::json::from_json_str(std::str::from_utf8(&response.body).unwrap()).expect("admin authority receipt");
+                let expected = if row["mutated"] == true { AdminIntentStateV1::Succeeded } else { AdminIntentStateV1::Cancelled };
+                assert_eq!(receipt.state, expected, "exact principal, not ordinary role, decides {}", row["name"]);
+                if let Some(revoke) = trailing_revoke {
+                    assert_eq!(tokio::time::timeout(std::time::Duration::from_secs(2), revoke).await.expect("trailing admin revoke deadline").expect("trailing admin revoke"), StatusCode::NO_CONTENT);
+                }
+                let events = state.directory.events_since(before, 50).await.expect("admin authority durable events");
+                let own_events: Vec<_> = events.iter().filter(|event| event.actor == principal.event_actor()).collect();
+                assert_eq!(own_events.len(), if row["mutated"] == true { if create { 2 } else { 1 } } else { 0 }, "no mutation escapes a revoked principal");
+                let persisted = state.directory.get_space(&target).await.expect("admin target projection");
+                assert_eq!(persisted.as_ref().is_some_and(|space| space.name == name), row["mutated"].as_bool().unwrap());
+                if row["mutated"] == false {
+                    assert!(receipt.event_seq_first.is_none() && receipt.event_seq_last.is_none());
+                }
+                eprintln!("[DEBUG] admin-directory-authority: {} state={:?} events={}", row["name"], receipt.state, own_events.len());
+            }
+
+            let self_session = issue_test_session(&state, email).await;
+            let authorization = format!("Bearer {}", self_session.token);
+            let body = directory::os_pack::json::to_json_string(&AdminIntentV1::RevokeUserSessions { request_id: "request:admin-directory-self-revoke".into(), user_id: self_session.user_id.clone(), reason_code: "test-self-revoke".into() });
+            let response = tokio::time::timeout(std::time::Duration::from_secs(5), raw_http_request(addr, "POST", "/admin/api/intents", &[("Authorization", &authorization), ("Content-Type", "application/json")], body.as_bytes()))
+                .await
+                .expect("self-revocation cannot nest an administrator User fence");
+            assert_eq!(response.status, 200);
+            let receipt: AdminIntentReceiptV1 = directory::os_pack::json::from_json_str(std::str::from_utf8(&response.body).unwrap()).expect("self-revocation receipt");
+            assert_eq!(receipt.state, AdminIntentStateV1::Succeeded);
+            let capability = SessionCapability::parse(&self_session.token).unwrap();
+            assert!(state.directory.authenticate_session(&capability).await.unwrap().is_none());
+            eprintln!("[DEBUG] admin-directory-authority: self-user-revocation completed without nested User ownership");
+            stop_recovery_server(state, shutdown, server).await;
+        });
+    }
+
+    #[test]
+    fn directory_global_message_bindings_decode_wire_without_indexing_unrelated_memberships() {
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🌐️directory-message-authority-v1/🔣️.json")).expect("message authority fixture");
+        let ledger = SocketGrantLedgerV1::default();
+        let capability = SocketGrantCapability::mint().expect("global capability");
+        let audience = SocketAudienceV1::Directory { auth_session_id: "session".into(), authorization_generation: 1 };
+        let subject = SocketSubjectV1::Session { session_id: "session".into(), user_id: "recipient".into(), authorization_generation: 1, role: None, expires_at_ms: 10_000 };
+        ledger.issue(&capability, audience.clone(), "hub.v1.global".into(), subject, 1, 9_000).expect("global issue");
+        let pending = ledger.pending(&capability, &audience, 2).expect("pending global");
+        let record = ledger.consume(&pending, 3).expect("consumed global");
+        let (live_id, _) = ledger.register_live(&record).expect("global lease");
+        let principal_bindings = vec![SocketBindingKeyV1::User("recipient".into()), SocketBindingKeyV1::Session("session".into())];
+        for row in fixture["messages"].as_array().unwrap() {
+            let message: DirectoryStreamMessage = directory::os_pack::json::from_json_str(row["messageJson"].as_str().unwrap()).unwrap_or_else(|error| panic!("wire message {}: {error:?}", row["name"]));
+            assert_eq!(directory_stream_message_space(&message), row["spaceId"].as_str(), "wire-derived space");
+            let bindings = directory_message_bindings(&record, &message);
+            assert_eq!(bindings.len() as u64, row["keys"].as_u64().unwrap(), "complete transient union");
+            let mut expected = principal_bindings.clone();
+            if let Some(space_id) = row["spaceId"].as_str() {
+                expected.push(SocketBindingKeyV1::DirectorySpaceAuthority { space_id: space_id.to_owned() });
+                expected.push(SocketBindingKeyV1::Membership { user_id: "recipient".into(), space_id: space_id.to_owned() });
+            }
+            assert_eq!(bindings, expected, "sorted exact principal and recipient membership union");
+            assert_eq!(record.bindings(), principal_bindings, "transient keys never become permanent global indices");
+            let mut scoped = record.clone();
+            scoped.audience = SocketAudienceV1::DirectoryScoped(DocumentScope::new("scoped", "doc"));
+            assert_eq!(directory_message_bindings(&scoped, &message), scoped.bindings(), "scoped audiences do not borrow unrelated scopes");
+        }
+        ledger.invalidate_binding(SocketBindingKeyV1::Membership { user_id: "recipient".into(), space_id: "space-a".into() });
+        ledger.invalidate_binding(SocketBindingKeyV1::DirectorySpaceAuthority { space_id: "space-a".into() });
+        assert!(ledger.is_live(&record, &live_id), "space A revocation cannot invalidate a global lease for B");
+        ledger.invalidate_binding(SocketBindingKeyV1::Session("session".into()));
+        assert!(!ledger.is_live(&record, &live_id), "principal revocation remains terminal");
+        eprintln!("[DEBUG] global-directory-message-bindings: six real wire kinds, transient union, scoped isolation, global indices, principal invalidation");
+    }
+
+    #[test]
+    fn directory_global_socket_delivery_and_revocation_share_one_transient_authority_order() {
+        run_socket_test(|| async {
+            let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🌐️directory-message-authority-v1/🔣️.json")).expect("message authority fixture");
+            let mut state = tokio::time::timeout(std::time::Duration::from_secs(5), test_state()).await.expect("global directory state open deadline");
+            let gate = Arc::new(TestLiveGate::default());
+            state.live_gate = Some(gate.clone());
+            let (addr, shutdown, server) = spawn_restartable_server(state.clone()).await;
+            for (index, row) in fixture["vectors"].as_array().unwrap().iter().enumerate() {
+                let owner_email = format!("global-owner-{index}@example.test");
+                let recipient_email = format!("global-recipient-{index}@example.test");
+                let owner = issue_test_session(&state, &owner_email).await;
+                let recipient = issue_test_session(&state, &recipient_email).await;
+                let space_a = create_space_for_test(&state, &owner.user_id, "A", os_directory::DirectorySpaceKind::Studio, DirectorySpaceVisibility::Private).await;
+                let space_b = create_space_for_test(&state, &owner.user_id, "B", os_directory::DirectorySpaceKind::Studio, DirectorySpaceVisibility::Private).await;
+                for space in [&space_a, &space_b] {
+                    upsert_member_for_test(&state, space, &recipient_email, DirectorySpaceRole::Spectator).await;
+                }
+                let receipt = issue_directory_socket_grant(bearer_headers(&recipient.token), State(state.clone())).await.expect("global grant").0;
+                let since = state.directory.head_seq().await.expect("global directory head");
+                let url = format!("ws://{addr}/directory/socket/v1?since={since}");
+                let (mut socket, _) = connect_async(socket_request(&url, &receipt.grant)).await.expect("global directory socket");
+                socket.send(client_binary(&socket_hello(), Lane::Command).await).await.expect("global socket hello");
+                tokio::time::timeout(std::time::Duration::from_secs(5), gate.socket_directory_admitted.acquire()).await.expect("global admission deadline").expect("global admission").forget();
+                gate.socket_directory_release.add_permits(1);
+                let delivery_first = row["first"] == "send";
+                *gate.socket_global_send_pause.lock().expect("global pause lock") = Some((recipient.user_id.clone(), if delivery_first { 2 } else { 1 }));
+                let event_a = state
+                    .directory_service
+                    .execute(DirectoryActor { kind: DirectoryActorKind::System, id: "system:global-message-authority".into() }, DirectoryCommand::RenameSpace { space_id: space_a.clone(), name: format!("A-{index}") })
+                    .await
+                    .expect("durable A event")
+                    .0
+                    .into_iter()
+                    .next()
+                    .expect("A event");
+                tokio::time::timeout(std::time::Duration::from_secs(5), gate.socket_global_send_admitted.acquire()).await.expect("message pause deadline").expect("message pause").forget();
+                let membership = row["revocation"] == "membership";
+                let mut revoke = tokio::spawn({
+                    let state = state.clone();
+                    let token = if membership { owner.token.clone() } else { recipient.token.clone() };
+                    let command = DirectoryCommand::RemoveMember { space_id: space_a.clone(), user_id: recipient.user_id.clone() };
+                    async move { if membership { post_directory_command_for_test(addr, &token, "c00102030405060708090a0b0c0d0e0f", command).await.status } else { delete_session_me(bearer_headers(&token), State(state)).await.as_u16() } }
+                });
+                let attempted = if membership { &gate.directory_command_attempted } else { &gate.socket_session_revoke_attempted };
+                tokio::time::timeout(std::time::Duration::from_secs(5), attempted.acquire()).await.expect("revocation fence attempt deadline").expect("revocation fence attempt").forget();
+                if delivery_first {
+                    assert!(tokio::time::timeout(std::time::Duration::from_millis(100), &mut revoke).await.is_err(), "admitted delivery must own the same authority keys as revocation: {}", row["name"]);
+                } else {
+                    assert_eq!(tokio::time::timeout(std::time::Duration::from_secs(2), &mut revoke).await.expect("winning revocation deadline").expect("winning revocation"), if membership { 202 } else { 204 });
+                }
+                *gate.socket_global_send_pause.lock().expect("clear global pause") = None;
+                gate.socket_global_send_release.add_permits(1);
+                if row["a"] == true {
+                    assert!(matches!(next_directory_message(&mut socket).await, DirectoryStreamMessage::Event { event } if event == event_a), "one exact A event wins before revocation");
+                }
+                if delivery_first {
+                    assert_eq!(tokio::time::timeout(std::time::Duration::from_secs(2), revoke).await.expect("trailing revocation deadline").expect("trailing revocation"), if membership { 202 } else { 204 });
+                }
+                if row["b"] == true {
+                    let event_b = state
+                        .directory_service
+                        .execute(DirectoryActor { kind: DirectoryActorKind::System, id: "system:global-message-authority".into() }, DirectoryCommand::RenameSpace { space_id: space_b.clone(), name: format!("B-{index}") })
+                        .await
+                        .expect("durable B event")
+                        .0
+                        .into_iter()
+                        .next()
+                        .expect("B event");
+                    assert!(matches!(next_directory_message(&mut socket).await, DirectoryStreamMessage::Event { event } if event == event_b), "removed A membership neither leaks A nor closes unrelated B");
+                    socket.close(None).await.expect("close unaffected global socket");
+                } else {
+                    assert_eq!(u64::from(next_close_code(&mut socket, false).await), row["close"].as_u64().unwrap(), "revoked principal closes without a later message");
+                }
+                eprintln!("[DEBUG] global-directory-message-authority: {} A={} B={} close={}", row["name"], row["a"], row["b"], row["close"]);
+            }
+            stop_recovery_server(state, shutdown, server).await;
+        });
+    }
+
+    #[test]
     fn socket_directory_revoke_after_admission_suppresses_replay_without_deadlock() {
         run_socket_test(|| async {
             let mut state = test_state().await;
@@ -10834,7 +11725,7 @@ mod tests {
             expires_at_ms: session.expires_at,
             state: SocketGrantStateV1::Consumed,
         };
-        assert_eq!(socket_directory_message_visible(&state, &record, &DirectoryStreamMessage::Event { event }).await, SocketBindingValidityV1::Unauthorized);
+        assert_eq!(socket_directory_membership_visibility(&state, &record, &DirectoryStreamMessage::Event { event }).await, SocketBindingValidityV1::Unauthorized);
     }
 
     fn assert_public_projection_has_no_private_keys(value: &serde_json::Value) {
@@ -11222,6 +12113,296 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn retained_short_admin_request_drop_duplicate_cancel_and_secret_lifecycle_is_exact() {
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🌎️hub/📇️directory/🧪️tests/🏛️retained-short-admin/🔣️.json")).expect("retained short administrator fixture");
+        assert_eq!(fixture["cases"].as_array().expect("retained cases").len(), 15);
+        let root = tempdir("retained-short-admin");
+        std::fs::create_dir_all(&root).expect("retained administrator root");
+        let path = root.join("directory.sqlite");
+        let directory = SqliteDirectory::connect(path.to_str().expect("retained directory path")).await.expect("retained directory");
+        let mut state = test_state_with_directory(root.join("db"), directory, 1024, 256).await;
+        let physical = rusqlite::Connection::open(&path).expect("retained administrator physical reader");
+        let gate = Arc::new(TestLiveGate::default());
+        state.live_gate = Some(gate.clone());
+        let email = "retained-short-admin@example.test";
+        let _ = authorize_test_admin(&mut state, email).await;
+        let admin = issue_test_session(&state, email).await;
+        let owner = issue_test_session(&state, "retained-short-owner@example.test").await;
+        let space = create_space_for_test(&state, &owner.user_id, "Retained Short", os_directory::DirectorySpaceKind::Studio, DirectorySpaceVisibility::Private).await;
+        let scope = DocumentScope::new(&space, "retained-short-document");
+        announce_document_for_test(&state, &scope.space_id, &scope.document_id).await;
+        let (addr, shutdown, server) = spawn_restartable_server(state.clone()).await;
+        let request_id = "request:retained-short-drop";
+        let intent = AdminIntentV1::IssueDocumentShare { request_id: request_id.into(), scope: scope.clone(), ttl_secs: 600 };
+        let body = directory::os_pack::json::to_json_string(&intent);
+        *gate.directory_command_pause_user.lock().unwrap() = Some((admin.user_id.clone(), true));
+        let dropped = tokio::spawn({
+            let authorization = format!("Bearer {}", admin.token);
+            let body = body.clone();
+            async move { raw_http_request(addr, "POST", "/admin/api/intents", &[("Authorization", &authorization), ("Content-Type", "application/json")], body.as_bytes()).await }
+        });
+        tokio::time::timeout(std::time::Duration::from_secs(5), gate.directory_command_admitted.acquire()).await.expect("dropped request admission deadline").expect("dropped request admitted").forget();
+        dropped.abort();
+        let _ = dropped.await;
+        *gate.directory_command_pause_user.lock().unwrap() = None;
+        gate.directory_command_release.add_permits(1);
+        let mut rows = Vec::new();
+        for _ in 0..256 {
+            rows = state.directory.admin_operation_audit_for_request(request_id).await.expect("dropped request audit");
+            if rows.len() == 2 {
+                break;
+            }
+            tokio::task::yield_now().await;
+        }
+        assert_eq!(rows.len(), 2, "request cancellation cannot cancel its retained operation");
+        assert_eq!(rows[1].fact.phase, "succeeded");
+        assert_eq!(rows[1].fact.outcome_code, "share-issued");
+        assert_eq!(physical.query_row::<i64, _, _>("SELECT count(*) FROM hub_share_grant WHERE space_id = ?1 AND document_id = ?2", rusqlite::params![scope.space_id, scope.document_id], |row| row.get(0)).unwrap(), 1);
+        let authorization = format!("Bearer {}", admin.token);
+        let retry = raw_http_request(addr, "POST", "/admin/api/intents", &[("Authorization", &authorization), ("Content-Type", "application/json")], body.as_bytes()).await;
+        assert_eq!(retry.status, 200);
+        let retry_receipt: AdminIntentReceiptV1 = directory::os_pack::json::from_json_str(std::str::from_utf8(&retry.body).unwrap()).expect("retry receipt");
+        assert_eq!(retry_receipt.state, AdminIntentStateV1::Succeeded);
+        assert!(retry_receipt.result.is_none(), "a lost one-shot share token is never stored or replayed");
+        assert_eq!(
+            physical.query_row::<i64, _, _>("SELECT count(*) FROM hub_share_grant WHERE space_id = ?1 AND document_id = ?2", rusqlite::params![scope.space_id, scope.document_id], |row| row.get(0)).unwrap(),
+            1,
+            "retry cannot execute the side effect twice"
+        );
+        let collision = directory::os_pack::json::to_json_string(&AdminIntentV1::IssueDocumentShare { request_id: request_id.into(), scope: scope.clone(), ttl_secs: 601 });
+        assert_eq!(raw_http_request(addr, "POST", "/admin/api/intents", &[("Authorization", &authorization), ("Content-Type", "application/json")], collision.as_bytes()).await.status, 409);
+
+        let cancelled_scope = DocumentScope::new(&space, "retained-short-cancelled");
+        announce_document_for_test(&state, &cancelled_scope.space_id, &cancelled_scope.document_id).await;
+        let cancelled_request = "request:retained-short-cancelled";
+        let cancelled_body = directory::os_pack::json::to_json_string(&AdminIntentV1::IssueDocumentShare { request_id: cancelled_request.into(), scope: cancelled_scope.clone(), ttl_secs: 600 });
+        *gate.directory_command_pause_user.lock().unwrap() = Some((admin.user_id.clone(), false));
+        let cancelled = tokio::spawn({
+            let authorization = authorization.clone();
+            async move { raw_http_request(addr, "POST", "/admin/api/intents", &[("Authorization", &authorization), ("Content-Type", "application/json")], cancelled_body.as_bytes()).await }
+        });
+        tokio::time::timeout(std::time::Duration::from_secs(5), gate.directory_command_admitted.acquire()).await.expect("pre-effect cancellation admission deadline").expect("pre-effect cancellation admitted").forget();
+        let accepted = state.directory.admin_operation_audit_for_request(cancelled_request).await.expect("cancelled acceptance");
+        let operation_id = accepted.first().expect("cancelled accepted row").fact.operation_id.clone();
+        cancel_admin_operation(Path(operation_id), bearer_headers(&admin.token), loopback_peer(), State(state.clone())).await.expect("cancel retained operation");
+        *gate.directory_command_pause_user.lock().unwrap() = None;
+        gate.directory_command_release.add_permits(1);
+        let cancelled = cancelled.await.expect("cancelled request task");
+        let cancelled_receipt: AdminIntentReceiptV1 = directory::os_pack::json::from_json_str(std::str::from_utf8(&cancelled.body).unwrap()).expect("cancelled receipt");
+        assert_eq!(cancelled_receipt.state, AdminIntentStateV1::Cancelled);
+        assert_eq!(physical.query_row::<i64, _, _>("SELECT count(*) FROM hub_share_grant WHERE space_id = ?1 AND document_id = ?2", rusqlite::params![cancelled_scope.space_id, cancelled_scope.document_id], |row| row.get(0)).unwrap(), 0);
+
+        let admitted_scope = DocumentScope::new(&space, "retained-short-admitted");
+        announce_document_for_test(&state, &admitted_scope.space_id, &admitted_scope.document_id).await;
+        let admitted_request = "request:retained-short-admitted";
+        let admitted_body = directory::os_pack::json::to_json_string(&AdminIntentV1::IssueDocumentShare { request_id: admitted_request.into(), scope: admitted_scope.clone(), ttl_secs: 600 });
+        gate.admin_effect_pause_enabled.store(true, std::sync::atomic::Ordering::Release);
+        let admitted = tokio::spawn({
+            let authorization = authorization.clone();
+            async move { raw_http_request(addr, "POST", "/admin/api/intents", &[("Authorization", &authorization), ("Content-Type", "application/json")], admitted_body.as_bytes()).await }
+        });
+        tokio::time::timeout(std::time::Duration::from_secs(5), gate.admin_effect_admitted.acquire()).await.expect("admitted effect deadline").expect("effect admitted").forget();
+        let accepted = state.directory.admin_operation_audit_for_request(admitted_request).await.expect("admitted acceptance");
+        let operation_id = accepted.first().expect("admitted accepted row").fact.operation_id.clone();
+        cancel_admin_operation(Path(operation_id), bearer_headers(&admin.token), loopback_peer(), State(state.clone())).await.expect("late cancellation request");
+        gate.admin_effect_pause_enabled.store(false, std::sync::atomic::Ordering::Release);
+        gate.admin_effect_release.add_permits(1);
+        let admitted = admitted.await.expect("admitted request task");
+        let admitted_receipt: AdminIntentReceiptV1 = directory::os_pack::json::from_json_str(std::str::from_utf8(&admitted.body).unwrap()).expect("admitted receipt");
+        assert_eq!(admitted_receipt.state, AdminIntentStateV1::Succeeded, "cancellation after effect admission cannot invent rollback");
+        assert!(admitted_receipt.result.as_ref().and_then(|result| result.share_token.as_ref()).is_some());
+        assert_eq!(physical.query_row::<i64, _, _>("SELECT count(*) FROM hub_share_grant WHERE space_id = ?1 AND document_id = ?2", rusqlite::params![admitted_scope.space_id, admitted_scope.document_id], |row| row.get(0)).unwrap(), 1);
+
+        let fenced_scope = DocumentScope::new(&space, "retained-short-admitted-deadline");
+        announce_document_for_test(&state, &fenced_scope.space_id, &fenced_scope.document_id).await;
+        let first_request = "request:retained-short-admitted-deadline-first";
+        let second_request = "request:retained-short-admitted-deadline-second";
+        let first_body = directory::os_pack::json::to_json_string(&AdminIntentV1::IssueDocumentShare { request_id: first_request.into(), scope: fenced_scope.clone(), ttl_secs: 600 });
+        let second_body = directory::os_pack::json::to_json_string(&AdminIntentV1::IssueDocumentShare { request_id: second_request.into(), scope: fenced_scope.clone(), ttl_secs: 600 });
+        gate.admin_effect_pause_enabled.store(true, std::sync::atomic::Ordering::Release);
+        let mut first = tokio::spawn({
+            let authorization = authorization.clone();
+            async move { raw_http_request(addr, "POST", "/admin/api/intents", &[("Authorization", &authorization), ("Content-Type", "application/json")], first_body.as_bytes()).await }
+        });
+        tokio::time::timeout(std::time::Duration::from_secs(5), gate.admin_effect_admitted.acquire()).await.expect("first admitted writer deadline").expect("first writer admitted").forget();
+        let mut second = tokio::spawn({
+            let authorization = authorization.clone();
+            async move { raw_http_request(addr, "POST", "/admin/api/intents", &[("Authorization", &authorization), ("Content-Type", "application/json")], second_body.as_bytes()).await }
+        });
+        for _ in 0..256 {
+            if state.directory.admin_operation_audit_for_request(second_request).await.expect("competing acceptance read").len() == 1 {
+                break;
+            }
+            tokio::task::yield_now().await;
+        }
+        assert!(tokio::time::timeout(std::time::Duration::from_millis(50), &mut second).await.is_err(), "competing same-scope writer cannot pass retained authority");
+        let first_response = tokio::time::timeout(ADMIN_OPERATION_DEADLINE + std::time::Duration::from_secs(2), &mut first).await.expect("first HTTP deadline response").expect("first HTTP task");
+        assert_eq!(first_response.status, 503, "the HTTP waiter expires without cancelling its admitted writer");
+        assert_eq!(physical.query_row::<i64, _, _>("SELECT count(*) FROM hub_share_grant WHERE space_id = ?1 AND document_id = ?2", rusqlite::params![fenced_scope.space_id, fenced_scope.document_id], |row| row.get(0)).unwrap(), 0);
+        gate.admin_effect_pause_enabled.store(false, std::sync::atomic::Ordering::Release);
+        gate.admin_effect_release.add_permits(1);
+        let second_response = tokio::time::timeout(std::time::Duration::from_secs(5), &mut second).await.expect("competing writer completion deadline").expect("competing HTTP task");
+        assert_eq!(second_response.status, 200);
+        let mut first_rows = Vec::new();
+        for _ in 0..256 {
+            first_rows = state.directory.admin_operation_audit_for_request(first_request).await.expect("first admitted writer audit");
+            if first_rows.len() == 2 {
+                break;
+            }
+            tokio::task::yield_now().await;
+        }
+        let second_rows = state.directory.admin_operation_audit_for_request(second_request).await.expect("second admitted writer audit");
+        assert_eq!(first_rows.len(), 2);
+        assert_eq!(second_rows.len(), 2);
+        assert_eq!(first_rows[1].fact.phase, "succeeded");
+        assert_eq!(second_rows[1].fact.phase, "succeeded");
+        assert!(first_rows[1].sequence < second_rows[1].sequence, "the retained first writer terminal precedes its blocked successor");
+        assert_eq!(physical.query_row::<i64, _, _>("SELECT count(*) FROM hub_share_grant WHERE space_id = ?1 AND document_id = ?2", rusqlite::params![fenced_scope.space_id, fenced_scope.document_id], |row| row.get(0)).unwrap(), 2);
+        assert_eq!(state.admin_operation_tasks.task_count(), 0);
+        drop(physical);
+        stop_recovery_server(state, shutdown, server).await;
+    }
+
+    #[tokio::test]
+    async fn retained_short_admin_shutdown_drains_before_bounded_abort_and_receipt_reconciliation_is_exact() {
+        let cancelled = AdminOperationRuntime {
+            deadline: std::time::Instant::now() + ADMIN_OPERATION_DEADLINE,
+            completed: std::sync::atomic::AtomicU64::new(0),
+            total: std::sync::atomic::AtomicU64::new(0),
+            effect_state: std::sync::atomic::AtomicU8::new(ADMIN_EFFECT_PRE_EFFECT),
+            cooperative_cancel_requested: std::sync::atomic::AtomicBool::new(false),
+        };
+        assert!(cancelled.request_cancel());
+        assert!(!cancelled.admit_effect(), "cancellation linearized before admission refuses the effect");
+        let admitted = AdminOperationRuntime {
+            deadline: std::time::Instant::now() + ADMIN_OPERATION_DEADLINE,
+            completed: std::sync::atomic::AtomicU64::new(0),
+            total: std::sync::atomic::AtomicU64::new(0),
+            effect_state: std::sync::atomic::AtomicU8::new(ADMIN_EFFECT_PRE_EFFECT),
+            cooperative_cancel_requested: std::sync::atomic::AtomicBool::new(false),
+        };
+        assert!(admitted.admit_effect());
+        assert!(!admitted.request_cancel(), "admission linearized before cancellation cannot claim rollback");
+        ADMIN_SECRET_WIPE_BYTES.store(0, std::sync::atomic::Ordering::SeqCst);
+        let invite = "invite.v1.selector.secret".to_string();
+        let share = "share.v1.selector.secret".to_string();
+        let expected_wipes = invite.len() + share.len();
+        drop(AdminIntentSecretResult::Invite(invite));
+        drop(AdminIntentSecretResult::Share(share));
+        assert_eq!(ADMIN_SECRET_WIPE_BYTES.load(std::sync::atomic::Ordering::SeqCst), expected_wipes);
+
+        let state = test_state().await;
+        let principal = AdminPrincipalV1 {
+            user_id: "user:admin".into(),
+            auth_session_id: "session:admin".into(),
+            authorization_generation: 1,
+            identity_provider: "test".into(),
+            identity_subject_digest: [7; 32],
+            expires_at_ms: now_ms() + 60_000,
+            correlation_id: "correlation:retained".into(),
+            peer_class: "admin-rest",
+        };
+        let metadata = AdminIntentMetadata { intent_kind: "delete-space", target_kind: "space", target_id: "space:one".into(), reason_code: None };
+        let mut accepted = new_admin_audit_fact(&principal, "request:stale-accepted", &"11".repeat(32), "operation:stale-accepted", &metadata, "accepted", None, "accepted");
+        accepted.occurred_at = now_ms() - 60_000;
+        state.directory.append_admin_operation_audit(&accepted).await.expect("stale accepted audit");
+        let rows = reconcile_stale_admin_acceptance(&state, state.directory.admin_operation_audit_for_request(&accepted.request_id).await.expect("stale audit read")).await.expect("stale reconciliation");
+        assert_eq!(rows.len(), 1);
+        assert_eq!(rows[0].fact.phase, "accepted", "age alone cannot prove cancellation or rollback");
+        let unresolved = admin_audit_visibility(admin_audit_receipt(&rows).expect("stale accepted receipt"), false);
+        assert_eq!(unresolved.state, AdminIntentStateV1::Indeterminate);
+        assert_eq!(unresolved.outcome.code, "admin-effect-outcome-indeterminate");
+        assert_eq!(admin_audit_visibility(admin_audit_receipt(&rows).expect("live accepted receipt"), true).state, AdminIntentStateV1::Accepted);
+
+        let owner = issue_test_session(&state, "retained-reconcile-owner@example.test").await;
+        let space = create_space_for_test(&state, &owner.user_id, "Receipt Reconciliation", os_directory::DirectorySpaceKind::Studio, DirectorySpaceVisibility::Private).await;
+        let scope = DocumentScope::new(&space, "receipt-reconciliation-document");
+        announce_document_for_test(&state, &scope.space_id, &scope.document_id).await;
+        let committed_digest = "22".repeat(32);
+        let committed_metadata = AdminIntentMetadata { intent_kind: "issue-document-share", target_kind: "document", target_id: format!("{}/{}", scope.space_id, scope.document_id), reason_code: None };
+        let mut committed = new_admin_audit_fact(&principal, "request:committed-accepted", &committed_digest, "operation:committed-accepted", &committed_metadata, "accepted", None, "accepted");
+        committed.occurred_at = now_ms() - 60_000;
+        state.directory.append_admin_operation_audit(&committed).await.expect("committed acceptance audit");
+        let effect = NewAdminOperationEffectReceiptV1 {
+            operation_id: committed.operation_id.clone(),
+            intent_digest: committed.intent_digest.clone(),
+            committed_at: now_ms(),
+            outcome_code: "share-issued".into(),
+        };
+        let AdminEffectCommitV1::Applied(issued) = state.directory.issue_share_token_as_with_admin_effect(&scope, 600, Some(&principal.user_id), &principal.correlation_id, &effect).await else {
+            panic!("atomic share and effect receipt");
+        };
+        drop(issued);
+        assert!(tokio::time::timeout(std::time::Duration::ZERO, std::future::pending::<()>()).await.is_err(), "effect commit can precede acknowledgement deadline");
+        assert!(state.directory.admin_operation_effect_receipt(&committed.operation_id, &"33".repeat(32)).await.expect("mismatched receipt query").is_none());
+        let rows = reconcile_stale_admin_acceptance(&state, state.directory.admin_operation_audit_for_request(&committed.request_id).await.expect("committed audit read"))
+            .await
+            .expect("factual receipt reconciliation");
+        assert_eq!(rows.len(), 2);
+        assert_eq!(rows[1].fact.phase, "succeeded");
+        assert_eq!(rows[1].fact.outcome_code, "share-issued");
+        assert_eq!(rows[1].fact.event_seq_first, None);
+        assert_eq!(rows[1].fact.event_seq_last, None);
+
+        let owner = AdminOperationTaskOwner::new(std::time::Duration::from_secs(1));
+        let runtime = Arc::new(AdminOperationRuntime {
+            deadline: std::time::Instant::now() + ADMIN_OPERATION_DEADLINE,
+            completed: std::sync::atomic::AtomicU64::new(0),
+            total: std::sync::atomic::AtomicU64::new(0),
+            effect_state: std::sync::atomic::AtomicU8::new(ADMIN_EFFECT_PRE_EFFECT),
+            cooperative_cancel_requested: std::sync::atomic::AtomicBool::new(false),
+        });
+        let drained = Arc::new(std::sync::atomic::AtomicBool::new(false));
+        assert!(
+            owner
+                .spawn("operation:drain".into(), runtime.clone(), {
+                    let drained = drained.clone();
+                    let runtime = runtime.clone();
+                    async move {
+                        while !runtime.progress().cancel_requested {
+                            tokio::task::yield_now().await;
+                        }
+                        drained.store(true, std::sync::atomic::Ordering::Release);
+                    }
+                })
+                .is_ok()
+        );
+        owner.shutdown().await;
+        assert!(drained.load(std::sync::atomic::Ordering::Acquire));
+        assert_eq!(owner.task_count(), 0);
+        assert!(owner.spawn("operation:after-close".into(), runtime.clone(), async {}).is_err(), "shutdown refuses later operation tasks");
+
+        struct DropSignal(Option<tokio::sync::oneshot::Sender<()>>);
+        impl Drop for DropSignal {
+            fn drop(&mut self) {
+                if let Some(signal) = self.0.take() {
+                    let _ = signal.send(());
+                }
+            }
+        }
+        let aborting = AdminOperationTaskOwner::new(std::time::Duration::from_millis(10));
+        let abort_runtime = Arc::new(AdminOperationRuntime {
+            deadline: std::time::Instant::now() + ADMIN_OPERATION_DEADLINE,
+            completed: std::sync::atomic::AtomicU64::new(0),
+            total: std::sync::atomic::AtomicU64::new(0),
+            effect_state: std::sync::atomic::AtomicU8::new(ADMIN_EFFECT_ADMITTED),
+            cooperative_cancel_requested: std::sync::atomic::AtomicBool::new(false),
+        });
+        let (dropped_tx, dropped_rx) = tokio::sync::oneshot::channel();
+        assert!(
+            aborting
+                .spawn("operation:bounded-abort".into(), abort_runtime, async move {
+                    let _signal = DropSignal(Some(dropped_tx));
+                    std::future::pending::<()>().await;
+                })
+                .is_ok()
+        );
+        aborting.shutdown().await;
+        tokio::time::timeout(std::time::Duration::from_secs(1), dropped_rx).await.expect("aborted task drop deadline").expect("aborted task dropped");
+        assert_eq!(aborting.task_count(), 0);
+    }
+
+    #[tokio::test]
     async fn admin_rebuild_slots_are_atomic_and_abort_closes_once() {
         let directory = SqliteDirectory::connect(":memory:").await.expect("connect directory");
         directory.seed().await.expect("seed directory");
@@ -11280,12 +12461,11 @@ mod tests {
             deadline: std::time::Instant::now() + std::time::Duration::from_secs(10),
             completed: std::sync::atomic::AtomicU64::new(0),
             total: std::sync::atomic::AtomicU64::new(0),
-            cancel_requested: std::sync::atomic::AtomicBool::new(false),
+            effect_state: std::sync::atomic::AtomicU8::new(ADMIN_EFFECT_PRE_EFFECT),
+            cooperative_cancel_requested: std::sync::atomic::AtomicBool::new(false),
         });
         operations.insert(operation_id.into(), runtime);
-        let interrupted = new_admin_audit_fact(&principal, request_id, &digest, operation_id, &metadata, "cancelled", None, "interrupted-before-terminal");
-        let cleanup =
-            AdminOperationCleanup { directory: directory.clone(), operations: operations.clone(), operation_id: operation_id.into(), terminal: Some(interrupted.clone()), _permit: operation_slots.clone().try_acquire_owned().expect("cleanup slot") };
+        let cleanup = AdminOperationCleanup { operations: operations.clone(), operation_id: operation_id.into(), _permit: operation_slots.clone().try_acquire_owned().expect("cleanup slot") };
         let task = tokio::spawn(async move {
             let _cleanup = cleanup;
             std::future::pending::<()>().await;
@@ -11296,19 +12476,18 @@ mod tests {
         let mut rows = Vec::new();
         for _ in 0..128 {
             rows = directory.admin_operation_audit_for_request(request_id).await.expect("operation audit");
-            if rows.len() == 2 {
+            if operations.get_cloned(operation_id).is_none() {
                 break;
             }
             tokio::task::yield_now().await;
         }
-        assert_eq!(rows.len(), 2);
-        assert_eq!(rows[1].fact.phase, "cancelled");
-        assert_eq!(rows[1].fact.outcome_code, "interrupted-before-terminal");
+        assert_eq!(rows.len(), 1);
+        assert_eq!(rows[0].fact.phase, "accepted");
+        assert_eq!(rows[0].fact.outcome_code, "accepted");
         assert!(operations.get_cloned(operation_id).is_none());
         assert_eq!(operation_slots.available_permits(), 64);
         let later = new_admin_audit_fact(&principal, request_id, &digest, operation_id, &metadata, "succeeded", None, "late-success");
-        assert!(matches!(directory.append_admin_operation_audit(&later).await, Err(DirectoryError::Conflict(_))), "a different late success cannot replace the winning interrupted cancellation");
-        assert_eq!(directory.append_admin_operation_audit(&interrupted).await.expect("idempotent interrupted terminal").fact.phase, "cancelled", "the first terminal reason wins");
+        assert_eq!(directory.append_admin_operation_audit(&later).await.expect("factual late terminal").fact.phase, "succeeded", "task abortion cannot invent rollback before the factual result is known");
     }
 
     fn presence_hex_bytes(hex: &str) -> Vec<u8> {

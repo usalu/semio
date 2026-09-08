@@ -39,4 +39,5 @@ framework_hash = { package = "semio-framework-hash", path = "../../../../../🧰
 base64_codec = { path = "../../../../../🧰️framework/🔨️modules/🚪️io/🔤️base64/📦️packages/🦀️rust", package = "semio-framework-io-base64" }
 
 [dev-dependencies]
+serde_json = { workspace = true }
 semio-framework-async-macros = { path = "../../../../../🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }

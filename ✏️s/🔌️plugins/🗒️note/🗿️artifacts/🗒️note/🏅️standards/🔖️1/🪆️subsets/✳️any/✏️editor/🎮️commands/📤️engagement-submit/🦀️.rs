@@ -20,5 +20,5 @@ pub fn handle(payload: &EngagementSubmit, _doc: &ArtifactView<'_, NoteSnapshot>,
         let target_id = ctx.selected_block_ids[0].clone();
         artifact_mutations.push(crate::artifacts::note::schema::mutations::rename_block(target_id, name));
     }
-    Ok(Emit { artifact_mutations, config_mutations: vec![NoteConfigMutation::SetEngagementInput { value: String::new() }], ..Default::default() })
+    Ok(Emit { artifact_mutations, config_mutations: vec![NoteConfigMutation::SetEngagementInput(crate::editor::note::config::SetEngagementInput { value: String::new() })], ..Default::default() })
 }

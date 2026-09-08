@@ -27,7 +27,7 @@ pub fn handle(payload: &EngagementSubmit, doc: &ArtifactView<'_, PresentationSna
         let selected: Vec<String> = tiles.first().map(|tile| vec![tile.id.clone()]).unwrap_or_default();
         return Ok(Emit {
             artifact_mutations: vec![PresentationMutation::ReplaceTiles(ReplaceTiles { new_tiles: tiles })],
-            config_mutations: vec![PresentationConfigMutation::SetEngagementInput { value: String::new() }],
+            config_mutations: vec![PresentationConfigMutation::SetEngagementInput(crate::editor::animate::config::SetEngagementInput { value: String::new() })],
             effects: vec![interaction_select_effect(&selected, "replace")],
             ..Default::default()
         });
@@ -38,18 +38,18 @@ pub fn handle(payload: &EngagementSubmit, doc: &ArtifactView<'_, PresentationSna
             let tile = FigureTileDraft { id: id.clone(), name: id.clone(), crop: FigureTileFrame { x: 0.1, y: 0.1, width: 0.2, height: 0.2 } };
             Ok(Emit {
                 artifact_mutations: vec![PresentationMutation::CreateTile(CreateTile { index: deck_tiles.len(), tile })],
-                config_mutations: vec![PresentationConfigMutation::SetEngagementInput { value: String::new() }],
+                config_mutations: vec![PresentationConfigMutation::SetEngagementInput(crate::editor::animate::config::SetEngagementInput { value: String::new() })],
                 effects: vec![interaction_select_effect(&[id], "replace")],
                 ..Default::default()
             })
         }
         "clear" => Ok(Emit {
             artifact_mutations: vec![PresentationMutation::ReplaceTiles(ReplaceTiles { new_tiles: Vec::new() })],
-            config_mutations: vec![PresentationConfigMutation::SetEngagementInput { value: String::new() }],
+            config_mutations: vec![PresentationConfigMutation::SetEngagementInput(crate::editor::animate::config::SetEngagementInput { value: String::new() })],
             effects: vec![interaction_select_effect(&[], "replace")],
             ..Default::default()
         }),
-        "copy" | "copy prompt" => Ok(Emit { config_mutations: vec![PresentationConfigMutation::SetEngagementInput { value: String::new() }], effects: vec![tile_morph_prompt_effect(deck)], ..Default::default() }),
+        "copy" | "copy prompt" => Ok(Emit { config_mutations: vec![PresentationConfigMutation::SetEngagementInput(crate::editor::animate::config::SetEngagementInput { value: String::new() })], effects: vec![tile_morph_prompt_effect(deck)], ..Default::default() }),
         _ => Ok(Emit::default()),
     }
 }
@@ -68,7 +68,7 @@ mod tests {
         let mut app = presentation_app().await;
         dispatch(&mut app, PresentationCommand::EngagementInput(engagement_input::EngagementInput { value: "2x3".into() })).await;
         dispatch(&mut app, PresentationCommand::EngagementSubmit(EngagementSubmit { value: "2x3".into() })).await;
-        assert_eq!(crate::artifacts::presentation::presentation_working_scene(&app.snapshot().await.expect("projection")).1.len(), 6, "2x3 grid pattern seeds 6 tiles");
+        assert_eq!(crate::artifacts::presentation::presentation_working_scene(&app.snapshot().expect("projection")).1.len(), 6, "2x3 grid pattern seeds 6 tiles");
     }
 
     #[semio_framework_async_macros::async_test]
@@ -76,10 +76,10 @@ mod tests {
         use semio_framework_plugin::testkit::meta;
         let mut app = presentation_app().await;
         dispatch(&mut app, PresentationCommand::EngagementSubmit(EngagementSubmit { value: "add".into() })).await;
-        assert_eq!(crate::artifacts::presentation::presentation_working_scene(&app.snapshot().await.expect("projection")).1.len(), 1);
+        assert_eq!(crate::artifacts::presentation::presentation_working_scene(&app.snapshot().expect("projection")).1.len(), 1);
 
         dispatch(&mut app, PresentationCommand::EngagementSubmit(EngagementSubmit { value: "clear".into() })).await;
-        assert!(crate::artifacts::presentation::presentation_working_scene(&app.snapshot().await.expect("projection")).1.is_empty());
+        assert!(crate::artifacts::presentation::presentation_working_scene(&app.snapshot().expect("projection")).1.is_empty());
 
         app.dispatch_typed(PresentationCommand::AddTile(crate::editor::animate::commands::add_tile::AddTile { crop: None }), &meta("local")).await.expect("seed for copy");
         let copy_result = app.dispatch_typed(PresentationCommand::EngagementSubmit(EngagementSubmit { value: "copy prompt".into() }), &meta("local")).await.expect("copy keyword");

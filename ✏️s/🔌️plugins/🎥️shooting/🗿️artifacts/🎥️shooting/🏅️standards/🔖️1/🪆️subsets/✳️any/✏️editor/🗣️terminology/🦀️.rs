@@ -10,6 +10,7 @@ use crate::editor::shooting::config::ShootingConfig;
 // invocations, so a doc comment here is dead and clippy/rustc flag it as unused.)
 semio_framework_plugin::app_labels! {
     pub struct ShootingLabels {
+        inspection_title: native_en "Inspection", native_de "Inspektion", reuse_en "Inspection", reuse_de "Inspektion";
         shots: native_en "Shots", native_de "Aufnahmen", reuse_en "Shots", reuse_de "Aufnahmen";
         assets: native_en "Assets", native_de "Objekte", reuse_en "Assets", reuse_de "Objekte";
         add_shot: native_en "Add Shot", native_de "Aufnahme hinzufügen", reuse_en "Add Shot", reuse_de "Aufnahme hinzufügen";

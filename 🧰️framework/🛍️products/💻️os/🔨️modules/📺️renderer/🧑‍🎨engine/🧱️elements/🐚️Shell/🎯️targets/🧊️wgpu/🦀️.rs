@@ -6,15 +6,14 @@
 //! `crate::shell::...` call site elsewhere in the crate keeps resolving with zero other changes.
 //! 🖥️ OS shell chrome — navbar, footer, floating panels, overlays, and studio mode.
 
-use crate::dock::{compute_dock_drop_zone, drop_zone_indicator_rect, parse_path, push_window_silhouette_border, DockDragKind, DockDragPayload, DockDragState, DockDropZone, DockRenderContext, DockStackTab, DockState, WindowSilhouette};
-use crate::engine_canvas::theme_is_dark;
+use crate::dock::{compute_dock_drop_zone, parse_path, DockDragKind, DockDragPayload, DockDragState, DockState, WindowSilhouette};
 #[cfg(test)]
 use crate::interpreter::render_ui_document;
-use crate::interpreter::{begin_ui_document_opportunity, framework_widget_context, render_ui_document_step, resolve_ui_image, UiDocumentFrameCursor};
+use crate::interpreter::{begin_ui_document_opportunity, framework_widget_context, render_ui_document_step, UiDocumentFrameCursor};
 use crate::program_bridge::{is_space_mode, resolve_playground_app_id, resolve_plugin_host_config, PluginHostConfig, ProgramBridgeEntry};
 use crate::scenes::{clear_graph_node_context, resolve_graph_context_action, toggle_vfs_row_expanded, vfs_selection_for_click, AdmittedSurfaceMap, Board2dSurface, NodeGraphSurface, TiledMapSurface};
 use infinite_world::world::{enqueue_world3d_events, World3dState, WorldInteractionIntent, WorldInteractionPhase};
-use semio_framework::{app_breadcrumb, app_window_label, resolve_app_breadcrumb, AppDefinition, ExampleDefinition, IconName, PanelGroup, PanelTabDefinition, ViewModel};
+use semio_framework::{AppDefinition, ExampleDefinition, IconName, PanelGroup, PanelTabDefinition, ViewModel};
 use semio_framework_os_kernel::os_directory::identity::IdentityEnv;
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, HashMap};
@@ -33,17 +32,15 @@ use ui_contract::{SurfaceId, UiDocumentLease, UiFixedList, UiText, UI_DOCUMENT_L
 #[cfg(not(target_arch = "wasm32"))]
 use semio_framework_os_kernel::os_directory::{
     client::{
-        native::NativeDirectoryTransport, CanonicalDirectoryEventPageV1, DirectoryBootstrapTransition, DirectoryClient, DirectoryClientError, DirectoryEventPageAckV1, DirectoryEventPageBootstrapV1, DirectoryStream, DirectoryStreamTurn,
-        DirectoryTransport, DirectoryWsConnection, TransportError,
+        native::NativeDirectoryTransport, CanonicalDirectoryEventPageV1, DirectoryBootstrapTransition, DirectoryClient, DirectoryClientError, DirectoryEventPageAckV1, DirectoryEventPageBootstrapV1, DirectoryStream, DirectoryStreamTurn, DirectoryWsConnection, TransportError,
     },
-    directory_command_sha256,
     identity::{actor_id, claimed_local_hub_credential, restore_claimed, Identity, IdentityOutcome, IdentityStatus},
     mint_directory_command_request_id,
     schema::{
         reduce_gis_map_inference_port_v1, DocumentExecutionTargetLeaseFieldsV1, DocumentScope, GisMapInferenceApprovalRequestV1, GisMapInferenceJobRequestV1, GisMapInferencePortCodeV1, GisMapInferencePortEventV1, GisMapInferencePortPhaseV1,
         GisMapInferencePortStatusV1, GIS_MAP_INFERENCE_SERVICE_ID,
     },
-    DirectoryCommand, DirectoryCommandErrorCodeV1, DirectoryCommandOutcomeV1, DirectoryCommandReceiptV1, DirectoryCommandRequestV1, DirectoryCommandResultV1, DirectorySpaceAdministrationCapabilitiesV1, DirectorySpaceAdministrationInviteRowV1,
+    DirectoryCommand, DirectoryCommandErrorCodeV1, DirectoryCommandReceiptV1, DirectoryCommandRequestV1, DirectoryCommandResultV1, DirectorySpaceAdministrationCapabilitiesV1, DirectorySpaceAdministrationInviteRowV1,
     DirectorySpaceAdministrationMemberRowV1, DirectorySpaceAdministrationPageV1, DirectorySpaceKind, DirectorySpaceRole, DirectorySpaceVisibility, DirectoryStreamMessage,
 };
 // 🌀️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (terra-directory-and-run): `DirectoryClient`'s request
@@ -59,11 +56,11 @@ use semio_framework_async::{CancelToken, Lane, OperationContext, ScopeOwner, Tra
 #[cfg(not(target_arch = "wasm32"))]
 use semio_framework_os_services::{ComputePool, TokioHostRuntime};
 use ui_wgpu::wgpu::{
-    chrome_item_bg, chrome_item_text, draw_text, paint_retained_glyph_step, push_chrome_group_border, DragAxis, DrawList, FontAtlas, HitKind, HitTarget, IconAtlas, InputState, Level, PointerModifiers, Rect, RetainedGlyphCursor, RetainedGlyphStep,
+    chrome_item_bg, chrome_item_text, draw_text, paint_retained_glyph_step, DragAxis, DrawList, FontAtlas, HitKind, HitTarget, IconAtlas, InputState, Level, PointerModifiers, Rect, RetainedGlyphCursor, RetainedGlyphStep,
     Rgba, Theme, TreeDragState, TreeDropPosition, WidgetInteractionMaps, WindowStackCorner,
 };
 use ui_wgpu::wgpu::{
-    ActionDescriptor, Label, Locale, LocalizedLabel, Terminology, UiButtonNode, UiNode, UiPresence, UiSelectItem, UiSelectNode, UiStackNode, UiTextNode, UtilityCategory, UtilityNode, WindowEngagement, WindowEngagementControl, WindowEngagementInput,
+    ActionDescriptor, Locale, LocalizedLabel, Terminology, UtilityCategory, UtilityNode, WindowEngagement, WindowEngagementControl, WindowEngagementInput,
     WindowMeasure, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_HISTORY_ID, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
 };
 #[cfg(target_arch = "wasm32")]
@@ -4346,7 +4343,7 @@ impl ShellState {
     #[cfg(not(target_arch = "wasm32"))]
     fn publish_presence_heartbeat(&mut self) {
         let Some(channel) = self.sync_channel.as_ref() else { return };
-        let document_id = channel.document_id.clone();
+        let _document_id = channel.document_id.clone();
         let instance_id = channel.instance_id;
         let plugin_id = channel.plugin_id.clone();
         let connected_at_ms = channel.connected_at_ms;
@@ -12507,7 +12504,7 @@ impl ShellState {
         if actor.len() > SHELL_CHROME_IO_FIELD_BYTES {
             return;
         }
-        let document_id = channel.document_id.clone();
+        let _document_id = channel.document_id.clone();
         let connected_at_ms = channel.connected_at_ms;
         let label = self.session.as_ref().map(|session| session.app.id.clone()).filter(|value| value.len() <= SHELL_CHROME_IO_FIELD_BYTES);
         let user_id = self.identity.as_ref().map(|identity| identity.user_id.clone()).filter(|value| value.len() <= SHELL_CHROME_IO_FIELD_BYTES);

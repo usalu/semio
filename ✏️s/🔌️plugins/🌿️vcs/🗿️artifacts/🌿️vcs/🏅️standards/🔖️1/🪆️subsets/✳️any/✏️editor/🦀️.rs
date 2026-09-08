@@ -21,10 +21,9 @@ use semio_framework::{InteractiveJobClassification, ToolExecutionContract, ToolF
 use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::retained_command::{ArtifactCommandWork, ArtifactCommandWorkStep, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
 use semio_framework_plugin::{
-    ActionDescriptor, AppOperationContext, ArtifactEditor, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView, ConfigView, Dialect, DraftView, Editor, EditorApp, Emit, Fault, GranularityDefinition, HierarchyProvider,
+    AppOperationContext, ArtifactEditor, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView, ConfigView, Dialect, DraftView, Editor, EditorApp, Emit, Fault, GranularityDefinition, HierarchyProvider,
     HoverSpec, InteractionDefinition, InteractionRef, Label, LocalizedLabel, MergeMode, NoDraft, NoDraftMutation, SelectionMethod, SelectionMode, SelectionSpec,
 };
-use dsl::os_pack::json::{parse, Value};
 use std::collections::BTreeSet;
 use store::EngineHandles;
 
@@ -398,7 +397,7 @@ impl ArtifactCommandWork<EditorApp<VcsPlayApp>> for VcsEditCommandWork {
     ) -> Result<ArtifactCommandWorkStep<EditorApp<VcsPlayApp>>, Fault> {
         let replaying = self.steps < self.replay_target;
         match self.advance(command, snapshot)? {
-            Some(emit) if replaying => Err(Fault::from("vcs-edit-checkpoint-beyond-completion")),
+            Some(_emit) if replaying => Err(Fault::from("vcs-edit-checkpoint-beyond-completion")),
             Some(emit) => Ok(ArtifactCommandWorkStep::Complete(emit)),
             None => {
                 self.steps = self.steps.checked_add(1).ok_or_else(|| Fault::from("vcs-edit-step-overflow"))?;

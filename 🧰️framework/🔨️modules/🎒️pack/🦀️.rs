@@ -7,7 +7,7 @@
 //! `pack_value`/`pack_format`.
 //!
 //! See the `## pack (facade)` section of the wave-0 contract at
-//! `.🦑️repo/🎫️tickets/26/07/27/PACK-BINARY-DOCUMENT-LAYER-ACROSS-ALL-APPS/contract.md`. This crate does
+//! `.🧬semio/🦑️repo/🎫️tickets/26/07/27/PACK-BINARY-DOCUMENT-LAYER-ACROSS-ALL-APPS/contract.md`. This crate does
 //! NOT re-export `dsl_schema` itself as `crate::dsl_schema` — callers pass in
 //! `&os_dsl::schema::RecordSpec`/`&os_dsl::schema::RecordValue` they already depend on directly.
 

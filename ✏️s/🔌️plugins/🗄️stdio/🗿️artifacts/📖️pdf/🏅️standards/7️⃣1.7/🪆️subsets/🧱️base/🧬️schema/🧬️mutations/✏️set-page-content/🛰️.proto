@@ -1,0 +1,8 @@
+syntax = "proto3";
+package semio.s_stdio_pdf_1_7.mutation.set_page_content;
+
+// ✏️ Direct set-page-content protobuf payload.
+message SetPageContentMutation {
+  uint64 index = 1;
+  string text = 2;
+}

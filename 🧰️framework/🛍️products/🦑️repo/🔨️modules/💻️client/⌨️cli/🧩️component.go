@@ -7022,7 +7022,7 @@ func renderTreeNodeMarkdown(sb *strings.Builder, node *TreeNode, indent string) 
 // #endregion 🩻️Monorepo Tree
 
 // #region 🎊️Query Cache
-// Local event index under .🦑️repo/⚡️cache for keyword search. Uses a composite repository fingerprint for invalidation.
+// Local event index under .🧬semio/🦑️repo/⚡️cache for keyword search. Uses a composite repository fingerprint for invalidation.
 // 📌️cacheSchemaVersion holds the data fields for a cacheSchemaVersion record.
 const cacheSchemaVersion = 3
 
@@ -7592,7 +7592,7 @@ func queryCacheIndex(ctx context.Context, idx search.Index, query string, limit 
 // #endregion 🎊️Query Cache
 
 // #region 📌️Tree Cache
-// Gzip-compressed JSON cache of the full TreeNode tree under .🦑️repo/cache. Uses same git fingerprint as Query Cache for invalidation. Saves ~95% of tree build time on cache hit.
+// Gzip-compressed JSON cache of the full TreeNode tree under .🧬semio/🦑️repo/⚡️cache. Uses same git fingerprint as Query Cache for invalidation. Saves ~95% of tree build time on cache hit.
 
 // 🌳️getTreeCachePath holds the data fields for a getTreeCachePath record.
 func getTreeCachePath() string {
@@ -8516,7 +8516,7 @@ func locContributorAlias(name, email string) string {
 	return FindAndUpdateContributor(author)
 }
 
-// 🪷️ locPathSkipped returns true for paths that must not be counted (.🦑️repo, gitignore).
+// 🪷️ locPathSkipped returns true for paths that must not be counted (.🧬semio, gitignore).
 // 🗂️ locPathSkipped filters repo-internal and gitignored relative paths.
 func locPathSkipped(relPath string) bool {
 	rel := normalizeRepoPath(relPath)
@@ -8544,7 +8544,7 @@ func locPathHasHiddenSegment(relPath string) bool {
 	return false
 }
 
-// 🗂️ locPathSkippedForLoc combines gitignore/.🦑️repo skips with hidden-directory-segment skips for `loc`.
+// 🗂️ locPathSkippedForLoc combines gitignore/.🧬semio skips with hidden-directory-segment skips for `loc`.
 func locPathSkippedForLoc(relPath string) bool {
 	if locPathSkipped(relPath) {
 		return true
@@ -13280,7 +13280,7 @@ type Breach struct {
 	Line    int     `json:"line,omitempty"`
 	Column  int     `json:"column,omitempty"`
 	Excerpt string  `json:"excerpt,omitempty"`
-	// Optional fields from lint script JSON (`.🦑️repo/⚡️cache/breach/*.json`).
+	// Optional fields from lint script JSON (`.🧬semio/🦑️repo/⚡️cache/breach/*.json`).
 	LintPriority    BreachPriority `json:"priority,omitempty"`
 	LintAutofixable *bool          `json:"autofixable,omitempty"`
 	Reason          string         `json:"reason,omitempty"`
@@ -26402,7 +26402,7 @@ func ToolGoalCreate(title, description, prompt, dueDate, llm, client string, noM
 }
 
 // 🔖️ToolGoalList MUST complete the operation successfully.
-// Lists goals from `.🦑️repo/🎯️goals` only — avoids BuildMonorepoTree (full repo walk) while
+// Lists goals from `.🧬semio/🦑️repo/🎯️goals` only — avoids BuildMonorepoTree (full repo walk) while
 // keeping the same markdown lines as goal nodes in the monorepo tree.
 func ToolGoalList() ToolResult {
 	goals, err := ListGoals()
@@ -38848,7 +38848,7 @@ func computeCheckpointDiff(repoRoot string, checkpointID string) *CheckpointDiff
 	return diff
 }
 
-// 🏪️storeCheckpointDiff stores a semantic code diff at .🦑️repo/🔀️/YY/MM/DD/<checkpoint-id>.json.
+// 🏪️storeCheckpointDiff stores a semantic code diff at .🧬semio/🦑️repo/🔀️/YY/MM/DD/<checkpoint-id>.json.
 func storeCheckpointDiff(repoRoot string, checkpointID string) {
 	if checkpointID == "" || checkpointID == "unknown" {
 		return
@@ -40373,7 +40373,7 @@ func isDeeperGoal(goal *Goal) bool {
 	return goalDepth(goal.ID) >= 2
 }
 
-// 🛤️goalIDForFilesystem maps repo emoji goal IDs to `.🦑️repo/🎯️goals/...` paths for filesystem access.
+// 🛤️goalIDForFilesystem maps repo emoji goal IDs to `.🧬semio/🦑️repo/🎯️goals/...` paths for filesystem access.
 func goalIDForFilesystem(goalID string) string {
 	goalID = strings.TrimSpace(goalID)
 	if goalID == "" {

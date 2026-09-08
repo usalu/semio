@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Replace Config",
+  "type": "object",
+  "properties": {
+    "config": {
+      "$ref": "../../🔣️.json"
+    }
+  },
+  "required": [
+    "config"
+  ],
+  "additionalProperties": false
+}

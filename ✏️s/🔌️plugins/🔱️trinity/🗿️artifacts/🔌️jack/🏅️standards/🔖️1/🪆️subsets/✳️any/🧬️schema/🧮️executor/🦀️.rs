@@ -92,7 +92,7 @@ pub fn run(graph: &mut Graph, source: &str) -> Result<QueryResult, String> {
 /// ▶️ Execute jack and return JSON result.
 pub fn run_json(graph: &mut Graph, source: &str) -> Result<String, String> {
     let result = run(graph, source)?;
-    pack::to_json_string(&result).map_err(|e| e.to_string())
+    Ok(pack::to_json_string(&result))
 }
 
 fn match_patterns(graph: &Graph, patterns: &[Pattern]) -> Result<Vec<Binding>, String> {
@@ -302,8 +302,10 @@ fn emit_create_operations(fixture: &JackSnapshot, pattern: &Pattern) -> Result<V
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::artifacts::jack::{Camera, Manifest};
+    use crate::ast::QueryResultKind;
     use crate::language_service::{complete, format as format_source, hover, lint, semantic_tokens};
-    use crate::lexer::{lex, tokenize, TokenClass};
+    use crate::lexer::{lex, tokenize, Token, TokenClass};
 
     fn mini_graph() -> Graph {
         let fixture = JackSnapshot::with_content(

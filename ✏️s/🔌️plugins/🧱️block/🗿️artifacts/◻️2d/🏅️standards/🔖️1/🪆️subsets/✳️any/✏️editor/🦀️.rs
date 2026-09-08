@@ -23,8 +23,8 @@ use semio_framework::{DomainTopology, GranularityDefinition, HierarchyProvider, 
 use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::retained_command::{ArtifactCommandWork, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
 use semio_framework_plugin::{
-    ActionDescriptor, AppIo, AppOperationContext, ArtifactEditor, ArtifactKindSpec, ArtifactOwnedToolJobFactory, ArtifactOwnedToolJobRequest, ArtifactPresentation, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView, ConfigView, Dialect, DraftView, Editor, EditorApp, Emit, Fault, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload,
-    MediaPortDirection, MediaPortSpec, MediaType, NoDraft, NoDraftMutation, PortMultiplicity, UiNode,
+    AppIo, AppOperationContext, ArtifactEditor, ArtifactKindSpec, ArtifactOwnedToolJobFactory, ArtifactOwnedToolJobRequest, ArtifactPresentation, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView, ConfigView, Dialect, DraftView, Editor, EditorApp, Emit, Fault, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload,
+    MediaPortDirection, MediaPortSpec, MediaType, NoDraft, NoDraftMutation, PortMultiplicity,
 };
 use std::collections::BTreeMap;
 use store::EngineHandles;
@@ -316,7 +316,7 @@ impl store::ArtifactStoreOneItemPreparationFactory<Block2dSnapshot, Block2dMutat
 
 impl store::ArtifactStoreOneItemPreparation<Block2dSnapshot, Block2dMutation> for Block2dStorePreparation {
     fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {
-        use protocol::{Mutation as _, MutationDiff as _};
+        use protocol::Mutation as _;
         if !grant.permits_one() || self.cancelled {
             return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked);
         }

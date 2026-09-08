@@ -2,8 +2,9 @@
 
 use crate::editor::architect::catalog::REGISTER_IDS;
 use crate::editor::architect::{architect_action, ui_value_map, ui_value_text};
+use crate::editor::architect::ui_label;
 use semio_framework_plugin::{
-    tree_item_with_action, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, UiFixedList, UiValue, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
+    tree_item_with_action,  LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, UiFixedList, UiValue, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
 };
 
 //#region 🔖️Constants
@@ -25,12 +26,6 @@ pub fn definition() -> PanelTabDefinition {
 
 //#region 🔖️Render
 pub fn render() -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    let mut register_items = UiFixedList::default();
-    for register in REGISTER_IDS {
-        let args = ui_value_map([("registerId", ui_value_text(register)?)])?;
-        let item = tree_item_with_action(format!("architect-catalogue.register.{register}"), Label::data(*register), None, architect_action("selectRegister", Some(args))?)?;
-        register_items.try_push(item).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "architect catalogue register admission failed"))?;
-    }
     let specs = [
         ("architect-catalogue.add-item", "Add Register Item", "addRegisterItem", Some(ui_value_map([("registerId", ui_value_text("elements")?), ("template", UiValue::Null)])?)),
         ("architect-catalogue.validate", "Run Validation", "runValidation", None),
@@ -45,13 +40,23 @@ pub fn render() -> semio_framework_plugin::UiAssemblyResult<semio_framework_plug
     ];
     let mut actions = UiFixedList::default();
     for (id, label, action, args) in specs {
-        let item = tree_item_with_action(id, Label::data(label), None, architect_action(action, args)?)?;
+        let item = tree_item_with_action(id, ui_label(label)?, None, architect_action(action, args)?)?;
         actions.try_push(item).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "architect catalogue action admission failed"))?;
     }
-    PanelTreeBuilder::new("architect-catalogue")?
-        .section("architect-catalogue.actions", Some(Label::data(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL)), true, actions)?
-        .section("architect-catalogue.registers", Some(Label::data("Registers")), true, register_items)?
-        .build()
+    let mut tree = PanelTreeBuilder::new("architect-catalogue")?
+        .section("architect-catalogue.actions", Some(ui_label(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL)?), true, actions)?;
+    for (page, registers) in REGISTER_IDS.chunks(semio_framework_ui_contract::UI_FIXED_LIST_ITEMS).enumerate() {
+        let mut items = UiFixedList::default();
+        for register in registers {
+            let args = ui_value_map([("registerId", ui_value_text(register)?)])?;
+            let item = tree_item_with_action(format!("architect-catalogue.register.{register}"), ui_label(*register)?, None, architect_action("selectRegister", Some(args))?)?;
+            items.try_push(item).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "architect catalogue register admission failed"))?;
+        }
+        let start = page * semio_framework_ui_contract::UI_FIXED_LIST_ITEMS + 1;
+        let end = start + registers.len() - 1;
+        tree = tree.section(format!("architect-catalogue.registers.{page}"), Some(ui_label(format!("Registers {start}–{end}"))?), true, items)?;
+    }
+    tree.build()
 }
 //#endregion 🔖️Render
 
@@ -69,7 +74,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn every_register_id_gets_a_catalogue_row() {
-        let json = serde_json::to_string(&render()).expect("json");
+        let json = crate::editor::architect::testkit::project_render(render());
         for register in REGISTER_IDS {
             assert!(json.contains(&format!("architect-catalogue.register.{register}")), "missing catalogue row for {register}");
         }
@@ -77,7 +82,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn the_action_shortcuts_are_present() {
-        let json = serde_json::to_string(&render()).expect("json");
+        let json = crate::editor::architect::testkit::project_render(render());
         for id in ["architect-catalogue.validate", "architect-catalogue.analysis", "architect-catalogue.report", "architect-catalogue.search"] {
             assert!(json.contains(id), "missing shortcut {id}");
         }

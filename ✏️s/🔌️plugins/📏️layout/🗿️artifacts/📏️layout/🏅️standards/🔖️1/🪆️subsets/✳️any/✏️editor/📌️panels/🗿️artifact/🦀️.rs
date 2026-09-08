@@ -70,25 +70,26 @@ fn style_row_id(style_id: &str) -> String {
 /// `tree_item_desc`/`tree_item_with_action` — the icon assignment is the only bit the SDK helpers
 /// don't cover, since not every plugin's rows carry one.
 fn layout_tree_item(
-    id: impl Into<String>,
-    label: impl TryInto<Label>,
+    id: impl AsRef<str>,
+    label: impl Into<Label>,
     description: Option<String>,
     icon_id: Option<String>,
     action: Option<(semio_framework_plugin::ActionId, Option<UiValue>)>,
 ) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+    let label = label.into();
     let mut item = match action {
-        Some(action) => tree_item_with_action(id, label, description.clone(), action)?,
-        None => tree_item_desc(id, label, description.clone())?,
+        Some(action) => tree_item_with_action(id, label.as_str(), description.clone(), action)?,
+        None => tree_item_desc(id, label.as_str(), description.clone())?,
     };
     if let semio_framework_plugin::Component::TreeItem(props) = &mut item.component {
         if props.description.is_none() {
             props.description = match description {
-                Some(value) => Some(UiText::try_from_string(value).ok_or_else(|| PluginAssemblyError::new("ui.fixed-capacity", "layout row description admission failed"))?),
+                Some(value) => Some(UiText::try_from_string(value).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "layout row description admission failed"))?),
                 None => None,
             };
         }
         props.icon = match icon_id {
-            Some(value) => Some(UiText::try_from_string(value).ok_or_else(|| PluginAssemblyError::new("ui.fixed-capacity", "layout row icon admission failed"))?),
+            Some(value) => Some(UiText::try_from_string(value).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "layout row icon admission failed"))?),
             None => None,
         };
     }
@@ -96,7 +97,7 @@ fn layout_tree_item(
 }
 
 fn selection_args(ids: impl IntoIterator<Item = String>, merge: &str) -> semio_framework_plugin::UiAssemblyResult<UiValue> {
-    let mut targets = UiFixedList::default();
+    let mut targets: UiFixedList<InteractionTarget> = UiFixedList::default();
     for id in ids {
         targets.try_push(InteractionTarget { granularity: LAYOUT_GRANULARITY_ELEMENT.into(), id }).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "layout selection target admission failed"))?;
     }
@@ -159,7 +160,7 @@ pub fn render(doc: &LayoutSnapshot, _config: &LayoutConfig, labels: &LayoutLabel
 
     let mut link_items = UiFixedList::default();
     for link in &doc.links {
-        let mut referencing_ids = UiFixedList::default();
+        let mut referencing_ids: UiFixedList<String> = UiFixedList::default();
         for frame in doc.pages.iter().flat_map(|page| page.frames.iter()) {
             if let Frame::Image { link_id, .. } = frame {
                 if link_id == &link.id {
@@ -191,18 +192,18 @@ pub fn render(doc: &LayoutSnapshot, _config: &LayoutConfig, labels: &LayoutLabel
     PanelTreeBuilder::new("layout-document")?
         .section(
             "layout-document.document",
-            Some(labels.document.into()),
+            Some(crate::editor::layout::ui_label(labels.document.as_str())?),
             true,
             ui_node_list([layout_tree_item("layout-document.document.root", Label::data(doc.name.clone()), Some(LAYOUT_DOCUMENT_SCHEMA.into()), Some("file-text".into()), None)])?,
         )?
-        .section("layout-document.spreads", Some(labels.spreads.into()), false, spread_items)?
-        .section("layout-document.pages", Some(Label::data(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL)), true, page_items)?
-        .section("layout-document.frames", Some(labels.frames.into()), true, frame_items)?
-        .section("layout-document.parentPages", Some(labels.parent_pages.into()), false, parent_page_items)?
-        .section("layout-document.layers", Some(labels.layers.into()), false, layer_items)?
-        .section("layout-document.stories", Some(labels.stories.into()), false, story_items)?
-        .section("layout-document.links", Some(labels.links.into()), false, link_items)?
-        .section("layout-document.styles", Some(labels.styles.into()), false, style_items)?
+        .section("layout-document.spreads", Some(crate::editor::layout::ui_label(labels.spreads.as_str())?), false, spread_items)?
+        .section("layout-document.pages", Some(crate::editor::layout::ui_label(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL)?), true, page_items)?
+        .section("layout-document.frames", Some(crate::editor::layout::ui_label(labels.frames.as_str())?), true, frame_items)?
+        .section("layout-document.parentPages", Some(crate::editor::layout::ui_label(labels.parent_pages.as_str())?), false, parent_page_items)?
+        .section("layout-document.layers", Some(crate::editor::layout::ui_label(labels.layers.as_str())?), false, layer_items)?
+        .section("layout-document.stories", Some(crate::editor::layout::ui_label(labels.stories.as_str())?), false, story_items)?
+        .section("layout-document.links", Some(crate::editor::layout::ui_label(labels.links.as_str())?), false, link_items)?
+        .section("layout-document.styles", Some(crate::editor::layout::ui_label(labels.styles.as_str())?), false, style_items)?
         .interaction_domain(LAYOUT_INTERACTION_ELEMENTS)?
         .build()
 }
@@ -216,16 +217,16 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn document_lists_sample_pages() {
-        let mut app = layout_app();
-        let json = render_body(&mut app, LAYOUT_PLAY_BODY_DOCUMENT);
+        let mut app = layout_app().await;
+        let json = render_body(&mut app, LAYOUT_PLAY_BODY_DOCUMENT).await;
         assert!(json.contains("layout-document.page.page-1"));
         assert!(json.contains("Page 1"));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn document_tree_has_nine_sections() {
-        let mut app = layout_app();
-        let json = render_body(&mut app, LAYOUT_PLAY_BODY_DOCUMENT);
+        let mut app = layout_app().await;
+        let json = render_body(&mut app, LAYOUT_PLAY_BODY_DOCUMENT).await;
         for section_id in [
             "layout-document.document",
             "layout-document.spreads",
@@ -243,8 +244,8 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn layout_labels_resolve_native_english_by_default() {
-        let mut app = layout_app();
-        let json = render_body(&mut app, LAYOUT_PLAY_BODY_DOCUMENT);
+        let mut app = layout_app().await;
+        let json = render_body(&mut app, LAYOUT_PLAY_BODY_DOCUMENT).await;
         assert!(json.contains("\"Frames\""));
         assert!(json.contains("\"Layers\""));
         assert!(!json.contains("Rahmen"));
@@ -255,9 +256,9 @@ mod tests {
         use crate::editor::layout::commands::set_locale;
         use crate::editor::layout::testkit::dispatch;
         use crate::editor::layout::LayoutCommand;
-        let mut app = layout_app();
-        dispatch(&mut app, LayoutCommand::SetLocale(set_locale::SetLocale { value: "de-DE".into() }));
-        let json = render_body(&mut app, LAYOUT_PLAY_BODY_DOCUMENT);
+        let mut app = layout_app().await;
+        dispatch(&mut app, LayoutCommand::SetLocale(set_locale::SetLocale { value: "de-DE".into() })).await;
+        let json = render_body(&mut app, LAYOUT_PLAY_BODY_DOCUMENT).await;
         assert!(json.contains("\"Rahmen\""));
         assert!(json.contains("\"Ebenen\""));
         assert!(!json.contains("\"Frames\""));

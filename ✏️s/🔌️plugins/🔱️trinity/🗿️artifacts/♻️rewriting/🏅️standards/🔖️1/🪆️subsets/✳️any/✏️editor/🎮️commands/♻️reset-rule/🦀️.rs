@@ -12,7 +12,7 @@ use semio_framework_plugin::{Emit, Fault};
 pub(crate) fn reset_rule(state: &RewritingSnapshot) -> Result<Emit<RewriteRuleMutation, RewritingConfigMutation>, Fault> {
     let next = crate::editor::rewriting::default_rule_state();
     let camera = crate::editor::rewriting::seed_before_pane_camera(&next);
-    let config_mutations = vec![RewritingConfigMutation::SetBeforePaneCamera { camera }];
+    let config_mutations = vec![RewritingConfigMutation::SetBeforePaneCamera(crate::editor::rewriting::config::SetBeforePaneCamera { camera })];
     if &next == state {
         Ok(Emit::config(config_mutations))
     } else {

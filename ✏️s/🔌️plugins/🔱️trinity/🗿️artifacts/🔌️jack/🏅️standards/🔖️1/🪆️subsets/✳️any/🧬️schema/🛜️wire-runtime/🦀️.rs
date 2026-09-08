@@ -1800,10 +1800,10 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn nakagin_document_text_round_trips_store_with_applied_operation() {
         let envelope = create_document_envelope_for_test();
-        let mut doc_store = store::ArtifactStore::new(envelope).expect("valid artifact store fixture");
-        doc_store.dispatch(store::ArtifactCommand::Apply { mutations: vec![rename_node("node-1".into(), "Renamed".into())], description: None }).ok();
-        ::store::os_store::test_support::assert_document_text_round_trip(&doc_store);
-        ::store::os_store::test_support::assert_document_pack_round_trip(&doc_store);
+        let mut doc_store = store::ArtifactStore::new(envelope).await.expect("valid artifact store fixture");
+        doc_store.dispatch(store::ArtifactCommand::Apply { mutations: vec![rename_node("node-1".into(), "Renamed".into())], description: None }).await.expect("apply rename");
+        ::store::os_store::test_support::assert_document_text_round_trip(&doc_store).await;
+        ::store::os_store::test_support::assert_document_pack_round_trip(&doc_store).await;
     }
 
     fn create_document_envelope_for_test() -> store::ArtifactEnvelope<JackSnapshot, TrinityGraphMutation> {
@@ -1840,6 +1840,7 @@ mod tests {
                     assert!(released_bytes <= JACK_OWNED_FIELD_BYTES);
                 }
                 semio_framework_plugin::PluginCloseStep::Blocked { reason } => panic!("fresh Jack candidate close unexpectedly blocked: {reason}"),
+                semio_framework_plugin::PluginCloseStep::AwaitingInput { reason } => panic!("fresh Jack candidate close unexpectedly needs input: {reason}"),
                 semio_framework_plugin::PluginCloseStep::Complete => {
                     assert!(disposer.terminal_is_empty(&candidate));
                     drop(disposer);
@@ -1981,11 +1982,11 @@ mod tests {
         use crate::artifacts::jack::schema::mutations::text::TrinityGraphStore;
         use protocol::{ArtifactId, Edit, SchemaId};
 
-        let mut store = TrinityGraphStore::new(create_document_envelope_for_test());
-        crate::artifacts::jack::schema::mutations::text::dispatch_trinity_graph_mutations(&mut store, vec![rename_node("node-1".into(), "Renamed".into())]).unwrap_or(());
+        let mut store = TrinityGraphStore::new(create_document_envelope_for_test()).await.expect("valid artifact store");
+        crate::artifacts::jack::schema::mutations::text::dispatch_trinity_graph_mutations(&mut store, vec![rename_node("node-1".into(), "Renamed".into())]).await.unwrap_or(());
         if let Some(edit) = store.envelope().vcs.edits.last() {
             let edit: &Edit<TrinityGraphMutation> = edit;
-            ::store::os_store::test_support::assert_command_envelope_round_trip::<JackSnapshot, TrinityGraphMutation>(edit, &ArtifactId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone()));
+            ::store::os_store::test_support::assert_command_envelope_round_trip::<JackSnapshot, TrinityGraphMutation>(edit, &ArtifactId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone())).await;
         }
     }
 }

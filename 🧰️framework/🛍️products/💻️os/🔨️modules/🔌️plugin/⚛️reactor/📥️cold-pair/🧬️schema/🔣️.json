@@ -2,25 +2,54 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schema", "limits", "exact", "hostile", "lifecycle"],
+  "required": ["schema", "limits", "exact", "hostile", "lifecycle", "browserRender"],
   "properties": {
-    "schema": { "const": "semio.plugin.cold-document-pair-ingress-corpus/v1" },
+    "schema": {
+      "const": "semio.plugin.cold-document-pair-ingress-corpus/v1"
+    },
     "limits": {
-      "const": { "pageBytes": 65536, "maximumPages": 64, "maximumPairBytes": 4194304, "childMessageBytes": 262144 }
+      "const": {
+        "pageBytes": 65536,
+        "maximumPages": 64,
+        "maximumPairBytes": 4194304,
+        "childMessageBytes": 262144
+      }
     },
     "exact": {
       "type": "object",
       "additionalProperties": false,
       "required": ["packLength", "sprLength", "pageCount", "packPattern", "sprPattern", "packSha256", "sprSha256", "aggregateSha256"],
       "properties": {
-        "packLength": { "const": 2097152 },
-        "sprLength": { "const": 2097152 },
-        "pageCount": { "const": 64 },
-        "packPattern": { "const": { "multiplier": 31, "addend": 7 } },
-        "sprPattern": { "const": { "multiplier": 17, "addend": 11 } },
-        "packSha256": { "const": "15d80ba308304e391a817479e20a3922787105dfdff12e2251e83d80f8c32195" },
-        "sprSha256": { "const": "8807958a84cd0f2c56dfbbf5ce02cb84b518f03572d8f0d3452ec40f4e98cf14" },
-        "aggregateSha256": { "const": "4710c01dee5a714b6cb62150df7de95abdefd2753e63e81b9f3f896412b9d422" }
+        "packLength": {
+          "const": 2097152
+        },
+        "sprLength": {
+          "const": 2097152
+        },
+        "pageCount": {
+          "const": 64
+        },
+        "packPattern": {
+          "const": {
+            "multiplier": 31,
+            "addend": 7
+          }
+        },
+        "sprPattern": {
+          "const": {
+            "multiplier": 17,
+            "addend": 11
+          }
+        },
+        "packSha256": {
+          "const": "15d80ba308304e391a817479e20a3922787105dfdff12e2251e83d80f8c32195"
+        },
+        "sprSha256": {
+          "const": "8807958a84cd0f2c56dfbbf5ce02cb84b518f03572d8f0d3452ec40f4e98cf14"
+        },
+        "aggregateSha256": {
+          "const": "4710c01dee5a714b6cb62150df7de95abdefd2753e63e81b9f3f896412b9d422"
+        }
       }
     },
     "hostile": {
@@ -32,10 +61,18 @@
         "additionalProperties": false,
         "required": ["name", "fault", "displacesOwner", "loadsDocument"],
         "properties": {
-          "name": { "enum": ["duplicate-page", "reordered-page", "foreign-lifetime", "changed-descriptor", "changed-length", "short-middle-page", "mutated-terminal", "slot-collision"] },
-          "fault": { "const": true },
-          "displacesOwner": { "const": false },
-          "loadsDocument": { "const": false }
+          "name": {
+            "enum": ["duplicate-page", "reordered-page", "foreign-lifetime", "changed-descriptor", "changed-length", "short-middle-page", "mutated-terminal", "slot-collision"]
+          },
+          "fault": {
+            "const": true
+          },
+          "displacesOwner": {
+            "const": false
+          },
+          "loadsDocument": {
+            "const": false
+          }
         }
       }
     },
@@ -55,6 +92,42 @@
         "maximumCloseStepBytes": 65536,
         "closeWipesBytes": true,
         "lateClosedLifetimeLoads": 0
+      }
+    },
+    "browserRender": {
+      "const": {
+        "maximumRenderTurns": 256,
+        "lazyWakeTurns": 2,
+        "events": ["surface-visible", "wake", "wake", "patch-ack", "patch-rejected"],
+        "revision": 1,
+        "nodeKind": "tiled-map",
+        "hostile": [
+          {
+            "name": "turn-limit",
+            "turns": 256,
+            "error": "render turn limit"
+          },
+          {
+            "name": "stale-before-turn",
+            "turns": 0,
+            "error": "fixture-stale-render"
+          },
+          {
+            "name": "stale-after-turn",
+            "turns": 1,
+            "error": "fixture-stale-render"
+          },
+          {
+            "name": "cold-ingress",
+            "turns": 1,
+            "error": "unexpected cold ingress during render"
+          },
+          {
+            "name": "faulted-turn",
+            "turns": 1,
+            "error": "guest turn fault"
+          }
+        ]
       }
     }
   }

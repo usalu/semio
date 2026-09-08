@@ -5,7 +5,7 @@ use crate::editor::generation3d::terminology::Generation3dLabels;
 use crate::editor::generation3d::GENERATION_3D_PLAY_APP_ID;
 use flow::{FlowFixture, Widget};
 use semio_framework_plugin::plugin_app_close_prelude::{field, input, Buildable, HasBase, HasChildren, InputKind, Trigger};
-use semio_framework_plugin::{tree_item, ActionFactory, BuiltNode, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL};
+use semio_framework_plugin::{tree_item, ActionFactory, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL};
 
 //#region 🔖️Constants
 pub const GENERATION_3D_PLAY_BODY_INSPECTION: &str = "procedural.play.inspection";

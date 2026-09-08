@@ -1,35 +1,31 @@
-//! Serialize layout to stdio.json.
-//!
-//! 🩹️ w5b-close fix (stdio_gap/foreign-lag, not svg/dwg-pattern scope — see w5b-close-report.md):
-//! `JsonSnapshot.value` was retyped from `serde_json::Value` to stdio's own lexeme-preserving
-//! `JsonValue` by a concurrent stdio wave, breaking this pre-existing leaf's compile. Mirrors
-//! 🗒️note's/🎥️shooting's identical fix: a real structural `serde_json::Value -> JsonValue`
-//! converter plus stdio's own real `write_json_pretty`.
+//! 🧾️ Serialize layout through the first-party JSON artifact codec.
 use crate::artifacts::layout::LayoutSnapshot;
-use semio_s_plugin_stdio::artifacts::json::schema::snapshot::{JsonMember, JsonSnapshot, JsonValue};
-use semio_s_plugin_stdio::artifacts::json::STDIO_JSON_DOCUMENT_SCHEMA;
+use semio_s_plugin_stdio::artifacts::json::schema::snapshot::JsonSnapshot;
 
 pub fn register() {}
 
-/// 🔁️ Structural `serde_json::Value -> JsonValue` conversion (stdio's own `JsonValue` has no
-/// built-in bridge to `serde_json::Value` — see this file's module doc comment).
-fn serde_to_json_value(value: &serde_json::Value) -> JsonValue {
-    match value {
-        serde_json::Value::Null => JsonValue::Null,
-        serde_json::Value::Bool(value) => JsonValue::Bool { value: *value },
-        serde_json::Value::Number(number) => JsonValue::Number { lexeme: number.to_string() },
-        serde_json::Value::String(value) => JsonValue::String { value: value.clone() },
-        serde_json::Value::Array(items) => JsonValue::Array { items: items.iter().map(serde_to_json_value).collect() },
-        serde_json::Value::Object(members) => JsonValue::Object { members: members.iter().map(|(key, value)| JsonMember { key: key.clone(), value: serde_to_json_value(value) }).collect() },
-    }
-}
-
 pub fn serialize(from: &LayoutSnapshot) -> Result<JsonSnapshot, store::PackError> {
-    let _ = STDIO_JSON_DOCUMENT_SCHEMA;
-    let value = serde_json::to_value(from).map_err(|e| store::PackError::Schema(e.to_string()))?;
-    Ok(JsonSnapshot::from_value(value))
+    <JsonSnapshot as store::ArtifactDsl>::parse_dsl(&serialize_text(from)?).map_err(|error| store::PackError::Schema(error.to_string()))
 }
 
 pub fn serialize_text(from: &LayoutSnapshot) -> Result<String, store::PackError> {
-    Ok(<LayoutSnapshot as store::ArtifactDsl>::print_dsl(from))
+    Ok(dsl::os_pack::json::to_json_string(from))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn json_artifact_round_trip_preserves_the_language_neutral_snapshot() {
+        let fixture = include_str!("../../../../../../../🧬️schema/🧬️mutations/🔀reorder-pages/🧪️tests/🔀️moves-page-1-behind-page-2/📸️snapshot/⬅️before/🔣️.json");
+        let snapshot = crate::artifacts::layout::schema::parse_layout_document(fixture).unwrap();
+        let actual = serialize_text(&snapshot).unwrap();
+        let oracle: serde_json::Value = serde_json::from_str(fixture).unwrap();
+        let parsed: serde_json::Value = serde_json::from_str(&actual).unwrap();
+        for (key, value) in oracle.as_object().unwrap() { assert_eq!(&parsed[key], value, "field {key}"); }
+        let artifact = serialize(&snapshot).unwrap();
+        let artifact_json = semio_s_plugin_stdio::artifacts::json::schema::snapshot::write_json_text(&artifact.value);
+        assert_eq!(serde_json::from_str::<serde_json::Value>(&artifact_json).unwrap(), parsed);
+        assert_eq!(crate::artifacts::layout::schema::parse_layout_document(&artifact_json).unwrap(), snapshot);
+    }
 }

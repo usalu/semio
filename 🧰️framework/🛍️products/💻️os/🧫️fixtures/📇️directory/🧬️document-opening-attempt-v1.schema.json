@@ -1,0 +1,67 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.tech/schemas/os/document-opening-attempt-v1.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "runtime", "attemptA", "attemptB", "cases", "rebootstrapCases", "sourceHostiles"],
+  "properties": {
+    "schema": { "const": "semio.os.document-opening-attempt/v1" },
+    "runtime": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["spaceId", "documentId"],
+      "properties": {
+        "spaceId": { "type": "string", "minLength": 1, "maxLength": 256 },
+        "documentId": { "type": "string", "minLength": 1, "maxLength": 256 }
+      }
+    },
+    "attemptA": { "type": "string", "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$" },
+    "attemptB": { "type": "string", "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$" },
+    "cases": {
+      "type": "array",
+      "minItems": 12,
+      "maxItems": 12,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "current", "incoming", "kind", "accepted", "replaced", "currentAfter"],
+        "properties": {
+          "name": { "type": "string", "minLength": 1, "maxLength": 64 },
+          "current": { "enum": [null, "a", "b"] },
+          "incoming": { "enum": [null, "a", "b", "malformed"] },
+          "kind": { "enum": ["open", "event", "patch", "send", "close"] },
+          "accepted": { "type": "boolean" },
+          "replaced": { "type": "boolean" },
+          "currentAfter": { "enum": [null, "a", "b"] }
+        }
+      }
+    },
+    "rebootstrapCases": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "currentOwner", "entryClient", "messageClient", "messageAccepted", "ownerRemoved", "ownerAfter", "freshBaseZeroAccepted"],
+        "properties": {
+          "name": { "type": "string", "minLength": 1, "maxLength": 64 },
+          "currentOwner": { "enum": [null, "actor-a"] },
+          "entryClient": { "enum": ["a", "b"] },
+          "messageClient": { "enum": ["a", "b"] },
+          "messageAccepted": { "type": "boolean" },
+          "ownerRemoved": { "type": "boolean" },
+          "ownerAfter": { "enum": [null, "actor-a"] },
+          "freshBaseZeroAccepted": { "type": "boolean" }
+        }
+      }
+    },
+    "sourceHostiles": {
+      "type": "array",
+      "minItems": 13,
+      "maxItems": 13,
+      "uniqueItems": true,
+      "items": { "type": "string", "minLength": 1, "maxLength": 64 }
+    }
+  }
+}

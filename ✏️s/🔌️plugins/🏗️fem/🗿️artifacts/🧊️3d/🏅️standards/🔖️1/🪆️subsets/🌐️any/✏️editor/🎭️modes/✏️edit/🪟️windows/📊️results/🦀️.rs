@@ -11,9 +11,15 @@
 //! FILES, per the migration recipe's `DocumentHelpers` placement rule).
 
 use crate::app_surface::{DisplayMode, ResultDisplay};
-use crate::artifacts::fem3d::{Fem3dSnapshot, FemCamera};
+#[cfg(test)]
+use crate::artifacts::fem3d::Fem3dSnapshot;
+use crate::artifacts::fem3d::FemCamera;
 use crate::editor::fem3d::config::Fem3dConfig;
-use semio_framework_plugin::{built_text_node, BuiltNode, Label};
+use semio_framework_plugin::BuiltNode;
+#[cfg(test)]
+use semio_framework_plugin::Label;
+#[cfg(test)]
+use semio_framework_ui_contract::{Buildable, HasChildren};
 
 /// 🪟️ The manifest's Results window kind id.
 pub const FEM3D_WINDOW_RESULTS: &str = "fem3d-results";
@@ -66,18 +72,23 @@ fn fem3d_model_extent(doc: &Fem3dSnapshot) -> f64 {
     (d[0] * d[0] + d[1] * d[1] + d[2] * d[2]).sqrt().max(1.0)
 }
 
-/// 🏷️ Wraps a `World3d` scene node with a text caption above it — `World3dScene` itself has no text
-/// field, so a vertical `UiNode` stack (already how the shell composes surfaces) is the idiomatic way to
-/// show a frequency/load-factor/case caption in-scene. `caption` is genuine runtime data (a case id,
-/// mode index, frequency, …), so it is wrapped via `Label::data` rather than any `LocalizedLabel`.
+/// 📝️ Admits a result label into the fixture's semantic tree.
 #[cfg(test)]
-fn with_caption(scene: BuiltNode, caption: String) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    semio_framework_ui_contract::column().children([built_text_node(Label::data(caption)), scene]).build()
+fn placeholder(label: Label) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+    semio_framework_plugin::built_text_node(label).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "FEM result text admission failed"))
+}
+
+/// 🏷️ Places a data caption above the fixture's world scene.
+#[cfg(test)]
+fn with_caption(scene: BuiltNode, caption: String) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
+    let caption = placeholder(Label::data(caption))?;
+    let builder = semio_framework_ui_contract::column().try_children([caption, scene]).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "FEM caption children admission failed"))?;
+    builder.try_build().map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "FEM caption node admission failed"))
 }
 
 /// 📊️ Results window dispatcher — picks the static/modal/buckling render based on `display`.
 #[cfg(test)]
-pub fn render(doc: &Fem3dSnapshot, cfg: &Fem3dConfig) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn render(doc: &Fem3dSnapshot, cfg: &Fem3dConfig) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let display = config_result_display(cfg);
     let camera = &cfg.camera;
     match display.mode {
@@ -88,7 +99,7 @@ pub fn render(doc: &Fem3dSnapshot, cfg: &Fem3dConfig) -> semio_framework_plugin:
 }
 
 /// 👁️ Adopts the immutable mounted result packet without solving, meshing, sorting, or encoding during render.
-pub fn render_with_progress(camera: &FemCamera, visual: Option<&crate::artifacts::fem3d::live_visual::Fem3dPageVisualLease>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn render_with_progress(camera: &FemCamera, visual: Option<&crate::artifacts::fem3d::live_visual::Fem3dPageVisualLease>) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let mut scene =
         semio_framework_plugin::world3d_scene(crate::editor::fem3d::fem3d_camera_json(camera), "[]".into(), "[]".into(), semio_framework_plugin::world3d_selection_json("rectangle", &[], None), &semio_framework_plugin::WorldSunConfig::default());
     scene.snapshot = visual.map(crate::artifacts::fem3d::live_visual::Fem3dPageVisualLease::snapshot);
@@ -102,20 +113,20 @@ pub fn render_with_progress(camera: &FemCamera, visual: Option<&crate::artifacts
 /// case/combination id, falling back to the first load case when `None`/unknown. Caption names the
 /// active case.
 #[cfg(test)]
-fn render_static(doc: &Fem3dSnapshot, source_id: Option<&str>, camera: &FemCamera) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+fn render_static(doc: &Fem3dSnapshot, source_id: Option<&str>, camera: &FemCamera) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     use crate::editor::fem3d::{fem3d_camera_json, fem3d_scene_parts};
     use crate::fem3d_engine::fem3d_solve_all;
 
     let results = match fem3d_solve_all(doc) {
         Ok(results) => results,
-        Err(e) => return built_text_node(Label::data(format!("Analysis error: {e}"))),
+        Err(e) => return placeholder(Label::data(format!("Analysis error: {e}"))),
     };
     let case_id = source_id.filter(|id| results.contains_key(*id)).map(str::to_string).or_else(|| doc.load_cases.first().map(|c| c.id.clone()));
     let Some(case_id) = case_id else {
-        return built_text_node(Label::data("No load case defined"));
+        return placeholder(Label::data("No load case defined"));
     };
     let Some(result) = results.get(&case_id) else {
-        return built_text_node(Label::data(format!("Result not found: {case_id}")));
+        return placeholder(Label::data(format!("Result not found: {case_id}")));
     };
     let mut disp_map: std::collections::HashMap<String, [f64; 6]> = std::collections::HashMap::new();
     for d in &result.displacements {
@@ -127,20 +138,20 @@ fn render_static(doc: &Fem3dSnapshot, source_id: Option<&str>, camera: &FemCamer
         FEM3D_BODY_RESULTS,
         semio_framework_plugin::world3d_scene(fem3d_camera_json(camera), meshes_json, instances_json, semio_framework_plugin::world3d_selection_json("rectangle", &[], None), &semio_framework_plugin::WorldSunConfig::default()),
     );
-    with_caption(scene, format!("Case: {case_id}"))
+    with_caption(scene?, format!("Case: {case_id}"))
 }
 
 /// 📊️ Modal mode-shape overlay: instances offset by the selected mode's shape, normalized to unit peak
 /// then scaled to `MODE_SHAPE_AMPLITUDE_RATIO` of the model's own extent, with a frequency caption.
 #[cfg(test)]
-fn render_modal(doc: &Fem3dSnapshot, mode_index: usize, camera: &FemCamera) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+fn render_modal(doc: &Fem3dSnapshot, mode_index: usize, camera: &FemCamera) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     use crate::app_surface::{normalize_mode_shape, MODE_SHAPE_AMPLITUDE_RATIO};
     use crate::editor::fem3d::{fem3d_camera_json, fem3d_scene_parts};
     use crate::fem3d_engine::modal_buckling::fem3d_modal_mode_values;
 
     let (freq_hz, mut disp_map) = match fem3d_modal_mode_values(doc, mode_index) {
         Ok(values) => values,
-        Err(e) => return built_text_node(Label::data(format!("Modal analysis error: {e}"))),
+        Err(e) => return placeholder(Label::data(format!("Modal analysis error: {e}"))),
     };
     normalize_mode_shape(&mut disp_map);
     let (meshes_json, instances_json) = fem3d_scene_parts(doc, Some(&disp_map), fem3d_model_extent(doc) * MODE_SHAPE_AMPLITUDE_RATIO, None);
@@ -148,7 +159,7 @@ fn render_modal(doc: &Fem3dSnapshot, mode_index: usize, camera: &FemCamera) -> s
         FEM3D_BODY_RESULTS,
         semio_framework_plugin::world3d_scene(fem3d_camera_json(camera), meshes_json, instances_json, semio_framework_plugin::world3d_selection_json("rectangle", &[], None), &semio_framework_plugin::WorldSunConfig::default()),
     );
-    with_caption(scene, format!("Mode {}: {freq_hz:.3} Hz", mode_index + 1))
+    with_caption(scene?, format!("Mode {}: {freq_hz:.3} Hz", mode_index + 1))
 }
 
 /// 📊️ Buckling mode-shape overlay: instances offset by the selected mode's shape, normalized to unit
@@ -156,17 +167,17 @@ fn render_modal(doc: &Fem3dSnapshot, mode_index: usize, camera: &FemCamera) -> s
 /// reference load case, falling back to the first load case when `None`. Caption names the mode and its
 /// load factor.
 #[cfg(test)]
-fn render_buckling(doc: &Fem3dSnapshot, source_id: Option<&str>, mode_index: usize, camera: &FemCamera) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+fn render_buckling(doc: &Fem3dSnapshot, source_id: Option<&str>, mode_index: usize, camera: &FemCamera) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     use crate::app_surface::{normalize_mode_shape, MODE_SHAPE_AMPLITUDE_RATIO};
     use crate::editor::fem3d::{fem3d_camera_json, fem3d_scene_parts};
     use crate::fem3d_engine::modal_buckling::fem3d_buckling_mode_values;
 
     let Some(case_id) = source_id.map(str::to_string).or_else(|| doc.load_cases.first().map(|c| c.id.clone())) else {
-        return built_text_node(Label::data("No load case defined"));
+        return placeholder(Label::data("No load case defined"));
     };
     let (factor, mut disp_map) = match fem3d_buckling_mode_values(doc, &case_id, mode_index) {
         Ok(values) => values,
-        Err(e) => return built_text_node(Label::data(format!("Buckling analysis error: {e}"))),
+        Err(e) => return placeholder(Label::data(format!("Buckling analysis error: {e}"))),
     };
     normalize_mode_shape(&mut disp_map);
     let (meshes_json, instances_json) = fem3d_scene_parts(doc, Some(&disp_map), fem3d_model_extent(doc) * MODE_SHAPE_AMPLITUDE_RATIO, None);
@@ -174,7 +185,7 @@ fn render_buckling(doc: &Fem3dSnapshot, source_id: Option<&str>, mode_index: usi
         FEM3D_BODY_RESULTS,
         semio_framework_plugin::world3d_scene(fem3d_camera_json(camera), meshes_json, instances_json, semio_framework_plugin::world3d_selection_json("rectangle", &[], None), &semio_framework_plugin::WorldSunConfig::default()),
     );
-    with_caption(scene, format!("Buckling mode {}: factor {factor:.3}", mode_index + 1))
+    with_caption(scene?, format!("Buckling mode {}: factor {factor:.3}", mode_index + 1))
 }
 // #endregion 🔖️Render
 
@@ -224,10 +235,10 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn results_scene_includes_solid_vertex_colors_3d() {
-        let mut app = app_with_example().await;
+        let app = app_with_example().await;
         let snapshot = app.snapshot().expect("snapshot");
         let config = Fem3dConfig { result_source_id: Some("dead".into()), result_mode: "static".into(), ..Fem3dConfig::default() };
-        let node = render(&snapshot, &config);
+        let node = render(&snapshot, &config).expect("fixture surface admission");
         let props = node
             .children
             .iter()
@@ -237,7 +248,7 @@ mod tests {
             })
             .expect("world surface child");
         let scene: semio_framework_ui_scene::World3dScene = semio_framework_ui_scene::decode(props).expect("decode world scene");
-        let json = dsl::json::to_json_string(&node);
+        let json = serde_json::to_string(&node).expect("independent semantic JSON oracle");
         assert!(scene.meshes_json.contains("solid-sol1"), "expected the solid mesh in the results scene: {}", scene.meshes_json);
         assert!(scene.meshes_json.contains("\"colors\""), "expected a vertex colors array on the solid mesh data: {}", scene.meshes_json);
         assert!(json.contains("Case: dead"), "expected a case-id caption: {json}");

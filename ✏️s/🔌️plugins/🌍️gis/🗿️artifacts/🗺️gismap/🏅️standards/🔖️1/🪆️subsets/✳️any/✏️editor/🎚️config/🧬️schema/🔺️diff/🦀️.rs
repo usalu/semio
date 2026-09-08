@@ -34,6 +34,7 @@ impl From<Gis2dConfigDelta> for Gis2dConfigDiff {
     }
 }
 
+#[cfg(test)]
 fn serialize_scales<S: serde::Serializer>(values: &BTreeMap<String, Option<f64>>, serializer: S) -> Result<S::Ok, S::Error> {
     if values.values().any(|value| value.is_some_and(|value| !value.is_finite())) { return Err(serde::ser::Error::custom("layer stroke scale must be finite")); }
     serde::Serialize::serialize(values, serializer)

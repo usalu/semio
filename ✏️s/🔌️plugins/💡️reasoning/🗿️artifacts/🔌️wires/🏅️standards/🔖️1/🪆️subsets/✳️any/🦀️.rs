@@ -28,13 +28,13 @@ fn inference_descriptors() -> &'static [::schema::ArtifactInferenceDescriptor] {
 //#endregion 🔖️Inferences
 
 //#region 🔖️Subset
-pub fn subset() -> SubsetDeclaration {
+pub fn subset() -> SubsetDeclaration<crate::plugin::ReasoningApps> {
     SubsetDeclaration {
         dialect: DIALECT,
         schema: SchemaDeclaration { descriptor: schema::wires_artifact_schema_descriptor(), inferences: inference_descriptors(), inference_services: Vec::new() },
         io: io::io(),
-        viewer: viewer_surface::<viewer::WiresViewer>(viewer::create_wires_viewer()),
-        editor: editor_surface::<editor::ReasoningWiresPlayApp>(editor::create_wires_app()),
+        viewer: viewer_surface::<viewer::WiresViewer, crate::plugin::ReasoningApps>(viewer::create_wires_viewer()),
+        editor: editor_surface::<editor::ReasoningWiresPlayApp, crate::plugin::ReasoningApps>(editor::create_wires_app()),
         examples: examples(),
     }
 }

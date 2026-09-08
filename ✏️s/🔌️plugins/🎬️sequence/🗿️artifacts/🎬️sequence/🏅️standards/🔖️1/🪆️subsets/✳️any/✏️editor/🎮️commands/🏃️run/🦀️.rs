@@ -21,8 +21,8 @@ pub mod run_command {
 
     pub fn handle(_payload: &Run, doc: &ArtifactView<'_, SequenceSnapshot>, _cfg: &ConfigView<'_, SequenceConfig>) -> Result<Emit<SequenceMutation, SequenceConfigMutation>, Fault> {
         let result = host_from_snapshot(doc.snapshot).run();
-        let json = serde_json::to_string(&result).unwrap_or_default();
-        Ok(Emit::config(vec![SequenceConfigMutation::SetLastRun { json }]))
+        let json = dsl::os_pack::to_json_string(&result);
+        Ok(Emit::config(vec![SequenceConfigMutation::SetLastRun(crate::editor::sequence::config::SetLastRun { json })]))
     }
 }
 //#endregion 🔖️Run
@@ -36,7 +36,7 @@ pub mod stop_command {
     pub struct Stop {}
 
     pub fn handle(_payload: &Stop, _doc: &ArtifactView<'_, SequenceSnapshot>, _cfg: &ConfigView<'_, SequenceConfig>) -> Result<Emit<SequenceMutation, SequenceConfigMutation>, Fault> {
-        Ok(Emit::config(vec![SequenceConfigMutation::SetLastRun { json: String::new() }]))
+        Ok(Emit::config(vec![SequenceConfigMutation::SetLastRun(crate::editor::sequence::config::SetLastRun { json: String::new() })]))
     }
 }
 //#endregion 🔖️Stop
@@ -52,17 +52,17 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn run_stores_result_and_renders_in_script() {
-        let mut app = new_app();
-        dispatch(&mut app, SequenceCommand::Run(Run {}));
-        assert!(render(&mut app, crate::editor::sequence::modes::edit::windows::script::SEQUENCE_PLAY_BODY_SCRIPT).contains("run result"));
+        let mut app = new_app().await;
+        dispatch(&mut app, SequenceCommand::Run(Run {})).await;
+        assert!(render(&mut app, crate::editor::sequence::modes::edit::windows::script::SEQUENCE_PLAY_BODY_SCRIPT).await.contains("run result"));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn stop_command_clears_last_run_result() {
-        let mut app = new_app();
-        dispatch(&mut app, SequenceCommand::Run(Run {}));
-        dispatch(&mut app, SequenceCommand::Stop(Stop {}));
-        assert!(!render(&mut app, crate::editor::sequence::modes::edit::windows::script::SEQUENCE_PLAY_BODY_SCRIPT).contains("run result"));
+        let mut app = new_app().await;
+        dispatch(&mut app, SequenceCommand::Run(Run {})).await;
+        dispatch(&mut app, SequenceCommand::Stop(Stop {})).await;
+        assert!(!render(&mut app, crate::editor::sequence::modes::edit::windows::script::SEQUENCE_PLAY_BODY_SCRIPT).await.contains("run result"));
     }
 }
 //#endregion 🧪️Tests

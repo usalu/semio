@@ -91,7 +91,14 @@ function oracleEnvironment(repoRoot: string): NodeJS.ProcessEnv {
 /** 🐍️ Runs the oracle Python module inside the uv-managed venv. */
 function runOraclePython(repoRoot: string, args: string[], budgetMs?: number): Promise<void> {
   const inline = `import sys; from importlib import import_module; sys.exit(import_module(${JSON.stringify(PYTHON_MODULE)}).main(sys.argv[1:]))`;
-  return runTestBudgeted("uv", ["run", "--project", PACKAGE_DIR, "python", "-c", inline, ...args], { cwd: PACKAGE_DIR, env: oracleEnvironment(repoRoot), budgetMs });
+  return runTestBudgeted("uv", ["run", "--locked", "--no-sync", "--project", PACKAGE_DIR, "python", "-c", inline, ...args], { cwd: PACKAGE_DIR, env: oracleEnvironment(repoRoot), budgetMs });
+}
+
+/** 📥️ Synchronizes this separately locked Python environment without running application work. */
+class DepsScript extends BundleScript {
+  run(): void {
+    runCmd("uv", ["sync", "--locked", "--project", import.meta.dir], { cwd: import.meta.dir });
+  }
 }
 
 /** ⚙️ Downloads, verifies, extracts the pinned toolchain and materialises the Python 3.12 venv. */
@@ -99,8 +106,6 @@ class SetupScript extends BundleScript {
   async run(): Promise<void> {
     const manifest = oracleManifest();
     for (const tool of manifest.tools) await ensureOracleTool(this.repoRoot, tool);
-    console.log(`[oracle] syncing python ${manifest.python.version} venv with uv`);
-    runCmd("uv", ["sync", "--project", PACKAGE_DIR], { cwd: PACKAGE_DIR });
     await runOraclePython(this.repoRoot, ["status"]);
   }
 }
@@ -160,6 +165,6 @@ class TestScript extends BundleScript {
   }
 }
 
-const router = new ScriptRouter(PACKAGE_DIR).register("setup", SetupScript).register("status", StatusScript).register("run", RunScript).register("native", NativeScript).register("epjson", EpJsonScript).register("emit", EmitScript).register("test", TestScript);
+const router = new ScriptRouter(PACKAGE_DIR).register("deps", DepsScript).register("setup", SetupScript).register("status", StatusScript).register("run", RunScript).register("native", NativeScript).register("epjson", EpJsonScript).register("emit", EmitScript).register("test", TestScript);
 
 await runBundleScriptMain(router, import.meta.url, { defaultCommand: "status" });

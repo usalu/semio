@@ -6,8 +6,8 @@ use semio_framework_plugin::plugin_app_close_prelude::*;
 use semio_framework_plugin::{ExecutionMode, Plugin, PluginApp};
 
 //#region 🗃️Apps
-/// 🗃️ Closed runtime app fleet for both Trinity artifact surfaces.
 semio_framework_dispatch_macros::dyn_enum_close! {
+    /// 🗃️ Closed runtime app fleet for both Trinity artifact surfaces.
     pub enum TrinityApps: PluginApp {
         JackEditor(VcsArtifactApp<EditorApp<crate::editor::jack::TrinityJackPlayApp>>),
         JackViewer(VcsArtifactApp<ViewerApp<crate::viewer::jack::TrinityJackViewer>>),
@@ -54,22 +54,22 @@ mod surface_tests {
 
     #[semio_framework_async_macros::async_test]
     async fn trinity_jack_viewer_never_mutates() {
-        assert_viewer_never_mutates::<crate::viewer::jack::TrinityJackViewer>();
+        assert_viewer_never_mutates::<crate::viewer::jack::TrinityJackViewer>().await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn trinity_jack_editor_and_viewer_share_dialect() {
-        assert_editor_and_viewer_share_dialect::<crate::editor::jack::TrinityJackPlayApp, crate::viewer::jack::TrinityJackViewer>();
+        assert_editor_and_viewer_share_dialect::<crate::editor::jack::TrinityJackPlayApp, crate::viewer::jack::TrinityJackViewer>().await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn trinity_rewriting_viewer_never_mutates() {
-        assert_viewer_never_mutates::<crate::viewer::rewriting::TrinityRewritingViewer>();
+        assert_viewer_never_mutates::<crate::viewer::rewriting::TrinityRewritingViewer>().await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn trinity_rewriting_editor_and_viewer_share_dialect() {
-        assert_editor_and_viewer_share_dialect::<crate::editor::rewriting::TrinityRewritingPlayApp, crate::viewer::rewriting::TrinityRewritingViewer>();
+        assert_editor_and_viewer_share_dialect::<crate::editor::rewriting::TrinityRewritingPlayApp, crate::viewer::rewriting::TrinityRewritingViewer>().await;
     }
 }
 //#endregion 🧪️SurfaceTests

@@ -11,7 +11,7 @@ use crate::editor::cad::terminology::CadLabels;
 use crate::editor::cad::TYPOLOGY_CATALOG;
 use crate::editor::cad::{CadPlayView, CAD_PLAY_APP_ID};
 use semio_framework_plugin::{
-    tree_item, ui_inspector_groups_to_tree, ui_inspector_readonly_field, ui_inspector_stepper_field, ui_inspector_vec3_group, ActionDescriptor, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, UiFieldNode, UiGroupNode, UiInputNode,
+    tree_item, ui_inspector_readonly_field, ui_inspector_stepper_field, ui_inspector_vec3_group, ActionDescriptor, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, UiFieldNode, UiGroupNode, UiInputNode,
     UiInspectorFieldGroup, UiNode, UiPresence, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
 };
 #[cfg(test)]

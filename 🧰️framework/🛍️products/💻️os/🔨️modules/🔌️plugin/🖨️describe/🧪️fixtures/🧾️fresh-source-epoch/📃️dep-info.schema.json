@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "semio.plugin.rust-dep-info-laws/v1",
+  "type": "object", "additionalProperties": false,
+  "required": ["schema", "maximumBytes", "cases"],
+  "properties": {
+    "schema": { "const": "semio.plugin.rust-dep-info-laws/v1" },
+    "maximumBytes": { "const": 8388608 },
+    "cases": { "type": "array", "minItems": 19, "items": {
+      "type": "object", "additionalProperties": false, "required": ["id", "text", "expected"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 }, "text": { "type": "string" },
+        "expected": { "oneOf": [{ "type": "null" }, {
+          "type": "object", "additionalProperties": false, "required": ["targets", "inputs", "environment"],
+          "properties": {
+            "targets": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string" } },
+            "inputs": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string" } },
+            "environment": { "type": "array", "items": { "type": "array", "prefixItems": [{ "type": "string" }, { "type": ["string", "null"] }], "minItems": 2, "maxItems": 2, "items": false } }
+          }
+        }] }
+      }
+    } }
+  }
+}

@@ -7,8 +7,7 @@
 //! 🎬️ Native component scene hosts for canvas-2d, tables, graphs, and 3D views.
 
 use crate::engine_canvas;
-use crate::interpreter::{validate_component_scene, FrameworkWidgetContext, RENDER_PLAN_LIMITS};
-use crate::shell::{try_push_find_item, ShellFindItem};
+use crate::interpreter::FrameworkWidgetContext;
 use base64::Engine;
 use infinite_world::world::{render_world_3d, World3dBuildContext, World3dState};
 use semio_framework::IconName;
@@ -1935,7 +1934,7 @@ pub fn render_component_scene(
         // ticket's task 5 — `render_placeholder` itself is kept for other callers that still want an
         // explicit "unimplemented" chrome, e.g. an unresolved `ExternalSlot`).
     }
-    // 🐛️➡️✅️ W4 (`.🦑️repo/🎫️tickets/26/07/11/WGPU-RENDERER-FULL-PARITY/report-w4-scene-input.md`): this used to
+    // 🐛️➡️✅️ W4 (`.🧬semio/🦑️repo/🎫️tickets/26/07/11/WGPU-RENDERER-FULL-PARITY/report-w4-scene-input.md`): this used to
     // end with `apply_scene_wheel(scene, bounds, ctx); apply_scene_pointer(scene, bounds, ctx);` — a
     // once-per-render-frame sample of the aggregate `InputState` with its own manual "was it down last
     // frame" edge detection, which could drop fast clicks/double-clicks and had asymmetries (e.g. a
@@ -8717,14 +8716,14 @@ mod virtual_file_system_tests {
 /// called `SceneInput::handle_scene_pointer_button`/`handle_scene_pointer_move` for any surface kind.
 /// `w2-scene-wiring` landed `apply_scene_pointer` in `RenderEntry` next, calling those for every
 /// non-bespoke surface kind including `✏️TextEditor` from a once-per-render-frame `InputState` sample —
-/// and `w4-scene-input` (`.🦑️repo/🎫️tickets/26/07/11/WGPU-RENDERER-FULL-PARITY/report-w4-scene-input.md`) has
+/// and `w4-scene-input` (`.🧬semio/🦑️repo/🎫️tickets/26/07/11/WGPU-RENDERER-FULL-PARITY/report-w4-scene-input.md`) has
 /// since replaced THAT with a real per-event route (`ui_wgpu::wgpu::UiCommand::Scene` ->
 /// `interpreter::apply_scene_ui_command`, calling the same two handlers), deleting `apply_scene_pointer`
 /// itself. Plain click/drag still reaches `EditorHost` via that generic path today, just per real event
 /// now rather than sampled once per frame. That single-click/drag code was removed here to avoid
 /// double-dispatching `textSelect`/`textEdit`; what remains below (double-click word-select, right-click
 /// context menu, completions, rename) is *not* covered by the generic path and
-/// stays. 🐛️➡️✅️ W4 fix (`.🦑️repo/🎫️tickets/26/07/11/WGPU-RENDERER-FULL-PARITY/report-w4-scene-input.md`):
+/// stays. 🐛️➡️✅️ W4 fix (`.🧬semio/🦑️repo/🎫️tickets/26/07/11/WGPU-RENDERER-FULL-PARITY/report-w4-scene-input.md`):
 /// `EditorHost::pointer_down_screen` used to no-operate entirely for `button != 0`, so both the generic
 /// path's raw-button-passthrough call AND this region's own right-click handling had to force `button`
 /// to `0` to reposition the caret at all. `pointer_down_screen` now repositions the caret for every

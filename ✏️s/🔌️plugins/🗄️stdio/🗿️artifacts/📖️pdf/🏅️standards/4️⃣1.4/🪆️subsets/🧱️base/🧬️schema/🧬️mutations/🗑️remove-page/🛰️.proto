@@ -1,0 +1,7 @@
+syntax = "proto3";
+package semio.stdio.pdf.v1_4.mutations;
+
+// 🗑️ remove-page payload.
+message RemovePage {
+  uint64 index = 1;
+}

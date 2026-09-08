@@ -1,9 +1,10 @@
 import { act as reactAct, createElement, useState, type ReactElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
+import { applyPatch } from "fast-json-patch";
 import { Layout } from "@semio-tech/ui-react";
 import { resolvePluginCanvasStatus, type PluginSupervisorState } from "../../../../🧱️elements/🐚️Shell/🟦️.tsx";
 import bootCanvasFixture from "../../../../🧱️elements/🐚️Shell/🧪️fixtures/🔣️.json";
-import { dispatchInvokeExtensionEffect, runInvokeExtensionEffect } from "../../../../🧱️elements/🏛️ShellHost/🟦️.tsx";
+import { dispatchInvokeExtensionEffect, runInvokeExtensionEffect, tutorialInteractionSelectionActions } from "../../../../🧱️elements/🏛️ShellHost/🟦️.tsx";
 import type { LoadedProgramState } from "../../../../🧱️elements/🐚️Shell/🟦️.tsx";
 import extensionInvocationFixture from "../../../../🧱️elements/🏛️ShellHost/🧪️fixtures/🔣️extension-invocation.json";
 import extensionInvocationSchema from "../../../../🧱️elements/🏛️ShellHost/🧪️fixtures/🧬️.schema.json";
@@ -13,6 +14,9 @@ import descriptorLoadSchema from "../../../../../../../../../🔨️modules/🎠
 import { createInstance as createTranslationOracle } from "i18next";
 import labelResolutionSchema from "../../../../🧱️elements/🛠️ShellHelpers/🧫️fixtures/🧬️.schema.json";
 import labelResolutionFixture from "../../../../🧱️elements/🛠️ShellHelpers/🧫️fixtures/🔣️label-resolution.json";
+import tutorialInteractionSchema from "../../../../🧱️elements/🛠️ShellHelpers/🧫️fixtures/🎥️tutorial-interaction/🧬️schema.json";
+import tutorialInteractionFixture from "../../../../🧱️elements/🛠️ShellHelpers/🧫️fixtures/🎥️tutorial-interaction/🔣️.json";
+import interactionSchema from "../../../../../../../../../🔨️modules/🕹️interaction/🧬️schema/🔣️.json";
 import actionSemanticsSchema from "../../../../../../../../../../🧰️framework/🔨️modules/🛂️manifest/🧪️fixtures/📜️action-semantics.schema.json";
 import actionSemanticsFixture from "../../../../../../../../../../🧰️framework/🔨️modules/🛂️manifest/🧪️fixtures/⚖️action-semantics.json";
 import tutorialDocumentFixture from "../../../../../../../../../../🧰️framework/🔨️modules/🛂️manifest/🧪️fixtures/🎞️tutorial-document-track.json";
@@ -20,11 +24,12 @@ import tutorialDocumentSchema from "../../../../../../../../../../🧰️framewo
 import boardSessionFixture from "../../../../../../../../../../✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌉️wasm/🧪️fixtures/🔣️session-factory.json";
 import boardSessionSchema from "../../../../../../../../../../✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌉️wasm/🧪️fixtures/🧬️.schema.json";
 import { tutorialSlice, validateTutorial } from "@semio-tech/ui-react";
-import type { TutorialDefinition } from "@semio-tech/framework";
+import type { TutorialDefinition, TutorialUiChange, TutorialUiSnapshot } from "@semio-tech/framework";
 import presenceOverlayFixture from "../../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧪️fixtures/👥️presence-overlay.json";
 import presenceOverlaySchema from "../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧪️fixtures/🔣️.schema.json";
 import { createRequire } from "node:module";
 import type * as AccessibilityOracle from "dom-accessibility-api" with { "resolution-mode": "require" };
+import { decodeLocalInteractionCaptureJson, LOCAL_INTERACTION_CAPTURE_MAX_BYTES } from "@semio-tech/framework-replication";
 
 const { computeAccessibleName }: typeof AccessibilityOracle = createRequire(import.meta.url)("dom-accessibility-api");
 
@@ -443,6 +448,10 @@ import graphPickSchema from "../../../../🧱️elements/🕸️NodeGraph/🧪�
 import graphPickFixture from "../../../../🧱️elements/🕸️NodeGraph/🧪️fixtures/🔣️pick-target.json";
 import graphParameterSchema from "../../../../../../🌊️flow/🎚️parameter/🧬️schema/🔣️.schema.json";
 import * as flowSessionLoader from "../../../../🧱️elements/🪪️WasmSessionLoader/🟦️.tsx";
+import { createFlowBrowserRuntime } from "@semio-tech/flow-core/🌐️flow-browser.js";
+import { MockFlowBridge } from "../../../../../../🌊️flow/🕸️wasm/📦️packages/🟨️javascript/🧪️tests/mock-flow-bridge.ts";
+import flowBrowserRuntimeFixture from "../../../../../../🌊️flow/🕸️wasm/🧪️fixtures/🧑‍🤝‍🧑️browser-runtime/🔣️.json";
+import flowBrowserRuntimeSchema from "../../../../../../🌊️flow/🕸️wasm/🧪️fixtures/🧑‍🤝‍🧑️browser-runtime/🧬️.schema.json";
 import { cleanup, fireEvent, render, waitFor } from "@semio-tech/ui-react/test";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
@@ -626,6 +635,8 @@ import {
   DIRECTORY_COMMAND_RESULT_SLOTS,
   type DirectoryCommandResultSlotV1,
   type DirectoryCommandReceiptV1,
+  type ShellAction,
+  type ShellState,
   AUTO_CHECKIN_IDLE_MS,
   AUTO_CHECKIN_EDIT_THRESHOLD,
   AutoCheckinScheduler,
@@ -732,6 +743,7 @@ import {
   peerIdsHovering,
   SyncAttachCard,
 } from "./🟦️";
+import { applyTutorialUiChangeToShell, applyTutorialUiSnapshotToShell, captureTutorialUiSnapshot } from "../../../../🧱️elements/🛠️ShellHelpers/🟦️.tsx";
 import { decodeWorldProjectionTemplateId, encodeWorldProjectionTemplateId } from "@semio-tech/infinite-world-r3f";
 
 //#region 🔌️jsdom polyfills
@@ -1082,6 +1094,45 @@ describe("coalescing action dispatcher", () => {
 
 describe("shell store reducer", () => {
   const baseState = () => initialShellState({ plugins: [], storage: createMemoryStoragePort() });
+  const fixtureInteractionState = (value: {
+    readonly selection: Readonly<Record<string, { readonly granularity: string; readonly ids: readonly string[]; readonly anchorId?: string }>>;
+    readonly hover: Readonly<Record<string, { readonly channel: string; readonly ids: readonly string[] }>>;
+    readonly activeMode: Readonly<Record<string, string>>;
+    readonly activeGranularity: Readonly<Record<string, string>>;
+  }): ShellState["interaction"] => {
+    const activeMode: Record<string, "single" | "multiple"> = {};
+    for (const [domainId, mode] of Object.entries(value.activeMode)) {
+      if (mode !== "single" && mode !== "multiple") throw new Error(`invalid fixture selection mode: ${mode}`);
+      Object.defineProperty(activeMode, domainId, { value: mode, enumerable: true, writable: true, configurable: true });
+    }
+    return { selection: value.selection, hover: value.hover, activeMode, activeGranularity: value.activeGranularity };
+  };
+  const fixtureSelectionChange = (value: { readonly domainId: string; readonly granularity: string; readonly ids: readonly string[] }): TutorialUiChange => ({
+    kind: "selection",
+    domainId: value.domainId,
+    granularity: value.granularity,
+    ids: [...value.ids],
+  });
+  const fixtureTutorialSelection = (value: ShellState["interaction"]["selection"]): TutorialUiSnapshot["interactionSelection"] => {
+    const selection: TutorialUiSnapshot["interactionSelection"] = {};
+    for (const [domainId, current] of Object.entries(value)) {
+      Object.defineProperty(selection, domainId, { value: { ...current, ids: [...current.ids] }, enumerable: true, writable: true, configurable: true });
+    }
+    return selection;
+  };
+  const tutorialBridgeContext = (
+    interactionSelection: () => ShellState["interaction"]["selection"] = () => ({}),
+    publishInteractionSelection: (selection: ShellState["interaction"]["selection"]) => void = () => {},
+  ): import("../../../../🧱️elements/🛠️ShellHelpers/🟦️.tsx").TutorialUiBridgeContext => ({
+    session: null,
+    appLabelsOverlay: {
+      windowKindLabels: {}, panelTabLabels: {}, modeLabels: {}, actionLabels: {}, utilityLabels: {}, exampleLabels: {}, actionArgLabels: {}, dialogLabels: {}, introductionLabels: {}, groupLabels: {},
+    },
+    terminology: "native",
+    locale: "en",
+    interactionSelection,
+    publishInteractionSelection,
+  });
 
   it("shows terminal boot content instead of an infinite loading canvas", () => {
     for (const row of bootCanvasFixture) {
@@ -1360,8 +1411,8 @@ describe("shell store reducer", () => {
     expect(recording.tutorial.recording).toBe(true);
   });
 
-  it("APPLY_TUTORIAL_UI_SNAPSHOT atomically restores layout/panels/tree/utility/tool/dialog/search across their owning slices", () => {
-    const state = baseState();
+  it("APPLY_TUTORIAL_UI_SNAPSHOT restores shell-owned fields without forging actor-owned interaction state", () => {
+    const state = shellReducer(baseState(), { type: "INTERACTION_STATE_OBSERVED", state: fixtureInteractionState(tutorialInteractionFixture.playbackBefore) });
     const snapshot = shellReducer(state, {
       type: "APPLY_TUTORIAL_UI_SNAPSHOT",
       snapshot: {
@@ -1383,7 +1434,111 @@ describe("shell store reducer", () => {
     expect(snapshot.actionPane.activeToolId).toBe("fill");
     expect(snapshot.overlays.dialog).toEqual({ dialogId: "addObject" });
     expect(snapshot.overlays.searchOpen).toBe(true);
+    expect(snapshot.interaction).toBe(state.interaction);
     expect(snapshot.pluginRuntime).toBe(state.pluginRuntime);
+  });
+
+  it("validates the language-neutral interaction recording vectors against the canonical schema", () => {
+    const ajv = new Ajv({ strict: true, allErrors: true });
+    ajv.addKeyword({ keyword: "x-semio-state", schemaType: "string" });
+    ajv.addSchema(interactionSchema);
+    const validate = ajv.compile(tutorialInteractionSchema);
+    expect(validate(tutorialInteractionFixture), JSON.stringify(validate.errors)).toBe(true);
+    expect(validate({
+      ...tutorialInteractionFixture,
+      observed: {
+        ...tutorialInteractionFixture.observed,
+        selection: { mesh: { ...tutorialInteractionFixture.observed.selection.mesh, ids: [7] } },
+      },
+    })).toBe(false);
+  });
+
+  it("decodes the bounded actor interaction capture and rejects noncanonical authority or state", () => {
+    const bytes = new TextEncoder().encode(JSON.stringify(tutorialInteractionFixture.capture));
+    expect(decodeLocalInteractionCaptureJson(bytes)).toEqual(tutorialInteractionFixture.capture);
+    expect(() => decodeLocalInteractionCaptureJson(new TextEncoder().encode(JSON.stringify({ ...tutorialInteractionFixture.capture, extra: true })))).toThrow("local-interaction.capture");
+    expect(() => decodeLocalInteractionCaptureJson(new TextEncoder().encode(JSON.stringify({ ...tutorialInteractionFixture.capture, identity: { ...tutorialInteractionFixture.capture.identity, generation: "01" } })))).toThrow("local-interaction.identity.generation");
+    expect(() => decodeLocalInteractionCaptureJson(new TextEncoder().encode(JSON.stringify({ ...tutorialInteractionFixture.capture, state: { ...tutorialInteractionFixture.capture.state, selection: { mesh: { granularity: "face", ids: ["same", "same"] } } } })))).toThrow("local-interaction.state.selection.mesh.ids");
+    expect(() => decodeLocalInteractionCaptureJson(new Uint8Array(LOCAL_INTERACTION_CAPTURE_MAX_BYTES + 1))).toThrow("local-interaction.capture-length");
+  });
+
+  it("captures the observed typed interaction selection without aliasing ids or special domain keys", () => {
+    const observed = fixtureInteractionState(tutorialInteractionFixture.observed);
+    const selection = { ...observed.selection };
+    Object.defineProperty(selection, "__proto__", { value: { granularity: "node", ids: ["prototype-safe"] }, enumerable: true, writable: true, configurable: true });
+    const state = shellReducer(baseState(), { type: "INTERACTION_STATE_OBSERVED", state: { ...observed, selection } });
+    const snapshot = captureTutorialUiSnapshot(state, null);
+    expect(snapshot.interactionSelection.mesh).toEqual(tutorialInteractionFixture.snapshotSelection.mesh);
+    expect(snapshot.interactionSelection["special.domain"]).toEqual(tutorialInteractionFixture.snapshotSelection["special.domain"]);
+    expect(snapshot.interactionSelection).not.toBe(state.interaction.selection);
+    expect(snapshot.interactionSelection.mesh?.ids).not.toBe(state.interaction.selection.mesh?.ids);
+    expect(Object.hasOwn(snapshot.interactionSelection, "__proto__")).toBe(true);
+    expect(snapshot.interactionSelection["__proto__"]).toEqual({ granularity: "node", ids: ["prototype-safe"] });
+  });
+
+  it("plays full and sparse typed selections through the Shell reducer with JSON Patch parity", () => {
+    let state = shellReducer(baseState(), { type: "INTERACTION_STATE_OBSERVED", state: fixtureInteractionState(tutorialInteractionFixture.playbackBefore) });
+    const dispatch = (action: ShellAction) => {
+      state = shellReducer(state, action);
+    };
+    const bridge = tutorialBridgeContext(
+      () => state.interaction.selection,
+      (selection) => dispatch({ type: "INTERACTION_STATE_OBSERVED", state: { ...state.interaction, selection } }),
+    );
+    applyTutorialUiSnapshotToShell(
+      dispatch,
+      {
+        activeUtilityByWindowId: {},
+        activePanelTabByGroup: {},
+        interactionSelection: fixtureTutorialSelection(fixtureInteractionState(tutorialInteractionFixture.observed).selection),
+        expandedTreeIds: [],
+        commandPanelOpen: false,
+      },
+      bridge,
+    );
+    expect(state.interaction).toEqual(
+      applyPatch(structuredClone(tutorialInteractionFixture.playbackBefore), [{ op: "replace", path: "/selection", value: structuredClone(tutorialInteractionFixture.snapshotSelection) }], true, false).newDocument,
+    );
+
+    state = shellReducer(baseState(), { type: "INTERACTION_STATE_OBSERVED", state: fixtureInteractionState(tutorialInteractionFixture.playbackBefore) });
+    applyTutorialUiChangeToShell(dispatch, fixtureSelectionChange({ ...tutorialInteractionFixture.delta, domainId: "mesh" }), bridge);
+    const oracleAfterDelta = applyPatch(
+      structuredClone(tutorialInteractionFixture.playbackBefore),
+      [{ op: "replace", path: "/selection/mesh", value: { granularity: tutorialInteractionFixture.delta.granularity, ids: [...tutorialInteractionFixture.delta.ids] } }],
+      true,
+      false,
+    ).newDocument;
+    expect(state.interaction).toEqual(oracleAfterDelta);
+    expect(state.interaction).toEqual(tutorialInteractionFixture.afterDelta);
+    applyTutorialUiChangeToShell(dispatch, fixtureSelectionChange({ ...tutorialInteractionFixture.clearDelta, domainId: "mesh" }), bridge);
+    expect(state.interaction).toEqual(tutorialInteractionFixture.afterClear);
+  });
+
+  it("projects tutorial selection playback through ordinary interaction CQRS actions", () => {
+    expect(tutorialInteractionSelectionActions("controller", fixtureInteractionState(tutorialInteractionFixture.observed).selection)).toEqual([
+      { controllerId: "controller", action: "clearSelection" },
+      { controllerId: "controller", action: "setSelectionMode", args: { domainId: "mesh", mode: "multiple" } },
+      { controllerId: "controller", action: "interactionSelect", args: { domainId: "mesh", merge: "replace", method: "pick", targets: JSON.stringify([{ granularity: "face", id: "face,west" }, { granularity: "face", id: "face-east" }]) } },
+      { controllerId: "controller", action: "interactionSelect", args: { domainId: "mesh", merge: "additive", method: "pick", targets: JSON.stringify([{ granularity: "face", id: "face,west" }]) } },
+      { controllerId: "controller", action: "interactionSelect", args: { domainId: "special.domain", merge: "replace", method: "pick", targets: JSON.stringify([{ granularity: "node", id: "owned" }]) } },
+    ]);
+  });
+
+  it("records comma-bearing selection changes and explicit domain clearing as typed deltas", () => {
+    const base: TutorialUiSnapshot = {
+      activeUtilityByWindowId: {},
+      activePanelTabByGroup: {},
+      interactionSelection: fixtureTutorialSelection(fixtureInteractionState(tutorialInteractionFixture.playbackBefore).selection),
+      expandedTreeIds: [],
+      commandPanelOpen: false,
+    };
+    const recorder = new TutorialRecorder(base, null);
+    recorder.recordUiDiff({ ...base, interactionSelection: fixtureTutorialSelection(fixtureInteractionState(tutorialInteractionFixture.afterDelta).selection) });
+    recorder.recordUiDiff({ ...base, interactionSelection: {} });
+    expect(recorder.build("interaction", "Interaction").tracks.ui.map((keyframe) => keyframe.sample)).toEqual([
+      { kind: "delta", changes: [tutorialInteractionFixture.delta] },
+      { kind: "delta", changes: [{ kind: "selection", domainId: "mesh", granularity: "face", ids: [] }] },
+    ]);
   });
 
   //#region 🔌️PluginRuntime hot-swap actions
@@ -1993,6 +2148,8 @@ describe("framework plugin runtime", () => {
               ui_scope: Array.from(encodePackValue({ kind: "partial", windowBodies: ["graph"], utilities: false })),
               history_patch: Array.from(encodePackValue({ cursor: 1, upserts: [] })),
               messages: [],
+              mutations: Array.from(encodePackValue([])),
+              inverse_group: Array.from(encodePackValue({ invocationId: "", mutations: [], inverseMutations: [] })),
             },
           }),
         ];
@@ -2784,6 +2941,105 @@ describe("framework renderer hosts", () => {
     } finally {
       cleanup(); createSpy.mockRestore(); schedulerSpy.mockRestore(); contextSpy.mockRestore(); timerSpy.mockRestore();
       globalThis.PointerEvent = originalPointer;
+    }
+  });
+
+  it("retains one shared Flow browser runtime across two mounted graph hosts and retires only each unmounted session", async () => {
+    const validate = new Ajv({ strict: true, allErrors: true }).compile(flowBrowserRuntimeSchema);
+    expect(validate(flowBrowserRuntimeFixture), JSON.stringify(validate.errors)).toBe(true);
+    const expected = flowBrowserRuntimeFixture.mountedHosts;
+    const bridge = new MockFlowBridge(new WebAssembly.Memory({ initial: 400 }));
+    const runtime = await createFlowBrowserRuntime({ source: bridge.exports });
+    const createSpy = vi.spyOn(flowSessionLoader, "createFlowSession").mockImplementation(async () => runtime.openSession());
+    const contextSpy = vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue(null);
+    const scene = (revision: number) => ({
+      nodes: [],
+      edges: [],
+      viewport: { x: 0, y: 0, zoom: 1 },
+      fixtureJson: JSON.stringify({ schema: "flow.fixture", revision, widgets: [] }),
+    });
+    const host = (id: "A" | "B", revision: number) => createElement(FlowGraphCanvasHost, {
+      key: id,
+      scene: scene(revision),
+      controllerId: `flow.${id}`,
+      surfaceId: `flow.${id}`,
+      editable: true,
+      onAction: vi.fn(),
+    });
+    const pair = (revision: number) => createElement("div", {}, host("A", revision), host("B", revision));
+    const single = (revision: number) => createElement("div", {}, host("B", revision));
+    const view = render(pair(0));
+    try {
+      expect(expected.sharedRuntime).toBe(true);
+      await waitFor(() => expect(bridge.openRequestIds).toEqual(flowBrowserRuntimeFixture.openRequestIds));
+      await waitFor(() => expect(bridge.operationSessions.some((row) => row.operation === expected.afterUnmountA.command && row.slot === expected.afterUnmountA.liveSlot)).toBe(true));
+      view.rerender(single(1));
+      await waitFor(() => expect(bridge.closedSessionSlots).toEqual(expected.afterUnmountA.closedSlots));
+      expect(bridge.globalCloseCalls).toBe(expected.afterUnmountA.globalCloseCalls);
+      const beforeSiblingCommand = bridge.operationSessions.filter((row) => row.operation === expected.afterUnmountA.command && row.slot === expected.afterUnmountA.liveSlot).length;
+      view.rerender(single(2));
+      await waitFor(() => expect(bridge.operationSessions.filter((row) => row.operation === expected.afterUnmountA.command && row.slot === expected.afterUnmountA.liveSlot)).toHaveLength(beforeSiblingCommand + 1));
+      view.unmount();
+      await waitFor(() => expect(bridge.closedSessionSlots).toEqual(expected.afterUnmountB.closedSlots));
+      expect(bridge.globalCloseCalls).toBe(expected.afterUnmountB.globalCloseCalls);
+      await runtime.close();
+      expect(bridge.globalCloseCalls).toBe(flowBrowserRuntimeFixture.runtimeClose.globalCloseCalls);
+      expect(runtime.terminalIsEmpty()).toBe(flowBrowserRuntimeFixture.runtimeClose.terminal);
+    } finally {
+      view.unmount();
+      await runtime.close();
+      createSpy.mockRestore();
+      contextSpy.mockRestore();
+      cleanup();
+    }
+  });
+
+  it("retires a graph host unmounted before its open reply while its shared-runtime sibling remains live", async () => {
+    const expected = flowBrowserRuntimeFixture.mountedHosts.lateUnmount;
+    const bridge = new MockFlowBridge(new WebAssembly.Memory({ initial: 400 }), { heldOpenReplies: 1 });
+    const runtime = await createFlowBrowserRuntime({ source: bridge.exports });
+    const createSpy = vi.spyOn(flowSessionLoader, "createFlowSession").mockImplementation(async () => runtime.openSession());
+    const contextSpy = vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue(null);
+    const scene = (revision: number) => ({
+      nodes: [],
+      edges: [],
+      viewport: { x: 0, y: 0, zoom: 1 },
+      fixtureJson: JSON.stringify({ schema: "flow.fixture", revision, widgets: [] }),
+    });
+    const host = (id: "A" | "B", revision: number) => createElement(FlowGraphCanvasHost, {
+      scene: scene(revision),
+      controllerId: `flow.late.${id}`,
+      surfaceId: `flow.late.${id}`,
+      editable: true,
+      onAction: vi.fn(),
+    });
+    const first = render(host("A", 0));
+    let sibling: ReturnType<typeof render> | undefined;
+    try {
+      await waitFor(() => expect(bridge.openRequestIds).toEqual(["1"]));
+      first.unmount();
+      sibling = render(host("B", 0));
+      await waitFor(() => expect(bridge.openRequestIds).toEqual(flowBrowserRuntimeFixture.openRequestIds));
+      await waitFor(() => expect(bridge.operationSessions.some((row) => row.operation === expected.command && row.slot === expected.liveSlot)).toBe(true));
+      bridge.releaseOpenReplies();
+      await waitFor(() => expect(bridge.closedSessionSlots).toEqual(expected.closedSlots));
+      expect(bridge.globalCloseCalls).toBe(0);
+      const beforeSiblingCommand = bridge.operationSessions.filter((row) => row.operation === expected.command && row.slot === expected.liveSlot).length;
+      sibling.rerender(host("B", 1));
+      await waitFor(() => expect(bridge.operationSessions.filter((row) => row.operation === expected.command && row.slot === expected.liveSlot)).toHaveLength(beforeSiblingCommand + 1));
+      sibling.unmount();
+      await waitFor(() => expect(bridge.closedSessionSlots).toEqual([expected.heldOpenSlot, expected.liveSlot]));
+      await runtime.close();
+      expect(bridge.globalCloseCalls).toBe(flowBrowserRuntimeFixture.runtimeClose.globalCloseCalls);
+      expect(runtime.terminalIsEmpty()).toBe(flowBrowserRuntimeFixture.runtimeClose.terminal);
+    } finally {
+      bridge.releaseOpenReplies();
+      first.unmount();
+      sibling?.unmount();
+      await runtime.close();
+      createSpy.mockRestore();
+      contextSpy.mockRestore();
+      cleanup();
     }
   });
   //#endregion 🎚️GraphParameterDispatch
@@ -6015,6 +6271,8 @@ describe("Play/Record Tutorial commands", () => {
     const playTutorial = withTutorials.find((command) => command.id === "os.playTutorial");
     expect(playTutorial).toMatchObject({ label: "Play Tutorial", category: "app" });
     expect(playTutorial?.args[0]).toMatchObject({ id: "tutorialId", required: true, schema: { kind: "string", options: [{ value: "welcome-tour", label: "Welcome Tour" }] } });
+    const localized = buildOsCommands([], [], false, undefined, undefined, [{ id: "localized-tour", title: labelResolutionFixture.matrix }], false, "reuse", "de");
+    expect(localized.find((command) => command.id === "os.playTutorial")?.args[0]).toMatchObject({ schema: { kind: "string", options: [{ value: "localized-tour", label: "Bauteil" }] } });
   });
 
   it("os.recordTutorial appears only when the recorder is available (dev/studio), independent of declared tutorials", () => {
@@ -7013,7 +7271,7 @@ describe("TutorialRecorder LocalizedLabel synthesis", () => {
   });
 
   it("TutorialRecorder synthesizes LocalizedLabel for addChapter and build titles", () => {
-    const recorder = new TutorialRecorder({ activeUtilityByWindowId: {}, activePanelTabByGroup: {}, expandedTreeIds: [], commandPanelOpen: false }, null);
+    const recorder = new TutorialRecorder({ activeUtilityByWindowId: {}, activePanelTabByGroup: {}, interactionSelection: {}, expandedTreeIds: [], commandPanelOpen: false }, null);
     recorder.addChapter("Introduction");
     recorder.addChapter();
     const def = recorder.build("rec-1", "Recorded Tutorial");

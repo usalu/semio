@@ -15,7 +15,7 @@ pub fn diff(payload: &DragBlocks, base: &NoteSnapshot) -> protocol::MutationOutc
         };
         let mut moved = block.clone();
         crate::artifacts::note::schema::offset_block_tree(&mut moved, payload.dx, payload.dy);
-        delta.patched.push(crate::artifacts::note::schema::diff::NoteBlockPatchEntry { id: id.clone(), patch: crate::artifacts::note::schema::diff::NoteBlockPatch { block_json: Some(serde_json::to_string(&moved).expect("json")) } });
+        delta.patched.push(crate::artifacts::note::schema::diff::NoteBlockPatchEntry { id: id.clone(), patch: crate::artifacts::note::schema::diff::NoteBlockPatch { block_json: Some(dsl::os_pack::to_json_string(&moved)) } });
     }
     if delta.patched.is_empty() {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("None of the {} requested block(s) exist.", payload.ids.len()), payload.ids.clone());

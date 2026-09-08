@@ -7,7 +7,9 @@ use crate::mesh::{MeshJob, MeshOpts, PlanarDomain, TriMesh2};
 use crate::model::Element;
 use crate::sparse::{PcgJob, PcgJobConstruction};
 use semio_framework::kernel::{Effect, JobPlacement};
-use semio_framework_job::{CommitValidation, InteractiveJob, Operation, OperationId, RetainedJobPayload, StepBudget, StepContext, StepOutcome};
+#[cfg(test)]
+use semio_framework_job::CommitValidation;
+use semio_framework_job::{ InteractiveJob, Operation, OperationId, RetainedJobPayload, StepBudget, StepContext, StepOutcome};
 use semio_framework_plugin::reactor::jobs::{BoundedJob, BoundedJobFactory, JobBudget, JobStep};
 use semio_framework_plugin::{AppRenderOperationContext, ArtifactView, PluginCloseStep};
 use std::cell::RefCell;
@@ -136,6 +138,7 @@ impl MountedProcessOwnerCatalog {
         let mut roots = 0;
         let mut index = 0;
         while index < self.claims.len() {
+            assert!(self.claims[index].class as usize == index, "owner catalog class order");
             roots += self.claims[index].roots;
             index += 1;
         }
@@ -523,7 +526,7 @@ impl MountedModelBuild {
                 self.stage = ModelBuildStage::Supports;
             }
             ModelBuildStage::RegionNodeCoordinate => {
-                let Some(region) = snapshot.regions.first() else {
+                if snapshot.regions.is_empty() {
                     self.stage = ModelBuildStage::Complete;
                     return Ok(false);
                 };
@@ -905,7 +908,6 @@ struct MountedState {
     cancel: semio_framework_job::CancelToken,
     stage: MountedStage,
     admitted_items: usize,
-    admitted_bytes: usize,
     graph_plans: Vec<FemStagePlan>,
     graph: Option<FemJobGraph>,
     domain: Option<PlanarDomain>,
@@ -966,7 +968,7 @@ fn retained_payload_byte(payload: &RetainedJobPayload, index: usize) -> Option<u
 }
 
 impl MountedState {
-    fn new(identity: MountedIdentity, snapshot: store::SnapshotRead<Fem2dSnapshot>, admitted_items: usize, admitted_bytes: usize) -> Self {
+    fn new(identity: MountedIdentity, snapshot: store::SnapshotRead<Fem2dSnapshot>, admitted_items: usize) -> Self {
         Self {
             identity,
             snapshot: Some(snapshot),
@@ -974,7 +976,6 @@ impl MountedState {
             cancel: semio_framework_job::root_cancel_token(),
             stage: MountedStage::PrepareGraph,
             admitted_items,
-            admitted_bytes,
             graph_plans: Vec::new(),
             graph: None,
             domain: None,
@@ -1832,7 +1833,6 @@ struct PendingAdmission {
     shell: u16,
     identity: MountedIdentity,
     admitted_items: usize,
-    admitted_bytes: usize,
 }
 
 #[derive(Clone, Copy)]
@@ -2342,7 +2342,7 @@ pub fn prepare_snapshot_read(render: AppRenderOperationContext, snapshot: &Fem2d
         registry.next_job = counter;
         let job = FEM2D_JOB_TAG | counter;
         let identity = MountedIdentity { app_instance_id: render.app_instance_id, base_revision: render.base_revision, generation: render.generation, canonical_base_revision: render.canonical_base_revision, operation: OperationId(job), job };
-        registry.pending[current_slot] = Some(PendingAdmission { app_instance_id: render.app_instance_id, shell, identity, admitted_items: process_items, admitted_bytes: process_bytes });
+        registry.pending[current_slot] = Some(PendingAdmission { app_instance_id: render.app_instance_id, shell, identity, admitted_items: process_items });
         true
     })
 }
@@ -2401,7 +2401,7 @@ pub fn reconcile(doc: &ArtifactView<'_, Fem2dSnapshot>) -> Vec<Effect> {
         }
         let identity = pending.identity;
         let job = identity.job;
-        *registry.shells[shell as usize].borrow_mut() = Some(MountedState::new(identity, snapshot, pending.admitted_items, pending.admitted_bytes));
+        *registry.shells[shell as usize].borrow_mut() = Some(MountedState::new(identity, snapshot, pending.admitted_items));
         registry.current[current_slot] = Some(CurrentSession { app_instance_id: render.app_instance_id, shell, identity });
         let mut effects = Vec::with_capacity(2);
         if let Some(previous) = previous {

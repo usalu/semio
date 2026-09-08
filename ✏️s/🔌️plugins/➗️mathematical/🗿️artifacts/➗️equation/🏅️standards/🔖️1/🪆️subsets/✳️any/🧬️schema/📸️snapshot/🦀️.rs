@@ -80,7 +80,7 @@ impl FromValue for EquationSnapshot {
 /// `🧊️brep`'s `PersistentLabel` shape. A mutation address built from THIS survives unrelated
 /// edits: unlike a positional path (`expr.children[2].children[0]`), which breaks the instant a
 /// sibling is inserted or removed anywhere in the tree (exactly the bug class documented in
-/// `.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM/📓️wave4-reports/equation-report.md`'s
+/// `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM/📓️wave4-reports/equation-report.md`'s
 /// `insert_point_inverse_is_remove_point_at_same_index` finding — a base-relative Vec index that
 /// silently resolves to the wrong element once the collection's length has changed underneath
 /// it — a label is opaque, assigned once, and never reassigned or renumbered by any mutation.

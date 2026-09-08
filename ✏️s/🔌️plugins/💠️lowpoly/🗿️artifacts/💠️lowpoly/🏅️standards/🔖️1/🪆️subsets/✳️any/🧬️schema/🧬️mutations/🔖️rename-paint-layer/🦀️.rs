@@ -1,6 +1,7 @@
 //! 🔖️ `rename-paint-layer` — changes a paint layer's display name.
 
 use crate::artifacts::lowpoly::{LowpolyMutation, LowpolySnapshot};
+#[cfg(test)]
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Payload

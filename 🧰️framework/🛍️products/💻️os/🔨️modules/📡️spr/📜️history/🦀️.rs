@@ -2,7 +2,7 @@
 //! grammar twin (built directly on `dsl_schema`, never on `vcs`), per-kind binary payload codecs
 //! (built on `crate::os_spr::wire::scalar` + `protocol_format`'s frame writer/reader), the whole-file
 //! codec, a streaming append API, and a lazy forward/reverse scan API. Frozen contract:
-//! `.🦑️repo/🎫️tickets/26/07/27/PROTOCOL-BINARY-OP-LOG-LAYER/contract.md` (`## protocol_history`).
+//! `.🧬semio/🦑️repo/🎫️tickets/26/07/27/PROTOCOL-BINARY-OP-LOG-LAYER/contract.md` (`## protocol_history`).
 //!
 //! Op payloads are opaque validated bytes to this crate — it stores, hashes, frames, and indexes
 //! them, but never interprets operation semantics (that is `protocol_command`'s concern, a sibling
@@ -39,7 +39,7 @@ pub struct HistoryLog {
     /// (the overwhelming majority) and for logs predating the record.
     pub composition: Option<HistoryComposition>,
     /// @emoji ⚔️ First-class merge conflicts (`REC_CONFLICT`), durable per
-    /// `.🦑️repo/🎫️tickets/26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS/
+    /// `.🧬semio/🦑️repo/🎫️tickets/26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS/
     /// 📋️contract-freeze.md` §C7: a `Quarantined` batch rejected outright, or a `Degraded`
     /// accepted-but-messy merge — see `crate::os_spr::conflict::ConflictKind`. Empty for the
     /// overwhelming majority of documents and for logs predating the record; no record is written

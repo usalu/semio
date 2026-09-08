@@ -199,7 +199,7 @@ pub fn decode_op(bytes: &[u8]) -> Result<Process3dMutation, protocol::ProtocolEr
 }
 
 //#region 🔖️RetainedEnvelopeOwnership
-use crate::artifacts::process3d::{Capability, CapabilityParameter, CapabilityRule, MeasureRecipe, Pose, Process3dSnapshot, ProcessMeasure, ProcessStep, StepOrigin, Stock, StockQuantity, WorkingSolid, WorkshopMachine};
+use crate::artifacts::process3d::{Capability, CapabilityParameter, CapabilityRule, MeasureRecipe, Process3dSnapshot, ProcessMeasure, ProcessStep, StepOrigin, Stock, StockQuantity, WorkingSolid, WorkshopMachine};
 
 const PROCESS3D_OWNER_BYTES: usize = store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES;
 const PROCESS3D_RETAINED_STACK_CAPACITY: usize = 64;
@@ -369,7 +369,7 @@ fn process3d_validate_atomic_lease(lease: Process3dPublicationLease, operation: 
 /// 🔐️ Fail-closed Process3d authority used by the shared atomic replacement branch.
 pub fn process3d_validate_atomic_publication_authority(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, live_generation: semio_framework_job::Generation) -> Result<(), &'static str> {
     let leases = process3d_publication_leases().try_lock().map_err(|_| "process3d-publication.contended")?;
-    let mut lease = leases.get_operation(operation).map(|(_, lease)| *lease).ok_or("process3d-publication.authority-missing")?;
+    let lease = leases.get_operation(operation).map(|(_, lease)| *lease).ok_or("process3d-publication.authority-missing")?;
     #[cfg(test)]
     {
         let mut hostiles = process3d_publication_hostiles().try_lock().map_err(|_| "process3d-publication.hostile-contended")?;
@@ -519,17 +519,16 @@ enum Process3dRetirementOwner {
     Snapshot { value: Process3dSnapshot, phase: u8 },
     Machine { value: WorkshopMachine, phase: u8 },
     Capability { value: Capability, phase: u8 },
-    Parameter { value: CapabilityParameter, phase: u8 },
+    Parameter { value: CapabilityParameter },
     Step { value: ProcessStep, phase: u8 },
-    Origin { value: StepOrigin, phase: u8 },
+    Origin { value: StepOrigin },
     Stock { value: Stock, phase: u8 },
-    Measure { value: ProcessMeasure, phase: u8 },
-    Solid { value: WorkingSolid, phase: u8 },
+    Measure { value: ProcessMeasure },
+    Solid { value: WorkingSolid },
     Child { value: Process3dChildParts, phase: usize },
     Strings { values: [Option<String>; 6], phase: usize },
     MutationFields { value: Process3dMutationFields, phase: u8 },
     Capabilities { values: Vec<Capability> },
-    Scalar { remaining: u8 },
 }
 
 struct Process3dRetirementStack {
@@ -671,7 +670,7 @@ impl Process3dRetirementStack {
                     parent = Some(Process3dRetirementOwner::Capability { value, phase: 1 });
                 }
                 1 if !value.parameters.is_empty() => {
-                    child = value.parameters.pop().map(|value| Process3dRetirementOwner::Parameter { value, phase: 0 });
+                    child = value.parameters.pop().map(|value| Process3dRetirementOwner::Parameter { value });
                     parent = Some(Process3dRetirementOwner::Capability { value, phase });
                 }
                 1 => {
@@ -700,20 +699,20 @@ impl Process3dRetirementStack {
                     released_items = 1;
                 }
             },
-            Process3dRetirementOwner::Parameter { value, .. } => {
+            Process3dRetirementOwner::Parameter { value } => {
                 child = Some(Self::string([Some(value.id), Some(value.label), None, None, None, None]));
                 released_items = 1;
             }
             Process3dRetirementOwner::Step { mut value, phase } => match phase {
                 0 => {
                     if let Some(origin) = value.origin.take() {
-                        child = Some(Process3dRetirementOwner::Origin { value: origin, phase: 0 });
+                        child = Some(Process3dRetirementOwner::Origin { value: origin });
                     }
                     parent = Some(Process3dRetirementOwner::Step { value, phase: 1 });
                 }
                 1 => {
                     let measure = std::mem::replace(&mut value.measure, ProcessMeasure::Drill { radius: 0.0, depth: 0.0, pose: Default::default() });
-                    child = Some(Process3dRetirementOwner::Measure { value: measure, phase: 0 });
+                    child = Some(Process3dRetirementOwner::Measure { value: measure });
                     parent = Some(Process3dRetirementOwner::Step { value, phase: 2 });
                 }
                 _ => {
@@ -721,13 +720,13 @@ impl Process3dRetirementStack {
                     released_items = 1;
                 }
             },
-            Process3dRetirementOwner::Origin { value, .. } => {
+            Process3dRetirementOwner::Origin { value } => {
                 child = Some(Self::string([Some(value.machine_id), Some(value.capability_id), None, None, None, None]));
                 released_items = 1;
             }
             Process3dRetirementOwner::Stock { mut value, phase } => match phase {
                 0 => {
-                    child = Some(Process3dRetirementOwner::Solid { value: std::mem::take(&mut value.solid), phase: 0 });
+                    child = Some(Process3dRetirementOwner::Solid { value: std::mem::take(&mut value.solid) });
                     parent = Some(Process3dRetirementOwner::Stock { value, phase: 1 });
                 }
                 _ => {
@@ -735,12 +734,12 @@ impl Process3dRetirementStack {
                     released_items = 1;
                 }
             },
-            Process3dRetirementOwner::Measure { value, .. } => match value {
-                ProcessMeasure::Cut { tool, .. } => child = Some(Process3dRetirementOwner::Solid { value: tool, phase: 0 }),
-                ProcessMeasure::Attach { component, .. } => child = Some(Process3dRetirementOwner::Solid { value: component, phase: 0 }),
+            Process3dRetirementOwner::Measure { value } => match value {
+                ProcessMeasure::Cut { tool, .. } => child = Some(Process3dRetirementOwner::Solid { value: tool }),
+                ProcessMeasure::Attach { component, .. } => child = Some(Process3dRetirementOwner::Solid { value: component }),
                 ProcessMeasure::Drill { .. } => released_items = 1,
             },
-            Process3dRetirementOwner::Solid { value, .. } => match value {
+            Process3dRetirementOwner::Solid { value } => match value {
                 WorkingSolid::ImportedMesh { mesh_url } => child = Some(Self::one_string(mesh_url)),
                 WorkingSolid::ImportedSolid { solid_handle } => child = Some(Self::one_string(solid_handle)),
                 WorkingSolid::Box { .. } | WorkingSolid::Cylinder { .. } | WorkingSolid::Sphere { .. } => released_items = 1,
@@ -786,12 +785,12 @@ impl Process3dRetirementStack {
                 }
                 2 => parent = Some(Process3dRetirementOwner::MutationFields { value, phase: 3 }),
                 3 if value.origin.is_some() => {
-                    child = value.origin.take().map(|value| Process3dRetirementOwner::Origin { value, phase: 0 });
+                    child = value.origin.take().map(|value| Process3dRetirementOwner::Origin { value });
                     parent = Some(Process3dRetirementOwner::MutationFields { value, phase: 4 });
                 }
                 3 => parent = Some(Process3dRetirementOwner::MutationFields { value, phase: 4 }),
                 4 if value.measure.is_some() => {
-                    child = value.measure.take().map(|value| Process3dRetirementOwner::Measure { value, phase: 0 });
+                    child = value.measure.take().map(|value| Process3dRetirementOwner::Measure { value });
                     parent = Some(Process3dRetirementOwner::MutationFields { value, phase: 5 });
                 }
                 4 => parent = Some(Process3dRetirementOwner::MutationFields { value, phase: 5 }),
@@ -820,13 +819,6 @@ impl Process3dRetirementStack {
                     drop(values);
                     released_items = 1;
                 }
-            }
-            Process3dRetirementOwner::Scalar { mut remaining } => {
-                if remaining > 1 {
-                    remaining -= 1;
-                    parent = Some(Process3dRetirementOwner::Scalar { remaining });
-                }
-                released_items = 1;
             }
         }
         if released_bytes > maximum_bytes {

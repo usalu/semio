@@ -11,9 +11,7 @@ use schema::ArtifactSchema;
 /// slots are never absent, only ever replaced, so a single `Option<…Child>` — not the double-
 /// `Option` an optional slot needs — is the sparse-vs-unchanged signal here).
 #[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue, ArtifactSchema)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default)]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
 #[artifact_schema(id = "s.imperative.procedure")]
 pub struct ProcedureDiff {
     #[state(artifact)]
@@ -36,9 +34,7 @@ pub struct ProcedureDiff {
 //#region 🔖️DeltaHelpers
 /// 📋 String-list wrapper so optional list diffs stay scalar across formats.
 #[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default)]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
 pub struct ProcedureStringList {
     pub values: Vec<String>,
 }

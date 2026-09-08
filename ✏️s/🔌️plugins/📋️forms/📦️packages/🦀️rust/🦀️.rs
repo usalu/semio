@@ -424,10 +424,6 @@ pub mod editor {
 
         #[path = "."]
         pub mod presence {
-            #[path = "../../🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🦀️.rs"]
-            mod component;
-            pub use component::*;
-
             #[path = "../../🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🧬️schema/🦀️.rs"]
             pub mod schema;
         }

@@ -216,6 +216,7 @@ semio-framework-ui-styling = { path = "🧰️framework/🔨️modules/🖱️ui
 semio-framework-ui-contract = { path = "🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust" }
 semio-framework-ui-render = { path = "🧰️framework/🔨️modules/🖱️ui/🖌️render/📦️packages/🦀️rust" }
 semio-framework-ui-runtime = { path = "🧰️framework/🔨️modules/🖱️ui/🧠️runtime/📦️packages/🦀️rust" }
+semio-framework-ui-scene = { path = "🧰️framework/🔨️modules/🖱️ui/🎬️scene/📦️packages/🦀️rust" }
 semio-framework-ui-backend-webgpu = { path = "🧰️framework/🔨️modules/🖱️ui/🖌️render/🎯️targets/🧊️webgpu/📦️packages/🦀️rust" }
 semio-framework-ui-backend-metal = { path = "🧰️framework/🔨️modules/🖱️ui/🖌️render/🎯️targets/🍎️metal/📦️packages/🦀️rust" }
 semio-framework-ui-backend-d3d12 = { path = "🧰️framework/🔨️modules/🖱️ui/🖌️render/🎯️targets/🪟️d3d12/📦️packages/🦀️rust" }

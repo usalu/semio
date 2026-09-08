@@ -413,7 +413,7 @@ impl TimestepBuilder {
         [self.stage as u64, self.cursor as u64, self.zone_envelope_w.len() as u64, self.zone_solar_w.len() as u64, self.zone_surface_conv_w.len() as u64, self.hour.to_bits()]
     }
 
-    pub(crate) fn new(model: &Model, pre: &PrecomputedModel, weather: WeatherRecord, date: SimDate, hour: f64, dt_s: f64) -> Self {
+    pub(crate) fn new(pre: &PrecomputedModel, weather: WeatherRecord, date: SimDate, hour: f64, dt_s: f64) -> Self {
         let system_dt_s = pre.system_timestep_s.min(dt_s);
         Self {
             stage: 0,
@@ -546,7 +546,7 @@ impl TimestepWork {
 
     #[cfg(test)]
     pub(crate) fn new(model: &Model, pre: &PrecomputedModel, weather: WeatherRecord, date: SimDate, hour: f64, dt_s: f64) -> Self {
-        let mut builder = TimestepBuilder::new(model, pre, weather, date, hour, dt_s);
+        let mut builder = TimestepBuilder::new(pre, weather, date, hour, dt_s);
         loop {
             if let Some(work) = builder.step(model, pre).expect("headless timestep admission") {
                 return work;
@@ -1571,6 +1571,7 @@ fn relative_humidity_from_w(w: f64, t_c: f64, p_atm: f64) -> f64 {
     (p_w / p_ws).clamp(0.0, 1.0)
 }
 
+#[cfg(test)]
 fn default_weather(hour: u32) -> WeatherRecord {
     WeatherRecord {
         year: 2026,

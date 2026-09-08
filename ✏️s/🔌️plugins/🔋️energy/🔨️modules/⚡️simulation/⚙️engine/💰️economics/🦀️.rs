@@ -1,6 +1,8 @@
 //! 💰️ Utility tariffs and life-cycle costing (non-physics post-pass).
 
-use crate::meters::{FuelType, MeterTable};
+use crate::meters::FuelType;
+#[cfg(test)]
+use crate::meters::MeterTable;
 use serde::{Deserialize, Serialize};
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 

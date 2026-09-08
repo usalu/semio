@@ -1,0 +1,43 @@
+{
+  "schema": "semio.gis.component-cold-map-patch/v1",
+  "package": {
+    "pluginId": "gis",
+    "packageId": "semio:gis",
+    "cargoPackage": "semio-s-plugin-gis",
+    "componentFile": "semio_s_plugin_gis.wasm"
+  },
+  "app": {
+    "id": "s.gis.gismap@1/*#editor",
+    "modeId": "edit",
+    "windowKindId": "gis2d-main",
+    "windowInstanceId": "gis2d-main",
+    "actionId": "patchPositions"
+  },
+  "surface": "1:gis2d.play.composite",
+  "receipt": {
+    "componentSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+    "descriptorSha256": "3333333333333333333333333333333333333333333333333333333333333333"
+  },
+  "document": {
+    "id": "shared-map",
+    "before": { "id": "cold-before", "lon": 7.1, "lat": 46.2 },
+    "after": { "id": "patched-after", "lon": 8.5, "lat": 47.1 }
+  },
+  "authority": {
+    "activationGeneration": 41,
+    "requestSequence": 7,
+    "transferGeneration": 51,
+    "headEditOrdinal": 7,
+    "headEditId": "edit-7",
+    "lastCommitSeq": 5,
+    "chainSha256": "2222222222222222222222222222222222222222222222222222222222222222"
+  },
+  "expected": {
+    "coldStatuses": ["applied"],
+    "sceneSchema": "tiled-map@1",
+    "beforeMarker": "cold-before",
+    "afterMarker": "patched-after",
+    "patchSequenceMinimum": 2
+  },
+  "hostile": ["foreign-package", "stale-lifetime", "wrong-descriptor", "wrong-action-owner", "changed-component-after-receipt"]
+}

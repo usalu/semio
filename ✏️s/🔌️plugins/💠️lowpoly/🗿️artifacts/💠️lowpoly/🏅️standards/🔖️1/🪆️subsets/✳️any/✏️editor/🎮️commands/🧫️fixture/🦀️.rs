@@ -8,6 +8,7 @@ use crate::artifacts::lowpoly::LowpolySnapshot;
 use crate::editor::lowpoly::config::{LowpolyConfig, LowpolyConfigMutation};
 use crate::editor::lowpoly::session::LowpolyScratch;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+#[cfg(test)]
 use serde::{Deserialize, Serialize};
 
 fn reset_from_json(json: &str) -> Emit<LowpolyMutation, LowpolyConfigMutation> {

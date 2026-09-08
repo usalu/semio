@@ -56,9 +56,9 @@ mod tests {
     /// nothing gets deleted.
     #[semio_framework_async_macros::async_test]
     async fn handle_alone_deletes_nothing_without_a_live_selection() {
-        let mut app = new_app();
-        dispatch(&mut app, WiresCommand::AddNode(add_node::AddNode { kind: "identity".into() }));
-        dispatch(&mut app, WiresCommand::DeleteSelection(DeleteSelection {}));
+        let mut app = new_app().await;
+        dispatch(&mut app, WiresCommand::AddNode(add_node::AddNode { kind: "identity".into() })).await;
+        dispatch(&mut app, WiresCommand::DeleteSelection(DeleteSelection {})).await;
         assert_eq!(fixture_nodes(&crate::artifacts::wires::wires_working_board(&app.snapshot().expect("snapshot"))).len(), 1);
     }
 
@@ -68,11 +68,11 @@ mod tests {
     /// removes exactly that node.
     #[semio_framework_async_macros::async_test]
     async fn delete_selection_removes_the_live_selected_node() {
-        let mut app = app_with_registry();
-        dispatch(&mut app, WiresCommand::AddNode(add_node::AddNode { kind: "identity".into() }));
+        let mut app = app_with_registry().await;
+        dispatch(&mut app, WiresCommand::AddNode(add_node::AddNode { kind: "identity".into() })).await;
         let targets = serde_json::to_string(&vec![InteractionTarget { granularity: "node".into(), id: "node-1".into() }]).expect("targets");
-        app.handle_action(INTERACTION_SELECT_ACTION_ID, Some(&json!({ "domainId": "graph", "targets": targets, "merge": "replace", "method": "pick" })), &meta("local")).expect("interactionSelect");
-        dispatch(&mut app, WiresCommand::DeleteSelection(DeleteSelection {}));
+        app.handle_action(INTERACTION_SELECT_ACTION_ID, semio_framework_plugin::optional_json_to_dsl(Some(json!({ "domainId": "graph", "targets": targets, "merge": "replace", "method": "pick" }))).as_ref(), &meta("local")).await.expect("interactionSelect");
+        dispatch(&mut app, WiresCommand::DeleteSelection(DeleteSelection {})).await;
         assert!(fixture_nodes(&crate::artifacts::wires::wires_working_board(&app.snapshot().expect("snapshot"))).is_empty());
     }
 }

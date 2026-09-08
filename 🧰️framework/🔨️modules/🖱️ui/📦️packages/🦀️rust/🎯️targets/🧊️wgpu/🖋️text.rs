@@ -5,7 +5,7 @@
 //! glyphs). A built-in 8×16 ASCII bitmap mode is kept as the deterministic, dependency-free
 //! fallback used by `FontAtlas::builtin()` (relied on by many call sites across the crate for
 //! fast/fixed-metric test setup) and by any single codepoint no registered font can shape at all.
-//! See `.🦑️repo/🎫️tickets/26/07/11/WGPU-RENDERER-FULL-PARITY/report-w1b-text-stack.md` for the full
+//! See `.🧬semio/🦑️repo/🎫️tickets/26/07/11/WGPU-RENDERER-FULL-PARITY/report-w1b-text-stack.md` for the full
 //! architecture writeup, including the deliberate measurement/paint-consistency tradeoff that
 //! keeps `measure_text`/`ensure_glyph` per-codepoint rather than switching to whole-string
 //! `parley::Layout` metrics.

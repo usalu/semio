@@ -6,8 +6,8 @@ use semio_framework_plugin::plugin_app_close_prelude::*;
 use semio_framework_plugin::{ExecutionMode, Plugin, PluginApp};
 
 //#region 🗃️Apps
-/// 🗃️ Closed runtime app fleet for the FEM 2D and 3D surfaces.
 semio_framework_dispatch_macros::dyn_enum_close! {
+    /// 🗃️ Closed runtime app fleet for the FEM 2D and 3D surfaces.
     pub enum FemApps: PluginApp {
         Fem2dEditor(VcsArtifactApp<EditorApp<crate::editor::fem2d::Fem2dPlayApp>>),
         Fem2dViewer(VcsArtifactApp<ViewerApp<crate::viewer::fem2d::Fem2dViewer>>),

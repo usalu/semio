@@ -1,0 +1,42 @@
+{
+  "cases": [
+    {
+      "locale": "en",
+      "shot": "Shot",
+      "fields": [
+        "Label",
+        "Format",
+        "Shape",
+        "Width",
+        "Height"
+      ],
+      "summary": "Inspection"
+    },
+    {
+      "locale": "de",
+      "shot": "Aufnahme",
+      "fields": [
+        "Bezeichnung",
+        "Format",
+        "Form",
+        "Breite",
+        "Höhe"
+      ],
+      "summary": "Inspektion"
+    }
+  ],
+  "editableFields": [
+    "label",
+    "width",
+    "height"
+  ],
+  "controller": "s.shooting.shooting@1/*#editor",
+  "action": "patchShots",
+  "iconAssetUrl": "/mesh/🧊️base.glb",
+  "frame": {
+    "width": 256,
+    "height": 256,
+    "shape": "rectangle",
+    "badge": true
+  }
+}

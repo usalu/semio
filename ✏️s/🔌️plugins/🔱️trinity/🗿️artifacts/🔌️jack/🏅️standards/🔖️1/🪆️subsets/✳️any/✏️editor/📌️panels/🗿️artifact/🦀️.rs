@@ -19,5 +19,5 @@ pub(crate) fn render(fixture: &JackSnapshot, _cfg: &JackConfig, labels: &Trinity
         let label = crate::editor::jack::ui_label(format!("{} → {}", edge.source, edge.target))?;
         tree_item(builder.item_id("edge", &edge.id)?, label)
     }))?;
-    builder.section("trinity-document.nodes", Some(labels.pieces.as_str().into()), true, node_items)?.section("trinity-document.edges", Some(labels.connections.as_str().into()), false, edge_items)?.interaction_domain("ast")?.build()
+    builder.section("trinity-document.nodes", Some(crate::editor::jack::ui_label(labels.pieces.as_str())?), true, node_items)?.section("trinity-document.edges", Some(crate::editor::jack::ui_label(labels.connections.as_str())?), false, edge_items)?.interaction_domain("ast")?.build()
 }

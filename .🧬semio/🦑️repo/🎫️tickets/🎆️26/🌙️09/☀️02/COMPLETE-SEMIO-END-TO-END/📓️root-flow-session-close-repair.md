@@ -1,0 +1,55 @@
+# Flow Session Close Repair
+
+## Latest Native Compile Result (2026-09-08)
+
+Native54926 completed RED before any session-close law ran: 64 Flow libtest compilation errors exposed stale serde derives and JSON API assumptions after the first-party serialization transition. Full diagnostics are retained at ticket `🗑️generated/flow-session-close-native-target/debug/.fingerprint/semio-framework-os-flow-9ef5a064a4eef928/output-test-lib-semio_framework_os_flow`. The empty `semio-nextest-4A5uYT` directory is not a runtime receipt: compilation failed before binary metadata was written. WGPU now owns the coherent first-party serialization/test repair and the same warmed-target retry, plus a controlled pre-admission failed-open lifetime law. No native Flow close success or updated consumed WASM has been established.
+
+The current consumed Flow browser WASM opens a real session and processes catalogue requests but traps while closing that session. Terra independently reproduced the session-specific failure and distinguished it from clock/import initialization. The generated artifact predates the current Rust source; a fresh artifact build and actual browser bridge run are required before declaring a source repair successful.
+
+Root is implementing a retained domain close lifecycle in the existing Flow bridge. Session handles must remain owned while operations cancel and retire; only then may the domain retire its VCS and host state under bounded caller credit and release the handle. Tests will cover duplicate/stale close, zero credit, active operations, retained pages and terminal-empty release. No implementation or rebuilt-runtime result is claimed yet.
+
+## Authored Repair and Current Evidence
+
+The language-neutral `session-close` fixture/schema and actual initialized-WASM close assertions were added first. Registered89913 remains RED with the same `flow_bridge_send` unreachable trap after its real catalogue/burst requests. AJV and Node's independent structural oracle validate the fixture before that failing runtime operation. This is the pre-repair consumed artifact, not a rebuilt source result.
+
+Current source now requires every FlowDomain to implement close start, bounded close step and terminal evidence. Closing sessions retain their exact handles in the existing fair work queue. They refuse new commands, wait for only their own child operations, retire the domain once, and release the resource only after its terminal predicate. Faults requeue the exact live operation/session instead of stranding it. Cancelled retained page bytes move into the existing AbiPageReader cursor and retire under actual byte credit without requiring a stale acknowledgement.
+
+The production adapter moves its real host into a typed Open/Closing/Closed owner without constructing replacement host state. VCS retirement precedes host retirement. FlowHostRetirement now exposes an in-crate typed no-credit/failure result and byte-credit close page; the renderer's existing StepContext entry remains. Its deeper DagHostRetirement cursor still uses a zero-argument close method: complete nested byte accounting is a known separate gap, not claimed by this repair.
+
+The linear-memory begin-close no longer discards an already-popped retained message. A new native law reserves a real event through an undersized output buffer, begins close, delivers exactly those retained bytes, acknowledges the event, and then drains to terminal. Other authored laws cover child-before-domain order, rejected budgets, exact terminal event ownership, an unproven terminal domain, a retryable feature-close fault, an unacknowledged page, and the actual production domain close.
+
+Native62828 is active through the registered Flow test target with the `session_close` filter, one Cargo job and isolated `🗑️generated/flow-session-close-native-target`. No Rust compile/test or rebuilt browser success is claimed yet. The separate linear-memory and host-fault tests require subsequent filtered execution too. Scoped whitespace validation passed.
+
+The existing registered `test-source` router now also validates the new close fixture using AJV, an independent stable JSON comparison and four hostile mutations. An initial wiring run26550 found an incorrect relative fixture URL; the URL was corrected, and21536 passed both source corpora with their DEBUG lines observed (original retirement fixture3 hostiles; new close fixture4 hostiles). These are source/data checks only. The protocol test module's existing missing AbiOperation import was also corrected while reviewing its compile boundary.
+
+## JS Close Completion and Event-Loop Progress
+
+A new controlled boundary exposed a second real host defect: the poll that completes domain retirement returns the ABI Closed status, but JS treated every negative poll as failure even if terminal-empty had just become true. Registered89868 was RED on `closing-poll-exact-terminal-witness: false !== true`. The close drain now checks the terminal predicate after a negative poll, finishes only with that exact witness, and still rejects the unproven negative result. Run33820 observed both controlled outcomes passing before reaching the still-broken consumed WASM close.
+
+A separate fixture-backed event-loop law63414 was RED: recursive queueMicrotask scheduling completed four pending close turns before an external user event could run. Default host scheduling now yields with a timer while retaining injectable scheduling. Run95921 observed both DEBUG confirmations (exact terminal accepted/unproven rejected; external event runs before bounded close completes), then remained RED on the old WASM unreachable trap. This is controlled JS runtime evidence, not compiled Flow acceptance. Two intervening launches86345/73787 did not reach tests because the shared Nx graph encountered a concurrently changing project metadata file; it was left untouched, and retry95921 reached the tests normally.
+
+The authored JS host source must be republished by the real Flow WASM/package build; no skip-build or stale-artifact fallback was used. Current generated bindings still need regeneration after Rust qualification.
+
+## Native Build Dependency Failure
+
+Native62828 completed RED at23:28UTC before any Flow test or Flow compilation result: `semio-framework-plugin` reports two E0425 references to `protocol::INVOCATION_RESULT_PACK_MAXIMUM_BYTES`, introduced by the concurrent Invocation-v14 producer packet. The exact compiler failure was handed to its owner; root will reuse the warmed isolated target after correction. This is not a Flow law failure or pass. Source/data retry69822 passed both fixture corpora; browser95921 remains the latest observed controlled-JS success followed by the old actual-WASM trap.
+
+The v14 agent corrected the canonical os_spr reexport. Warm native54786 is active; no test outcome yet.
+
+## Shared Browser Runtime Ownership
+
+Terra's read-only audit reproduced the global-default-host failure: closing one mounted Flow session closes siblings; init also opens a discarded orphan session; duplicate factories can allocate identical request ids on the same exports. New schema-first `semio.flow.browser-runtime-lifetime/v1` fixtures were followed by registered79967 RED on the missing explicit runtime owner.
+
+Authored browser source now exposes an explicit private-host runtime factory with openSession, exact per-session close and one global runtime close. Session constructors require inaccessible runtime authority; duplicate Wasm exports are refused before frames; init/global default host were removed, and the renderer loader caches the explicit runtime. Session close refuses later feature admission, waits for late open replies, and retains its exact promise. Its exact handle/open-origin/generation receipt is acknowledged before the retained session owner is released. Runtime close refuses new opens synchronously and waits for all owned sessions before global bridge drain. Generated declarations and package publication remain pending.
+
+Registered58014 observed controlled JS DEBUG laws passing: two sessions, sibling command after A close, duplicate runtime refused and one global close; terminal witness cases; event-loop yielding. It then failed on the old compiled WASM trap. That is not rebuilt native, React mounting, or artifact qualification.
+
+Native source adds schema event2657, carrying the exact session handle and original open request identity. A terminal domain is retained in a pending-publication phase when its event slot or output capacity is occupied; only successful nonreplaceable receipt publication permits native session release. Receipt acknowledgement remains in the existing event ledger. A new native law covers colliding event slots, exact receipt identity, stale-generation ACK refusal and a live sibling. This native law and updated existing expectations have not yet run.
+
+Follow-up audit findings were applied: session close control submission is now a retained retry phase, not a permanently rejected promise; transport rejection retries but actual Wasm exceptions fail visibly. The JS test now closes A before its open reply, refuses an already-queued feature, completes B, and refuses two exact receipt ACKs plus three close controls before successful retirement. Registered64645 observed these controlled laws plus existing terminal/yield laws passing, then remained RED at the actual old WASM trap. Registry identity now uses the exact exported send function, so copying an exports object cannot create a second host.
+
+Source61729 passed all three fixture corpora (retirement, session close, browser runtime). Declaration publication/check17543 passed 105 methods, three package exports, two TypeScript resolutions and five hostile fixtures; both authored and packaged declarations now describe the explicit runtime/private session constructor. These declarations do not publish or qualify new JavaScript/WASM. Added a real production-adapter two-session native law that closes A via exact2657, completes B selection, and only then globally drains. It remains unexecuted pending54786 compilation.
+
+Full source oracle was not wired to test-source. Wiring it exposed18038 RED: its old111-operation minimum conflicts with the108 currently supported native operations (2603,2604,2608 are refused). Schema and neutral counts now exactly describe108 operations and8 events, and the independent oracle asserts every supported/refused operation code. Registered98911 passed the complete source corpus. Browser56110 observed all controlled runtime laws passing before the old WASM trap; copied exports identity was also refused.
+
+Native54786 progressed through stdio dependency compilation and stopped on four pre-existing Flow test import errors: missing root DslValue/FromValue/ToValue, Mutation trait, and twice the private collection-delta helper. These two VCS test files now import the existing canonical os_dsl/os_spr/vcs definitions directly. No runtime implementation or API was added for those imports. A warmed registered native retry follows; no Flow native test has passed yet.

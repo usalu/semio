@@ -6,9 +6,7 @@
 
 use crate::artifacts::program::registers::AdjacencyKind;
 use crate::artifacts::program::{EntityId, ProgramSnapshot};
-use crate::editor::architect::ARCHITECT_APP_ID;
 use dsl::DslValue as Value;
-use semio_framework_plugin::{SurfaceKind, UiComponentSceneNode, UiPresence};
 
 //#region 🔖️Labels
 pub fn element_label(program: &ProgramSnapshot, id: &EntityId) -> String {
@@ -37,34 +35,6 @@ pub fn entity_name_from_json(value: &Value) -> String {
 }
 //#endregion 🔖️Labels
 
-//#region 🔖️Scene
-pub fn empty_component_scene(surface_id: &str, component_kind: SurfaceKind) -> UiComponentSceneNode {
-    UiComponentSceneNode {
-        surface_id: surface_id.into(),
-        controller_id: ARCHITECT_APP_ID.into(),
-        component_kind,
-        pane_id: None,
-        binding_id: None,
-        presence: UiPresence::default(),
-        canvas_2d: None,
-        world_3d: None,
-        node_graph: None,
-        text_editor: None,
-        table: None,
-        paint_2d: None,
-        virtual_file_system: None,
-        tiled_map: None,
-        board2d: None,
-        icon_render: None,
-        ink_canvas: None,
-        graph_timeline: None,
-        block_list: None,
-        diff_view: None,
-        event_feed: None,
-        menu: None,
-    }
-}
-//#endregion 🔖️Scene
 
 //#region 🧪️Tests
 #[cfg(test)]

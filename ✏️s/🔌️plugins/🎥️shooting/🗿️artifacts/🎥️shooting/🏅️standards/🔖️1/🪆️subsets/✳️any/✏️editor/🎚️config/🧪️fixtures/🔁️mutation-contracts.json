@@ -1,0 +1,383 @@
+{
+  "base": {
+    "defaultShotFormat": "png",
+    "defaultShotShape": "rectangle",
+    "defaultAssetFormat": "glb",
+    "selectedShotIds": [],
+    "centerModel": true,
+    "fitRevision": 0,
+    "cameraDraftLabel": "",
+    "camera": {
+      "position": [
+        420,
+        -420,
+        320
+      ],
+      "target": [
+        0,
+        0,
+        40
+      ],
+      "zoom": 1,
+      "fov": 50
+    },
+    "activeUtilityId": "move",
+    "locale": "en-US"
+  },
+  "cases": [
+    {
+      "kind": "replace-config",
+      "mutation": {
+        "ReplaceConfig": {
+          "config": {
+            "defaultShotFormat": "png",
+            "defaultShotShape": "rectangle",
+            "defaultAssetFormat": "glb",
+            "selectedShotIds": [],
+            "centerModel": true,
+            "fitRevision": 0,
+            "cameraDraftLabel": "Übersicht",
+            "camera": {
+              "position": [
+                420,
+                -420,
+                320
+              ],
+              "target": [
+                0,
+                0,
+                40
+              ],
+              "zoom": 1,
+              "fov": 50
+            },
+            "activeUtilityId": "move",
+            "locale": "de-DE"
+          }
+        }
+      },
+      "expected": {
+        "defaultShotFormat": "png",
+        "defaultShotShape": "rectangle",
+        "defaultAssetFormat": "glb",
+        "selectedShotIds": [],
+        "centerModel": true,
+        "fitRevision": 0,
+        "cameraDraftLabel": "Übersicht",
+        "camera": {
+          "position": [
+            420,
+            -420,
+            320
+          ],
+          "target": [
+            0,
+            0,
+            40
+          ],
+          "zoom": 1,
+          "fov": 50
+        },
+        "activeUtilityId": "move",
+        "locale": "de-DE"
+      }
+    },
+    {
+      "kind": "set-shot-selection",
+      "mutation": {
+        "SetShotSelection": {
+          "shotIds": [
+            "shot-a",
+            "shot-b"
+          ]
+        }
+      },
+      "expected": {
+        "defaultShotFormat": "png",
+        "defaultShotShape": "rectangle",
+        "defaultAssetFormat": "glb",
+        "selectedShotIds": [
+          "shot-a",
+          "shot-b"
+        ],
+        "centerModel": true,
+        "fitRevision": 0,
+        "cameraDraftLabel": "",
+        "camera": {
+          "position": [
+            420,
+            -420,
+            320
+          ],
+          "target": [
+            0,
+            0,
+            40
+          ],
+          "zoom": 1,
+          "fov": 50
+        },
+        "activeUtilityId": "move",
+        "locale": "en-US"
+      }
+    },
+    {
+      "kind": "set-center-model",
+      "mutation": {
+        "SetCenterModel": {
+          "value": false
+        }
+      },
+      "expected": {
+        "defaultShotFormat": "png",
+        "defaultShotShape": "rectangle",
+        "defaultAssetFormat": "glb",
+        "selectedShotIds": [],
+        "centerModel": false,
+        "fitRevision": 0,
+        "cameraDraftLabel": "",
+        "camera": {
+          "position": [
+            420,
+            -420,
+            320
+          ],
+          "target": [
+            0,
+            0,
+            40
+          ],
+          "zoom": 1,
+          "fov": 50
+        },
+        "activeUtilityId": "move",
+        "locale": "en-US"
+      }
+    },
+    {
+      "kind": "set-fit-revision",
+      "mutation": {
+        "SetFitRevision": {
+          "value": 4294967295
+        }
+      },
+      "expected": {
+        "defaultShotFormat": "png",
+        "defaultShotShape": "rectangle",
+        "defaultAssetFormat": "glb",
+        "selectedShotIds": [],
+        "centerModel": true,
+        "fitRevision": 4294967295,
+        "cameraDraftLabel": "",
+        "camera": {
+          "position": [
+            420,
+            -420,
+            320
+          ],
+          "target": [
+            0,
+            0,
+            40
+          ],
+          "zoom": 1,
+          "fov": 50
+        },
+        "activeUtilityId": "move",
+        "locale": "en-US"
+      }
+    },
+    {
+      "kind": "set-camera-draft-label",
+      "mutation": {
+        "SetCameraDraftLabel": {
+          "value": "Übersicht"
+        }
+      },
+      "expected": {
+        "defaultShotFormat": "png",
+        "defaultShotShape": "rectangle",
+        "defaultAssetFormat": "glb",
+        "selectedShotIds": [],
+        "centerModel": true,
+        "fitRevision": 0,
+        "cameraDraftLabel": "Übersicht",
+        "camera": {
+          "position": [
+            420,
+            -420,
+            320
+          ],
+          "target": [
+            0,
+            0,
+            40
+          ],
+          "zoom": 1,
+          "fov": 50
+        },
+        "activeUtilityId": "move",
+        "locale": "en-US"
+      }
+    },
+    {
+      "kind": "set-camera",
+      "mutation": {
+        "SetCamera": {
+          "camera": {
+            "position": [
+              1,
+              2,
+              3
+            ],
+            "target": [
+              0,
+              0,
+              0
+            ],
+            "zoom": 2,
+            "fov": 35,
+            "up": [
+              0,
+              0,
+              1
+            ],
+            "projection": "orthographic"
+          }
+        }
+      },
+      "expected": {
+        "defaultShotFormat": "png",
+        "defaultShotShape": "rectangle",
+        "defaultAssetFormat": "glb",
+        "selectedShotIds": [],
+        "centerModel": true,
+        "fitRevision": 0,
+        "cameraDraftLabel": "",
+        "camera": {
+          "position": [
+            1,
+            2,
+            3
+          ],
+          "target": [
+            0,
+            0,
+            0
+          ],
+          "zoom": 2,
+          "fov": 35,
+          "up": [
+            0,
+            0,
+            1
+          ],
+          "projection": "orthographic"
+        },
+        "activeUtilityId": "move",
+        "locale": "en-US"
+      }
+    },
+    {
+      "kind": "set-active-utility",
+      "mutation": {
+        "SetActiveUtility": {
+          "utilityId": "rotate"
+        }
+      },
+      "expected": {
+        "defaultShotFormat": "png",
+        "defaultShotShape": "rectangle",
+        "defaultAssetFormat": "glb",
+        "selectedShotIds": [],
+        "centerModel": true,
+        "fitRevision": 0,
+        "cameraDraftLabel": "",
+        "camera": {
+          "position": [
+            420,
+            -420,
+            320
+          ],
+          "target": [
+            0,
+            0,
+            40
+          ],
+          "zoom": 1,
+          "fov": 50
+        },
+        "activeUtilityId": "rotate",
+        "locale": "en-US"
+      }
+    },
+    {
+      "kind": "set-locale",
+      "mutation": {
+        "SetLocale": {
+          "value": "de-DE"
+        }
+      },
+      "expected": {
+        "defaultShotFormat": "png",
+        "defaultShotShape": "rectangle",
+        "defaultAssetFormat": "glb",
+        "selectedShotIds": [],
+        "centerModel": true,
+        "fitRevision": 0,
+        "cameraDraftLabel": "",
+        "camera": {
+          "position": [
+            420,
+            -420,
+            320
+          ],
+          "target": [
+            0,
+            0,
+            40
+          ],
+          "zoom": 1,
+          "fov": 50
+        },
+        "activeUtilityId": "move",
+        "locale": "de-DE"
+      }
+    },
+    {
+      "kind": "set-defaults",
+      "mutation": {
+        "SetDefaults": {
+          "shotFormat": "svg",
+          "shotShape": "ellipse",
+          "assetFormat": "obj"
+        }
+      },
+      "expected": {
+        "defaultShotFormat": "svg",
+        "defaultShotShape": "ellipse",
+        "defaultAssetFormat": "obj",
+        "selectedShotIds": [],
+        "centerModel": true,
+        "fitRevision": 0,
+        "cameraDraftLabel": "",
+        "camera": {
+          "position": [
+            420,
+            -420,
+            320
+          ],
+          "target": [
+            0,
+            0,
+            40
+          ],
+          "zoom": 1,
+          "fov": 50
+        },
+        "activeUtilityId": "move",
+        "locale": "en-US"
+      }
+    }
+  ]
+}

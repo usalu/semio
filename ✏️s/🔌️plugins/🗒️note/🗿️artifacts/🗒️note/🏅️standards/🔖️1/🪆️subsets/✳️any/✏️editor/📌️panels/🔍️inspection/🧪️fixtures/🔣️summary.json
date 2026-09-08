@@ -1,0 +1,35 @@
+{
+  "schema": "note.document",
+  "camera": {
+    "x": 2.5,
+    "y": -3.25,
+    "zoom": 1.75
+  },
+  "utility": "pencil",
+  "cases": [
+    {
+      "locale": "en-US",
+      "heading": "Inspection",
+      "lines": [
+        "Schema: note.document",
+        "Blocks: 0",
+        "Utility: pencil",
+        "Snap: off"
+      ],
+      "catalogue": "Block kinds",
+      "firstKind": "text — rich text block"
+    },
+    {
+      "locale": "de-DE",
+      "heading": "Inspektion",
+      "lines": [
+        "Schema: note.document",
+        "Blöcke: 0",
+        "Werkzeug: pencil",
+        "Fangen: aus"
+      ],
+      "catalogue": "Blockarten",
+      "firstKind": "Text — reicher Textblock"
+    }
+  ]
+}

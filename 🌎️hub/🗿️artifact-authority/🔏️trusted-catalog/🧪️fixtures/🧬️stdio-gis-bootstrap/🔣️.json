@@ -16,6 +16,7 @@
         "componentSha256": "1111111111111111111111111111111111111111111111111111111111111111",
         "componentBlake3": "1212121212121212121212121212121212121212121212121212121212121212",
         "descriptorSha256": "1313131313131313131313131313131313131313131313131313131313131313",
+        "executionProtocol": { "appChannelVersion": 14 },
         "browserActor": {
           "kind":"closed-browser-actor", "schema":"semio.os.closed-browser-actor.v1", "codegenPolicy":"semio.os.browser-jco-1.27.0-jspi.v1",
           "path":"packages/gis/browser/closed-actor.mjs", "byteLength":3,
@@ -36,6 +37,7 @@
         "componentSha256": "2121212121212121212121212121212121212121212121212121212121212121",
         "componentBlake3": "2222222222222222222222222222222222222222222222222222222222222222",
         "descriptorSha256": "2323232323232323232323232323232323232323232323232323232323232323",
+        "executionProtocol": { "appChannelVersion": 14 },
         "browserActor": { "kind":"none" },
         "codecCount": 26,
         "targetCount": 0
@@ -53,7 +55,7 @@
       "parentDialect": { "artifactKind": "s.gis.gismap", "standard": "1", "subset": "*" },
       "grant": { "read": true, "write": true, "observe": true }
     },
-    "generationId": "eca8c78ec518fe21d781a7e175bc77a9b2b9bdb3e4dd4afe3af16dbc952d61e3"
+    "generationId": "4770d7cd21d76ec2310270fe9404b2eaa08fe8add81de6f3dbc729b6bc7c3969"
   },
   "sources": {
     "stdioReceipts": "✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️schema/📜️native-codec-factories.json",
@@ -76,6 +78,86 @@
   },
   "cancellationStages": ["build", "extract-core", "inspect-wit", "emit-descriptor", "stage-component", "stage-descriptor", "hash", "pre-publication"],
   "hostile": ["stale-stdio-component", "stale-stdio-descriptor", "stale-stdio-codec", "wrong-stdio-version", "wrong-gis-version", "missing-map", "missing-terrain", "duplicate-terrain", "terrain-target", "non-wasm", "readonly-editor", "mixed-package", "closure-order", "path-escape", "path-collision", "descriptor-max-plus-one", "cancel-before-publication", "candidate-crash", "stale-plan-generation"],
+  "publication": {
+    "entryPoints": [
+      "development",
+      "bootstrap",
+      "native",
+      "process-rotation"
+    ],
+    "steps": [
+      "materialized",
+      "exact-gis-cold-proof",
+      "candidate-validated",
+      "current-published"
+    ],
+    "cases": [
+      {
+        "name": "exact",
+        "steps": [
+          "materialized",
+          "exact-gis-cold-proof",
+          "candidate-validated",
+          "current-published"
+        ],
+        "proofGeneration": "same",
+        "proofSucceeds": true,
+        "published": true,
+        "retained": "candidate"
+      },
+      {
+        "name": "omitted",
+        "steps": [
+          "materialized",
+          "candidate-validated",
+          "current-published"
+        ],
+        "proofGeneration": "same",
+        "proofSucceeds": true,
+        "published": false,
+        "retained": "previous"
+      },
+      {
+        "name": "late",
+        "steps": [
+          "materialized",
+          "candidate-validated",
+          "exact-gis-cold-proof",
+          "current-published"
+        ],
+        "proofGeneration": "same",
+        "proofSucceeds": true,
+        "published": false,
+        "retained": "previous"
+      },
+      {
+        "name": "wrong-generation",
+        "steps": [
+          "materialized",
+          "exact-gis-cold-proof",
+          "candidate-validated",
+          "current-published"
+        ],
+        "proofGeneration": "different",
+        "proofSucceeds": true,
+        "published": false,
+        "retained": "previous"
+      },
+      {
+        "name": "proof-failed",
+        "steps": [
+          "materialized",
+          "exact-gis-cold-proof",
+          "candidate-validated",
+          "current-published"
+        ],
+        "proofGeneration": "same",
+        "proofSucceeds": false,
+        "published": false,
+        "retained": "previous"
+      }
+    ]
+  },
   "rotation": {
     "writeCases": [
       { "id": "chunk-boundary", "byteLength": 65536, "cancelCheck": null, "existing": false, "accepted": true, "retained": "new" },
@@ -94,12 +176,12 @@
       { "change": "leaf-replaced-during-read", "accepted": false },
       { "change": "cancel-before-read", "accepted": false }
     ],
-    "initialGenerationId": "eca8c78ec518fe21d781a7e175bc77a9b2b9bdb3e4dd4afe3af16dbc952d61e3",
+    "initialGenerationId": "4770d7cd21d76ec2310270fe9404b2eaa08fe8add81de6f3dbc729b6bc7c3969",
     "failedCandidateGenerationId": "f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1",
-    "currentAfterFailedCandidate": "eca8c78ec518fe21d781a7e175bc77a9b2b9bdb3e4dd4afe3af16dbc952d61e3",
+    "currentAfterFailedCandidate": "4770d7cd21d76ec2310270fe9404b2eaa08fe8add81de6f3dbc729b6bc7c3969",
     "nextGenerationId": "3434343434343434343434343434343434343434343434343434343434343434",
     "stalePlan": {
-      "issuedGenerationId": "eca8c78ec518fe21d781a7e175bc77a9b2b9bdb3e4dd4afe3af16dbc952d61e3",
+      "issuedGenerationId": "4770d7cd21d76ec2310270fe9404b2eaa08fe8add81de6f3dbc729b6bc7c3969",
       "observedGenerationId": "3434343434343434343434343434343434343434343434343434343434343434",
       "expected": "stale"
     },

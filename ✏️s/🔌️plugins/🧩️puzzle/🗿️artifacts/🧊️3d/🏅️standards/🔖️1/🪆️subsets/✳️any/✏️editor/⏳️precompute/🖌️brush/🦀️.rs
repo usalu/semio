@@ -345,6 +345,7 @@ pub(crate) fn brush_fill_candidate_at(
     Some((candidate, rank))
 }
 
+#[cfg(test)]
 pub(crate) fn blocked_vortex_full_ids(attractions: &[AttractionProps]) -> std::collections::HashSet<String> {
     let mut s = std::collections::HashSet::new();
     for a in attractions {
@@ -362,6 +363,7 @@ pub(crate) fn vortex_world_from_object(obj: &FixtureObject, vortex_index: usize)
     Some((position, direction))
 }
 
+#[cfg(test)]
 pub(crate) fn enumerate_brush_fill_vortex_targets(fixture: &Fixture) -> Vec<BrushFillVortexTarget> {
     let blocked = blocked_vortex_full_ids(&fixture.attractions);
     let mut out = Vec::new();
@@ -391,10 +393,12 @@ pub(crate) fn brush_target_vortex_allows_suggestion(vortex_kind: Option<&str>, w
     brush_kind_weight_value(&weights.vortex_weights, vortex_kind.unwrap_or("")) > 0.0
 }
 
+#[cfg(test)]
 pub(crate) fn fill_vortex_target_weight(target: &BrushFillVortexTarget, weights: &BrushKindWeights) -> f64 {
     brush_kind_weight_value(&weights.vortex_weights, target.vortex_kind.as_deref().unwrap_or(""))
 }
 
+#[cfg(test)]
 pub(crate) fn weighted_sample_without_replacement<T, F>(items: &[T], weight_of: F, rng_state: &mut u32) -> Vec<T>
 where
     T: Clone,
@@ -432,10 +436,12 @@ pub(crate) fn fill_rng(rng_state: &mut u32) -> f64 {
     *rng_state as f64 / 4_294_967_296.0
 }
 
+#[cfg(test)]
 pub(crate) fn weighted_order_fill_vortex_targets(targets: &[BrushFillVortexTarget], weights: &BrushKindWeights, rng_state: &mut u32) -> Vec<BrushFillVortexTarget> {
     weighted_sample_without_replacement(targets, |target| fill_vortex_target_weight(target, weights), rng_state)
 }
 
+#[cfg(test)]
 pub(crate) fn weighted_order_brush_compatible_candidates(candidates: &[BrushCompatibleCandidate], weights: &BrushKindWeights, catalogs: &KindCatalogBundle, rng_state: &mut u32) -> Vec<BrushCompatibleCandidate> {
     weighted_sample_without_replacement(candidates, |candidate| brush_candidate_suggestion_weight(candidate, weights, catalogs), rng_state)
 }
@@ -447,6 +453,7 @@ pub(crate) fn fill_candidate_diversity_score(candidate: &BrushCompatibleCandidat
     1000 + (candidate.source_vortex_index as i64 - target_vortex_index as i64).unsigned_abs() as i64 * 100
 }
 
+#[cfg(test)]
 pub(crate) fn order_brush_fill_compatible_candidates(
     candidates: &[BrushCompatibleCandidate],
     target_vortex_kind: Option<&str>,

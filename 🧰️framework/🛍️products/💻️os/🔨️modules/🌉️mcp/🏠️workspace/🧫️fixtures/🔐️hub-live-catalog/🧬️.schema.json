@@ -32,7 +32,7 @@
         "required": ["name", "field", "value"],
         "properties": {
           "name": { "$ref": "#/$defs/id" },
-          "field": { "enum": ["scope", "descriptorDigestV1", "pluginId", "packageId", "version", "componentSha256", "descriptorByteSha256"] },
+          "field": { "enum": ["scope", "descriptorDigestV1", "pluginId", "packageId", "version", "componentSha256", "descriptorByteSha256", "executionProtocol"] },
           "value": {}
         }
       }
@@ -53,13 +53,19 @@
     "package": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["pluginId", "packageId", "version", "componentSha256", "descriptorByteSha256"],
+      "required": ["pluginId", "packageId", "version", "componentSha256", "descriptorByteSha256", "executionProtocol"],
       "properties": {
         "pluginId": { "$ref": "#/$defs/id" },
         "packageId": { "$ref": "#/$defs/id" },
         "version": { "$ref": "#/$defs/id" },
         "componentSha256": { "$ref": "#/$defs/hash" },
-        "descriptorByteSha256": { "$ref": "#/$defs/hash" }
+        "descriptorByteSha256": { "$ref": "#/$defs/hash" },
+        "executionProtocol": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["appChannelVersion"],
+          "properties": { "appChannelVersion": { "const": 14 } }
+        }
       }
     },
     "selection": {

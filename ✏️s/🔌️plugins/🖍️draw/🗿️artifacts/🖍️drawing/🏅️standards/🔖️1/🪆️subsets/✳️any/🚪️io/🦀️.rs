@@ -247,7 +247,7 @@ mod tests {
     /// of substring-matching hand-rolled markup, since the markup is no longer hand-rolled.
     #[semio_framework_async_macros::async_test]
     async fn drawing_document_to_svg_bridges_shape_text_image_and_gradient_nodes_through_semio_drawing() {
-        use semio_s_plugin_stdio::artifacts::svg::standards::v1_1::subsets::any::schema::snapshot::{parse_svg_xml, svg_element_from_xml_node, SvgElement};
+        use semio_s_plugin_stdio::artifacts::svg::standards::v1_1::subsets::base::schema::snapshot::{parse_svg_xml, svg_element_from_xml_node, SvgElement};
 
         let mut rect = create_drawing_shape_layer_rect("Rect");
         if let DrawingLayerNode::Shape(shape) = &mut rect {

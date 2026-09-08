@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Replace Presence",
+  "type": "object",
+  "properties": {
+    "presence": {
+      "$ref": "../../🔣️.json"
+    }
+  },
+  "required": [
+    "presence"
+  ],
+  "additionalProperties": false
+}

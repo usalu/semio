@@ -1,0 +1,45 @@
+{
+  "cases": [
+    {
+      "left": "",
+      "right": "",
+      "equal": true
+    },
+    {
+      "left": "rename-piece",
+      "right": "rename-piece",
+      "equal": true
+    },
+    {
+      "left": "rename-piece",
+      "right": "rename-part",
+      "equal": false
+    },
+    {
+      "left": "short",
+      "right": "shorter",
+      "equal": false
+    },
+    {
+      "left": "ä",
+      "right": "ö",
+      "equal": false
+    },
+    {
+      "left": "😀",
+      "right": "😀",
+      "equal": true
+    },
+    {
+      "left": "a suffix",
+      "right": "b suffix",
+      "equal": false
+    },
+    {
+      "left": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📋️program/🧩️requirements/🦠️operation/create-a",
+      "right": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📋️program/🧩️requirements/🦠️operation/create-b",
+      "equal": false
+    }
+  ],
+  "compileIterations": 10000
+}

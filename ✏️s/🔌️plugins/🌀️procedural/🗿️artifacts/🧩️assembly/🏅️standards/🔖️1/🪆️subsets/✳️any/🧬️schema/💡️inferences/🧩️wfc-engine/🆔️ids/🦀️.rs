@@ -4,7 +4,7 @@
 
 // #region 🔖️Macro
 macro_rules! id_newtype {
-    ($(#[$meta:meta])* $name:ident) => {
+    ($(#[$meta:meta])* $name:ident; $access:meta, $construct:meta) => {
         $(#[$meta])*
         #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
         pub struct $name(pub u32);
@@ -12,12 +12,14 @@ macro_rules! id_newtype {
         impl $name {
             /// 🔖️ The raw `u32` value.
             #[inline]
+            #[cfg($access)]
             pub fn get(self) -> u32 {
                 self.0
             }
 
             /// 🔖️ The value as a `usize` index, for slice/vec indexing.
             #[inline]
+            #[cfg($access)]
             pub fn index(self) -> usize {
                 self.0 as usize
             }
@@ -25,6 +27,7 @@ macro_rules! id_newtype {
             /// 🔖️ Builds an id from a `usize` index (e.g. a loop counter). Truncates silently only
             /// if `i > u32::MAX`, which every builder in this crate rejects long before this point.
             #[inline]
+            #[cfg($construct)]
             pub fn from_index(i: usize) -> Self {
                 Self(i as u32)
             }
@@ -42,36 +45,40 @@ macro_rules! id_newtype {
 // #region 🔖️Ids
 id_newtype!(
     /// 🧩️ One distinct pattern/tile value a variable can be assigned (the WFC "value").
-    PatternId
+    PatternId; all(), all()
 );
+#[cfg(test)]
 id_newtype!(
     /// 🧱️ A tile identity as authored (may map to several `PatternId`s under symmetry expansion).
-    TileId
+    TileId; test, test
 );
 id_newtype!(
     /// 📍️ One solver variable (grid cell or graph node). Distinct from `graph_core::NodeId`
     /// (a `u64`); the only conversion boundary is `GraphTopology::from_graph_view`.
-    NodeId
+    NodeId; all(), all()
 );
 id_newtype!(
     /// ↔ One directed compatibility relation (e.g. "north", "+X", or a graph edge label).
-    RelationId
+    RelationId; all(), test
 );
+#[cfg(test)]
 id_newtype!(
     /// 🧷️ One registered global/soft constraint instance.
-    ConstraintId
+    ConstraintId; test, test
 );
+#[cfg(test)]
 id_newtype!(
     /// 🌳️ One search decision (a branch point in the backtracking tree).
-    DecisionId
+    DecisionId; test, test
 );
 id_newtype!(
     /// 🗺️ One named region/zone used for scoped constraints and priorities.
-    RegionId
+    RegionId; test, test
 );
+#[cfg(test)]
 id_newtype!(
     /// 🔌️ One connector/socket slot on a tile or graph node.
-    PortId
+    PortId; test, test
 );
 // #endregion 🔖️Ids
 

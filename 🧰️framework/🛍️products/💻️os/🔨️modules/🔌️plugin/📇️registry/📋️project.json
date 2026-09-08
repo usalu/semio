@@ -8,7 +8,14 @@
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry",
         "command": "bun ./📜️script.ts generate",
         "forwardAllArgs": true
-      }
+      },
+      "cache": true,
+      "inputs": [
+        "default"
+      ],
+      "dependsOn": [
+        "repo:generator-inputs"
+      ]
     },
     "preview-generated": {
       "executor": "nx:run-commands",
@@ -62,6 +69,22 @@
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry",
         "command": "bun ./📜️script.ts new",
         "forwardAllArgs": true
+      }
+    },
+    "rust-taxonomy-mounts-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry",
+        "command": "bun ./📜️script.ts rust-taxonomy-mounts-check"
+      }
+    },
+    "plugin-root-ownership-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry",
+        "command": "bun ./📜️script.ts plugin-root-ownership-check"
       }
     }
   },

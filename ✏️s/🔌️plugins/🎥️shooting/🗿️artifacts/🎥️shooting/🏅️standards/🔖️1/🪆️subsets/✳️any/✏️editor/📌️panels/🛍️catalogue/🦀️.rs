@@ -42,7 +42,7 @@ pub fn render(labels: &ShootingLabels) -> semio_framework_plugin::UiAssemblyResu
         "box",
         crate::editor::shooting::shooting_action("addAsset", Some(asset_args)),
     )])?;
-    PanelTreeBuilder::new("shooting-play-catalogue")?.section("shooting-play-catalogue.shots", Some(labels.add_shot.into()), true, shot_items)?.section("shooting-play-catalogue.assets", Some(labels.add_asset.into()), true, asset_items)?.build()
+    PanelTreeBuilder::new("shooting-play-catalogue")?.section("shooting-play-catalogue.shots", Some(crate::editor::shooting::ui_label(labels.add_shot.as_str())?), true, shot_items)?.section("shooting-play-catalogue.assets", Some(crate::editor::shooting::ui_label(labels.add_asset.as_str())?), true, asset_items)?.build()
 }
 //#endregion 🔖️Render
 
@@ -54,8 +54,8 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn catalogue_lists_the_shot_presets_and_glb_asset() {
-        let mut app = shooting_app();
-        let json = render_body(&mut app, SHOOTING_PLAY_BODY_CATALOGUE);
+        let mut app = shooting_app().await;
+        let json = render_body(&mut app, SHOOTING_PLAY_BODY_CATALOGUE).await;
         assert!(json.contains("Add Shot"));
         assert!(json.contains("Add Asset"));
         assert!(json.contains("SVG Rectangle"));

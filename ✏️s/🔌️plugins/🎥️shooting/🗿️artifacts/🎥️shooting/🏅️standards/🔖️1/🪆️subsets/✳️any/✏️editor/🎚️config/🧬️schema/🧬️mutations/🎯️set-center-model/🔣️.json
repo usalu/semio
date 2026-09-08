@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🧬️mutations/🎯️set-center-model",
+  "semanticKind": "set-center-model",
+  "displayName": "Set Center Model",
+  "emoji": "🎯️",
+  "aggregateVariant": "SetCenterModel",
+  "payloadSchema": "🧬️.schema.json",
+  "textOpcode": "set-center-model",
+  "binaryTag": 2,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "apply-only",
+  "outcomeClasses": [
+    "applied"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "text",
+    "binary",
+    "json-schema"
+  ]
+}

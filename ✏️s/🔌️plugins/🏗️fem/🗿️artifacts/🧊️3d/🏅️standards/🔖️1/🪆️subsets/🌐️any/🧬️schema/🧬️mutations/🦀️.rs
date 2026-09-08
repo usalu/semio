@@ -322,7 +322,6 @@ mod tests {
     use super::*;
     use crate::artifacts::fem3d::{element_id, load_id, FemAnalysisSettings, FemCombination, FemDof, FemElement, FemLoad, FemLoadCase, FemMaterial, FemNode, FemSection, FemSolid, FemSupport};
     use protocol::MutationDiff;
-    use protocol::SemanticMutation;
     use std::collections::BTreeMap;
 
     // #region 🔖️Fixtures

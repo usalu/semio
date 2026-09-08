@@ -7,6 +7,7 @@ use crate::editor::lowpoly::commands::mesh_edit::{bevel, decimate, dissolve, ext
 use crate::editor::lowpoly::config::{LowpolyConfig, LowpolyConfigMutation};
 use crate::editor::lowpoly::session::LowpolyScratch;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+#[cfg(test)]
 use serde::{Deserialize, Serialize};
 
 /// 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md. Local sync

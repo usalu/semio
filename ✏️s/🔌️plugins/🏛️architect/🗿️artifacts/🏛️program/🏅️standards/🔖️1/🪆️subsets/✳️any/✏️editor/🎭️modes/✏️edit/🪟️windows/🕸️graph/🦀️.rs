@@ -3,9 +3,8 @@
 
 use crate::artifacts::program::standards::v1::subsets::any::schema::inferences::undirected_edges;
 use crate::artifacts::program::ProgramSnapshot;
-use crate::editor::architect::chrome::empty_component_scene;
 use crate::editor::architect::config::ArchitectConfig;
-use semio_framework_plugin::{LocalizedLabel, NodeGraphEdgeRecord, NodeGraphNodeRecord, NodeGraphPortRecord, NodeGraphScene, NodeGraphViewport, SurfaceKind, UiNode, WindowKindDefinition, WindowOptions};
+use semio_framework_plugin::{LocalizedLabel, NodeGraphEdgeRecord, NodeGraphNodeRecord, NodeGraphPortRecord, NodeGraphScene, NodeGraphViewport, SurfaceKind, WindowKindDefinition, WindowOptions};
 
 //#region 🔖️Constants
 pub const ARCHITECT_WINDOW_GRAPH: &str = "architect-graph";
@@ -94,13 +93,12 @@ pub fn graph_media_json(program: &ProgramSnapshot, _camera: &GraphCamera) -> (Ve
 /// and `NodeGraphScene` has no `interaction_domain` field the wrapper could stamp post-render either
 /// (unlike `UiNode::Tree`) — `selection`/`hover` are left at `NodeGraphScene::base`'s defaults
 /// (empty/none), matching `dag`'s main window's and `space`'s workflow window's identical gap.
-pub fn render(program: &ProgramSnapshot, cfg: &ArchitectConfig) -> UiNode {
+pub fn render(program: &ProgramSnapshot, cfg: &ArchitectConfig) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let camera = GraphCamera { x: cfg.graph_camera_x, y: cfg.graph_camera_y, zoom: cfg.graph_camera_zoom };
     let (nodes, edges) = graph_media_json(program, &camera);
     let viewport = NodeGraphViewport { x: camera.x, y: camera.y, zoom: camera.zoom };
-    let mut scene = empty_component_scene(ARCHITECT_BODY_GRAPH, SurfaceKind::NodeGraph);
-    scene.node_graph = Some(NodeGraphScene { editable: Some(true), capabilities_json: Some(r#"{"directedness":"undirected"}"#.into()), ..NodeGraphScene::base(nodes, edges, viewport) });
-    UiNode::ComponentScene(scene)
+    let scene = NodeGraphScene { editable: Some(true), capabilities_json: Some(r#"{"directedness":"undirected"}"#.into()), ..NodeGraphScene::base(nodes, edges, viewport) };
+    semio_framework_plugin::scene_surface(ARCHITECT_BODY_GRAPH, semio_framework_ui_contract::SurfaceKind::NodeGraph, &scene)
 }
 //#endregion 🔖️Render
 
@@ -119,8 +117,13 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn the_graph_body_emits_a_node_graph_scene() {
-        let json = serde_json::to_string(&render(&sample_plugin(), &ArchitectConfig::default())).expect("json");
-        assert!(json.contains("node-graph"));
+        let program = sample_plugin();
+        let node = render(&program, &ArchitectConfig::default()).expect("graph");
+        let semio_framework_plugin::Component::Surface(props) = &node.component else { panic!("graph surface") };
+        let scene: NodeGraphScene = semio_framework_ui_scene::decode(props).expect("packed graph");
+        assert_eq!(scene.nodes.len(), program.elements.len());
+        assert_eq!(scene.edges.len(), undirected_edges(&program).len());
+        crate::editor::architect::testkit::project_render(Ok(node));
     }
 
     #[semio_framework_async_macros::async_test]

@@ -4,7 +4,7 @@
 //! (`XmlNode::Element` <-> `SvgElementDiff`, `XmlNode::Text` <-> `Text{text}`, everything else --
 //! CData/Comment/ProcessingInstruction, plus any node-KIND change -- via the `Replace` fallback).
 //! Builds on the xml/svg node-diff pattern originated by `📰️xml`'s own `XmlDiff`
-//! (`.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️10/ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION/
+//! (`.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️10/ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION/
 //! 🧬️schema-design.md`) but declares its OWN diff types (per the spec-mandated-reuse rule: svg
 //! embeds xml's *node* model, never xml's *diff* model).
 

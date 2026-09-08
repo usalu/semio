@@ -1,6 +1,7 @@
 //! 🧮️ Equation artifact — the document entities this plugin's app edits: a graph playground
 //! (nodes/edges/algorithm) and a geometry playground (a point cloud), combined into one snapshot.
 
+#[cfg(test)]
 use semio_framework_os_kernel::{FromValue, ToValue};
 use semio_framework_plugin::{ArtifactKindSpec, Dialect, MediaClass, MediaForm, MediaType, OsMediaCapability, StandardId, SubsetId};
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
@@ -577,7 +578,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn carrier_fixture_contains_child_state_and_rejects_a_wire_only_parent() {
-        let snapshot = owned_snapshot(true).await;
+        let snapshot = owned_snapshot(true);
         let fixture = equation_fixture(&snapshot).expect("owned scene projects");
         assert_eq!(fixture.graph, equation_scene_owner(&snapshot).unwrap().graph);
         assert_eq!(fixture.geometry, EquationGeometry::default());
@@ -602,7 +603,7 @@ mod tests {
             let right_directed = case["rightDirected"].as_bool().expect("rightDirected");
             match law {
                 "tripleIdentity" => {
-                    let snapshot = owned_snapshot(left_directed).await;
+                    let snapshot = owned_snapshot(left_directed);
                     let notation = snapshot.notation.local_owner::<EquationWorkingScene>().expect("notation owner");
                     let results = snapshot.results.local_owner::<EquationWorkingScene>().expect("results owner");
                     let computed = snapshot.computed.local_owner::<EquationWorkingScene>().expect("computed owner");
@@ -610,7 +611,7 @@ mod tests {
                     assert_eq!(Arc::strong_count(&notation), 6);
                 }
                 "instanceIsolation" => {
-                    let left = owned_snapshot(left_directed).await;
+                    let left = owned_snapshot(left_directed);
                     let mut right = left.clone();
                     replace_scene_owner(&mut right, Arc::new(scene(right_directed)));
                     assert_eq!(left.results.child_id, right.results.child_id, "hostile identity collision is deliberate");
@@ -618,7 +619,7 @@ mod tests {
                     assert_eq!(equation_graph(&right).directed, right_directed);
                 }
                 "abaIsolation" => {
-                    let stale_a = owned_snapshot(left_directed).await;
+                    let stale_a = owned_snapshot(left_directed);
                     let mut reused_identity_b = stale_a.clone();
                     replace_scene_owner(&mut reused_identity_b, Arc::new(scene(right_directed)));
                     assert_eq!(stale_a.computed.child_id, reused_identity_b.computed.child_id);
@@ -627,7 +628,7 @@ mod tests {
                     assert_eq!(equation_graph(&stale_a).directed, left_directed);
                 }
                 "wireOmission" => {
-                    let left = owned_snapshot(left_directed).await;
+                    let left = owned_snapshot(left_directed);
                     let mut right = left.clone();
                     replace_scene_owner(&mut right, Arc::new(scene(right_directed)));
                     let left_wire = left.to_value();
@@ -637,7 +638,7 @@ mod tests {
                     assert!(decoded.results.local_owner::<EquationWorkingScene>().is_none());
                 }
                 "boundedClose" => {
-                    let snapshot = owned_snapshot(left_directed).await;
+                    let snapshot = owned_snapshot(left_directed);
                     let retained = snapshot.results.local_owner::<EquationWorkingScene>().expect("retained owner");
                     let weak = Arc::downgrade(&retained);
                     assert_eq!(Arc::strong_count(&retained), fixture["ownedSlots"].as_u64().expect("owned slots") as usize + 1);

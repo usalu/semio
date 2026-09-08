@@ -1,0 +1,28 @@
+{
+  "schema": "semio.hub.trusted-publication-transport/v1",
+  "command": ["trusted-catalog", "publish"],
+  "commandBytes": 4096,
+  "receiptBytes": 4096,
+  "inputDeadlineMs": 5000,
+  "publicationDeadlineMs": 30000,
+  "outcomes": [
+    { "outcome": "durable", "exit": "success", "activate": true },
+    { "outcome": "replaced-unconfirmed", "exit": "failure", "activate": false },
+    { "outcome": "missing-or-invalid", "exit": "failure", "activate": false }
+  ],
+  "rejectedArguments": [["trusted-catalog"], ["publish"], ["trusted-catalog", "publish", "--force"], ["trusted-catalog", "activate"]],
+  "processCases": [
+    { "mode": "durable", "result": "durable" },
+    { "mode": "unconfirmed", "result": "unconfirmed" },
+    { "mode": "unconfirmed-zero", "result": "indeterminate" },
+    { "mode": "unconfirmed-two", "result": "indeterminate" },
+    { "mode": "overflow", "result": "indeterminate" },
+    { "mode": "signal", "result": "indeterminate" },
+    { "mode": "empty", "result": "indeterminate" },
+    { "mode": "identity", "result": "indeterminate" },
+    { "mode": "durable-one", "result": "indeterminate" },
+    { "mode": "timeout", "result": "indeterminate" },
+    { "mode": "cancel", "result": "indeterminate" },
+    { "mode": "durable-after-cancel", "result": "durable" }
+  ]
+}

@@ -913,11 +913,11 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn graph_op_create_node_and_undo() {
         let fixture = mini_fixture();
-        let mut store = crate::artifacts::jack::op::TrinityGraphStore::new(crate::artifacts::jack::op::create_trinity_graph_envelope("test", fixture));
-        dispatch_trinity_graph_mutations(&mut store, vec![create_node(Node { id: "new".into(), kind: "Piece".into(), name: "new-piece".into(), x: 200.0, y: 40.0, width: 80.0, height: 40.0, properties: PropertyBag::new(), ports: vec![] })])
+        let mut store = crate::artifacts::jack::op::TrinityGraphStore::new(crate::artifacts::jack::op::create_trinity_graph_envelope("test", fixture)).await.expect("valid artifact store");
+        dispatch_trinity_graph_mutations(&mut store, vec![create_node(Node { id: "new".into(), kind: "Piece".into(), name: "new-piece".into(), x: 200.0, y: 40.0, width: 80.0, height: 40.0, properties: PropertyBag::new(), ports: vec![] })]).await
             .expect("create");
         assert_eq!(store.snapshot().expect("projection").nodes().len(), 3);
-        store.dispatch(ArtifactCommand::Undo).expect("undo");
+        store.dispatch(ArtifactCommand::Undo).await.expect("undo");
         assert_eq!(store.snapshot().expect("projection").nodes().len(), 2);
     }
 
@@ -929,7 +929,7 @@ mod tests {
             nodes.push(Node { id: format!("pad-{}", nodes.len()), kind: "Piece".into(), name: format!("pad-{}", nodes.len()), x: 0.0, y: 0.0, width: 80.0, height: 40.0, properties: PropertyBag::new(), ports: vec![] });
         }
         let fixture = JackSnapshot::with_content(fixture.schema.clone(), fixture.name.clone(), fixture.manifest_id.clone(), fixture.manifest.clone(), fixture.camera.clone(), nodes, fixture.edges(), fixture.root_node_id.clone());
-        let mut store = crate::artifacts::jack::op::TrinityGraphStore::new(crate::artifacts::jack::op::create_trinity_graph_envelope("test", fixture));
+        let mut store = crate::artifacts::jack::op::TrinityGraphStore::new(crate::artifacts::jack::op::create_trinity_graph_envelope("test", fixture)).await.expect("valid artifact store");
         dispatch_trinity_graph_mutations(
             &mut store,
             vec![
@@ -957,7 +957,7 @@ mod tests {
                 }),
                 create_edge(Edge { id: "e-batch".into(), kind: "Connection".into(), source: port_key("x-9", "out"), target: port_key("y-10", "in"), properties: PropertyBag::new() }),
             ],
-        )
+        ).await
         .expect("batch create edge");
         let projection = store.snapshot().expect("projection");
         assert_eq!(projection.nodes().len(), 11);

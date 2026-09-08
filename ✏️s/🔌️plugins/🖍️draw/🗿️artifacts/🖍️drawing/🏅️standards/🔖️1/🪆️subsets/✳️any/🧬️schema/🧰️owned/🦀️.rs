@@ -12,7 +12,6 @@ enum DrawingRetirementOwner {
     Mutation(DrawingMutation),
     MutationFields(DrawingMutationFields),
     Layer(DrawingLayerNode),
-    Layers(Vec<DrawingLayerNode>),
     LayerFields(DrawingLayerFields),
     Base(DrawingLayerBase),
     Attributes(DrawingAttributes),
@@ -121,14 +120,6 @@ impl DrawingOwnedRetirement {
                 };
                 *self.owner = Some(DrawingRetirementOwner::LayerFields(fields));
                 Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 })
-            }
-            DrawingRetirementOwner::Layers(values) => {
-                if let Some(value) = values.pop() {
-                    Ok(Self::spawn(&mut self.active, DrawingRetirementOwner::Layer(value)))
-                } else {
-                    drop(self.owner.take());
-                    Ok(store::SnapshotRetirementStep::Complete)
-                }
             }
             DrawingRetirementOwner::LayerFields(fields) => {
                 if self.phase == 0 {
@@ -1377,7 +1368,7 @@ impl DrawingFixedOwnerCensus {
         Self { slots: [DrawingOwnerCreditSlot::EMPTY; DRAWING_MAXIMUM_NESTED_ITEMS], length: 0 }
     }
 
-    fn admit(&mut self, source_items: usize, source_bytes: usize, derived_items: usize, derived_bytes: usize) -> Result<(), &'static str> {
+    fn admit(&mut self, source_items: usize, source_bytes: usize, derived_items: usize, derived_bytes: usize) -> Result<DrawingOwnerCreditSlot, &'static str> {
         let target = self.slots.get_mut(self.length).ok_or("drawing-store.owner-census-slot-capacity")?;
         *target = DrawingOwnerCreditSlot {
             source_items: source_items.try_into().map_err(|_| "drawing-store.owner-census-item-width")?,
@@ -1386,7 +1377,7 @@ impl DrawingFixedOwnerCensus {
             derived_bytes: derived_bytes.try_into().map_err(|_| "drawing-store.owner-census-byte-width")?,
         };
         self.length += 1;
-        Ok(())
+        Ok(*target)
     }
 }
 
@@ -1466,11 +1457,11 @@ impl DrawingSnapshotBoundsAuthority {
     }
 
     fn add(&mut self, items: usize, bytes: usize, candidate_items: usize, candidate_bytes: usize) -> Result<(), &'static str> {
-        self.owner_census.admit(items, bytes, candidate_items, candidate_bytes)?;
-        self.items = self.items.checked_add(items).ok_or("drawing-store.preflight-item-overflow")?;
-        self.bytes = self.bytes.checked_add(bytes).ok_or("drawing-store.preflight-byte-overflow")?;
-        self.candidate_items = self.candidate_items.checked_add(candidate_items).ok_or("drawing-store.preflight-candidate-item-overflow")?;
-        self.candidate_bytes = self.candidate_bytes.checked_add(candidate_bytes).ok_or("drawing-store.preflight-candidate-byte-overflow")?;
+        let credit = self.owner_census.admit(items, bytes, candidate_items, candidate_bytes)?;
+        self.items = self.items.checked_add(credit.source_items as usize).ok_or("drawing-store.preflight-item-overflow")?;
+        self.bytes = self.bytes.checked_add(credit.source_bytes as usize).ok_or("drawing-store.preflight-byte-overflow")?;
+        self.candidate_items = self.candidate_items.checked_add(credit.derived_items as usize).ok_or("drawing-store.preflight-candidate-item-overflow")?;
+        self.candidate_bytes = self.candidate_bytes.checked_add(credit.derived_bytes as usize).ok_or("drawing-store.preflight-candidate-byte-overflow")?;
         if self.items > DRAWING_MAXIMUM_NESTED_ITEMS || self.candidate_items > DRAWING_MAXIMUM_NESTED_ITEMS {
             return Err("drawing-store.preflight-item-capacity");
         }
@@ -1951,197 +1942,14 @@ impl Drop for DrawingLayerCloneAuthority {
     }
 }
 
-struct DrawingSnapshotCloneAuthority {
-    value: std::mem::ManuallyDrop<Option<DrawingSnapshot>>,
-    retirement: std::mem::ManuallyDrop<Option<Box<dyn store::ErasedSnapshotRetirement>>>,
-    layer: std::mem::ManuallyDrop<Option<Box<DrawingLayerCloneAuthority>>>,
-    pending_asset: std::mem::ManuallyDrop<Option<(String, DrawingImageAsset)>>,
-    bounds: DrawingSnapshotBoundsAuthority,
-    phase: u8,
-    index: usize,
-    field: u8,
-    terminal: bool,
-}
-
-impl DrawingSnapshotCloneAuthority {
-    fn new() -> Self {
-        Self {
-            value: std::mem::ManuallyDrop::new(Some(DrawingSnapshot { schema: String::new(), id: String::new(), title: None, layers: Vec::new(), assets: std::collections::BTreeMap::new(), artboard: None })),
-            retirement: std::mem::ManuallyDrop::new(None),
-            layer: std::mem::ManuallyDrop::new(None),
-            pending_asset: std::mem::ManuallyDrop::new(None),
-            bounds: DrawingSnapshotBoundsAuthority::new(),
-            phase: 0,
-            index: 0,
-            field: 0,
-            terminal: false,
-        }
+fn clone_drawing_string(source: &str) -> Result<String, &'static str> {
+    if source.len() > DRAWING_OWNED_FIELD_BYTES {
+        return Err("drawing-store.initializer-field-too-large");
     }
-
-    fn clone_string(source: &str) -> Result<String, &'static str> {
-        if source.len() > DRAWING_OWNED_FIELD_BYTES {
-            return Err("drawing-store.initializer-field-too-large");
-        }
-        let mut value = String::new();
-        value.try_reserve_exact(source.len()).map_err(|_| "drawing-store.initializer-string-admission")?;
-        value.push_str(source);
-        Ok(value)
-    }
-
-    fn step(&mut self, source: &DrawingSnapshot, digest: &mut store::ArtifactStoreInitializationDigest, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, &'static str> {
-        if self.phase == 0 {
-            if self.bounds.step(source, cx)? {
-                self.phase = 1;
-            }
-            return Ok(false);
-        }
-        let target = self.value.as_mut().ok_or("drawing-store.initializer-clone-target")?;
-        let observed = match self.phase {
-            1 => {
-                target.schema = Self::clone_string(&source.schema)?;
-                source.schema.as_bytes()
-            }
-            2 => {
-                target.id = Self::clone_string(&source.id)?;
-                source.id.as_bytes()
-            }
-            3 => {
-                target.title = match source.title.as_deref() {
-                    Some(value) => Some(Self::clone_string(value)?),
-                    None => None,
-                };
-                source.title.as_deref().unwrap_or_default().as_bytes()
-            }
-            4 => {
-                if let Some(layer) = self.layer.as_mut() {
-                    if layer.step(source.layers.get(self.index).ok_or("drawing-store.initializer-layer-source")?, digest, cx)? {
-                        let value = layer.take().ok_or("drawing-store.initializer-layer-handoff")?;
-                        drop(self.layer.take());
-                        target.layers.push(value);
-                        self.index += 1;
-                    }
-                    return Ok(false);
-                }
-                if let Some(layer_source) = source.layers.get(self.index) {
-                    if self.index == 0 {
-                        target.layers.try_reserve_exact(source.layers.len()).map_err(|_| "drawing-store.initializer-layer-admission")?;
-                    }
-                    *self.layer = Some(Box::new(DrawingLayerCloneAuthority::new(layer_source)?));
-                    cx.consume_fuel(1);
-                    return Ok(false);
-                }
-                self.index = 0;
-                &[]
-            }
-            5 => {
-                if self.pending_asset.is_none() {
-                    use std::ops::Bound::{Excluded, Unbounded};
-                    let next = match target.assets.last_key_value() {
-                        Some((key, _)) => source.assets.range::<str, _>((Excluded(key.as_str()), Unbounded)).next(),
-                        None => source.assets.iter().next(),
-                    };
-                    let Some((key, value)) = next else {
-                        self.phase = 6;
-                        self.field = 0;
-                        return Ok(false);
-                    };
-                    *self.pending_asset = Some((Self::clone_string(key)?, DrawingImageAsset { mime: String::new(), data: String::new(), width: value.width, height: value.height }));
-                    self.field = 0;
-                    digest.observe(key.as_bytes());
-                    cx.consume_fuel(key.len().max(1) as u64);
-                    return Ok(false);
-                }
-                let (key, pending) = self.pending_asset.as_mut().expect("Drawing pending asset remains exact");
-                let source = source.assets.get(key).ok_or("drawing-store.initializer-asset-source")?;
-                match self.field {
-                    0 => {
-                        pending.mime = Self::clone_string(&source.mime)?;
-                        self.field = 1;
-                        source.mime.as_bytes()
-                    }
-                    1 => {
-                        pending.data = Self::clone_string(&source.data)?;
-                        self.field = 2;
-                        source.data.as_bytes()
-                    }
-                    _ => {
-                        let (key, value) = self.pending_asset.take().expect("Drawing pending asset handoff remains exact");
-                        if target.assets.insert(key, value).is_some() {
-                            return Err("drawing-store.initializer-duplicate-asset");
-                        }
-                        self.field = 0;
-                        cx.consume_fuel(1);
-                        return Ok(false);
-                    }
-                }
-            }
-            6 => {
-                target.artboard = source.artboard.as_ref().map(|value| crate::artifacts::drawing::DrawingArtboard { width: value.width, height: value.height });
-                &[]
-            }
-            _ => {
-                self.terminal = true;
-                return Ok(true);
-            }
-        };
-        digest.observe(observed);
-        self.phase += 1;
-        cx.consume_fuel(observed.len().max(1) as u64);
-        Ok(false)
-    }
-
-    fn take_value(&mut self) -> Option<DrawingSnapshot> {
-        if !self.terminal {
-            return None;
-        }
-        self.value.take()
-    }
-
-    fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<store::SnapshotRetirementStep, String> {
-        if maximum_items == 0 {
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
-        }
-        if let Some(retirement) = self.retirement.as_mut() {
-            return match store::ErasedSnapshotRetirement::close_step(retirement.as_mut(), 1, maximum_bytes)? {
-                store::SnapshotRetirementStep::Complete if store::ErasedSnapshotRetirement::terminal_is_empty(retirement.as_ref()) => {
-                    drop(self.retirement.take());
-                    Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 })
-                }
-                store::SnapshotRetirementStep::Complete => Err("Drawing clone retirement reported false terminal".into()),
-                step => Ok(step),
-            };
-        }
-        if let Some(layer) = self.layer.as_mut() {
-            return match layer.close_step(1, maximum_bytes)? {
-                store::SnapshotRetirementStep::Complete if layer.terminal_is_empty() => {
-                    drop(self.layer.take());
-                    Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 })
-                }
-                store::SnapshotRetirementStep::Complete => Err("Drawing active layer clone reported false terminal".into()),
-                step => Ok(step),
-            };
-        }
-        if let Some((key, value)) = self.pending_asset.take() {
-            *self.retirement = Some(Box::new(DrawingOwnedRetirement::new(DrawingRetirementOwner::AssetEntry { key, value: Some(value) })));
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
-        }
-        if let Some(value) = self.value.take() {
-            *self.retirement = Some(store::ArtifactOwnedValueRetirementFactory::retire_owned(&DrawingSnapshotRetirementFactory, value));
-            return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 });
-        }
-        self.terminal = true;
-        Ok(store::SnapshotRetirementStep::Complete)
-    }
-
-    fn terminal_is_empty(&self) -> bool {
-        self.terminal && self.value.is_none() && self.retirement.is_none() && self.layer.is_none() && self.pending_asset.is_none()
-    }
-}
-
-impl Drop for DrawingSnapshotCloneAuthority {
-    fn drop(&mut self) {
-        assert!(self.terminal_is_empty(), "Drawing snapshot clone reached Drop before exact handoff or cursor retirement");
-    }
+    let mut value = String::new();
+    value.try_reserve_exact(source.len()).map_err(|_| "drawing-store.initializer-string-admission")?;
+    value.push_str(source);
+    Ok(value)
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -2640,12 +2448,12 @@ impl DrawingStrokeCloneAuthority {
         let target = self.value.as_mut().ok_or("drawing-store.stroke-target")?;
         match self.phase {
             0 => {
-                target.cap = DrawingSnapshotCloneAuthority::clone_string(&source.cap)?;
+                target.cap = clone_drawing_string(&source.cap)?;
                 self.phase = 1;
                 cx.consume_fuel(source.cap.len().max(1) as u64);
             }
             1 => {
-                target.join = DrawingSnapshotCloneAuthority::clone_string(&source.join)?;
+                target.join = clone_drawing_string(&source.join)?;
                 self.phase = 2;
                 cx.consume_fuel(source.join.len().max(1) as u64);
             }
@@ -3363,9 +3171,6 @@ impl DrawingLayerDigestAuthority {
         self.terminal = true;
     }
 
-    fn terminal_is_empty(&self) -> bool {
-        self.terminal && self.fill.is_none() && self.stroke.is_none() && self.variant.is_none()
-    }
 }
 
 struct DrawingMutationDigestAuthority {
@@ -4021,6 +3826,7 @@ impl DrawingMutationCandidateAuthority {
         Ok(Self::from_arena(operation, generation, arena_pool, arena_slot, arena_generation, owner))
     }
 
+    #[cfg(test)]
     fn try_new_from_pool(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, pool: std::sync::Arc<DrawingMutationArenaPool>) -> Result<Self, &'static str> {
         let (arena_pool, arena_slot, arena_generation, owner) = borrow_drawing_mutation_arena_from(pool)?;
         Ok(Self::from_arena(operation, generation, arena_pool, arena_slot, arena_generation, owner))
@@ -4834,12 +4640,12 @@ enum DrawingStoreInitializationPhase {
     ApplyForward { position: usize, edit: usize, mutation: usize },
     HashInverse { position: usize, edit: usize, mutation: usize },
     PrepareApplied { position: usize, edit: usize, field: u8 },
-    CommitApplied { position: usize, edit: usize },
+    CommitApplied { position: usize },
     FindRedo { position: usize, scan: usize },
     HashRedoForward { position: usize, edit: usize, mutation: usize },
     HashRedoInverse { position: usize, edit: usize, mutation: usize },
     PrepareRedo { position: usize, edit: usize },
-    CommitRedo { position: usize, edit: usize },
+    CommitRedo { position: usize },
     BuildCandidate,
     RetireCancelled,
     RetireFault,
@@ -5261,24 +5067,24 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<DrawingSnapsho
                 let entry = self.envelope.as_ref().and_then(|envelope| envelope.vcs.edits.get(edit)).expect("Drawing applied edit remains retained");
                 match field {
                     0 => {
-                        *self.prepared_history_id = Some(DrawingSnapshotCloneAuthority::clone_string(&entry.id).expect("validated Drawing applied id remains admitted"));
+                        *self.prepared_history_id = Some(clone_drawing_string(&entry.id).expect("validated Drawing applied id remains admitted"));
                         self.phase = DrawingStoreInitializationPhase::PrepareApplied { position, edit, field: 1 };
                         cx.consume_fuel(entry.id.len().max(1) as u64);
                     }
                     1 => {
                         if let Some(actor) = entry.actor.as_deref() {
-                            *self.prepared_actor = Some(DrawingSnapshotCloneAuthority::clone_string(actor).expect("validated Drawing actor remains admitted"));
+                            *self.prepared_actor = Some(clone_drawing_string(actor).expect("validated Drawing actor remains admitted"));
                             cx.consume_fuel(actor.len().max(1) as u64);
                         } else {
                             cx.consume_fuel(1);
                         }
-                        self.phase = DrawingStoreInitializationPhase::CommitApplied { position, edit };
+                        self.phase = DrawingStoreInitializationPhase::CommitApplied { position };
                     }
                     _ => self.fail(b"drawing-store.initializer-applied-preparation"),
                 }
                 semio_framework_job::StepOutcome::Yield
             }
-            DrawingStoreInitializationPhase::CommitApplied { position, edit } => {
+            DrawingStoreInitializationPhase::CommitApplied { position } => {
                 let id = self.prepared_history_id.take().expect("Drawing applied id was retained in its own preparation grant");
                 let actor = self.prepared_actor.take();
                 let digest = self.edit_digest.take().expect("Drawing applied edit digest remains retained").finish();
@@ -5360,12 +5166,12 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<DrawingSnapsho
             }
             DrawingStoreInitializationPhase::PrepareRedo { position, edit } => {
                 let id = &self.envelope.as_ref().and_then(|envelope| envelope.vcs.edits.get(edit)).expect("Drawing redo edit remains retained").id;
-                *self.prepared_history_id = Some(DrawingSnapshotCloneAuthority::clone_string(id).expect("validated Drawing redo id remains admitted"));
-                self.phase = DrawingStoreInitializationPhase::CommitRedo { position, edit };
+                *self.prepared_history_id = Some(clone_drawing_string(id).expect("validated Drawing redo id remains admitted"));
+                self.phase = DrawingStoreInitializationPhase::CommitRedo { position };
                 cx.consume_fuel(id.len().max(1) as u64);
                 semio_framework_job::StepOutcome::Yield
             }
-            DrawingStoreInitializationPhase::CommitRedo { position, edit } => {
+            DrawingStoreInitializationPhase::CommitRedo { position } => {
                 let id = self.prepared_history_id.take().expect("Drawing redo id was retained in its own preparation grant");
                 let digest = self.edit_digest.take().expect("Drawing redo digest remains retained").finish();
                 if let Err(error) = self.runtime.as_mut().expect("Drawing runtime remains retained").push_redo(id, digest) {
@@ -6095,7 +5901,7 @@ mod retained_mutation_authority_tests {
         let source_owner = source.as_ptr();
         let reverse_owner = reverse.as_ptr();
         let output_owner = output.as_ptr();
-        let mut authority = DrawingContainerRebuildAuthority::new(source, Some(0), Some(1), Some(pending), reverse, output, reservation).expect("fixed Drawing rebuild admitted");
+        let mut authority = DrawingContainerRebuildAuthority::new(source, Some(0), Some(1), Some(pending), reverse, output, reservation).unwrap_or_else(|_| panic!("fixed Drawing rebuild admitted"));
         assert!(authority.take().is_none(), "false terminal cannot expose a partially rebuilt owner");
         let cancel = semio_framework_job::root_cancel_token();
         let mut preview_sequence = 0;

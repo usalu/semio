@@ -1,0 +1,9 @@
+{
+  "name": "Plan / Entwurf",
+  "pageCount": 0,
+  "activePage": "page-1",
+  "cases": [
+    { "locale": "en-US", "heading": "Inspection", "lines": ["Schema: layout.layout", "Name: Plan / Entwurf", "Pages: 0", "Active page: page-1"] },
+    { "locale": "de-DE", "heading": "Inspektion", "lines": ["Schema: layout.layout", "Name: Plan / Entwurf", "Seiten: 0", "Aktive Seite: page-1"] }
+  ]
+}

@@ -35,7 +35,7 @@ pub fn definition() -> WindowKindDefinition {
 /// 🌳️ One root node per step (labeled with the step title, falling back to its id when the title is
 /// empty), one leaf child per block (labeled `"<label> (<kind>)"`) — a faithful, read-only reflection
 /// of the same step/block nesting the editor's block-list builder edits.
-pub fn render(spec: &PlaybookSnapshot) -> semio_framework_plugin::UiNode {
+pub fn render(spec: &PlaybookSnapshot) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let roots = spec
         .steps()
         .into_iter()
@@ -93,8 +93,8 @@ mod tests {
     async fn render_nests_every_blocks_label_and_kind_under_its_own_step() {
         let step = PlaybookStep { id: "s1".into(), title: "Intro".into(), description: None, blocks: vec![sample_block("b1", "Name", "text")] };
         let spec = playbook_snapshot_with_steps("playbook.program", "playbook", "1", Some("Recipe".into()), vec![step]);
-        let node = render(&spec);
-        let json = protocol::json::to_json_string(&node);
+        let node = render(&spec).expect("steps tree");
+        let json = serde_json::to_string(&node).expect("serialize semantic UI fixture");
         assert!(json.contains("Intro"), "step title must appear as a root node label: {json}");
         assert!(json.contains("Name (text)"), "block label+kind must appear as a leaf node label: {json}");
     }
@@ -103,8 +103,8 @@ mod tests {
     async fn render_falls_back_to_the_step_id_when_the_title_is_empty() {
         let step = PlaybookStep { id: "s1".into(), title: String::new(), description: None, blocks: Vec::new() };
         let spec = playbook_snapshot_with_steps("playbook.program", "playbook", "1", None, vec![step]);
-        let node = render(&spec);
-        let json = protocol::json::to_json_string(&node);
+        let node = render(&spec).expect("steps tree");
+        let json = serde_json::to_string(&node).expect("serialize semantic UI fixture");
         assert!(json.contains("\"s1\""), "an empty step title must fall back to the step id: {json}");
     }
 }

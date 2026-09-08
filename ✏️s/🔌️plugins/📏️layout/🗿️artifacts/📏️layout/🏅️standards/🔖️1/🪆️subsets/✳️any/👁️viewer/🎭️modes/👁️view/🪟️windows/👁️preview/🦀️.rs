@@ -11,16 +11,14 @@
 
 use crate::artifacts::layout::schema::resolve_page;
 use crate::artifacts::layout::{Frame, LayoutSnapshot};
-use semio_framework_plugin::{build_canvas_2d_scene, Canvas2dScene, LocalizedLabel, SurfaceKind, UiNode, WindowKindDefinition, WindowOptions};
+use semio_framework_plugin::{Canvas2dScene, LocalizedLabel, SurfaceKind, WindowKindDefinition, WindowOptions};
 use serde_json::{json, Value};
 
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = "layout-view-preview";
 pub const BODY_KEY: &str = "layout.view.preview";
 pub const SURFACE_ID: &str = "layout.view.preview";
-/// 👁️ Read-only counterpart of the editor's `LAYOUT_PLAY_APP_ID` controller id — kept distinct so a
-/// viewer session's canvas controller can never be mistaken for an editor session's.
-const LAYOUT_VIEW_CONTROLLER_ID: &str = "layout-view";
+
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
@@ -93,8 +91,8 @@ fn viewer_canvas_layers(doc: &LayoutSnapshot) -> String {
 
 /// 👁️ Fixed default camera every render — a viewer has no persisted per-session camera (`Config =
 /// NoConfig`), matching cad's viewer's documented "default camera/sun" simplification.
-pub fn render(doc: &LayoutSnapshot) -> UiNode {
-    build_canvas_2d_scene(SURFACE_ID, LAYOUT_VIEW_CONTROLLER_ID, Canvas2dScene { camera_x: 0.0, camera_y: 0.0, zoom: 1.0, layers_json: viewer_canvas_layers(doc), snapshot: None })
+pub fn render(doc: &LayoutSnapshot) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+    semio_framework_plugin::scene_surface(SURFACE_ID, semio_framework_plugin::plugin_app_close_prelude::SurfaceKind::Canvas2d, &Canvas2dScene { camera_x: 0.0, camera_y: 0.0, zoom: 1.0, layers_json: viewer_canvas_layers(doc), snapshot: None })
 }
 //#endregion 🔖️Render
 
@@ -113,7 +111,8 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn render_produces_a_scene_node_for_the_default_document() {
         let document = crate::artifacts::layout::schema::default_document();
-        let _node = render(&document);
+        let node = render(&document).expect("layout preview surface");
+        assert!(matches!(node.component, semio_framework_plugin::plugin_app_close_prelude::Component::Surface(_)));
     }
 
     #[semio_framework_async_macros::async_test]

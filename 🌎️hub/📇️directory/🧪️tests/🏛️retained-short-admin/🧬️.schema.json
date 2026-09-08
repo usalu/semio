@@ -1,0 +1,84 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.tech/schemas/hub/retained-short-admin-v1.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "capacity", "cases", "adminEffectCommitOutcomes", "crossCuttingOutcomes", "sourceHostiles"],
+  "properties": {
+    "schema": { "const": "semio.hub.retained-short-admin/v1" },
+    "capacity": { "type": "integer", "minimum": 1, "maximum": 64 },
+    "cases": {
+      "type": "array",
+      "minItems": 15,
+      "maxItems": 15,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "accepted", "requestDropped", "cancelBeforeEffect", "effectStarted", "effectCommitted", "effectReceiptStored", "receiptDigestMatches", "terminalStored", "state", "effectCount", "secretDeliveries"],
+        "properties": {
+          "name": { "type": "string", "minLength": 1, "maxLength": 64 },
+          "accepted": { "type": "boolean" },
+          "requestDropped": { "type": "boolean" },
+          "cancelBeforeEffect": { "type": "boolean" },
+          "effectStarted": { "type": "boolean" },
+          "effectCommitted": { "type": "boolean" },
+          "effectReceiptStored": { "type": "boolean" },
+          "receiptDigestMatches": { "type": "boolean" },
+          "terminalStored": { "type": "boolean" },
+          "state": { "enum": ["accepted", "indeterminate", "succeeded", "failed", "cancelled", "conflict"] },
+          "effectCount": { "type": "integer", "minimum": 0, "maximum": 1 },
+          "secretDeliveries": { "type": "integer", "minimum": 0, "maximum": 1 }
+        }
+      }
+    },
+    "adminEffectCommitOutcomes": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "cases"],
+      "properties": {
+        "schema": { "const": "semio.hub.admin-effect-commit-outcome/v1" },
+        "cases": {
+          "type": "array",
+          "minItems": 21,
+          "maxItems": 21,
+          "items": { "$ref": "#/$defs/commitOutcome" }
+        }
+      }
+    },
+    "crossCuttingOutcomes": {
+      "type": "array",
+      "minItems": 6,
+      "maxItems": 6,
+      "items": { "$ref": "#/$defs/commitOutcome" }
+    },
+    "sourceHostiles": {
+      "type": "array",
+      "minItems": 25,
+      "maxItems": 25,
+      "uniqueItems": true,
+      "items": {
+        "enum": ["short-effect-inline", "task-owner-removed", "terminal-before-effect", "request-drop-cancels-task", "stale-accepted-claims-cancelled", "capacity-unbounded", "secret-retained-for-retry", "shutdown-aborts-without-drain", "cancel-check-store-race", "secret-public-before-terminal", "terminal-single-attempt", "public-result-not-zeroizing", "effect-receipt-outside-writer", "stale-reconciler-skips-receipt", "effect-receipt-omits-intent-digest", "effect-receipt-replays-secret", "commit-ack-timeout-records-failed", "admitted-writer-request-timeout", "admin-effect-open-error-vocabulary", "semantic-refusal-without-rollback-proof", "rollback-error-records-failed", "commit-error-records-failed", "invite-outcome-collapsed", "session-outcome-collapsed", "event-outcome-collapsed"]
+      }
+    }
+  },
+  "$defs": {
+    "commitOutcome": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "method", "driverOutcome", "initialHttp", "retryState", "cancelState", "writerEntries", "effectCount", "receiptCount", "terminalCount", "secretDeliveries"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1, "maxLength": 96 },
+        "method": { "enum": ["create-space", "directory-event", "issue-share", "revoke-share", "revoke-sessions", "issue-invite", "revoke-invite"] },
+        "driverOutcome": { "enum": ["applied", "rejected-before-commit", "indeterminate-no-receipt", "indeterminate-after-commit"] },
+        "initialHttp": { "enum": [200, 503] },
+        "retryState": { "enum": ["accepted", "indeterminate", "succeeded", "failed", "cancelled", "conflict"] },
+        "cancelState": { "enum": ["cancelled", "failed", "conflict"] },
+        "writerEntries": { "type": "integer", "minimum": 0, "maximum": 1 },
+        "effectCount": { "type": "integer", "minimum": 0, "maximum": 1 },
+        "receiptCount": { "type": "integer", "minimum": 0, "maximum": 1 },
+        "terminalCount": { "type": "integer", "minimum": 0, "maximum": 1 },
+        "secretDeliveries": { "type": "integer", "minimum": 0, "maximum": 1 }
+      }
+    }
+  }
+}

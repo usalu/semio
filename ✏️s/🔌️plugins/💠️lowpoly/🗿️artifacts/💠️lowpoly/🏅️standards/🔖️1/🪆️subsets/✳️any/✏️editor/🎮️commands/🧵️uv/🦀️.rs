@@ -6,6 +6,7 @@ use crate::editor::lowpoly::config::{LowpolyConfig, LowpolyConfigMutation};
 use crate::editor::lowpoly::session::{map_kernel_err, mesh_edit, LowpolyScratch};
 use semio_framework_3d::mesh::EdgeId;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+#[cfg(test)]
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️UnwrapActive

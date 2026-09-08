@@ -82,9 +82,9 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn every_authored_action_is_localized_in_english_and_german() {
         for action in actions() {
-            assert_ne!(action.label.native(), action.label.secondary(), "action {} is not really translated", action.id);
+            assert!(semio_framework::Terminology::ALL.iter().all(|&terminology| action.label.resolve(terminology, semio_framework::Locale::En) != action.label.resolve(terminology, semio_framework::Locale::De)), "action {} is not really translated", action.id);
             for arg in &action.args {
-                assert_ne!(arg.label.native(), arg.label.secondary(), "arg {} of action {} is not really translated", arg.id, action.id);
+                assert!(semio_framework::Terminology::ALL.iter().all(|&terminology| arg.label.resolve(terminology, semio_framework::Locale::En) != arg.label.resolve(terminology, semio_framework::Locale::De)), "arg {} of action {} is not really translated", arg.id, action.id);
             }
         }
     }
@@ -93,7 +93,7 @@ mod tests {
     async fn render_lists_one_row_per_zone() {
         let document = EnergyModelSnapshot::default();
         let table = render(&document).expect("the table window assembles");
-        assert_eq!(table.key, WINDOW_KIND_ID);
+        assert_eq!(table.key.as_str(), WINDOW_KIND_ID);
         assert!(table.children.is_empty());
     }
 }

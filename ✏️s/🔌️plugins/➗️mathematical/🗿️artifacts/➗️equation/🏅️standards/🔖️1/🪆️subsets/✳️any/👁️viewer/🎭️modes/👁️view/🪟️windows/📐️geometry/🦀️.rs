@@ -53,13 +53,12 @@ mod tests {
         let document = EquationSnapshot::default();
         let points = equation_geometry(&document).points;
         assert!(!points.is_empty());
-        // 🌱️ `UiNode` (`semio-framework-plugin`, framework-owned) has not itself gained `ToValue` —
-        // `Debug` gives the same "does the render mention X" substring check.
-        let debug = format!("{:?}", render(&document));
-        assert!(debug.to_lowercase().contains("table"));
-        for point in &points {
-            assert!(debug.contains(&format!("{}", point.x)), "row for x={} missing from rendered table: {debug}", point.x);
-        }
+        let node = render(&document).expect("table surface");
+        let semio_framework_plugin::plugin_app_close_prelude::Component::Surface(props) = node.component else { panic!("viewer must render a table surface") };
+        let scene: semio_framework_ui_scene::TableScene = semio_framework_ui_scene::decode(&props).expect("table payload");
+        assert_eq!(serde_json::from_str::<Vec<String>>(&scene.columns_json).unwrap(), ["#", "x", "y"]);
+        let expected: Vec<Vec<String>> = points.iter().enumerate().map(|(index, point)| vec![index.to_string(), point.x.to_string(), point.y.to_string()]).collect();
+        assert_eq!(serde_json::from_str::<Vec<Vec<String>>>(&scene.rows_json).unwrap(), expected);
     }
 }
 //#endregion 🧪️Tests

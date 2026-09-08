@@ -25,7 +25,7 @@ impl Default for LowpolyPresence {
 
 impl protocol::MutationDiff<LowpolyPresence> for LowpolyPresence {
     fn apply(&self, _base: &LowpolyPresence) -> protocol::MutationApplyResult<LowpolyPresence> {
-        Ok({ self.clone() })
+        Ok(self.clone())
     }
     fn absorb(&mut self, other: Self) {
         *self = other;

@@ -1,0 +1,34 @@
+{
+  "name": "@semio-tech/repo-test-dotnet",
+  "projectType": "library",
+  "tags": [
+    "language:dotnet"
+  ],
+  "targets": {
+    "deps": {
+      "cache": false,
+      "parallelism": false,
+      "outputs": [],
+      "options": {
+        "command": "bun ./📜️script.ts deps"
+      }
+    },
+    "build": {
+      "cache": true,
+      "parallelism": false,
+      "dependsOn": [
+        "deps"
+      ],
+      "inputs": [
+        "production",
+        "^production"
+      ],
+      "outputs": [
+        "{projectRoot}/dist/build"
+      ],
+      "options": {
+        "command": "bun ./📜️script.ts build"
+      }
+    }
+  }
+}

@@ -46,10 +46,6 @@ crate::component_persistent_local! {
     static COMMAND_INGRESS: RefCell<[Option<RetainedCommandIngress>; 2]> = RefCell::new([None, None]);
 }
 
-fn native_close_key_fault(message: &'static str) -> semio_framework::Fault {
-    reactor_close_fault(message)
-}
-
 fn native_close_key<PA: crate::app::PluginApp>(runtime: &crate::plugin_runtime::PluginRuntime<PA>, instance: u32) -> Result<instance_lifetime::NativeCloseKey, semio_framework::Fault> {
     let lifetimes = runtime.guest_lifetimes.try_borrow().map_err(|_| reactor_close_fault("lifecycle authority busy"))?;
     lifetimes.get(instance).filter(|slot| slot.cell.is_live()).and_then(|slot| slot.cell.owner()).map(|owner| owner.key()).ok_or_else(|| reactor_close_fault("instance has no acknowledged live lifetime"))
@@ -960,11 +956,13 @@ pub fn drain_task_resumes<PA: crate::app::PluginApp>(runtime: &crate::plugin_run
             continue;
         }
         let input = match resume.outcome {
+            #[cfg(test)]
             TaskResumeOutcome::Fault(fault) => {
                 effects.push(shell_fault_effect(resume.instance, &fault));
                 continue;
             }
             TaskResumeOutcome::Command(bytes) => crate::plugin_runtime::TaskResumeInput::Command(bytes),
+            #[cfg(test)]
             TaskResumeOutcome::Emit { artifact_ops, config_ops, draft_ops } => crate::plugin_runtime::TaskResumeInput::Emit { artifact_ops, config_ops, draft_ops },
         };
         // 🚫️async: E5 executor bridge — `plugin_resume_task` stays genuinely `async fn`; see

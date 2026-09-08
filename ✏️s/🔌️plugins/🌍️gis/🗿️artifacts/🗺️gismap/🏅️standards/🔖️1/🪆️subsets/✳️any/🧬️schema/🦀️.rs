@@ -10,8 +10,9 @@ use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::base::schema
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::drawing::io::export::serializers::artifacts::svg::v1_1::any::SemioDrawingToSvg;
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::{DrawCanvas, DrawLayer, DrawNode, DrawStyle, PathSegment, SemioDrawingSnapshot};
 use semio_s_plugin_stdio::artifacts::svg::SvgSnapshot;
+#[cfg(test)]
 use serde::{Deserialize, Serialize};
-use serde_json::{json, Value};
+use serde_json::Value;
 use std::collections::{BTreeMap, HashSet};
 use dsl::{FromValue, ToValue};
 

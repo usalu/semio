@@ -1,5 +1,5 @@
 // #region 🧲️Header
-/** @emoji 🎭️ `@semio-tech/cad-js/stately` — `@semio-tech/machine`-backed `StateEngine` for `InteractionSpec.machine`; transitions mirror spec while `applyTransition` owns effects. See `.🦑️repo/✍️/spatial.md`. Was XState-backed; ported to the in-house statechart kernel (Wave 8, runtime-dependency-elimination) — see the kernel's own flat/guarded fixture tests in `🧰️framework/🔨️modules/🔄️machine/🟦️.ts`. */
+/** @emoji 🎭️ `@semio-tech/cad-js/stately` — `@semio-tech/machine`-backed `StateEngine` for `InteractionSpec.machine`; transitions mirror spec while `applyTransition` owns effects. See `.🧬semio/🦑️repo/✍️/spatial.md`. Was XState-backed; ported to the in-house statechart kernel (Wave 8, runtime-dependency-elimination) — see the kernel's own flat/guarded fixture tests in `🧰️framework/🔨️modules/🔄️machine/🟦️.ts`. */
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters

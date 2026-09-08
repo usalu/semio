@@ -48,11 +48,11 @@ mod tests {
         use crate::artifacts::equation::standards::v1::subsets::graph::schema::mutations::update_graph_algorithm::UpdateGraphAlgorithm;
         let initial = EquationSnapshot::default();
         let envelope = store::create_document_envelope(crate::artifacts::equation::MATH_DOCUMENT_SCHEMA, "math-demo", initial, None);
-        let mut store = store::ArtifactStore::new(envelope).expect("valid artifact store fixture");
+        let mut store = store::ArtifactStore::new(envelope).await.expect("valid artifact store fixture");
         let mutation = UpdateGraphAlgorithm { new_algorithm: "components".into(), new_algorithm_seed: None };
-        store.dispatch(store::ArtifactCommand::Apply { mutations: vec![EquationMutation::UpdateGraphAlgorithm(mutation)], description: None }).expect("apply");
-        store::os_store::test_support::assert_document_text_round_trip(&store);
-        store::os_store::test_support::assert_document_pack_round_trip(&store);
+        store.dispatch(store::ArtifactCommand::Apply { mutations: vec![EquationMutation::UpdateGraphAlgorithm(mutation)], description: None }).await.expect("apply");
+        store::os_store::test_support::assert_document_text_round_trip(&store).await;
+        store::os_store::test_support::assert_document_pack_round_trip(&store).await;
     }
 }
 //#endregion 🧪️Tests

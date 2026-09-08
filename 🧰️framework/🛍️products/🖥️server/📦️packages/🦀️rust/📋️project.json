@@ -4,9 +4,16 @@
   "root": "🧰️framework/🛍️products/🖥️server/📦️packages/🦀️rust",
   "sourceRoot": "🧰️framework/🛍️products/🖥️server/📦️packages/🦀️rust",
   "projectType": "library",
-  "tags": ["lang:rust", "role:product", "family:server"],
+  "tags": [
+    "lang:rust",
+    "role:product",
+    "family:server"
+  ],
   "namedInputs": {
-    "default": ["{workspaceRoot}/🧰️framework/🛍️products/🖥️server/**/*.rs", "{projectRoot}/**/*"]
+    "default": [
+      "{workspaceRoot}/🧰️framework/🛍️products/🖥️server/**/*.rs",
+      "{projectRoot}/**/*"
+    ]
   },
   "targets": {
     "build": {
@@ -15,7 +22,11 @@
         "cwd": "🧰️framework/🛍️products/🖥️server/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts build",
         "forwardAllArgs": true
-      }
+      },
+      "cache": true,
+      "outputs": [
+        "{projectRoot}/dist/build"
+      ]
     },
     "test": {
       "executor": "nx:run-commands",

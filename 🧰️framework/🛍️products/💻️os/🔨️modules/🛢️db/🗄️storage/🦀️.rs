@@ -4,7 +4,7 @@
 //! the sibling `db_storage_sqlite`/`db_storage_postgres`/`db_storage_neo4j` modules) implements
 //! identically, so `db_engine`/the `db` facade select a backend via [`DbBackend`] at
 //! `Database::open` rather than at compile time. Frozen contract:
-//! `.🦑️repo/🎫️tickets/26/07/27/INTRODUCE-DB-PROTOCOL-COMMAND-LAYER-AND-VCS-SLIMMING/contract.md`
+//! `.🧬semio/🦑️repo/🎫️tickets/26/07/27/INTRODUCE-DB-PROTOCOL-COMMAND-LAYER-AND-VCS-SLIMMING/contract.md`
 //! (`## db crate family`).
 //!
 //! 🎯️ Design choice: this crate has no opinion on WAL record framing (`db_wal` reuses
@@ -2024,16 +2024,16 @@ pub enum WalSegmentState {
 pub enum DbIoTask {
     BackendOpen { backend: DbIoBackendControl, path: DbIoText },
     WalWriterAcquire { backend: DbIoBackendControl, document: DbIoText },
-    WalCreate { backend: DbIoBackendControl, document: DbIoText, writer: writer::WalWriterKey, index: u64 },
-    WalAppend { backend: DbIoBackendControl, document: DbIoText, writer: writer::WalWriterKey, index: u64, input: DbIoPages },
-    WalSync { backend: DbIoBackendControl, document: DbIoText, writer: writer::WalWriterKey, index: u64, class: DurabilityClass },
-    WalSeal { backend: DbIoBackendControl, document: DbIoText, writer: writer::WalWriterKey, index: u64 },
+    WalCreate { backend: DbIoBackendControl, document: DbIoText, writer: WalWriterKey, index: u64 },
+    WalAppend { backend: DbIoBackendControl, document: DbIoText, writer: WalWriterKey, index: u64, input: DbIoPages },
+    WalSync { backend: DbIoBackendControl, document: DbIoText, writer: WalWriterKey, index: u64, class: DurabilityClass },
+    WalSeal { backend: DbIoBackendControl, document: DbIoText, writer: WalWriterKey, index: u64 },
     WalRead { backend: DbIoBackendControl, document: DbIoText, index: u64, range: ByteRange, output: DbIoPageWriter },
     WalLength { backend: DbIoBackendControl, document: DbIoText, index: u64 },
     WalState { backend: DbIoBackendControl, document: DbIoText, index: u64 },
     WalList { backend: DbIoBackendControl, document: DbIoText, output: DbIoU64List },
-    WalTruncate { backend: DbIoBackendControl, document: DbIoText, writer: writer::WalWriterKey, index: u64, new_len: u64 },
-    WalDelete { backend: DbIoBackendControl, document: DbIoText, writer: writer::WalWriterKey, index: u64 },
+    WalTruncate { backend: DbIoBackendControl, document: DbIoText, writer: WalWriterKey, index: u64, new_len: u64 },
+    WalDelete { backend: DbIoBackendControl, document: DbIoText, writer: WalWriterKey, index: u64 },
     SnapshotWrite { backend: DbIoBackendControl, document: DbIoText, generation: u64, input: DbIoPages },
     SnapshotRead { backend: DbIoBackendControl, document: DbIoText, generation: u64, output: DbIoPageWriter },
     SnapshotLatest { backend: DbIoBackendControl, document: DbIoText, output: DbIoU64List },
@@ -2146,7 +2146,7 @@ pub enum DbIoTaskPhase {
 }
 
 impl DbIoTask {
-    pub(crate) fn writer_stamp(&self) -> Option<(writer::WalWriterKey, DbIoBackendControl, &DbIoText)> {
+    pub(crate) fn writer_stamp(&self) -> Option<(WalWriterKey, DbIoBackendControl, &DbIoText)> {
         match self {
             Self::WalCreate { writer, backend, document, .. }
             | Self::WalAppend { writer, backend, document, .. }
@@ -7055,9 +7055,8 @@ mod fs_storage {
     use super::check_len;
     use super::writer::{WalFileWriterGuard, WalWriterTable};
     use super::{
-        close_db_io_backend, register_db_io_backend_prepared_with_use, retire_db_io_backend, submit_db_io_task, ArtifactId, ByteRange, ContentHash, DbError, DbIoAsyncDriverFuture, DbIoBackendControl, DbIoBackendKind,
-        DbIoBackendRollbackReservation, DbIoExecutionStep, DbIoPageWriter, DbIoPageWriterRejected, DbIoPages, DbIoResult, DbIoTask, DbIoTaskExecutor, DbIoText, DbIoU64List, DbStorageOpenRejected, DurabilityClass, EpochFence, LeaseInfo,
-        DB_IO_MAX_READ_BYTES,
+        close_db_io_backend, register_db_io_backend_prepared_with_use, retire_db_io_backend, submit_db_io_task, ArtifactId, ByteRange, ContentHash, DbError, DbIoAsyncDriverFuture, DbIoBackendControl, DbIoBackendKind, DbIoBackendRollbackReservation,
+        DbIoExecutionStep, DbIoPageWriter, DbIoPageWriterRejected, DbIoPages, DbIoResult, DbIoTask, DbIoTaskExecutor, DbIoText, DbIoU64List, DbStorageOpenRejected, DurabilityClass, EpochFence, LeaseInfo, DB_IO_MAX_READ_BYTES,
     };
     use super::{CatalogStorage, DbIoWriterReleaseStep, IndexStorage, LeaseStorage, PayloadStorage, SnapshotStorage, StorageCapabilities, WalSegmentState, WalStorage, WalWriterPermit};
     use semio_framework_async::WorkerPool;
@@ -8128,11 +8127,12 @@ mod fs_storage {
             let rollback = DbIoBackendRollbackReservation::try_reserve()?;
             let pool_use = pool.acquire_use().map_err(|error| DbError::Unavailable(format!("filesystem DB I/O backend WorkerPool use rejected: {error:?}")))?;
             let control = register_db_io_backend_prepared_with_use(DbIoBackendKind::Filesystem, Box::new(FsDbIoExecutor::new(root.clone())), pool.clone(), pool_use, rollback)?;
+            let storage = Self { control, pool, closed: std::sync::atomic::AtomicBool::new(false) };
             let task = DbIoTask::BackendOpen { backend: control, path: root };
             if let Err(error) = execute(task).await {
                 return Err(DbStorageOpenRejected::registered(error, control));
             }
-            Ok(Self { control, pool, closed: std::sync::atomic::AtomicBool::new(false) })
+            Ok(storage)
         }
 
         pub async fn close(&self) -> Result<(), DbError> {
@@ -10647,6 +10647,127 @@ mod db_io_retained_fixtures {
             close_db_io_backend(control).await.unwrap();
         }
         assert_eq!(ledger_witness(), before);
+    }
+
+    #[cfg(all(feature = "fs", feature = "sqlite", not(target_arch = "wasm32")))]
+    async fn open_real_storage_fixture(backend: &str, pool: Arc<WorkerPool>, path: &std::path::Path) -> Result<(), DbStorageOpenRejected> {
+        match backend {
+            "fs" => drop(FsStorage::open(pool, path).await?),
+            "sqlite" => drop(crate::db_storage_sqlite::SqliteStorage::open(pool, path).await?),
+            _ => panic!("unknown physical storage fixture"),
+        }
+        Ok(())
+    }
+
+    #[cfg(all(feature = "fs", feature = "sqlite", not(target_arch = "wasm32")))]
+    fn opening_fixture_control(pool: &Arc<WorkerPool>) -> DbIoBackendControl {
+        let registry = lock(db_io_backend_registry());
+        let (index, slot) = registry.slots.iter().enumerate().find(|(_, slot)| slot.pool.as_ref().is_some_and(|registered| Arc::ptr_eq(registered, pool))).expect("opening registered its exact pool");
+        db_io_backend_control(slot.kind, index as u16, slot.generation)
+    }
+
+    #[cfg(all(feature = "fs", feature = "sqlite", not(target_arch = "wasm32")))]
+    fn opening_fixture_close_requested(control: DbIoBackendControl) -> bool {
+        let registry = lock(db_io_backend_registry());
+        let (index, generation) = db_io_backend_parts(control);
+        let slot = &registry.slots[index as usize];
+        slot.generation != generation || slot.close_requested
+    }
+
+    #[cfg(all(feature = "fs", feature = "sqlite", not(target_arch = "wasm32")))]
+    async fn drain_opening_fixture_pool(pool: &Arc<WorkerPool>) {
+        let deadline = std::time::Instant::now() + std::time::Duration::from_secs(10);
+        loop {
+            let retained = lock(db_io_backend_registry()).slots.iter().any(|slot| slot.pool.as_ref().is_some_and(|registered| Arc::ptr_eq(registered, pool)));
+            let tasks_retained = DB_IO_TASK_SLOTS.iter().any(|task| lock(task).pool.as_ref().is_some_and(|registered| Arc::ptr_eq(registered, pool)));
+            if !retained && !tasks_retained {
+                break;
+            }
+            assert!(std::time::Instant::now() < deadline, "opening Drop failed to retire the exact registered pool use");
+            db_io_maintenance_step().expect("opening terminal maintenance");
+            semio_framework_async::yield_once().await;
+        }
+    }
+
+    #[cfg(all(feature = "fs", feature = "sqlite", not(target_arch = "wasm32")))]
+    #[semio_framework_async_macros::async_test]
+    async fn db_io_real_storage_open_drop_retires_queued_backend_and_allows_reopen() {
+        let _serial = fixture_serial();
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🔐️backend-pool-use/🔣️.json")).unwrap();
+        for row in fixture["opening"].as_array().unwrap().iter().filter(|row| row["cause"] == "queued-drop") {
+            let before = ledger_witness();
+            let slots_before = lock(db_io_backend_registry()).free_len;
+            let backend = row["backend"].as_str().unwrap();
+            let root = std::path::PathBuf::from(std::env::var_os("SEMIO_TEST_ARTIFACT_DIR").expect("physical opening law requires its ticket artifact directory")).join(format!("storage-open-queued-{backend}-{}", std::process::id()));
+            let pool = Arc::new(WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 1)));
+            let (started_tx, started_rx) = std::sync::mpsc::channel();
+            let (release_tx, release_rx) = std::sync::mpsc::channel();
+            pool.try_submit(
+                Lane::Io,
+                Box::new(move || {
+                    let _ = started_tx.send(());
+                    let _ = release_rx.recv();
+                }),
+            )
+            .ok()
+            .expect("opening lane blocker admission");
+            started_rx.recv_timeout(std::time::Duration::from_secs(5)).expect("opening lane blocker starts");
+            let mut opening = Box::pin(open_real_storage_fixture(backend, pool.clone(), &root));
+            let pending = std::future::Future::poll(opening.as_mut(), &mut std::task::Context::from_waker(std::task::Waker::noop())).is_pending();
+            let control = opening_fixture_control(&pool);
+            assert_eq!(pool.shutdown(), Err(semio_framework_async::WorkerPoolShutdownError::Busy { retained_uses: 1 }));
+            drop(opening);
+            let close_requested = opening_fixture_close_requested(control);
+            release_tx.send(()).expect("opening lane blocker release");
+            assert!(pending, "actual BackendOpen remained queued before cancellation");
+            assert_eq!(close_requested, row["closeRequestedBeforeRetry"].as_bool().unwrap(), "cancelled {backend} opening must request close before any caller retry");
+            drain_opening_fixture_pool(&pool).await;
+            assert_eq!(ledger_witness() == before && lock(db_io_backend_registry()).free_len == slots_before, row["ledgerBaseline"].as_bool().unwrap(), "cancelled {backend} registration returns exact credit and slot");
+            assert_eq!(open_real_storage_fixture(backend, pool.clone(), &root).await.is_ok(), row["reopens"].as_bool().unwrap(), "fresh {backend} storage opens after cancellation");
+            drain_opening_fixture_pool(&pool).await;
+            assert_eq!(pool.shutdown().is_ok(), row["poolShutdownAfterDrain"].as_bool().unwrap());
+            assert_eq!(ledger_witness(), before);
+            assert_eq!(lock(db_io_backend_registry()).free_len, slots_before);
+            eprintln!("[DEBUG] real-storage-open: backend={backend} cause=queued-drop close-requested={close_requested} ledger=baseline reopened=true pool=terminal");
+        }
+    }
+
+    #[cfg(all(feature = "fs", feature = "sqlite", not(target_arch = "wasm32")))]
+    #[semio_framework_async_macros::async_test]
+    async fn db_io_real_storage_open_fault_drop_retires_registered_backend_without_retry() {
+        let _serial = fixture_serial();
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🔐️backend-pool-use/🔣️.json")).unwrap();
+        for row in fixture["opening"].as_array().unwrap().iter().filter(|row| row["cause"] == "path-type-conflict") {
+            let before = ledger_witness();
+            let slots_before = lock(db_io_backend_registry()).free_len;
+            let backend = row["backend"].as_str().unwrap();
+            let root = std::path::PathBuf::from(std::env::var_os("SEMIO_TEST_ARTIFACT_DIR").expect("physical opening law requires its ticket artifact directory")).join(format!("storage-open-fault-{backend}-{}", std::process::id()));
+            std::fs::create_dir_all(&root).unwrap();
+            let bad = root.join("wrong-physical-type");
+            if backend == "fs" {
+                std::fs::write(&bad, b"not a directory").unwrap();
+            } else {
+                std::fs::create_dir_all(&bad).unwrap();
+                assert!(rusqlite::Connection::open(&bad).is_err(), "independent SQLite rejects the same physical directory path");
+            }
+            let pool = Arc::new(WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, 1)));
+            let rejected = open_real_storage_fixture(backend, pool.clone(), &bad).await.expect_err("physical BackendOpen must reject the wrong filesystem type");
+            let control = match &rejected {
+                DbStorageOpenRejected::Registered { control, .. } => *control,
+                _ => panic!("physical opening fault lost its registered backend"),
+            };
+            let close_requested = opening_fixture_close_requested(control);
+            drop(rejected);
+            assert_eq!(close_requested, row["closeRequestedBeforeRetry"].as_bool().unwrap(), "failed {backend} opening must already own deferred close");
+            drain_opening_fixture_pool(&pool).await;
+            assert_eq!(ledger_witness() == before && lock(db_io_backend_registry()).free_len == slots_before, row["ledgerBaseline"].as_bool().unwrap());
+            assert_eq!(open_real_storage_fixture(backend, pool.clone(), &root.join("recovered")).await.is_ok(), row["reopens"].as_bool().unwrap());
+            drain_opening_fixture_pool(&pool).await;
+            assert_eq!(pool.shutdown().is_ok(), row["poolShutdownAfterDrain"].as_bool().unwrap());
+            assert_eq!(ledger_witness(), before);
+            assert_eq!(lock(db_io_backend_registry()).free_len, slots_before);
+            eprintln!("[DEBUG] real-storage-open: backend={backend} cause=path-type-conflict close-requested={close_requested} ledger=baseline reopened=true pool=terminal");
+        }
     }
 
     #[semio_framework_async_macros::async_test]

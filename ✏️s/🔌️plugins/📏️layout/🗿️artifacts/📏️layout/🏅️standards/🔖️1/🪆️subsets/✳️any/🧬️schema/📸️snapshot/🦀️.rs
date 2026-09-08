@@ -1,9 +1,9 @@
 //! 🧬️ Layout snapshot schema — artifact-lane fields only.
 
-use crate::artifacts::layout::{CharacterStyle, Frame, GridSettings, ImageLink, Layer, LayoutDrawingChild, Page, PageColumns, PageMargins, ParagraphStyle, ParentPage, Spread, TextStory, LAYOUT_DOCUMENT_SCHEMA};
+use crate::artifacts::layout::{CharacterStyle, GridSettings, ImageLink, LayoutDrawingChild, Page, ParagraphStyle, ParentPage, Spread, TextStory, LAYOUT_DOCUMENT_SCHEMA};
 use schema::ArtifactSchema;
 #[cfg(test)]
-use serde::{Deserialize, Serialize};
+use crate::artifacts::layout::Frame;
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Snapshot
@@ -18,8 +18,6 @@ use semio_framework_value_derive::{FromValue, ToValue};
 /// field's text/binary shape is now hand-rolled below instead (JSON-then-hex for structured fields,
 /// same convention cad's `📸️snapshot/🦀️.rs` established for this ticket).
 #[derive(Clone, Debug, PartialEq, ArtifactSchema, ToValue, FromValue)]
-#[cfg_attr(test, derive(Serialize, Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.layout.layout")]
 pub struct LayoutSnapshot {
@@ -30,11 +28,9 @@ pub struct LayoutSnapshot {
     #[state(artifact)]
     pub grid: GridSettings,
     #[state(artifact)]
-    #[cfg_attr(test, serde(rename = "paragraphStyles"))]
     #[value(rename = "paragraphStyles")]
     pub paragraph_styles: Vec<ParagraphStyle>,
     #[state(artifact)]
-    #[cfg_attr(test, serde(rename = "characterStyles"))]
     #[value(rename = "characterStyles")]
     pub character_styles: Vec<CharacterStyle>,
     #[state(artifact)]
@@ -42,7 +38,6 @@ pub struct LayoutSnapshot {
     #[state(artifact)]
     pub links: Vec<ImageLink>,
     #[state(artifact)]
-    #[cfg_attr(test, serde(rename = "parentPages"))]
     #[value(rename = "parentPages")]
     pub parent_pages: Vec<ParentPage>,
     #[state(artifact)]
@@ -50,21 +45,17 @@ pub struct LayoutSnapshot {
     #[state(artifact)]
     pub pages: Vec<Page>,
     #[state(artifact)]
-    #[cfg_attr(test, serde(rename = "printTarget"))]
     #[value(rename = "printTarget")]
     pub print_target: Option<String>,
     #[state(artifact)]
-    #[cfg_attr(test, serde(rename = "dataFieldsJson", default, skip_serializing_if = "Option::is_none"))]
     #[value(rename = "dataFieldsJson", default, skip_serializing_if = "Option::is_none")]
     pub data_fields_json: Option<String>,
     #[state(artifact)]
     #[child(kind = "s.stdio.semio.drawing")]
-    #[cfg_attr(test, serde(rename = "backgroundDrawing", default, skip_serializing_if = "Option::is_none"))]
     #[value(rename = "backgroundDrawing", default, skip_serializing_if = "Option::is_none")]
     pub background_drawing: Option<LayoutDrawingChild>,
     #[state(artifact)]
     #[link_slot(roles("model"))]
-    #[cfg_attr(test, serde(rename = "referencedModel", default, skip_serializing_if = "Option::is_none"))]
     #[value(rename = "referencedModel", default, skip_serializing_if = "Option::is_none")]
     pub referenced_model: Option<store::ArtifactLink>,
 }
@@ -111,34 +102,6 @@ pub(crate) fn enc_str(s: &str) -> String {
 }
 pub(crate) fn dec_str(s: &str) -> Result<String, String> {
     String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
-}
-pub(crate) fn enc_ref(r: &store::os_io::ArtifactRef) -> String {
-    enc_str(&r.to_uri())
-}
-pub(crate) fn dec_ref(s: &str) -> Result<store::os_io::ArtifactRef, String> {
-    store::os_io::ArtifactRef::parse_uri(&dec_str(s)?)
-}
-
-pub(crate) fn enc_child<S>(c: &store::ArtifactChild<S>) -> String {
-    format!("[{},{}]", enc_str(&c.child_id), enc_ref(&c.target))
-}
-pub(crate) fn dec_child<S>(s: &str) -> Result<store::ArtifactChild<S>, String> {
-    let inner = s.strip_prefix('[').and_then(|s| s.strip_suffix(']')).ok_or_else(|| format!("expected [...], got {s:?}"))?;
-    let parts: Vec<&str> = inner.splitn(2, ',').collect();
-    let [child_id, target] = parts.as_slice() else { return Err(format!("child handle: expected 2 fields, got {}", parts.len())) };
-    Ok(store::ArtifactChild::new(dec_str(child_id)?, dec_ref(target)?))
-}
-pub(crate) fn enc_child_opt<S>(c: &Option<store::ArtifactChild<S>>) -> String {
-    match c {
-        Some(c) => enc_child(c),
-        None => "[]".to_string(),
-    }
-}
-pub(crate) fn dec_child_opt<S>(s: &str) -> Result<Option<store::ArtifactChild<S>>, String> {
-    if s == "[]" {
-        return Ok(None);
-    }
-    Ok(Some(dec_child(s)?))
 }
 //#endregion 🔖️ChildCodecPrimitives
 
@@ -239,36 +202,6 @@ fn write_str_lp(out: &mut Vec<u8>, s: &str) {
 }
 fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
     String::from_utf8(read_bytes_lp(reader)?).map_err(|e| e.to_string())
-}
-fn write_ref(out: &mut Vec<u8>, r: &store::os_io::ArtifactRef) {
-    write_str_lp(out, &r.to_uri());
-}
-fn read_ref(reader: &mut store::ByteReader<'_>) -> Result<store::os_io::ArtifactRef, String> {
-    store::os_io::ArtifactRef::parse_uri(&read_str_lp(reader)?)
-}
-fn write_child<S>(out: &mut Vec<u8>, c: &store::ArtifactChild<S>) {
-    write_str_lp(out, &c.child_id);
-    write_ref(out, &c.target);
-}
-fn read_child<S>(reader: &mut store::ByteReader<'_>) -> Result<store::ArtifactChild<S>, String> {
-    let child_id = read_str_lp(reader)?;
-    let target = read_ref(reader)?;
-    Ok(store::ArtifactChild::new(child_id, target))
-}
-fn write_child_opt<S>(out: &mut Vec<u8>, c: &Option<store::ArtifactChild<S>>) {
-    match c {
-        Some(c) => {
-            out.push(1);
-            write_child(out, c);
-        }
-        None => out.push(0),
-    }
-}
-fn read_child_opt<S>(reader: &mut store::ByteReader<'_>) -> Result<Option<store::ArtifactChild<S>>, String> {
-    match reader.read_u8().map_err(|e| e.to_string())? {
-        0 => Ok(None),
-        _ => Ok(Some(read_child(reader)?)),
-    }
 }
 fn write_json<T: protocol::ToValue>(out: &mut Vec<u8>, value: &T) {
     write_str_lp(out, &protocol::json::to_json_string(value));
@@ -399,7 +332,7 @@ mod round_trip_tests {
             }],
             overrides: Vec::new(),
         }];
-        snapshot.background_drawing = Some(crate::artifacts::layout::LayoutDrawingChild {
+        snapshot.background_drawing = Some(LayoutDrawingChild {
             handle: store::ArtifactChild::new("child-drawing-1".to_string(), store::os_io::ArtifactRef::parse_uri("doc-1!s.stdio.semio@v1/drawing").expect("valid child ref uri")),
             content: Default::default(),
         });

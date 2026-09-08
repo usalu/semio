@@ -3,13 +3,12 @@
 use crate::artifacts::playbook::{PlaybookSnapshot, PLAYBOOK_BUILTIN_KINDS};
 use crate::editor::playbook::config::PlaybookConfig;
 use semio_framework::parse_contributions;
-use semio_framework_plugin::{BlockPaletteEntry, LocalizedLabel, SurfaceKind, UiNode, WindowKindDefinition, WindowOptions};
+use semio_framework_plugin::{BlockPaletteEntry, LocalizedLabel, SurfaceKind, WindowKindDefinition, WindowOptions};
 
 //#region 🔖️Constants
 pub const PLAYBOOK_PLAY_WINDOW_BUILDER: &str = "playbook-builder";
 pub const PLAYBOOK_PLAY_BODY_BUILDER: &str = "playbook.play.builder";
 const PLAYBOOK_PLAY_SURFACE_BUILDER: &str = "playbook.play.builder";
-const PLAYBOOK_PLAY_CONTROLLER_ID: &str = "playbook-play";
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition
@@ -67,17 +66,13 @@ fn build_palette(config: &PlaybookConfig) -> Vec<BlockPaletteEntry> {
     crate::playbook::build_palette(&builtins, &extension_palette_entries(config))
 }
 
-fn playbook_builder_config() -> crate::playbook::PlaybookBuilderConfig {
-    crate::playbook::PlaybookBuilderConfig { action_namespace: "playbook-builder", controller_id: PLAYBOOK_PLAY_CONTROLLER_ID, labels: crate::playbook::PLAYBOOK_BUILDER_LABELS_EN }
-}
-
 /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: `ArtifactEditor::render` carries no
 /// `InteractionView` (a known SDK gap — matches `forms`'/`note`'s render-surface precedent), so this
 /// block-list surface's own selected-card highlight (`render_playbook_builder`'s `selected_id`) can no
 /// longer be driven from live framework selection — it always renders with none highlighted now.
-pub fn render(spec: &PlaybookSnapshot, config: &PlaybookConfig) -> UiNode {
+pub fn render(spec: &PlaybookSnapshot, config: &PlaybookConfig) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let kernel = spec.as_kernel();
-    crate::playbook::render_playbook_builder(PLAYBOOK_PLAY_SURFACE_BUILDER, &kernel, &build_palette(config), None, &playbook_builder_config())
+    semio_framework_plugin::scene_surface(PLAYBOOK_PLAY_SURFACE_BUILDER, semio_framework_ui_contract::SurfaceKind::BlockList, &crate::playbook::build_playbook_list_scene(&kernel, &build_palette(config), None))
 }
 //#endregion 🔖️Render
 
@@ -85,7 +80,8 @@ pub fn render(spec: &PlaybookSnapshot, config: &PlaybookConfig) -> UiNode {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::editor::playbook::testkit::{playbook_app, render as render_body};
+    use crate::editor::playbook::testkit::playbook_app;
+    use semio_framework_plugin::PluginApp;
     use crate::editor::playbook::PLAYBOOK_PLAY_BODY_BUILDER as BODY_BUILDER;
 
     #[semio_framework_async_macros::async_test]
@@ -120,9 +116,13 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn render_builder_emits_playbook_list_component_scene() {
         let mut app = playbook_app().await;
-        let json = render_body(&mut app, BODY_BUILDER).await;
-        assert!(json.contains(r#""componentKind":"block-list""#));
-        assert!(json.contains(&format!(r#""surfaceId":"{PLAYBOOK_PLAY_SURFACE_BUILDER}""#)));
+        let tree = app.render(BODY_BUILDER, None, &semio_framework_plugin::ViewModel::default()).await.expect("builder surface");
+        let semio_framework_ui_contract::Component::Surface(props) = tree.root.component else { panic!("builder must render a semantic surface") };
+        let scene: semio_framework_ui_scene::BlockListScene = semio_framework_ui_scene::decode(&props).expect("block-list payload");
+        let expected = app.snapshot().expect("snapshot").as_kernel();
+        semio_framework_plugin::testkit::close_registered_fixture_app(&mut app);
+        assert_eq!(serde_json::from_str::<serde_json::Value>(&scene.steps_json).unwrap(), serde_json::to_value(&expected.steps).unwrap());
+        assert_eq!(serde_json::from_str::<Vec<serde_json::Value>>(&scene.palette_json).unwrap().len(), PLAYBOOK_BUILTIN_KINDS.len());
     }
 }
 //#endregion 🧪️Tests

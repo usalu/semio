@@ -1,22 +1,89 @@
 import { FLOW_MAX_REQUEST_BYTES, FlowOperation, attachFlowSurface, createFlowFeatures, createFlowHost, decodeFlowMessage } from "../🖥️flow-host.js";
-import { createFlowBrowserFeatures } from "../🌐️flow-browser.js";
+import { createFlowBrowserRuntime } from "../🌐️flow-browser.js";
+import * as flowBrowser from "../🌐️flow-browser.js";
 import { readFile } from "node:fs/promises";
 import Ajv from "ajv";
+import { deepStrictEqual } from "node:assert";
+import { MockFlowBridge } from "./mock-flow-bridge.ts";
+import { testFlowOpenOwnership } from "./🧪️flow-open-ownership.test.ts";
 
 const equal = (actual, expected, law) => { if (actual !== expected) throw new Error(`${law}: ${actual} !== ${expected}`); };
 const startup = JSON.parse(await readFile(new URL("../../../🧪️fixtures/🚀️browser-startup/🔣️.json", import.meta.url), "utf8"));
 const startupSchema = JSON.parse(await readFile(new URL("../../../🧪️fixtures/🚀️browser-startup/🧬️.schema.json", import.meta.url), "utf8"));
+const sessionClose = JSON.parse(await readFile(new URL("../../../🧪️fixtures/🧹️session-close/🔣️.json", import.meta.url), "utf8"));
+const sessionCloseSchema = JSON.parse(await readFile(new URL("../../../🧪️fixtures/🧹️session-close/🧬️.schema.json", import.meta.url), "utf8"));
+equal(new Ajv({ strict: true }).compile(sessionCloseSchema)(sessionClose), true, "session-close-schema");
+for (const [key, value] of Object.entries(sessionCloseSchema.properties)) deepStrictEqual(sessionClose[key], value.const);
 equal(new Ajv({ strict: true }).compile(startupSchema)(startup), true, "startup-schema");
 for (const law of startup.cases) equal(law.source === "exports" || law.initializer === "custom" || law.imports === "empty", law.accepted, "startup-independent-admission-oracle");
-const encoder = new TextEncoder();
 const memory = new WebAssembly.Memory({ initial: 400 });
+const runtimeLifetime = JSON.parse(await readFile(new URL("../../../🧪️fixtures/🧑‍🤝‍🧑️browser-runtime/🔣️.json", import.meta.url), "utf8"));
+const runtimeLifetimeSchema = JSON.parse(await readFile(new URL("../../../🧪️fixtures/🧑‍🤝‍🧑️browser-runtime/🧬️.schema.json", import.meta.url), "utf8"));
+equal(new Ajv({ strict: true }).compile(runtimeLifetimeSchema)(runtimeLifetime), true, "runtime-lifetime-schema");
+for (const [key, value] of Object.entries(runtimeLifetimeSchema.properties)) deepStrictEqual(runtimeLifetime[key], value.const);
+equal(typeof flowBrowser.createFlowBrowserRuntime, "function", "explicit-browser-runtime-owner");
+const sharedBridge = new MockFlowBridge(memory);
+const runtime = await flowBrowser.createFlowBrowserRuntime({ source: sharedBridge.exports });
+equal(sharedBridge.operations.length, runtimeLifetime.initialSessions, "runtime-opens-no-orphan-session");
+const sessionA = runtime.openSession();
+const sessionB = runtime.openSession();
+await Promise.all([sessionA.selectedWidgetIds().result, sessionB.selectedWidgetIds().result]);
+deepStrictEqual(sharedBridge.openRequestIds, runtimeLifetime.openRequestIds);
+const closeA = sessionA.close();
+equal(sessionA.close(), closeA, "session-close-retains-exact-promise");
+await closeA;
+await sessionB.selectedWidgetIds().result;
+equal(sharedBridge.globalCloseCalls, runtimeLifetime.afterCloseA.globalCloseCalls, "session-close-preserves-sibling-runtime");
+const beforeDuplicate = sharedBridge.operations.length;
+let duplicateRuntime = false;
+try { await flowBrowser.createFlowBrowserRuntime({ source: sharedBridge.exports }); } catch { duplicateRuntime = true; }
+equal(duplicateRuntime, true, "duplicate-export-owner-rejected");
+let copiedExports = false;
+try { await flowBrowser.createFlowBrowserRuntime({ source: { ...sharedBridge.exports } }); } catch { copiedExports = true; }
+equal(copiedExports, true, "copied-export-container-preserves-runtime-identity");
+equal(sharedBridge.operations.length, beforeDuplicate, "duplicate-export-owner-before-frame");
+const runtimeClose = runtime.close();
+equal(runtime.close(), runtimeClose, "runtime-close-retains-exact-promise");
+await runtimeClose;
+equal(sharedBridge.globalCloseCalls, runtimeLifetime.runtimeClose.globalCloseCalls, "one-global-runtime-close");
+equal(runtime.terminalIsEmpty(), runtimeLifetime.runtimeClose.terminal, "runtime-terminal-proof");
+let lateAdmission = false;
+try { runtime.openSession(); } catch { lateAdmission = true; }
+equal(lateAdmission, true, "runtime-closing-refuses-new-session");
+console.log("[DEBUG] Flow browser runtime isolated two sessions, acknowledged exact session retirement, refused duplicate exports, and closed its bridge exactly once");
+const lateBridge = new MockFlowBridge(memory);
+const lateRuntime = await createFlowBrowserRuntime({ source: lateBridge.exports });
+const lateSession = lateRuntime.openSession();
+const refusedTask = lateSession.selectedWidgetIds();
+const lateClose = lateSession.close();
+let cancelledBeforeOpen = false;
+try { await refusedTask.result; } catch { cancelledBeforeOpen = true; }
+equal(cancelledBeforeOpen, true, "closing-before-open-reply-refuses-queued-feature");
+const lateSibling = lateRuntime.openSession();
+await Promise.all([lateClose, lateSibling.selectedWidgetIds().result]);
+deepStrictEqual(lateBridge.closedSessionSlots, [1]);
+equal(lateBridge.globalCloseCalls, 0, "late-open-close-preserves-sibling");
+await lateRuntime.close();
+deepStrictEqual(lateBridge.closedSessionSlots, [1, 2]);
+const receiptBridge = new MockFlowBridge(memory, { rejectSessionReceiptAcks: runtimeLifetime.backpressure.receiptAckRejections, rejectSessionCloseControls: runtimeLifetime.backpressure.closeControlRejections });
+const receiptRuntime = await createFlowBrowserRuntime({ source: receiptBridge.exports });
+const receiptSession = receiptRuntime.openSession();
+await receiptSession.selectedWidgetIds().result;
+await receiptSession.close();
+equal(receiptBridge.sessionReceiptAckAttempts, runtimeLifetime.backpressure.receiptAckRejections + 1, "exact-session-receipt-ack-retried");
+equal(receiptBridge.sessionCloseControlAttempts, runtimeLifetime.backpressure.closeControlRejections + 1, "exact-session-close-control-retried");
+deepStrictEqual(receiptBridge.closedSessionSlots, [1]);
+await receiptRuntime.close();
+console.log("[DEBUG] Flow late open retired only its cancelled owner; session retirement waited for the third exact receipt ACK without resending close");
+
+await testFlowOpenOwnership(runtimeLifetime.openFailure);
 const bridge = new MockFlowBridge(memory);
 const host = createFlowHost({ exports: bridge.exports, memory });
 const features = await createFlowFeatures(host);
 
 const browserBridge = new MockFlowBridge(memory);
 let browserInstantiationAttempted = false;
-const browser = await createFlowBrowserFeatures({
+const browser = await createFlowBrowserRuntime({
   source: browserBridge.exports,
   instantiate: async () => {
     browserInstantiationAttempted = true;
@@ -24,25 +91,67 @@ const browser = await createFlowBrowserFeatures({
   },
 });
 equal(browserInstantiationAttempted, false, "preinitialized-browser-exports");
-await browser.features.lifetime.close();
+await browser.close();
 
 let foreignRejected = false;
-try { await createFlowBrowserFeatures({ source: new Uint8Array(), imports: { foreign: {} } }); } catch (error) { foreignRejected = error.message === "custom Flow imports require their exact embedding initializer"; }
+try { await createFlowBrowserRuntime({ source: new Uint8Array(), imports: { foreign: {} } }); } catch (error) { foreignRejected = error.message === "custom Flow imports require their exact embedding initializer"; }
 equal(foreignRejected, true, "generated-loader-rejects-foreign-imports");
 const customBridge = new MockFlowBridge(memory);
 const foreignImports = { foreign: { identity: 7 } };
-const custom = await createFlowBrowserFeatures({ source: new Uint8Array(), imports: foreignImports, instantiate: async (_bytes, imports) => {
+const custom = await createFlowBrowserRuntime({ source: new Uint8Array(), imports: foreignImports, instantiate: async (_bytes, imports) => {
   equal(imports, foreignImports, "custom-loader-exact-import-owner");
   return { instance: { exports: customBridge.exports } };
 } });
-await custom.features.lifetime.close();
+await custom.close();
 
-const integrated = await createFlowBrowserFeatures({ source: await readFile(new URL("../../../../🫀️core/🕸️bindings/flow_core_bg.wasm", import.meta.url)) });
-const integratedCatalogue = await integrated.features.document.catalogueJson({}).result;
+for (const provenTerminal of [sessionClose.browser.terminalOnClosingPoll, false]) {
+  const boundary = new MockFlowBridge(memory);
+  let closing = false;
+  let terminal = false;
+  const owner = await createFlowBrowserRuntime({ source: {
+    ...boundary.exports,
+    flow_bridge_begin_close() { closing = true; },
+    flow_bridge_poll(...args) { if (!closing) return boundary.exports.flow_bridge_poll(...args); terminal = provenTerminal; return -1; },
+    flow_bridge_terminal_is_empty() { return Number(terminal); },
+  } });
+  let accepted = false;
+  try { await owner.close(); accepted = true; } catch (error) { equal(error.message, "Flow closed before terminal-empty", "unproven-close-error"); }
+  equal(accepted, provenTerminal, "closing-poll-exact-terminal-witness");
+  equal(owner.terminalIsEmpty(), provenTerminal, "closing-poll-retained-terminal-state");
+}
+console.log("[DEBUG] Flow close poll terminal witness: exact-terminal accepted, unproven-terminal rejected");
+
+const yieldingBridge = new MockFlowBridge(memory);
+let yieldingClose = false;
+let closePolls = 0;
+const yieldingOwner = await createFlowBrowserRuntime({ source: {
+  ...yieldingBridge.exports,
+  flow_bridge_begin_close() { yieldingClose = true; },
+  flow_bridge_poll(...args) { if (!yieldingClose) return yieldingBridge.exports.flow_bridge_poll(...args); closePolls += 1; return closePolls < sessionClose.browser.pendingClosePolls ? 0 : -1; },
+  flow_bridge_terminal_is_empty() { return Number(yieldingClose && closePolls >= sessionClose.browser.pendingClosePolls); },
+} });
+let closeCompleted = false;
+let eventObserved = false;
+const pendingClose = yieldingOwner.close().then(() => { closeCompleted = true; });
+const externalEvent = new Promise((resolve) => setTimeout(() => { eventObserved = !closeCompleted; resolve(); }, 0));
+await Promise.all([pendingClose, externalEvent]);
+equal(eventObserved, sessionClose.browser.yieldsToEvents, "pending-close-yields-to-user-events");
+equal(closePolls, sessionClose.browser.pendingClosePolls, "bounded-close-poll-count");
+console.log("[DEBUG] Flow retained close yielded to an external event before its four bounded poll turns completed");
+
+const integrated = await createFlowBrowserRuntime({ source: await readFile(new URL("../../../../🫀️core/🕸️bindings/flow_core_bg.wasm", import.meta.url)) });
+const integratedSession = integrated.openSession();
+const integratedSibling = integrated.openSession();
+const integratedCatalogue = await integratedSession.catalogueJson().result;
 equal(integratedCatalogue !== undefined, true, "compiled-flow-bridge");
-const integratedBurst = await Promise.all(Array.from({ length: 32 }, () => integrated.features.document.catalogueJson({}).result));
+const integratedBurst = await Promise.all(Array.from({ length: sessionClose.browser.requestBurst }, () => integratedSession.catalogueJson().result));
 equal(integratedBurst.every((catalogue) => catalogue !== undefined), true, "compiled-flow-bridge-burst");
-await integrated.features.lifetime.close();
+equal(integrated.terminalIsEmpty(), sessionClose.browser.terminalBeforeClose, "compiled-session-retained-before-close");
+await integratedSession.close();
+await integratedSibling.catalogueJson().result;
+await integrated.close();
+equal(integrated.terminalIsEmpty(), sessionClose.browser.terminalAfterClose, "compiled-session-terminal-after-close");
+console.log("[DEBUG] Flow compiled session close drained its real domain after %d completed requests and reached terminal-empty", sessionClose.browser.requestBurst + 1);
 console.log("[DEBUG] Flow browser startup preserved four exact initializer/import ownership cases against the compiled module");
 
 const fixtureTask = features.document.catalogueJson({});
@@ -60,7 +169,7 @@ await features.surface.surfaceStatus({ surface: attachedSurface.surface, surface
 
 let releaseAdapter;
 const interruptedAttach = attachFlowSurface(features, {}, { width: 1, height: 1, gpu: { requestAdapter: () => new Promise((resolve) => { releaseAdapter = resolve; }) } });
-while (!releaseAdapter) await Promise.resolve();
+while (!releaseAdapter) await new Promise((resolve) => setTimeout(resolve, 0));
 equal(interruptedAttach.cancel(), true, "cancel-gpu-create");
 releaseAdapter({ requestDevice: async () => ({ lost: new Promise(() => {}) }) });
 let attachCancelled = false;
@@ -98,89 +207,6 @@ equal(cancelled, true, "cancel-terminal");
 await hostileHost.close();
 
 await features.lifetime.close();
+await host.close();
 equal(host.terminalIsEmpty(), true, "terminal-empty");
 console.log(JSON.stringify({ reactive: "progress-cancel", surface: "generation-status", controls: "nine-rejected-then-valid", bytes: "max-plus-one", terminal: "empty" }));
-
-function MockFlowBridge(targetMemory, options = {}) {
-  let retained;
-  let closing = false;
-  let sequence = 1;
-  let rejectedControls = options.rejectControls ?? 0;
-  const held = new Map();
-  const queue = [];
-  this.operations = [];
-  this.exports = {
-    memory: targetMemory,
-    flow_bridge_allocate: () => 8,
-    flow_bridge_release: () => {},
-    flow_bridge_send: (pointer, length, _credit, nowMs, deadlineMs) => {
-      equal(typeof nowMs, "bigint", "send-now-u64");
-      equal(typeof deadlineMs, "bigint", "send-deadline-u64");
-      const frame = new Uint8Array(targetMemory.buffer, pointer, length).slice();
-      const tag = frame[1];
-      if (tag === 5 && rejectedControls > 0) { rejectedControls -= 1; return -1; }
-      if (tag === 1) acceptRequest(frame);
-      else if (tag === 5) acceptControl(frame);
-      return 1;
-    },
-    flow_bridge_poll: (pointer, capacity, _credit, nowMs, deadlineMs) => {
-      equal(typeof nowMs, "bigint", "poll-now-u64");
-      equal(typeof deadlineMs, "bigint", "poll-deadline-u64");
-      retained ??= queue.shift();
-      if (!retained) return 0;
-      if (retained.length > capacity) return retained.length;
-      new Uint8Array(targetMemory.buffer, pointer, retained.length).set(retained);
-      const length = retained.length;
-      retained = undefined;
-      return length;
-    },
-    flow_bridge_begin_close: () => { closing = true; },
-    flow_bridge_terminal_is_empty: () => Number(closing && !retained && queue.length === 0),
-  };
-
-  const acceptRequest = (frame) => {
-    const operation = u16(frame, 2), request = u64(frame, 4), generation = u32(frame, 12);
-    this.operations.push(operation);
-    if (operation === FlowOperation.open) { queue.push(reply(request, generation, handle(1, 1))); return; }
-    const operationHandle = { slot: 2, generation: Number(request) };
-    queue.push(event(request, generation, sequence++, 2_650, handle(operationHandle.slot, operationHandle.generation)));
-    queue.push(event(request, generation, sequence++, 2_651, new Uint8Array()));
-    queue.push(event(request, generation, sequence++, 2_652, new Uint8Array()));
-    queue.push(event(request, generation, sequence++, 2_653, new Uint8Array()));
-    if (options.hold === operation) { held.set(request, { generation, operationHandle }); return; }
-    finish(request, generation, operation, operationHandle);
-  };
-  const acceptControl = (frame) => {
-    if (frame[2] !== 1) return;
-    const request = u64(frame, 3), generation = u32(frame, 11);
-    const pending = held.get(request);
-    if (!pending) return;
-    held.delete(request);
-    queue.push(event(request, generation, sequence++, 2_656, new Uint8Array()));
-    queue.push(failedReply(request, generation, "cancelled"));
-  };
-  const finish = (request, generation, operation, operationHandle) => {
-    const body = text("{}");
-    queue.push(event(request, generation, sequence++, 2_656, handle(operationHandle.slot, operationHandle.generation)));
-    queue.push(reply(request, generation, body));
-  };
-}
-
-function text(value) { return encoder.encode(value); }
-function handle(slot, generation) { return bytes((w) => { w.u32(slot); w.u32(generation); }); }
-function reply(request, generation, body) { return bytes((w) => { w.u8(1); w.u8(2); w.u64(request); w.u32(generation); w.u16(0); w.u8(0); w.body(body); }); }
-function failedReply(request, generation, message) {
-  const encoded = text(message);
-  return bytes((w) => { w.u8(1); w.u8(2); w.u64(request); w.u32(generation); w.u16(1); w.u8(1); w.u16(16); w.u16(encoded.length); w.raw(encoded); w.body(new Uint8Array()); });
-}
-function event(origin, generation, sequence, code, body) { const acknowledgement = origin ^ (BigInt(sequence) << 32n); return bytes((w) => { w.u8(1); w.u8(3); w.u64(acknowledgement); w.u32(generation); w.u32(sequence); w.u16(code); w.u16(0); w.u8(0); w.body(body); }); }
-function bytes(build) {
-  const values = [];
-  const writer = { u8: (v) => values.push(v), u16: (v) => number(2, (d) => d.setUint16(0, v, true)), u32: (v) => number(4, (d) => d.setUint32(0, v, true)), u64: (v) => number(8, (d) => d.setBigUint64(0, BigInt(v), true)), raw: (v) => values.push(...v), body: (v) => { writer.u32(v.length); values.push(...v); } };
-  const number = (length, write) => { const value = new Uint8Array(length); write(new DataView(value.buffer)); values.push(...value); };
-  build(writer);
-  return Uint8Array.from(values);
-}
-function u16(value, offset) { return new DataView(value.buffer, value.byteOffset, value.byteLength).getUint16(offset, true); }
-function u32(value, offset) { return new DataView(value.buffer, value.byteOffset, value.byteLength).getUint32(offset, true); }
-function u64(value, offset) { return new DataView(value.buffer, value.byteOffset, value.byteLength).getBigUint64(offset, true); }

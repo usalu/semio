@@ -23,13 +23,13 @@ fn inference_descriptors() -> &'static [::schema::ArtifactInferenceDescriptor] {
 //#endregion 🔖️Inferences
 
 //#region 🔖️Subset
-pub fn subset() -> SubsetDeclaration {
+pub fn subset() -> SubsetDeclaration<crate::plugin::WriterApps> {
     SubsetDeclaration {
         dialect: crate::artifacts::writer::WRITER_DIALECT,
         schema: SchemaDeclaration { descriptor: schema::writer_artifact_schema_descriptor(), inferences: inference_descriptors(), inference_services: Vec::new() },
         io: io::io(),
-        viewer: viewer_surface::<viewer::WriterViewer>(viewer::create_writer_viewer()),
-        editor: editor_surface::<editor::WriterPlayApp>(editor::create_writer_app()),
+        viewer: viewer_surface::<viewer::WriterViewer, crate::plugin::WriterApps>(viewer::create_writer_viewer()),
+        editor: editor_surface::<editor::WriterPlayApp, crate::plugin::WriterApps>(editor::create_writer_app()),
         examples: examples(),
     }
 }

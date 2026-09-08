@@ -92,10 +92,10 @@ mod tests {
     async fn render_lists_name_version_and_every_collection_count() {
         let document = EnergyModelSnapshot::default();
         let tree = render(&document).expect("the tree window assembles");
-        assert_eq!(tree.key, WINDOW_KIND_ID);
+        assert_eq!(tree.key.as_str(), WINDOW_KIND_ID);
         let root = &tree.children[0].children[0];
-        assert!(root.children.iter().any(|item| item.key == "name"));
-        assert!(root.children.iter().any(|item| item.key == "zones"));
+        assert!(root.children.iter().any(|item| item.key.as_str() == "name"));
+        assert!(root.children.iter().any(|item| item.key.as_str() == "zones"));
     }
 }
 //#endregion 🧪️Tests

@@ -18,18 +18,19 @@ const CLOSE_MAX_STEPS: usize = 8192;
 pub struct InferenceDocumentFenceV1 {
     scope: DocumentScope,
     generation: AtomicU64,
+    active: AtomicBool,
 }
 
 impl InferenceDocumentFenceV1 {
     pub fn new(scope: DocumentScope, generation: u64) -> Result<Self, InferenceErrorV1> {
-        if !server_id(&scope.space_id) || !server_id(&scope.document_id) || generation == 0 || generation > SAFE_INTEGER_MAX {
+        if !server_id(&scope.space_id) || !server_id(&scope.document_id) || generation > SAFE_INTEGER_MAX {
             return Err(InferenceErrorV1::Invalid);
         }
-        Ok(Self { scope, generation: AtomicU64::new(generation) })
+        Ok(Self { scope, generation: AtomicU64::new(generation), active: AtomicBool::new(true) })
     }
 
     pub fn invalidate(&self) {
-        self.generation.store(0, Ordering::Release);
+        self.active.store(false, Ordering::Release);
     }
 }
 
@@ -66,7 +67,7 @@ impl InferenceWalTargetV1 {
         if super::sha256(format!("semio.hub.inference-approval-mutation/v1\0{}\0{}", self.job_id, self.proposal_hash).as_bytes())[..32] != self.mutation_id {
             return Err(InferenceErrorV1::Conflict);
         }
-        if self.scope != fence.scope || self.generation == 0 || fence.generation.load(Ordering::Acquire) != self.generation {
+        if self.scope != fence.scope || !fence.active.load(Ordering::Acquire) || fence.generation.load(Ordering::Acquire) != self.generation {
             return Err(InferenceErrorV1::Conflict);
         }
         Ok(())
@@ -112,6 +113,7 @@ impl CommittedInferenceWalWitnessV1 {
     pub(super) fn matches(&self, scope: &DocumentScope, generation: u64, job_id: &str, proposal_hash: &str, mutation_id: &str, command_hash: &str) -> bool {
         self.scope == *scope
             && self.generation == generation
+            && self.fence.active.load(Ordering::Acquire)
             && self.fence.generation.load(Ordering::Acquire) == generation
             && self.job_id == job_id
             && self.proposal_hash == proposal_hash

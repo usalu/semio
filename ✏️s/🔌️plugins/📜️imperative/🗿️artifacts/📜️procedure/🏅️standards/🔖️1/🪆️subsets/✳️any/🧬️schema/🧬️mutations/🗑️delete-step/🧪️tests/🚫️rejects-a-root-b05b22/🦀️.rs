@@ -31,15 +31,15 @@ fn cached_program() -> Path {
 }
 
 fn before() -> ProcedureSnapshot {
-    let mut snapshot: ProcedureSnapshot = serde_json::from_str(BEFORE).expect("before imperative document decodes");
+    let mut snapshot: ProcedureSnapshot = dsl::os_pack::from_json_str(BEFORE).expect("before imperative document decodes");
     crate::artifacts::procedure::materialize_procedure_flow(&mut snapshot.flow, &cached_program());
     snapshot
 }
 fn expected_after() -> ProcedureSnapshot {
-    serde_json::from_str(AFTER).expect("after imperative document decodes")
+    dsl::os_pack::from_json_str(AFTER).expect("after imperative document decodes")
 }
 fn mutation() -> ProcedureMutation {
-    serde_json::from_str(MUTATION).expect("delete-step mutation decodes")
+    dsl::os_pack::from_json_str(MUTATION).expect("delete-step mutation decodes")
 }
 fn built_outcome() -> protocol::MutationOutcome<ProcedureDiff> {
     <ProcedureMutation as protocol::Mutation<ProcedureSnapshot>>::diff(&mutation(), &before())
@@ -71,12 +71,12 @@ async fn the_inverse_of_a_missed_target_is_empty() {
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {
-        let decoded: ProcedureSnapshot = serde_json::from_str(text).expect("imperative document decodes");
-        let reencoded = serde_json::to_value(&decoded).expect("imperative document encodes");
+        let decoded: ProcedureSnapshot = dsl::os_pack::from_json_str(text).expect("imperative document decodes");
+        let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::os_pack::to_json_string(&decoded)).expect("imperative document encodes");
         let original: serde_json::Value = serde_json::from_str(text).expect("imperative document reparses");
         assert_eq!(reencoded, original, "delete-step/rejects-a-root-step-id-addressed-inside-a-branch-body: committed {label} document JSON is not canonical");
     }
-    let reencoded = serde_json::to_value(mutation()).expect("deleteStep payload encodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::os_pack::to_json_string(&mutation())).expect("deleteStep payload encodes");
     let original: serde_json::Value = serde_json::from_str(MUTATION).expect("deleteStep payload reparses");
     assert_eq!(reencoded, original, "delete-step/rejects-a-root-step-id-addressed-inside-a-branch-body: committed deleteStep JSON is not canonical");
 }

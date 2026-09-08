@@ -3,7 +3,7 @@
   "$id": "https://semio.tech/schemas/hub/trusted-stdio-gis-bootstrap-v1.json",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schema", "profile", "sources", "limits", "framing", "cancellationStages", "hostile", "rotation"],
+  "required": ["schema", "profile", "sources", "limits", "framing", "cancellationStages", "hostile", "publication", "rotation"],
   "properties": {
     "schema": { "const": "semio.hub.trusted-stdio-gis-bootstrap/v1" },
     "profile": {
@@ -81,6 +81,105 @@
       "uniqueItems": true,
       "items": { "enum": ["stale-stdio-component", "stale-stdio-descriptor", "stale-stdio-codec", "wrong-stdio-version", "wrong-gis-version", "missing-map", "missing-terrain", "duplicate-terrain", "terrain-target", "non-wasm", "readonly-editor", "mixed-package", "closure-order", "path-escape", "path-collision", "descriptor-max-plus-one", "cancel-before-publication", "candidate-crash", "stale-plan-generation"] }
     },
+    "publication": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "entryPoints",
+        "steps",
+        "cases"
+      ],
+      "properties": {
+        "entryPoints": {
+          "type": "array",
+          "minItems": 4,
+          "maxItems": 4,
+          "items": {
+            "enum": [
+              "development",
+              "bootstrap",
+              "native",
+              "process-rotation"
+            ]
+          },
+          "uniqueItems": true
+        },
+        "steps": {
+          "type": "array",
+          "minItems": 4,
+          "maxItems": 4,
+          "items": {
+            "enum": [
+              "materialized",
+              "exact-gis-cold-proof",
+              "candidate-validated",
+              "current-published"
+            ]
+          },
+          "uniqueItems": true
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 5,
+          "maxItems": 5,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "steps",
+              "proofGeneration",
+              "proofSucceeds",
+              "published",
+              "retained"
+            ],
+            "properties": {
+              "name": {
+                "enum": [
+                  "exact",
+                  "omitted",
+                  "late",
+                  "wrong-generation",
+                  "proof-failed"
+                ]
+              },
+              "steps": {
+                "type": "array",
+                "minItems": 3,
+                "maxItems": 4,
+                "items": {
+                  "enum": [
+                    "materialized",
+                    "exact-gis-cold-proof",
+                    "candidate-validated",
+                    "current-published"
+                  ]
+                },
+                "uniqueItems": true
+              },
+              "proofGeneration": {
+                "enum": [
+                  "same",
+                  "different"
+                ]
+              },
+              "proofSucceeds": {
+                "type": "boolean"
+              },
+              "published": {
+                "type": "boolean"
+              },
+              "retained": {
+                "enum": [
+                  "candidate",
+                  "previous"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
     "rotation": {
       "type": "object",
       "additionalProperties": false,
@@ -148,7 +247,7 @@
     "package": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["pluginId", "packageId", "version", "role", "componentSha256", "componentBlake3", "descriptorSha256", "browserActor", "codecCount", "targetCount"],
+      "required": ["pluginId", "packageId", "version", "role", "componentSha256", "componentBlake3", "descriptorSha256", "executionProtocol", "browserActor", "codecCount", "targetCount"],
       "properties": {
         "pluginId": { "enum": ["gis", "stdio"] },
         "packageId": { "enum": ["semio:gis", "semio:stdio"] },
@@ -157,6 +256,7 @@
         "componentSha256": { "$ref": "#/$defs/digest" },
         "componentBlake3": { "$ref": "#/$defs/digest" },
         "descriptorSha256": { "$ref": "#/$defs/digest" },
+        "executionProtocol": { "const": { "appChannelVersion": 14 } },
         "browserActor": { "$ref": "https://semio.tech/schemas/hub/trusted-catalog-bundle-v2.json#/$defs/browserActor" },
         "codecCount": { "enum": [2, 26] },
         "targetCount": { "enum": [0, 1] }

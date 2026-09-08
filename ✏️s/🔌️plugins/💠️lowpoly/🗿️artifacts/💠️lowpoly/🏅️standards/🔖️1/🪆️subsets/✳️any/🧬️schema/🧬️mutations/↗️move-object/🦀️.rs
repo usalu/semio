@@ -1,6 +1,7 @@
 //! ↗️️ `move-object` — absolute spatial reposition of an object's transform.
 
 use crate::artifacts::lowpoly::{LowpolyMutation, LowpolySnapshot};
+#[cfg(test)]
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Payload

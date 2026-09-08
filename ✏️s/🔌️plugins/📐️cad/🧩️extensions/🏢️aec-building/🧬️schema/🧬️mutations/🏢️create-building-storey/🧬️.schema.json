@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Create Building Storey",
+  "type": "object",
+  "properties": {
+    "storeyId": {
+      "type": "string"
+    },
+    "levelIndex": {
+      "type": "integer",
+      "minimum": -2147483648,
+      "maximum": 2147483647
+    },
+    "storeyName": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "storeyId",
+    "levelIndex",
+    "storeyName"
+  ],
+  "additionalProperties": false
+}

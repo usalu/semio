@@ -1,0 +1,29 @@
+{
+  "base": {
+    "cameraX": 0.25,
+    "cameraY": 0.75,
+    "cameraZoom": 1.5,
+    "activeUtilityId": "selectDirect"
+  },
+  "cases": [
+    {
+      "kind": "replace-presence",
+      "mutation": {
+        "ReplacePresence": {
+          "presence": {
+            "cameraX": 2.5,
+            "cameraY": -3.25,
+            "cameraZoom": 1.75,
+            "activeUtilityId": "pencil"
+          }
+        }
+      },
+      "expected": {
+        "cameraX": 2.5,
+        "cameraY": -3.25,
+        "cameraZoom": 1.75,
+        "activeUtilityId": "pencil"
+      }
+    }
+  ]
+}

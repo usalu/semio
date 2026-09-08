@@ -1,5 +1,6 @@
 //! 🧬️ schema leaf
 use schema::ArtifactSchema;
+#[cfg(test)]
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 use semio_framework_value_derive::{FromValue, ToValue};

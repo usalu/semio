@@ -3088,7 +3088,7 @@ mod tests {
         let mut job = MeshJob::new_bounded(PlanarDomain { outer: square(1.0), holes: Vec::new() }, MeshOpts { max_edge: 0.0, min_angle_deg: 0.0 }, operation, 8, 2);
         let edge_capacity = job.maximum_triangles * 12 + 3;
         job.indexed_edges.try_reserve_exact(edge_capacity).expect("fixed edge index backing");
-        assert!(job.indexed_edges.capacity() * std::mem::size_of::<Edge>() <= 4_096);
+        assert!(job.indexed_edges.capacity() * size_of::<Edge>() <= 4_096);
         job.indexed_edges.extend((0..edge_capacity).map(|index| Edge(index, index + 1)));
         let before = (job.indexed_edges.as_ptr(), job.indexed_edges.len(), job.indexed_edges.capacity());
         assert_eq!(job.indexed_edges.binary_search(&Edge(edge_capacity + 1, edge_capacity + 2)), Err(edge_capacity));
@@ -3149,7 +3149,7 @@ mod tests {
             assert_eq!(job.step(&mut cancelled), StepOutcome::Cancelled);
             assert_eq!((job.constraint_cursor, job.constraint_stage, job.constraint_search_cursor, job.constraint_apply_cursor, job.constraint_retire_cursor, job.constraint_retire_adjacency_cursor), before_cursor);
 
-            let started = std::time::Instant::now();
+            let started = Instant::now();
             let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, u64::MAX), root_cancel_token(), || Some(0), &mut sequence);
             assert_eq!(job.step(&mut context), StepOutcome::Yield);
             maximum_micros = maximum_micros.max(started.elapsed().as_micros());

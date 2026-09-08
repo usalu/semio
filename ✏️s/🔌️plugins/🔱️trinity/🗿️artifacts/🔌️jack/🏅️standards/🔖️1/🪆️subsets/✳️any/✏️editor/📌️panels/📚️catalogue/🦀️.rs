@@ -33,14 +33,14 @@ pub(crate) fn render(cfg: &JackConfig, labels: &TrinityJackLabels) -> semio_fram
         tree_item("trinity-jack-catalogue.connector", crate::editor::jack::ui_label(labels.connector.as_str())?),
     ])?;
     let builder = builder
-        .section("trinity-jack-catalogue.fixtures", Some(labels.fixtures.as_str().into()), true, fixture_items)?
-        .section("trinity-jack-catalogue.examples", Some(labels.example_queries.as_str().into()), true, example_items)?
-        .section("trinity-jack-catalogue.kinds", Some(labels.manifest_kinds.as_str().into()), false, kind_items)?;
+        .section("trinity-jack-catalogue.fixtures", Some(crate::editor::jack::ui_label(labels.fixtures.as_str())?), true, fixture_items)?
+        .section("trinity-jack-catalogue.examples", Some(crate::editor::jack::ui_label(labels.example_queries.as_str())?), true, example_items)?
+        .section("trinity-jack-catalogue.kinds", Some(crate::editor::jack::ui_label(labels.manifest_kinds.as_str())?), false, kind_items)?;
     let builder = if cfg.active_fixture_id.is_empty() {
         builder
     } else {
         let selected_id = builder.item_id("fixture", &cfg.active_fixture_id)?;
-        builder.selected([selected_id])?
+        builder.selected([selected_id.as_str().to_string()])?
     };
     builder.build()
 }

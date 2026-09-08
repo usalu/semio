@@ -5,6 +5,7 @@ use crate::artifacts::gisterrain::op::GisTerrainMutation;
 use crate::artifacts::gisterrain::GisTerrainSnapshot;
 use crate::editor::gis3d::config::{Gis3dConfig, Gis3dConfigMutation, SetCamera as SetCameraMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+#[cfg(test)]
 use serde::{Deserialize, Serialize};
 use semio_framework_value_derive::{FromValue, ToValue};
 

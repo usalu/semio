@@ -288,7 +288,7 @@ impl store::ArtifactStoreOneItemPreparationFactory<Block5dSnapshot, Block5dMutat
 
 impl store::ArtifactStoreOneItemPreparation<Block5dSnapshot, Block5dMutation> for Block5dStorePreparation {
     fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {
-        use protocol::{Mutation as _, MutationDiff as _};
+        use protocol::Mutation as _;
         if !grant.permits_one() || self.cancelled {
             return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked);
         }

@@ -99,10 +99,10 @@ mod tests {
 
         let initial = crate::artifacts::note::standards::v1::subsets::any::io::snapshot::text::parse_dsl(crate::artifacts::note::standards::v1::subsets::any::io::snapshot::text::SEMIO_NOTE_EXAMPLE_TEXT).expect("parse semio example");
         let envelope = create_document_envelope::<NoteSnapshot, NoteMutation>(NOTE_DOCUMENT_SCHEMA, "note-command-envelope-demo", initial, None);
-        let mut store = ArtifactStore::new(envelope).expect("valid artifact store fixture");
-        store.dispatch(ArtifactCommand::Apply { mutations: vec![crate::artifacts::note::schema::mutations::change_grid_visible(Some(false))], description: None }).expect("apply");
+        let mut store = ArtifactStore::new(envelope).await.expect("valid artifact store fixture");
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![crate::artifacts::note::schema::mutations::change_grid_visible(Some(false))], description: None }).await.expect("apply");
         let edit: &Edit<NoteMutation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
-        store::os_store::test_support::assert_command_envelope_round_trip::<NoteSnapshot, NoteMutation>(edit, &ArtifactId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone()));
+        store::os_store::test_support::assert_command_envelope_round_trip::<NoteSnapshot, NoteMutation>(edit, &ArtifactId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone())).await;
     }
     //#endregion 🔖️CommandEnvelopeTests
 }

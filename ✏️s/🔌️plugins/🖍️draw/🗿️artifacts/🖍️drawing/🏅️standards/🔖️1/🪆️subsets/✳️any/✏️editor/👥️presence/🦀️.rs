@@ -28,7 +28,7 @@ impl Default for DrawingPresence {
 
 impl protocol::MutationDiff<DrawingPresence> for DrawingPresence {
     fn apply(&self, _base: &DrawingPresence) -> protocol::MutationApplyResult<DrawingPresence> {
-        Ok({ self.clone() })
+        Ok(self.clone())
     }
     fn absorb(&mut self, other: Self) {
         *self = other;

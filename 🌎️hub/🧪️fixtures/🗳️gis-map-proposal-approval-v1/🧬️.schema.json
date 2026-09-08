@@ -92,7 +92,7 @@
     "committer": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["capacity", "roles", "children", "phases", "witnessSource", "retryOwner", "publicationOrder", "beforePublicAck", "publicationFailure", "ingressAuthority", "abandonedRequest", "documentFence"],
+      "required": ["capacity", "roles", "children", "phases", "witnessSource", "retryOwner", "frontierChain", "storeIdentities", "publicationOrder", "beforePublicAck", "publicationFailure", "ingressAuthority", "abandonedRequest", "documentFence", "genesisPublication", "peerNotification"],
       "properties": {
         "capacity": { "const": 64 },
         "roles": { "const": ["map", "drawing", "value"] },
@@ -100,9 +100,18 @@
         "phases": { "const": ["ready", "assembly", "journal", "verification", "publishing", "published", "closing"] },
         "witnessSource": { "const": "sole-committed-wal-event" },
         "retryOwner": { "const": "same-document-three-store-host" },
+        "frontierChain": { "const": "canonical-lowercase-hex-with-genesis-zero" },
+        "storeIdentities": {
+          "const": {
+            "parentDialect": "s.gis.gismap@1/*",
+            "childReferences": ["gismap-drawing!s.stdio.semio@v1/drawing", "gismap-value!s.stdio.semio@v1/value"],
+            "childOwnerRoles": ["drawing", "value"],
+            "childOwnerParent": "exact-document-parent-reference"
+          }
+        },
         "publicationOrder": { "const": ["committed-wal-event", "actor-frontier", "public-checkpoint", "ledger-applied"] },
         "beforePublicAck": { "const": { "ledgerApplied": false, "documentWrite": "retained", "state": "publishing" } },
-        "publicationFailure": { "const": { "ledgerApplied": false, "documentWrite": "retained", "retry": "same-event-same-owner" } },
+        "publicationFailure": { "const": { "ledgerApplied": false, "documentWrite": "retained", "retry": "same-event-same-owner", "retryDeadline": "process-owned-bounded-attempt" } },
         "ingressAuthority": {
           "const": {
             "owner": "hub-private-sorted-binding-guards",
@@ -116,12 +125,30 @@
         "abandonedRequest": {
           "const": {
             "owner": "runtime-document-maintenance",
-            "abortPhases": ["ready", "preflight", "assembly", "journal-no-receipt"],
+            "preparedOwner": "armed-before-committer-preflight",
+            "driver": "document-write-request-token-single-poller",
+            "cleanupCapacity": 128,
+            "runtimeShutdown": "reinsert-exact-owner-before-task-drop",
+            "terminalClose": "fence-new-admission-until-cleanup-empty",
+            "abortPhases": ["no-runtime-unpolled", "unpolled", "rejected-preflight", "ready", "preflight", "assembly", "journal-no-receipt"],
+            "outbox": "abandoned-until-fresh-identical-retry",
             "commitCutover": "awaiting-ack",
             "postCutover": ["verification", "public-checkpoint", "ledger-applied"]
           }
         },
-        "documentFence": { "const": "mounted-actor-generation" }
+        "documentFence": { "const": "mounted-actor-generation-including-zero" },
+        "genesisPublication": { "const": "no-active-checkpoint-exact-zero-frontier" },
+        "peerNotification": {
+          "const": {
+            "after": ["committed-wal-event", "actor-frontier", "public-checkpoint", "ledger-applied"],
+            "frame": "rebootstrap-required",
+            "source": "active-checkpoint",
+            "command": "server-stamped-create-region",
+            "peers": 2,
+            "publicationFailure": "none",
+            "publicationCancellation": "none"
+          }
+        }
       }
     },
     "visibility": {

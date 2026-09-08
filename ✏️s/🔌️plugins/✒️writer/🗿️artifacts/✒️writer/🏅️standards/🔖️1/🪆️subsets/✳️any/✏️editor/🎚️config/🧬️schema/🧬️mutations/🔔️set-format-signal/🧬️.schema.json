@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Set Format Signal",
+  "type": "object",
+  "properties": {
+    "value": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 4294967295
+    }
+  },
+  "required": [
+    "value"
+  ],
+  "additionalProperties": false
+}

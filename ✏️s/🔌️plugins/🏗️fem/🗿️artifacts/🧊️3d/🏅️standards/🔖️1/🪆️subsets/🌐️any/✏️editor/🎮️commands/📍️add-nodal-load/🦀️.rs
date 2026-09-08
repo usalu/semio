@@ -98,7 +98,7 @@ mod tests {
         let snapshot = app.snapshot().expect("snapshot");
         assert_eq!(snapshot.load_cases.len(), 1);
         assert_eq!(snapshot.load_cases[0].id, "case-1");
-        assert!(matches!(snapshot.load_cases[0].loads[0], crate::artifacts::fem3d::FemLoad::Nodal { .. }));
+        assert!(matches!(snapshot.load_cases[0].loads[0], FemLoad::Nodal { .. }));
     }
 
     #[semio_framework_async_macros::async_test]
@@ -107,7 +107,7 @@ mod tests {
         dispatch(&mut app, Fem3dCommand::AddMemberUdl(add_member_udl::AddMemberUdl { element_id: "e1".into(), wx: 0.0, wy: 0.0, wz: -2000.0, case_id: None })).await;
         let snapshot = app.snapshot().expect("snapshot");
         let load_case = &snapshot.load_cases[0];
-        assert!(matches!(load_case.loads[0], crate::artifacts::fem3d::FemLoad::MemberUdl { .. }));
+        assert!(matches!(load_case.loads[0], FemLoad::MemberUdl { .. }));
     }
 
     #[semio_framework_async_macros::async_test]
@@ -117,7 +117,7 @@ mod tests {
         let live_case_id = app.snapshot().expect("snapshot").load_cases[1].id.clone();
         dispatch(&mut app, Fem3dCommand::AddNodalLoad(AddNodalLoad { node_id: "n2".into(), dof: crate::artifacts::fem3d::FemDof::Tz, value: -5000.0, case_id: Some(live_case_id) })).await;
         let snapshot = app.snapshot().expect("snapshot");
-        assert!(snapshot.load_cases[1].loads.iter().any(|l| matches!(l, crate::artifacts::fem3d::FemLoad::Nodal { .. })));
+        assert!(snapshot.load_cases[1].loads.iter().any(|l| matches!(l, FemLoad::Nodal { .. })));
         assert!(snapshot.load_cases[0].loads.is_empty(), "the untargeted case must stay untouched");
     }
 

@@ -3,7 +3,7 @@
 
 use crate::editor::procedure::terminology::ImperativeLabels;
 use crate::editor::procedure::IMPERATIVE_PLAY_APP_ID;
-use semio_framework_plugin::{tree_item_with_action, ActionFactory, BuiltNode, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL};
+use semio_framework_plugin::{tree_item_with_action, ActionFactory, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL};
 
 //#region 🔖️Constants
 pub const IMPERATIVE_PLAY_BODY_CATALOGUE: &str = "imperative.play.catalogue";
@@ -40,7 +40,7 @@ pub fn render(labels: &ImperativeLabels) -> semio_framework_plugin::UiAssemblyRe
             .try_push(item)
             .map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.catalogue.items", "fixed catalogue item admission failed"))?;
     }
-    builder.section("imperative-play-catalogue.actions", Some(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL.into()), true, action_items)?.selected([])?.build()
+    builder.section("imperative-play-catalogue.actions", Some(crate::editor::procedure::ui_label(labels.catalogue_title.as_str())?), true, action_items)?.selected([])?.build()
 }
 //#endregion 🔖️Render
 

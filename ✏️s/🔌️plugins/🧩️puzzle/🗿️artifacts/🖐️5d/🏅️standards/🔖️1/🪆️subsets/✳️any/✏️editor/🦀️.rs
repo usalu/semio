@@ -30,9 +30,9 @@ use semio_framework_plugin::kernel::{ClipboardError, ClipboardFragment, Effect, 
 use semio_framework_plugin::{
     ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, AppIo, ArtifactEditor, ArtifactOwnedToolJobFactory, ArtifactPresentation, ArtifactReservedJob, ArtifactReservedToolInput, ArtifactReservedToolJob,
     ArtifactReservedToolJobRequest, ArtifactToolCompletion, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView, ConfigView, DraftView, Editor, EditorApp, Emit, EphemeralEmit, Fault,
-    GranularityDefinition, HierarchyProvider, HoverSpec, IconName,
+    GranularityDefinition, HierarchyProvider, HoverSpec,
     InteractionDefinition, InteractionRef, InteractionTarget, InteractiveJobClassification, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPortDirection, MediaPortSpec, MediaType, MergeMode, NoDraft, NoDraftMutation,
-    PluginCloseStep, PortMultiplicity, SelectionMethod, SelectionMode, SelectionSpec, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError, UiNode, UiTreeItemNode, WindowEngagement, WindowMeasure, INTERACTION_SELECT_ACTION_ID,
+    PluginCloseStep, PortMultiplicity, SelectionMethod, SelectionMode, SelectionSpec, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError, WindowEngagement, WindowMeasure, INTERACTION_SELECT_ACTION_ID,
     SET_ACTIVE_UTILITY_ACTION_ID,
 };
 // 🕹️ `InteractionView` — see 🧊️3d/🦀️.rs's identical import comment (missing top-level
@@ -40,7 +40,7 @@ use semio_framework_plugin::{
 use semio_framework_job::{Checkpoint, CommitCandidate, InteractiveJob, JobFault, JobPayloadAdmissionFault, JobPayloadCloseStep, JobPayloadStream, Operation, RetainedJobPayload, RetainedJobPayloadWriter, StepContext, StepOutcome};
 use semio_framework_plugin::app::{ArtifactToolCompletionRejection, InteractionView};
 use serde::{Deserialize, Serialize};
-use dsl::os_pack::json::{from_json_str, object, parse, to_json_string, to_string, Object, Value};
+use dsl::os_pack::json::{parse, Value};
 use std::cell::RefCell;
 use std::collections::{HashMap, HashSet};
 use std::sync::LazyLock;
@@ -2815,7 +2815,6 @@ struct Puzzle5dImportJob {
     completed: bool,
     retiring_index_primary: Option<String>,
     retiring_index_secondary: Option<String>,
-    retirement_key: [u8; PUZZLE5D_JSON_RETIREMENT_KEY_BYTES],
     closing: bool,
 }
 
@@ -3362,7 +3361,6 @@ impl Puzzle5dImportJob {
             completed: false,
             retiring_index_primary: None,
             retiring_index_secondary: None,
-            retirement_key: [0; PUZZLE5D_JSON_RETIREMENT_KEY_BYTES],
             closing: false,
         }
     }
@@ -8072,7 +8070,7 @@ impl Puzzle5dSetActiveExampleWork {
             "" => Some(&EMPTY_EXAMPLE_DOCUMENT),
             PUZZLE5D_EXAMPLE_CONCRETE_FOREST | "concrete" => Some(&CONCRETE_FOREST_EXAMPLE_DOCUMENT),
             PUZZLE5D_EXAMPLE_NAKAGIN | "nakagin" => Some(&NAKAGIN_EXAMPLE_DOCUMENT),
-            PUZZLE5D_EXAMPLE_CAPSULE_DREAM | "capsule-dream" | "capsule" => Some(&CAPSULE_DREAM_EXAMPLE_DOCUMENT),
+            PUZZLE5D_EXAMPLE_CAPSULE_DREAM | "capsule" => Some(&CAPSULE_DREAM_EXAMPLE_DOCUMENT),
             _ => None,
         }
     }
@@ -8628,7 +8626,7 @@ impl store::ArtifactStoreOneItemPreparationFactory<Puzzle5dPlaySnapshot, Puzzle5
 
 impl store::ArtifactStoreOneItemPreparation<Puzzle5dPlaySnapshot, Puzzle5dMutation> for Puzzle5dStorePreparation {
     fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {
-        use protocol::{Mutation as _, MutationDiff as _};
+        use protocol::Mutation as _;
         if !grant.permits_one() || self.cancelled {
             return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked);
         }
@@ -8754,7 +8752,7 @@ impl store::ArtifactStoreOneItemPreparationFactory<Puzzle5dConfig, Puzzle5dConfi
 
 impl store::ArtifactStoreOneItemPreparation<Puzzle5dConfig, Puzzle5dConfigMutation> for Puzzle5dConfigStorePreparation {
     fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {
-        use protocol::{Mutation as _, MutationDiff as _};
+        use protocol::Mutation as _;
         if !grant.permits_one() || self.cancelled {
             return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked);
         }

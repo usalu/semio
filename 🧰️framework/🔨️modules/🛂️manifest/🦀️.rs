@@ -4894,6 +4894,14 @@ pub struct ContributionSet {
 /// on; a duplicated string literal in either would drift silently.
 pub const ASSEMBLY_FAILED_PLUGIN_ID: &str = "assembly-failed";
 
+/// 📡️ Exact guest-described application-channel ABI required by the compiled component.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
+pub struct ExecutionProtocol {
+    pub app_channel_version: u32,
+}
+
 /// 📦️ The static, build-time-emitted description of a plugin or extension package —
 /// `📓️design-abi.md` §3's `describe()` output (`🛂️.descriptor.semio`/`🔣️.json`).
 /// Nothing constructs or reads one yet in this packet: additive contract only (packet
@@ -4916,6 +4924,7 @@ pub struct PackageDescriptor {
     #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub extension_points: Vec<ExtensionPointDeclaration>,
     pub execution: ExecutionMode,
+    pub execution_protocol: ExecutionProtocol,
     #[serde(default)]
     #[value(default)]
     pub quotas: kernel::QuotaSchema,
@@ -4954,6 +4963,7 @@ mod package_descriptor_value_codec_tests {
             capability_requests: Vec::new(),
             extension_points: Vec::new(),
             execution: ExecutionMode::Isolated,
+            execution_protocol: ExecutionProtocol { app_channel_version: 14 },
             quotas: kernel::QuotaSchema::default(),
             contributions: ContributionSet::default(),
             assets: Vec::new(),
@@ -4971,7 +4981,7 @@ mod package_descriptor_value_codec_tests {
         for omitted in ["activationEvents", "capabilityRequests", "extensionPoints", "assets"] {
             assert!(!fields.iter().any(|(name, _)| name == omitted), "{omitted} must remain omitted when empty");
         }
-        for required in ["descriptorVersion", "packageId"] {
+        for required in ["descriptorVersion", "packageId", "executionProtocol"] {
             let mut missing = fields.clone();
             missing.retain(|(name, _)| name != required);
             let error = PackageDescriptor::from_value(DslValue::Object(missing)).expect_err("missing required descriptor field must fail");

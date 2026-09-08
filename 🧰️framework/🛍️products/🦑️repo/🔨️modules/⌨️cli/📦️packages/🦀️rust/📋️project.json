@@ -5,61 +5,77 @@
     "build": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83e\udd91\ufe0frepo/\ud83d\udd28\ufe0fmodules/\u2328\ufe0fcli/\ud83d\udce6\ufe0fpackages/\ud83e\udd80\ufe0frust",
-        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts build"
-      }
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts build"
+      },
+      "cache": true,
+      "outputs": [
+        "{projectRoot}/dist/build"
+      ]
     },
     "test": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83e\udd91\ufe0frepo/\ud83d\udd28\ufe0fmodules/\u2328\ufe0fcli/\ud83d\udce6\ufe0fpackages/\ud83e\udd80\ufe0frust",
-        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts test"
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test"
       }
     },
     "test-quick": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83e\udd91\ufe0frepo/\ud83d\udd28\ufe0fmodules/\u2328\ufe0fcli/\ud83d\udce6\ufe0fpackages/\ud83e\udd80\ufe0frust",
-        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts test quick"
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test quick"
       }
     },
     "test-long": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83e\udd91\ufe0frepo/\ud83d\udd28\ufe0fmodules/\u2328\ufe0fcli/\ud83d\udce6\ufe0fpackages/\ud83e\udd80\ufe0frust",
-        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts test long"
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test long"
       }
     },
     "test-exhaustive": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83e\udd91\ufe0frepo/\ud83d\udd28\ufe0fmodules/\u2328\ufe0fcli/\ud83d\udce6\ufe0fpackages/\ud83e\udd80\ufe0frust",
-        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts test exhaustive"
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test exhaustive"
       }
     },
     "run": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83e\udd91\ufe0frepo/\ud83d\udd28\ufe0fmodules/\u2328\ufe0fcli/\ud83d\udce6\ufe0fpackages/\ud83e\udd80\ufe0frust",
-        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts run",
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts run",
         "forwardAllArgs": true
-      }
+      },
+      "cache": false,
+      "dependsOn": [
+        "build"
+      ]
     },
     "daemon": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83e\udd91\ufe0frepo/\ud83d\udd28\ufe0fmodules/\u2328\ufe0fcli/\ud83d\udce6\ufe0fpackages/\ud83e\udd80\ufe0frust",
-        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts daemon",
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts daemon",
         "forwardAllArgs": true
-      }
+      },
+      "cache": false,
+      "dependsOn": [
+        "build"
+      ]
     },
     "workflow": {
       "executor": "nx:run-commands",
       "options": {
-        "cwd": "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83e\udd91\ufe0frepo/\ud83d\udd28\ufe0fmodules/\u2328\ufe0fcli/\ud83d\udce6\ufe0fpackages/\ud83e\udd80\ufe0frust",
-        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts workflow",
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts workflow",
         "forwardAllArgs": true
-      }
+      },
+      "cache": false,
+      "dependsOn": [
+        "build"
+      ]
     }
   }
 }

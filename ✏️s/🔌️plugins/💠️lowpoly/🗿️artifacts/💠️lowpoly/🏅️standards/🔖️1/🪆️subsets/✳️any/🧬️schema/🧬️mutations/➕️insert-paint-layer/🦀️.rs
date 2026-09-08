@@ -2,6 +2,7 @@
 //! layer list at a FINAL-state index; layers have no stable id, only position.
 
 use crate::artifacts::lowpoly::{LowpolyMutation, LowpolyPaintLayer, LowpolySnapshot};
+#[cfg(test)]
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Payload

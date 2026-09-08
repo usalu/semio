@@ -869,21 +869,6 @@ impl DrawingDraftQuery {
     }
 }
 
-// No `ToValue`/`FromValue`: `context: GestureContext` embeds a framework `UiFixedList` field with
-// no `ToValue` impl (see `GestureContext`'s own doc comment above) — this type is never actually
-// serialized (grep-confirmed), so no first-party value derive is needed either.
-#[derive(Clone, Debug)]
-pub(crate) struct DrawingGestureCheckpoint {
-    pub app_instance_id: u32,
-    pub document_id: String,
-    pub operation_id: u64,
-    pub generation: u64,
-    pub base_revision: String,
-    state: String,
-    context: GestureContext,
-    preview_seq: u64,
-}
-
 impl Default for DrawingSession {
     fn default() -> Self {
         let mut sink: Vec<fsm::Command<drawing_gesture::DrawingGesture>> = Vec::new();
@@ -930,28 +915,6 @@ impl DrawingSession {
             DrawingGesturePreviewPhase::Idle
         };
         DrawingGesturePreview { sequence: self.preview_seq, phase, context: self.gesture.context.clone() }
-    }
-
-    pub(crate) fn from_checkpoint(checkpoint: &DrawingGestureCheckpoint) -> Self {
-        let mut session = Self::default();
-        let event = match checkpoint.state.as_str() {
-            "marqueeing" => Some(drawing_gesture::Event::PointerDown { utility: if checkpoint.context.method == "lasso" { "selectLasso".into() } else { "selectMarquee".into() }, world: checkpoint.context.start, shift: false, ctrl: false, meta: false }),
-            "shape_dragging" => Some(drawing_gesture::Event::PointerDown { utility: checkpoint.context.utility.clone(), world: checkpoint.context.start, shift: false, ctrl: false, meta: false }),
-            "drafting" => Some(drawing_gesture::Event::PointerDown { utility: checkpoint.context.utility.clone(), world: checkpoint.context.points.get(0).copied().unwrap_or(checkpoint.context.start), shift: false, ctrl: false, meta: false }),
-            _ => None,
-        };
-        if let Some(event) = event {
-            let mut sink = Vec::new();
-            fsm::macrostep(&mut session.gesture, event, &mut sink, &mut fsm::NullInspector);
-        }
-        session.gesture.context = checkpoint.context.clone();
-        session.preview_seq = checkpoint.preview_seq;
-        session
-    }
-
-    pub(crate) fn checkpoint(&self, app_instance_id: u32, document_id: &str, operation_id: u64, generation: u64, base_revision: &str) -> DrawingGestureCheckpoint {
-        let state = ["marqueeing", "shape_dragging", "drafting"].into_iter().find(|state| self.gesture.matches(state)).unwrap_or("idle");
-        DrawingGestureCheckpoint { app_instance_id, document_id: document_id.into(), operation_id, generation, base_revision: base_revision.into(), state: state.into(), context: self.gesture.context.clone(), preview_seq: self.preview_seq }
     }
 
     pub(crate) fn step_gesture_retained(

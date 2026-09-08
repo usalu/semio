@@ -346,6 +346,7 @@ struct TaskSlot {
     future: Option<BoxedTask>,
     queued: bool,
     active: bool,
+    #[cfg(test)]
     reserved: bool,
     ready_previous: Option<usize>,
     ready_next: Option<usize>,
@@ -366,7 +367,7 @@ impl Inner {
         let mut slots = Vec::new();
         let slots_admitted = slots.try_reserve_exact(LOCAL_EXECUTOR_TASK_SLOTS).is_ok();
         if slots_admitted {
-            slots.resize_with(LOCAL_EXECUTOR_TASK_SLOTS, || TaskSlot { generation: 0, future: None, queued: false, active: false, reserved: false, ready_previous: None, ready_next: None });
+            slots.resize_with(LOCAL_EXECUTOR_TASK_SLOTS, || TaskSlot { generation: 0, future: None, queued: false, active: false, #[cfg(test)] reserved: false, ready_previous: None, ready_next: None });
         }
         let mut free = VecDeque::new();
         let free_admitted = free.try_reserve_exact(LOCAL_EXECUTOR_TASK_SLOTS).is_ok();
@@ -516,7 +517,7 @@ impl ColdFutureExecutor {
         let index = inner.free.pop_front().ok_or("executor fixed task capacity is saturated")?;
         let generation = inner.slots[index].generation.wrapping_add(1).max(1);
         let id = Inner::task_id(index, generation);
-        inner.slots[index] = TaskSlot { generation, future: Some(future), queued: false, active: true, reserved: false, ready_previous: None, ready_next: None };
+        inner.slots[index] = TaskSlot { generation, future: Some(future), queued: false, active: true, #[cfg(test)] reserved: false, ready_previous: None, ready_next: None };
         assert!(inner.enqueue_ready(index), "executor fixed ready authority rejected a new task");
         inner.live += 1;
         Ok(id)

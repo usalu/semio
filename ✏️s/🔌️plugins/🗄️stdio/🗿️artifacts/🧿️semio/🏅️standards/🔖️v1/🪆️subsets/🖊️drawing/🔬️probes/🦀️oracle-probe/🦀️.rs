@@ -14,14 +14,14 @@
 //! recolour mutation pass against evidence that was never in the file.
 //!
 //! Usage — one probe per invocation, one JSON body on stdout:
-//!   semio-drawing-oracle-probe svg-structure  --input a.svg
-//!   semio-drawing-oracle-probe dxf-entities   --input a.dxf
-//!   semio-drawing-oracle-probe pdf-text       --input a.pdf
-//!   semio-drawing-oracle-probe svg-compare    --input expected.svg --input actual.svg
-//!   semio-drawing-oracle-probe dxf-compare    --input expected.dxf --input actual.dxf
-//!   semio-drawing-oracle-probe pdf-compare    --input expected.pdf --input actual.pdf
-//!   semio-drawing-oracle-probe style-compare  --input expected.svg --input actual.svg
-//!   semio-drawing-oracle-probe gate-inputs    --out <dir>
+//!   semio-stdio-drawing-oracle-probe svg-structure  --input a.svg
+//!   semio-stdio-drawing-oracle-probe dxf-entities   --input a.dxf
+//!   semio-stdio-drawing-oracle-probe pdf-text       --input a.pdf
+//!   semio-stdio-drawing-oracle-probe svg-compare    --input expected.svg --input actual.svg
+//!   semio-stdio-drawing-oracle-probe dxf-compare    --input expected.dxf --input actual.dxf
+//!   semio-stdio-drawing-oracle-probe pdf-compare    --input expected.pdf --input actual.pdf
+//!   semio-stdio-drawing-oracle-probe style-compare  --input expected.svg --input actual.svg
+//!   semio-stdio-drawing-oracle-probe gate-inputs    --out <dir>
 //!
 //! @see ../📜️script.ts — the wrapper that stamps the ProbeReport envelope around this output
 //! @see ../../🔣️oracle.json — the oracle, probe and pipeline registrations

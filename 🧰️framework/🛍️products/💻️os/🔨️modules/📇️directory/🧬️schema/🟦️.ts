@@ -650,7 +650,7 @@ export type AdminIntentV1 =
   | { kind: "kick-connection"; requestId: string; syncSessionId: string; reasonCode: string }
   | { kind: "rebuild-directory-projections"; requestId: string; expectedHeadSeq: number };
 
-export type AdminIntentStateV1 = "succeeded" | "accepted" | "failed" | "cancelled";
+export type AdminIntentStateV1 = "succeeded" | "accepted" | "indeterminate" | "failed" | "cancelled";
 
 export interface AdminIntentOutcomeV1 {
   code: string;
@@ -1087,6 +1087,12 @@ export interface DocumentOpenCatalogV1 {
   generationId: string;
 }
 
+export const DOCUMENT_EXECUTION_PROTOCOL_APP_CHANNEL_VERSION_V1 = 14;
+
+export interface DocumentExecutionProtocolV1 {
+  appChannelVersion: typeof DOCUMENT_EXECUTION_PROTOCOL_APP_CHANNEL_VERSION_V1;
+}
+
 export interface DocumentOpenPackageV1 {
   pluginId: string;
   packageId: string;
@@ -1094,6 +1100,7 @@ export interface DocumentOpenPackageV1 {
   componentSha256: string;
   componentBlake3: string;
   descriptorByteSha256: string;
+  executionProtocol: DocumentExecutionProtocolV1;
 }
 
 export interface DocumentOpenArtifactV1 {
@@ -1241,7 +1248,9 @@ export function parseDocumentOpenPlanV1(value: unknown, nowMs: number): Document
   const scope = parseDocumentOpenScope(object.scope);
   const descriptorDigestV1 = documentOpenHash(object.descriptorDigestV1);
   const catalog = documentOpenObject(object.catalog, ["generationId"]);
-  const packageValue = documentOpenObject(object.package, ["pluginId", "packageId", "version", "componentSha256", "componentBlake3", "descriptorByteSha256"]);
+  const packageValue = documentOpenObject(object.package, ["pluginId", "packageId", "version", "componentSha256", "componentBlake3", "descriptorByteSha256", "executionProtocol"]);
+  const executionProtocol = documentOpenObject(packageValue.executionProtocol, ["appChannelVersion"]);
+  if (executionProtocol.appChannelVersion !== DOCUMENT_EXECUTION_PROTOCOL_APP_CHANNEL_VERSION_V1) throw new Error("document-open.unsupported-execution-protocol");
   const artifact = documentOpenObject(object.artifact, ["kind", "schema", "packSchemaHash"]);
   const parentDialect = documentOpenObject(object.parentDialect, ["artifactKind", "standard", "subset"]);
   const surface = documentOpenObject(object.surface, ["surfaceId", "appId", "windowKindId", "role", "rendererTarget"]);
@@ -1276,6 +1285,7 @@ export function parseDocumentOpenPlanV1(value: unknown, nowMs: number): Document
       componentSha256: documentOpenHash(packageValue.componentSha256),
       componentBlake3: documentOpenHash(packageValue.componentBlake3),
       descriptorByteSha256: documentOpenHash(packageValue.descriptorByteSha256),
+      executionProtocol: { appChannelVersion: DOCUMENT_EXECUTION_PROTOCOL_APP_CHANNEL_VERSION_V1 },
     },
     artifact: { kind: documentOpenText(artifact.kind), schema: documentOpenText(artifact.schema), packSchemaHash: documentOpenHash(artifact.packSchemaHash) },
     parentDialect: parsedParentDialect,
@@ -1365,7 +1375,9 @@ export function parseDocumentExecutionTargetLeaseFieldsV1(value: unknown): Docum
   const scope = parseDocumentOpenScope(object.scope);
   const descriptorDigestV1 = documentOpenHash(object.descriptorDigestV1);
   const catalog = documentOpenObject(object.catalog, ["generationId"]);
-  const packageValue = documentOpenObject(object.package, ["pluginId", "packageId", "version", "componentSha256", "componentBlake3", "descriptorByteSha256"]);
+  const packageValue = documentOpenObject(object.package, ["pluginId", "packageId", "version", "componentSha256", "componentBlake3", "descriptorByteSha256", "executionProtocol"]);
+  const executionProtocol = documentOpenObject(packageValue.executionProtocol, ["appChannelVersion"]);
+  if (executionProtocol.appChannelVersion !== DOCUMENT_EXECUTION_PROTOCOL_APP_CHANNEL_VERSION_V1) throw new Error("document-execution-target-lease.unsupported-execution-protocol");
   const component = documentOpenObject(object.component, ["sha256", "blake3", "byteLength"]);
   const descriptor = documentOpenObject(object.descriptor, ["sha256", "byteLength"]);
   const artifact = documentOpenObject(object.artifact, ["kind", "schema", "packSchemaHash"]);
@@ -1383,13 +1395,14 @@ export function parseDocumentExecutionTargetLeaseFieldsV1(value: unknown): Docum
     subset: documentOpenText(parentDialect.subset),
   };
   if (parsedParentDialect.artifactKind !== artifact.kind || Object.values(parsedParentDialect).some((entry) => entry.trim() !== entry)) throw new Error("document-execution-target-lease.invalid-parent-dialect");
-  const parsedPackage = {
+  const parsedPackage: DocumentOpenPackageV1 = {
     pluginId: documentOpenText(packageValue.pluginId),
     packageId: documentOpenText(packageValue.packageId),
     version: documentOpenText(packageValue.version),
     componentSha256: documentOpenHash(packageValue.componentSha256),
     componentBlake3: documentOpenHash(packageValue.componentBlake3),
     descriptorByteSha256: documentOpenHash(packageValue.descriptorByteSha256),
+    executionProtocol: { appChannelVersion: DOCUMENT_EXECUTION_PROTOCOL_APP_CHANNEL_VERSION_V1 },
   };
   const parsedComponent = {
     sha256: documentOpenHash(component.sha256),
@@ -1494,6 +1507,7 @@ export function sameLeaseFieldsV1(left: DocumentExecutionTargetLeaseFieldsV1, ri
     left.package.componentSha256 === right.package.componentSha256 &&
     left.package.componentBlake3 === right.package.componentBlake3 &&
     left.package.descriptorByteSha256 === right.package.descriptorByteSha256 &&
+    left.package.executionProtocol.appChannelVersion === right.package.executionProtocol.appChannelVersion &&
     left.component.sha256 === right.component.sha256 &&
     left.component.blake3 === right.component.blake3 &&
     left.component.byteLength === right.component.byteLength &&
@@ -2131,7 +2145,7 @@ function descriptorDigestText(value: string, field: string): Uint8Array {
 /** 🧬️ Domain plus declaration-ordered descriptor leaves, each encoded as
  * `u64_be(payload byte length) || payload`; text is UTF-8, integers are unsigned big-endian fixed-
  * width payloads, and hash text is decoded to 32 bytes. JSON serialization never participates. */
-export function descriptorDigestEncodingV1(descriptor: DocumentDescriptor): Uint8Array {
+export function descriptorDigestEncodingV1(descriptor: DocumentDescriptor): Uint8Array<ArrayBuffer> {
   if (descriptor.bootstrapVersion === 0) throw new Error("descriptor.invalid-bootstrap-version");
   if (descriptor.bootstrapFrontier.commitSeq > descriptor.bootstrapFrontier.headSeq) throw new Error("descriptor.invalid-bootstrap-frontier");
   const fields = [
@@ -2166,7 +2180,7 @@ export function descriptorDigestEncodingV1(descriptor: DocumentDescriptor): Uint
 }
 
 /** 🔐️ Host-Web-Crypto SHA-256 over {@link descriptorDigestEncodingV1}. */
-export async function descriptorDigestV1(descriptor: DocumentDescriptor): Promise<Uint8Array> {
+export async function descriptorDigestV1(descriptor: DocumentDescriptor): Promise<Uint8Array<ArrayBuffer>> {
   return new Uint8Array(await globalThis.crypto.subtle.digest("SHA-256", descriptorDigestEncodingV1(descriptor)));
 }
 

@@ -35,16 +35,16 @@ fn board_entries(board: &DslValue, key: &str) -> Vec<DslValue> {
 /// the exact child owner from that snapshot's own persisted `wiresFixture.board` mirror — two nodes and the one
 /// edge that really does join them.
 fn before() -> WiresSnapshot {
-    let mut snapshot: WiresSnapshot = serde_json::from_str(BEFORE).expect("before snapshot decodes");
+    let mut snapshot: WiresSnapshot = dsl::os_pack::from_json_str(BEFORE).expect("before snapshot decodes");
     let board = snapshot.wires_fixture.get("board").cloned().unwrap_or(DslValue::Null);
     materialize_wires_content(&mut snapshot.content, board_entries(&board, "nodes"), board_entries(&board, "edges"));
     snapshot
 }
 fn expected_after() -> WiresSnapshot {
-    serde_json::from_str(AFTER).expect("after snapshot decodes")
+    dsl::os_pack::from_json_str(AFTER).expect("after snapshot decodes")
 }
 fn mutation() -> WiresMutation {
-    serde_json::from_str(MUTATION).expect("mutation decodes")
+    dsl::os_pack::from_json_str(MUTATION).expect("mutation decodes")
 }
 
 /// ▶️ A rejected `disconnect-nodes` leaves the document byte-identical to the committed `after` —
@@ -102,12 +102,12 @@ async fn inverse_has_no_edge_and_relationship_pair_to_restore() {
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {
-        let decoded: WiresSnapshot = serde_json::from_str(text).expect("snapshot decodes");
-        let reencoded = serde_json::to_value(&decoded).expect("snapshot encodes");
+        let decoded: WiresSnapshot = dsl::os_pack::from_json_str(text).expect("snapshot decodes");
+        let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::os_pack::to_json_string(&decoded)).expect("snapshot encodes");
         let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
         assert_eq!(reencoded, original, "disconnect-nodes/rejects-cutting-an-edge-the-board-never-carried: committed {label} JSON is not canonical");
     }
-    let reencoded = serde_json::to_value(mutation()).expect("mutation encodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::os_pack::to_json_string(&mutation())).expect("mutation encodes");
     let original: serde_json::Value = serde_json::from_str(MUTATION).expect("mutation reparses");
     assert_eq!(reencoded, original, "disconnect-nodes/rejects-cutting-an-edge-the-board-never-carried: committed disconnectNodes JSON is not canonical");
     assert_eq!(original.as_object().map(|fields| fields.len()), Some(2), "the payload is the tag plus edgeId and nothing else");

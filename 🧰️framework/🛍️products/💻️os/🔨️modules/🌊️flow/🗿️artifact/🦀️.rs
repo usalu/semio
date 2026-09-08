@@ -65,14 +65,8 @@ pub struct WidgetLayout {
     pub y: f64,
 }
 
-/// 🧾️ Serializable flow document with authoritative neural tree and strippable UI. `serde` is
-/// TEST-ONLY (RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS, 26/09/01, tenth-seam
-/// pass): `tree: Tree` and `ui: FlowUi` both lost their own unconditional `Serialize`/`Deserialize`
-/// this pass — see `📓️orderedmap-tenth-seam.md`. Production already routed through `ToValue`/
-/// `FromValue`, unaffected.
+/// 🧾️ Flow document encoded through the first-party value contract.
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
-#[cfg_attr(test, derive(Serialize, Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub struct FlowArtifact {
     pub schema: String,
@@ -80,24 +74,17 @@ pub struct FlowArtifact {
     pub ui: FlowUi,
 }
 
-/// 🖼️ GUI-only flow data that can be removed without destroying logic. `serde` is TEST-ONLY
-/// (RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS, 26/09/01, tenth-seam pass): `nodes:
-/// OrderedMap<FlowNodeGui>` needs `OrderedMap<V>: Serialize`, now `#[cfg(test)]`-gated in
-/// `🌱️value/🗂️ordered/🦀️.rs` — see `📓️orderedmap-tenth-seam.md`. Production already routed
-/// through `ToValue`/`FromValue`, unaffected.
+/// 🖼️ GUI-only flow data that can be removed without destroying logic.
 #[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
-#[cfg_attr(test, derive(Serialize, Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub struct FlowUi {
     pub camera: CameraJson,
     pub nodes: OrderedMap<FlowNodeGui>,
-    #[cfg_attr(test, serde(default))]
     #[value(default)]
     pub previews: Vec<FlowPreviewGui>,
 }
 
-/// 🖼️ Alias retained for cluster widget serde compatibility.
+/// 🖼️ Cluster-flow alias.
 pub type FlowGui = FlowUi;
 
 /// 🧩️ GUI-only node presentation.
@@ -144,23 +131,17 @@ pub enum NodeChrome {
     },
 }
 
-/// 👁️ GUI-only preview binding. `serde` is TEST-ONLY — see `FlowArtifact`'s docstring above;
-/// `preview: Dictionary` is the same seam.
+/// 👁️ GUI-only preview binding.
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
-#[cfg_attr(test, derive(Serialize, Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub struct FlowPreviewGui {
     pub id: String,
     pub source: Option<FlowChannelRef>,
     pub mode: String,
-    #[cfg_attr(test, serde(default))]
     #[value(default)]
     pub preview: Dictionary,
-    #[cfg_attr(test, serde(default))]
     #[value(default)]
     pub expanded: OrderedSet,
-    #[cfg_attr(test, serde(default))]
     #[value(default)]
     pub layout: Option<WidgetLayout>,
 }
@@ -204,113 +185,87 @@ pub struct SynapseSpec {
     pub to_port: String,
 }
 
-/// 🎛️ Flow widget discriminant. `serde` is TEST-ONLY — see `FlowArtifact`'s docstring above;
-/// `Neuron.params`/`OutputPreview.preview: Dictionary` and `Cluster.tree: Tree` are the same seam.
+/// 🎛️ Flow widget discriminant encoded through the first-party value contract.
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
-#[cfg_attr(test, derive(Serialize, Deserialize))]
-#[cfg_attr(test, serde(tag = "kind", rename_all = "camelCase"))]
 #[value(tag = "kind", rename_all = "camelCase")]
 pub enum Widget {
     Neuron {
         id: String,
-        #[cfg_attr(test, serde(rename = "neuronKind"))]
         #[value(rename = "neuronKind")]
         neuron_kind: String,
-        #[cfg_attr(test, serde(default))]
         #[value(default)]
         params: Dictionary,
-        #[cfg_attr(test, serde(default, alias = "input_ports"))]
         #[value(default)]
         input_ports: Vec<String>,
-        #[cfg_attr(test, serde(default, alias = "output_ports"))]
         #[value(default)]
         output_ports: Vec<String>,
-        #[cfg_attr(test, serde(default = "default_neuron_preview"))]
         #[value(default = "default_neuron_preview")]
         preview: bool,
     },
     InputSlider {
         id: String,
         label: String,
-        #[cfg_attr(test, serde(default = "default_slider_value"))]
         #[value(default = "default_slider_value")]
         value: f64,
-        #[cfg_attr(test, serde(default = "default_slider_min"))]
         #[value(default = "default_slider_min")]
         min: f64,
-        #[cfg_attr(test, serde(default = "default_slider_max"))]
         #[value(default = "default_slider_max")]
         max: f64,
-        #[cfg_attr(test, serde(default = "default_slider_step"))]
         #[value(default = "default_slider_step")]
         step: f64,
     },
     InputNote {
         id: String,
-        #[cfg_attr(test, serde(default))]
         #[value(default)]
         text: String,
     },
     InputImage {
         id: String,
-        #[cfg_attr(test, serde(default))]
         #[value(default)]
         src: String,
     },
     Variable {
         id: String,
-        #[cfg_attr(test, serde(default = "default_variable_name"))]
         #[value(default = "default_variable_name")]
         name: String,
-        #[cfg_attr(test, serde(default = "default_variable_schema"))]
         #[value(default = "default_variable_schema")]
         schema: String,
     },
     OutputPreview {
         id: String,
-        #[cfg_attr(test, serde(default))]
         #[value(default)]
         preview: Dictionary,
-        #[cfg_attr(test, serde(default))]
         #[value(default)]
         expanded: OrderedSet,
     },
     OutputAction {
         id: String,
-        #[cfg_attr(test, serde(default))]
         #[value(default)]
         action: String,
     },
     OutputExport {
         id: String,
-        #[cfg_attr(test, serde(default = "default_export_format"))]
         #[value(default = "default_export_format")]
         format: String,
     },
     Cluster {
         id: String,
-        #[cfg_attr(test, serde(default))]
         #[value(default)]
         name: String,
         tree: Tree,
-        #[cfg_attr(test, serde(default))]
         #[value(default)]
         flow: FlowGui,
     },
 }
 
-/// 🧩️ Legacy fixture format still used by {@link FlowHost} retained state. `serde` is TEST-ONLY —
-/// see `FlowUi`'s docstring above; `layout: OrderedMap<WidgetLayout>` is the same seam.
+/// 🧩️ Flow-host retained fixture encoded through the first-party value contract.
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
-#[cfg_attr(test, derive(Serialize, Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub struct FlowFixture {
     pub schema: String,
     pub camera: CameraJson,
     pub widgets: Vec<Widget>,
     pub synapses: Vec<SynapseSpec>,
-    #[cfg_attr(test, serde(default))]
     #[value(default)]
     pub layout: OrderedMap<WidgetLayout>,
 }

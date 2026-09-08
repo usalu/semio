@@ -8,7 +8,6 @@
 use crate::artifacts::flow::FlowSnapshot;
 use crate::artifacts::flow::schema::mutations::FlowMutation;
 use protocol::{CompositeMutationKind, PlanError, Planner, SemanticDescriptor};
-use super::*;
 
 //#region 👯️DuplicateWidget
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl_derive::CompositeMutation, dsl::MutationLeaf)]

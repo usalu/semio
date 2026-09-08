@@ -2,26 +2,26 @@
   {
     "base": {
       "camera": {
-        "x": 1,
-        "y": 2,
-        "zoom": 2
+        "x": 1.0,
+        "y": 2.0,
+        "zoom": 2.0
       },
       "locale": "de-DE"
     },
     "mutation": {
       "SetCamera": {
         "camera": {
-          "x": 4,
-          "y": 5,
-          "zoom": 3
+          "x": 4.0,
+          "y": 5.0,
+          "zoom": 3.0
         }
       }
     },
     "after": {
       "camera": {
-        "x": 4,
-        "y": 5,
-        "zoom": 3
+        "x": 4.0,
+        "y": 5.0,
+        "zoom": 3.0
       },
       "locale": "de-DE"
     },
@@ -30,9 +30,9 @@
   {
     "base": {
       "camera": {
-        "x": 1,
-        "y": 2,
-        "zoom": 2
+        "x": 1.0,
+        "y": 2.0,
+        "zoom": 2.0
       },
       "locale": "de-DE"
     },
@@ -43,9 +43,9 @@
     },
     "after": {
       "camera": {
-        "x": 1,
-        "y": 2,
-        "zoom": 2
+        "x": 1.0,
+        "y": 2.0,
+        "zoom": 2.0
       },
       "locale": "en-US"
     },
@@ -54,26 +54,26 @@
   {
     "base": {
       "camera": {
-        "x": 1,
-        "y": 2,
-        "zoom": 2
+        "x": 1.0,
+        "y": 2.0,
+        "zoom": 2.0
       },
       "locale": "de-DE"
     },
     "mutation": {
       "SetCamera": {
         "camera": {
-          "x": 1,
-          "y": 2,
-          "zoom": 2
+          "x": 1.0,
+          "y": 2.0,
+          "zoom": 2.0
         }
       }
     },
     "after": {
       "camera": {
-        "x": 1,
-        "y": 2,
-        "zoom": 2
+        "x": 1.0,
+        "y": 2.0,
+        "zoom": 2.0
       },
       "locale": "de-DE"
     },
@@ -82,9 +82,9 @@
   {
     "base": {
       "camera": {
-        "x": 1,
-        "y": 2,
-        "zoom": 2
+        "x": 1.0,
+        "y": 2.0,
+        "zoom": 2.0
       },
       "locale": "de-DE"
     },
@@ -95,9 +95,9 @@
     },
     "after": {
       "camera": {
-        "x": 1,
-        "y": 2,
-        "zoom": 2
+        "x": 1.0,
+        "y": 2.0,
+        "zoom": 2.0
       },
       "locale": "de-DE"
     },

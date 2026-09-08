@@ -12,7 +12,7 @@ pub struct SetLocale {
 }
 
 pub fn handle(payload: &SetLocale, _doc: &ArtifactView<'_, PlaybookSnapshot>, _cfg: &ConfigView<'_, PlaybookConfig>) -> Result<Emit<PlaybookMutation, PlaybookConfigMutation>, Fault> {
-    Ok(Emit::config(vec![PlaybookConfigMutation::SetLocale { value: payload.value.clone() }]))
+    Ok(Emit::config(vec![PlaybookConfigMutation::SetLocale(crate::editor::playbook::config::SetLocale { value: payload.value.clone() })]))
 }
 
 //#region 🧪️Tests

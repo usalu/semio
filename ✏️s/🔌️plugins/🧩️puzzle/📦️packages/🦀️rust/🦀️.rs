@@ -12,7 +12,6 @@
 
 extern crate infinite_canvas as infinite_board_port_directed_normal;
 #[cfg(target_arch = "wasm32")]
-extern crate semio_framework_async as wasm_bindgen_futures;
 
 extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as protocol;

@@ -1,12 +1,10 @@
 //! 🌐️ Production Flow browser entry over the owned serialized Wasm ABI.
 
-import { FlowFeatureGroups, FlowOperation, FlowOperationFields, attachFlowSurface, createFlowFeatures, createFlowHost, renderFlowSurface } from "./🖥️flow-host.js";
+import { FlowFeatureGroups, FlowOperation, FlowOperationFields, attachFlowSurface, createFlowFeatures, createFlowHost, isFlowSessionOpenRejected, renderFlowSurface } from "./🖥️flow-host.js";
 
 //#region 🌐️BrowserConsumer
 
-let defaultHost;
-
-export async function createFlowBrowserFeatures({ source, imports = {}, instantiate, ...hostOptions } = {}) {
+export async function createFlowBrowserRuntime({ source, imports = {}, instantiate, ...hostOptions } = {}) {
   if (source === undefined) throw new Error("Flow Wasm source is required");
   let exports = source?.exports ?? source;
   if (typeof exports?.flow_bridge_allocate !== "function") {
@@ -25,41 +23,83 @@ export async function createFlowBrowserFeatures({ source, imports = {}, instanti
   const memory = exports?.memory;
   if (!exports || !(memory instanceof WebAssembly.Memory)) throw new Error("Flow Wasm instance must export memory");
   const host = createFlowHost({ ...hostOptions, exports, memory });
-  return { host, features: await createFlowFeatures(host), exports };
-}
-
-export default async function init(source) {
-  const initialized = await createFlowBrowserFeatures({ source });
-  defaultHost = initialized.host;
-  return initialized.exports;
+  const sessions = new Set();
+  let closePromise;
+  let closing = false;
+  return Object.freeze({
+    openSession() {
+      if (closing) throw new Error("Flow runtime is closed");
+      const session = new FlowSession(sessionAuthority, createFlowFeatures(host), () => sessions.delete(session));
+      sessions.add(session);
+      return session;
+    },
+    close() {
+      if (closePromise) return closePromise;
+      closing = true;
+      closePromise = Promise.allSettled([...sessions].map((session) => session.close())).then(async (results) => {
+        await host.close();
+        sessions.clear();
+        const failure = results.find((result) => result.status === "rejected");
+        if (failure) throw failure.reason;
+      });
+      return closePromise;
+    },
+    terminalIsEmpty: () => closing && sessions.size === 0 && host.terminalIsEmpty(),
+  });
 }
 
 const invokeFeature = Symbol("FlowSession.invokeFeature");
+const sessionAuthority = Symbol("FlowSession.owner");
 
 export class FlowSession {
-  constructor() {
-    if (!defaultHost) throw new Error("Flow browser ABI must be initialized before opening a session");
-    this.ready = createFlowFeatures(defaultHost);
+  #ready;
+  #closed = false;
+  #closePromise;
+  #release;
+  #released = false;
+
+  constructor(authority, ready, release) {
+    if (authority !== sessionAuthority) throw new Error("Flow sessions require their runtime owner");
+    this.#release = release;
+    this.#ready = Promise.resolve(ready).catch((error) => {
+      if (isFlowSessionOpenRejected(error)) this.#releaseOnce();
+      throw error;
+    });
   }
 
   [invokeFeature](name, args) {
-    return deferredFlowTask(this.ready, (features) => {
+    return deferredFlowTask(this.#ready, (features) => {
+      if (this.#closed) throw new Error("Flow session is closed");
       const group = Object.keys(FlowFeatureGroups).find((candidate) => FlowFeatureGroups[candidate].includes(name));
       return features[group][name](args);
     });
   }
 
   attachCanvas(canvas, width, height, dpr) {
-    return deferredFlowTask(this.ready, (features) => attachFlowSurface(features, canvas, { width, height, dpr }));
+    return deferredFlowTask(this.#ready, (features) => {
+      if (this.#closed) throw new Error("Flow session is closed");
+      return attachFlowSurface(features, canvas, { width, height, dpr });
+    });
   }
 
   renderCanvas(canvas) {
-    return deferredFlowTask(this.ready, (features) => renderFlowSurface(features, canvas));
+    return deferredFlowTask(this.#ready, (features) => {
+      if (this.#closed) throw new Error("Flow session is closed");
+      return renderFlowSurface(features, canvas);
+    });
   }
 
-  async close() {
-    const features = await this.ready;
-    await features.lifetime.close();
+  close() {
+    if (this.#closePromise) return this.#closePromise;
+    this.#closed = true;
+    this.#closePromise = this.#ready.then((features) => features.lifetime.close()).then(() => this.#releaseOnce());
+    return this.#closePromise;
+  }
+
+  #releaseOnce() {
+    if (this.#released) return;
+    this.#released = true;
+    this.#release();
   }
 
   free() { return this.close(); }

@@ -13,8 +13,6 @@ use semio_framework_plugin::{BuiltNode, Canvas2dScene};
 pub const WINDOW_KIND_ID: &str = "fem2d-view-model";
 pub const BODY_KEY: &str = "fem2d.view.model";
 /// 👁️ Read-only counterpart of the editor's `FEM2D_APP_ID` controller id — kept distinct so a viewer
-/// session's canvas-2d controller can never be mistaken for an editor session's.
-const FEM2D_VIEW_CONTROLLER_ID: &str = "fem2d-view";
 
 /// 📐️ Model-meters -> screen-pixels scale for the 2D canvas — duplicated from the sibling editor's
 /// model window (same literal value, not imported through it; see this file's own doc comment).
@@ -45,7 +43,7 @@ fn fem2d_element_endpoints(element: &FemElement) -> (&str, &str) {
 
 /// 🖼️ Nodes/members/supports as Canvas2d layers — read-only duplicate of the sibling editor's
 /// `fem2d_structure_layers`.
-fn fem2d_structure_layers(doc: &Fem2dSnapshot, node_color: &str, line_color: &str, support_color: &str) -> Vec<dsl::DslValue> {
+fn fem2d_structure_layers(doc: &Fem2dSnapshot, node_color: &str, line_color: &str, support_color: &str) -> Vec<dsl::json::Value> {
     let mut layers = Vec::new();
     for node in &doc.nodes {
         let (sx, sy) = screen_2d(node.x, node.y);
@@ -93,7 +91,7 @@ fn fem2d_region_triangles(doc: &Fem2dSnapshot) -> Vec<(String, [(f64, f64); 3])>
 /// overlay, hardcoded `FemCamera::default()` (a viewer has no persisted per-session camera —
 /// `Config = NoConfig`). No results overlay, no selection, no gumball — a viewer has no utilities
 /// that edit and emits no mutations by construction (`ViewEmit`).
-pub fn render(doc: &Fem2dSnapshot) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn render(doc: &Fem2dSnapshot) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let camera = FemCamera::default();
     let mut layers = fem2d_structure_layers(doc, "#38bdf8", "#94a3b8", "#f97316");
     for (tri_index, (_, tri)) in fem2d_region_triangles(doc).iter().enumerate() {
@@ -118,7 +116,7 @@ mod tests {
     #[test]
     fn renders_a_canvas_2d_scene_for_the_default_document() {
         let document = crate::artifacts::fem2d::schema::empty_fem2d_snapshot();
-        let json = dsl::json::to_string(&dsl::json::Value::Array(render(&document)));
+        let json = semio_framework_plugin::testkit::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(render(&document).expect("fixture surface admission"))).expect("fixture projection");
         assert!(json.contains("canvas-2d"), "expected a valid canvas-2d scene, got: {json}");
     }
 
@@ -126,7 +124,7 @@ mod tests {
     fn renders_mesh_edge_preview_for_the_default_example() {
         use store::ArtifactDsl;
         let document = Fem2dSnapshot::parse_dsl(crate::artifacts::fem2d::dsl::FEM2D_EXAMPLE_TEXT).expect("parse default example");
-        let node = render(&document);
+        let node = render(&document).expect("fixture surface admission");
         let semio_framework_ui_contract::Component::Surface(props) = &node.component else { panic!("expected canvas surface") };
         let scene: Canvas2dScene = semio_framework_ui_scene::decode(props).expect("decode canvas scene");
         assert!(scene.layers_json.contains("mesh-edge-"), "expected mesh-edge preview layers in the view scene: {}", scene.layers_json);

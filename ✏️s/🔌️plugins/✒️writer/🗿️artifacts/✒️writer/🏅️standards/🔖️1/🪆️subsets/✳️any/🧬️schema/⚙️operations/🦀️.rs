@@ -1,6 +1,8 @@
 //! ⚙️ Writer mutation application, codec bridge, store laws, and behavior tests.
 
-use crate::artifacts::writer::schema::mutations::{ChangeLanguage, ChangeUri, EditText, RenameWriter, WriterMutation};
+use crate::artifacts::writer::schema::mutations::WriterMutation;
+#[cfg(test)]
+use crate::artifacts::writer::schema::mutations::{ChangeLanguage, ChangeUri, EditText, RenameWriter};
 use crate::artifacts::writer::WriterDiff;
 use crate::artifacts::writer::WriterSnapshot;
 use protocol::{Mutation, MutationDiff};
@@ -25,7 +27,7 @@ pub fn inverse_writer_mutation(snapshot: &WriterSnapshot, mutation: &WriterMutat
 /// one — which is exactly what `edit-text`'s committed vector declares — cannot use it.
 // 🚫️async: E1 pure computation over an in-memory snapshot, consumed from a synchronous external test host — see R9
 pub fn apply_writer_mutation_outcome(snapshot: &mut WriterSnapshot, mutation: &WriterMutation) -> protocol::MutationOutcome<WriterDiff> {
-    let outcome = <WriterMutation as protocol::Mutation<WriterSnapshot>>::diff(mutation, snapshot);
+    let outcome = <WriterMutation as Mutation<WriterSnapshot>>::diff(mutation, snapshot);
     outcome.apply_to(snapshot)
 }
 
@@ -41,20 +43,20 @@ pub fn inverse_writer_mutation_steps(mutation: &WriterMutation, base: &WriterSna
 /// committed `<slug>/🧪️tests/<fixture>/🦠️mutation/🔣️.json` vectors carry.
 // 🚫️async: E1 pure codec helper (file verified I/O-free) — see R9
 pub fn decode_writer_mutation_json(text: &str) -> Result<WriterMutation, String> {
-    serde_json::from_str(text).map_err(|error| error.to_string())
+    dsl::os_pack::json::from_json_str(text).map_err(|error| error.to_string())
 }
 
 /// 📥️ Decodes a committed `📸️snapshot/{⬅️before,➡️after}/🔣️.json` vector.
 // 🚫️async: E1 pure codec helper (file verified I/O-free) — see R9
 pub fn decode_writer_snapshot_json(text: &str) -> Result<WriterSnapshot, String> {
-    serde_json::from_str(text).map_err(|error| error.to_string())
+    dsl::os_pack::json::from_json_str(text).map_err(|error| error.to_string())
 }
 
 /// 📤️ The snapshot as the same canonical JSON the committed vectors are written in — the
 /// projection an external test host compares through.
 // 🚫️async: E1 pure codec helper (file verified I/O-free) — see R9
 pub fn encode_writer_snapshot_json(snapshot: &WriterSnapshot) -> String {
-    serde_json::to_string(snapshot).expect("a WriterSnapshot is always serializable")
+    dsl::os_pack::json::to_json_string(snapshot)
 }
 
 //#endregion ⚙️Operations
@@ -67,22 +69,22 @@ mod tests {
 
     type WriterStore = store::ArtifactStore<WriterSnapshot, WriterMutation>;
 
-    fn seeded_store() -> WriterStore {
-        WriterStore::new(store::create_document_envelope("writer.document", "writer", schema::empty_writer_snapshot(), None)).expect("valid artifact store fixture")
+    async fn seeded_store() -> WriterStore {
+        WriterStore::new(store::create_document_envelope("writer.document", "writer", schema::empty_writer_snapshot(), None)).await.expect("valid artifact store fixture")
     }
 
     #[semio_framework_async_macros::async_test]
     async fn writer_document_vcs_replays_text_mutations() {
-        let mut store = seeded_store();
-        store.dispatch(store::ArtifactCommand::Apply { mutations: vec![WriterMutation::EditText(EditText { text: "hello".into() })], description: None }).expect("apply");
+        let mut store = seeded_store().await;
+        store.dispatch(store::ArtifactCommand::Apply { mutations: vec![WriterMutation::EditText(EditText { text: "hello".into() })], description: None }).await.expect("apply");
         assert_eq!(crate::artifacts::writer::writer_text(&store.snapshot().expect("snapshot")), "hello");
     }
 
     #[semio_framework_async_macros::async_test]
     async fn writer_document_vcs_undoes_text_mutation() {
-        let mut store = seeded_store();
-        store.dispatch(store::ArtifactCommand::Apply { mutations: vec![WriterMutation::EditText(EditText { text: "hello".into() })], description: None }).expect("apply");
-        store.dispatch(store::ArtifactCommand::Undo).expect("undo");
+        let mut store = seeded_store().await;
+        store.dispatch(store::ArtifactCommand::Apply { mutations: vec![WriterMutation::EditText(EditText { text: "hello".into() })], description: None }).await.expect("apply");
+        store.dispatch(store::ArtifactCommand::Undo).await.expect("undo");
         assert_eq!(crate::artifacts::writer::writer_text(&store.snapshot().expect("snapshot")), "");
     }
 
@@ -99,23 +101,23 @@ mod tests {
         let base = WriterSnapshot { uri: "writer://a".into(), language_id: "plaintext".into(), ..schema::empty_writer_snapshot() };
 
         let uri_mutation = WriterMutation::ChangeUri(ChangeUri { new_uri: "writer://b".into() });
-        protocol::testkit::assert_mutation_inverse_law(&base, &uri_mutation);
+        protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &uri_mutation).await;
         let d1 = uri_mutation.diff(&base).diff().clone();
         let d2 = WriterMutation::ChangeUri(ChangeUri { new_uri: "writer://c".into() }).diff(&base).diff().clone();
-        protocol::testkit::assert_mutation_diff_absorb_law(&base, d1, d2);
+        protocol::os_spr::testkit::assert_mutation_diff_absorb_law(&base, d1, d2).await;
 
         let language_mutation = WriterMutation::ChangeLanguage(ChangeLanguage { new_language_id: "jack".into() });
-        protocol::testkit::assert_mutation_inverse_law(&base, &language_mutation);
+        protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &language_mutation).await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn edit_text_obeys_the_inverse_and_diff_absorb_laws() {
         let base = WriterSnapshot { document: crate::artifacts::writer::document_child_handle_with_text("empty", "first", "plaintext"), ..schema::empty_writer_snapshot() };
         let mutation = WriterMutation::EditText(EditText { text: "second".into() });
-        protocol::testkit::assert_mutation_inverse_law(&base, &mutation);
+        protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &mutation).await;
         let d1 = mutation.diff(&base).diff().clone();
         let d2 = WriterMutation::EditText(EditText { text: "third".into() }).diff(&base).diff().clone();
-        protocol::testkit::assert_mutation_diff_absorb_law(&base, d1, d2);
+        protocol::os_spr::testkit::assert_mutation_diff_absorb_law(&base, d1, d2).await;
     }
     //#endregion 🔖️MutationLaws
 
@@ -128,26 +130,26 @@ mod tests {
     async fn edit_text_outcome_is_deterministic() {
         let base = WriterSnapshot { document: crate::artifacts::writer::document_child_handle_with_text("empty", "first", "plaintext"), ..schema::empty_writer_snapshot() };
         let mutation = WriterMutation::EditText(EditText { text: "second".into() });
-        protocol::testkit::assert_outcome_deterministic(&base, &mutation);
+        protocol::os_spr::testkit::assert_outcome_deterministic(&base, &mutation).await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn rename_writer_outcome_obeys_the_policy_matrix() {
         let snapshot = WriterSnapshot { id: "old-id".into(), document: crate::artifacts::writer::document_child_handle_with_text("old-id", "old text", "plaintext"), ..schema::empty_writer_snapshot() };
-        protocol::testkit::assert_outcome_policy_matrix(&snapshot, &WriterMutation::RenameWriter(RenameWriter { new_id: "new-id".into() }));
+        protocol::os_spr::testkit::assert_outcome_policy_matrix(&snapshot, &WriterMutation::RenameWriter(RenameWriter { new_id: "new-id".into() })).await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn change_uri_and_change_language_outcomes_obey_the_policy_matrix() {
         let base = WriterSnapshot { uri: "writer://a".into(), language_id: "plaintext".into(), ..schema::empty_writer_snapshot() };
-        protocol::testkit::assert_outcome_policy_matrix(&base, &WriterMutation::ChangeUri(ChangeUri { new_uri: "writer://b".into() }));
-        protocol::testkit::assert_outcome_policy_matrix(&base, &WriterMutation::ChangeLanguage(ChangeLanguage { new_language_id: "jack".into() }));
+        protocol::os_spr::testkit::assert_outcome_policy_matrix(&base, &WriterMutation::ChangeUri(ChangeUri { new_uri: "writer://b".into() })).await;
+        protocol::os_spr::testkit::assert_outcome_policy_matrix(&base, &WriterMutation::ChangeLanguage(ChangeLanguage { new_language_id: "jack".into() })).await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn edit_text_outcome_obeys_the_policy_matrix() {
         let base = WriterSnapshot { document: crate::artifacts::writer::document_child_handle_with_text("empty", "first", "plaintext"), ..schema::empty_writer_snapshot() };
-        protocol::testkit::assert_outcome_policy_matrix(&base, &WriterMutation::EditText(EditText { text: "second".into() }));
+        protocol::os_spr::testkit::assert_outcome_policy_matrix(&base, &WriterMutation::EditText(EditText { text: "second".into() })).await;
     }
     //#endregion 🧪️OutcomeLaws
 }

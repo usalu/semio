@@ -38,7 +38,7 @@ pub mod set_active_asset {
         match payload.asset_id.as_deref().filter(|id| !id.is_empty()) {
             Some(id) => Ok(Emit {
                 artifact_mutations: vec![ShootingMutation::SetActiveAsset(SetActiveAssetMutation { asset_id: Some(id.into()) })],
-                config_mutations: vec![ShootingConfigMutation::SetFitRevision { value: cfg.snapshot.fit_revision + 1 }],
+                config_mutations: vec![ShootingConfigMutation::SetFitRevision(crate::editor::shooting::config::SetFitRevision { value: cfg.snapshot.fit_revision + 1 })],
                 ..Default::default()
             }),
             None => Ok(Emit::default()),
@@ -119,7 +119,7 @@ pub mod import_asset {
         let asset = ShootingAsset { id: id.clone(), name: resolved_name, url: payload.payload.clone(), format: "glb".into(), origin: [0.0, 0.0, 0.0], orientation: Some([0.0, 0.0, 0.0, 1.0]), scale: None };
         Ok(Emit {
             artifact_mutations: vec![ShootingMutation::CreateAsset(CreateAsset { asset, index: Some(snapshot.assets.len()) }), ShootingMutation::SetActiveAsset(SetActiveAssetMutation { asset_id: Some(id) })],
-            config_mutations: vec![ShootingConfigMutation::SetFitRevision { value: cfg.snapshot.fit_revision + 1 }],
+            config_mutations: vec![ShootingConfigMutation::SetFitRevision(crate::editor::shooting::config::SetFitRevision { value: cfg.snapshot.fit_revision + 1 })],
             ..Default::default()
         })
     }
@@ -149,17 +149,17 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn set_active_asset_emits_both_a_document_and_a_fit_revision_config_operation() {
-        let mut app = shooting_app();
+        let mut app = shooting_app().await;
         let asset_id = app.snapshot().expect("snapshot").assets[0].id.clone();
-        let result = dispatch(&mut app, ShootingCommand::SetActiveAsset(set_active_asset::SetActiveAsset { asset_id: Some(asset_id.clone()) }));
+        let result = dispatch(&mut app, ShootingCommand::SetActiveAsset(set_active_asset::SetActiveAsset { asset_id: Some(asset_id.clone()) })).await;
         assert_eq!(result.mutations.len(), 1, "activating an asset is a real document edit");
         assert_eq!(app.snapshot().expect("snapshot").active_asset_id, asset_id);
     }
 
     #[semio_framework_async_macros::async_test]
     async fn import_asset_names_and_activates_the_new_asset() {
-        let mut app = shooting_app();
-        dispatch(&mut app, ShootingCommand::ImportAsset(import_asset::ImportAsset { payload: "data:model/gltf-binary;base64,AAAA".into(), name: Some("chair.glb".into()) }));
+        let mut app = shooting_app().await;
+        dispatch(&mut app, ShootingCommand::ImportAsset(import_asset::ImportAsset { payload: "data:model/gltf-binary;base64,AAAA".into(), name: Some("chair.glb".into()) })).await;
         let snapshot = app.snapshot().expect("snapshot");
         let imported = snapshot.assets.last().unwrap();
         assert_eq!(imported.name, "chair");
@@ -170,8 +170,8 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn import_asset_request_declares_the_glb_accept_filter() {
         use semio_framework_plugin::Effect;
-        let mut app = shooting_app();
-        let result = dispatch(&mut app, ShootingCommand::ImportAssetRequest(import_asset_request::ImportAssetRequest {}));
+        let mut app = shooting_app().await;
+        let result = dispatch(&mut app, ShootingCommand::ImportAssetRequest(import_asset_request::ImportAssetRequest {})).await;
         match &result.requested_effects[0] {
             Effect::RequestFileOpen { read_as, import_action, .. } => {
                 assert_eq!(read_as.as_deref(), Some("dataUrl"));

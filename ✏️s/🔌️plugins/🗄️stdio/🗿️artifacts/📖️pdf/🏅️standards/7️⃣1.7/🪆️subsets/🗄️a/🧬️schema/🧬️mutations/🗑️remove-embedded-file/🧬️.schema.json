@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "RemoveEmbeddedFile",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "fileName"
+  ],
+  "properties": {
+    "fileName": {
+      "type": "string"
+    }
+  }
+}

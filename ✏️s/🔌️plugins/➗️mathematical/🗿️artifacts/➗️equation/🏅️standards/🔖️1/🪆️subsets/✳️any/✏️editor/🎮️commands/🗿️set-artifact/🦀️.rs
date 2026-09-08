@@ -42,7 +42,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn set_artifact_replaces_graph_and_geometry() {
-        let mut app = math_app();
+        let mut app = math_app().await;
         let geometry = EquationGeometry { points: vec![crate::artifacts::equation::EquationPoint { x: 1.0, y: 2.0 }] };
         dispatch(
             &mut app,
@@ -50,7 +50,7 @@ mod tests {
                 graph: crate::artifacts::equation::dsl::math_graph_to_dsl(&crate::artifacts::equation::EquationGraph { algorithm: "components".into(), ..Default::default() }),
                 geometry: geometry.clone(),
             }),
-        );
+        ).await;
         let projection = app.snapshot().expect("projection");
         assert_eq!(crate::artifacts::equation::equation_graph(&projection).algorithm, "components");
         assert_eq!(crate::artifacts::equation::equation_geometry(&projection), geometry);

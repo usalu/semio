@@ -48,7 +48,15 @@
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts build",
         "forwardAllArgs": true
-      }
+      },
+      "cache": true,
+      "outputs": [
+        "{projectRoot}/out"
+      ],
+      "inputs": [
+        "default",
+        "^default"
+      ]
     },
     "lint": {
       "executor": "nx:run-commands",
@@ -67,7 +75,11 @@
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts build-vsix",
         "forwardAllArgs": true
-      }
+      },
+      "cache": true,
+      "outputs": [
+        "{projectRoot}/🧩️repo.vsix"
+      ]
     }
   }
 }

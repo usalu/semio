@@ -28,22 +28,21 @@ use crate::editor::sequence::terminology::sequence_play_labels;
 use dag::{dag_fixture_to_wire_literal, would_create_cycle, DagCamera, DagFixture, DagFixtureEdge, DagHost, DagLayoutOptions, DagNodeSpec, EdgeRouteStyle, IoPortSpec, PortShape};
 use graph::manifest::PropertyBag;
 use imperative_engine::{
-    compile_to_text as imperative_compile_to_text, contributions_json_from_entries, imperative_catalogue_json, imperative_module_registry, register_native_imperative_module, sync_imperative_module_contributions, Executor, Path, RunResult, Step,
+    compile_to_text as imperative_compile_to_text, imperative_catalogue_json, imperative_module_registry, Executor, Path, RunResult, Step,
 };
 use infinite_board_port_directed_dag as dag;
 use neural_engine::{ChannelSpec, Dictionary, Registry, Value as NeuralValue};
 use semio_framework_plugin::{
-    app::InteractionView, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, AppActionRegistry, AppDefinition, AppIo, ArtifactEditor, ArtifactView, ConfigFieldShape, ConfigFieldSpec, ConfigSpec, ConfigView,
+    app::InteractionView, ActionArgDef, ActionArgOption, ActionDefinition, ActionKind, AppActionRegistry, AppDefinition, AppIo, ArtifactEditor, ArtifactView, ConfigFieldShape, ConfigFieldSpec, ConfigSpec, ConfigView,
     ContextMenuItemSpec, ContextMenuRequest, Dialect, DomainTopology, DraftView, DslValue, Editor, Emit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, InteractionTopology, Label, LocalizedLabel,
-    Media, MediaError, MediaPayload, MergeMode, NoDraft, NoDraftMutation, SelectionMethod, SelectionMode, SelectionSpec, TopologyNode, UiNode,
+    Media, MediaError, MediaPayload, MergeMode, NoDraft, NoDraftMutation, SelectionMethod, SelectionMode, SelectionSpec, TopologyNode,
 };
 use serde_json::{json, Value};
 use std::collections::{BTreeMap, HashMap, VecDeque};
-use std::io::Write;
 use store::EngineHandles;
 
 //#region 🔖️Constants
-pub const SEQUENCE_PLAY_APP_ID: &str = "sequence-play";
+pub const SEQUENCE_PLAY_APP_ID: &str = "s.sequence.sequence@1/*#editor";
 pub use catalogue_panel::SEQUENCE_PLAY_BODY_CATALOGUE;
 pub use compiled::SEQUENCE_PLAY_BODY_COMPILED;
 pub use document_panel::SEQUENCE_PLAY_BODY_DOCUMENT;
@@ -63,6 +62,11 @@ pub fn sequence_action(action: &str, args: Option<semio_framework_plugin::UiValu
     semio_framework_plugin::ActionFactory::new(SEQUENCE_PLAY_APP_ID).action(action, args)
 }
 
+
+/// 🏷️ Admits one semantic label for Sequence panels.
+pub fn ui_label(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_ui_contract::Label> {
+    semio_framework_ui_contract::Label::try_from(value.as_ref()).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "sequence label admission failed"))
+}
 
 /// 🧱️ Admits one fixed UI text action value without JSON staging.
 pub fn ui_value_text(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiValue> {
@@ -172,7 +176,7 @@ pub fn dag_camera_from_sequence(value: &SequenceCamera) -> DagCamera {
 /// 🚨️ `SequenceHost`'s fallible operations.
 #[derive(Debug)]
 pub enum SequenceCoreError {
-    Json(serde_json::Error),
+    Json(String),
     UnsupportedSchema(String),
     SelfConnect,
     StepNotFound(String),
@@ -202,7 +206,7 @@ impl std::fmt::Display for SequenceCoreError {
 impl std::error::Error for SequenceCoreError {
     fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
         match self {
-            Self::Json(error) => std::error::Error::source(error),
+            Self::Json(_) => None,
             _ => None,
         }
     }
@@ -210,7 +214,7 @@ impl std::error::Error for SequenceCoreError {
 
 impl From<serde_json::Error> for SequenceCoreError {
     fn from(error: serde_json::Error) -> Self {
-        Self::Json(error)
+        Self::Json(error.to_string())
     }
 }
 //#endregion ⚠️ Errors
@@ -231,7 +235,7 @@ const FLOW_INPUT_PORT: &str = "prev";
 const FLOW_OUTPUT_PORT: &str = "next";
 
 fn property_bag_from_dictionary(dict: &Dictionary) -> PropertyBag {
-    serde_json::from_value(serde_json::to_value(dict).unwrap_or(Value::Null)).unwrap_or_default()
+    dsl::FromValue::from_value(dsl::ToValue::to_value(dict)).unwrap_or_default()
 }
 
 /// 🧭️ `pub` — reused by other app taxonomy nodes (panels/commands: control-flow nesting, catalogue slots).
@@ -349,6 +353,7 @@ fn slot_key(slot: Option<&SlotRef>) -> Option<(String, String)> {
 
 #[cfg(test)]
 fn ensure_imperative_modules_for_tests() {
+    use imperative_engine::{contributions_json_from_entries, register_native_imperative_module, sync_imperative_module_contributions};
     use std::sync::Once;
     static ONCE: Once = Once::new();
     ONCE.call_once(|| {
@@ -423,7 +428,7 @@ impl SequenceHost {
     }
 
     pub fn load_json(json: &str) -> Result<Self, SequenceCoreError> {
-        let fixture: SequenceFixture = serde_json::from_str(json)?;
+        let fixture: SequenceFixture = dsl::os_pack::from_json_str(json).map_err(|error| SequenceCoreError::Json(error.to_string()))?;
         if fixture.schema != "sequence.sequence" {
             return Err(SequenceCoreError::UnsupportedSchema(fixture.schema));
         }
@@ -431,7 +436,7 @@ impl SequenceHost {
     }
 
     pub fn to_json(&self) -> Result<String, SequenceCoreError> {
-        Ok(serde_json::to_string(&self.snapshot)?)
+        Ok(dsl::os_pack::to_json_string(&self.snapshot))
     }
 
     pub fn catalogue_json(&self) -> String {
@@ -529,7 +534,7 @@ impl SequenceHost {
     }
 
     pub fn set_step_params_json(&mut self, id: &str, json: &str) -> Result<(), SequenceCoreError> {
-        let params: StepParams = serde_json::from_str(json)?;
+        let params: StepParams = dsl::os_pack::from_json_str(json).map_err(|error| SequenceCoreError::Json(error.to_string()))?;
         let Some(step) = self.snapshot.steps.iter_mut().find(|step| step.id == id) else {
             return Err(SequenceCoreError::UnknownStep(id.into()));
         };
@@ -617,7 +622,7 @@ impl SequenceHost {
     }
 
     pub fn build_path_json(&self) -> Result<String, SequenceCoreError> {
-        Ok(serde_json::to_string(&self.build_path())?)
+        Ok(dsl::os_pack::to_json_string(&self.build_path()))
     }
 
     fn build_path_for_slot(&self, slot: Option<&SlotRef>) -> Path {
@@ -730,7 +735,7 @@ impl SequenceHost {
     }
 
     fn rebuild_dag(&mut self) {
-        let selected = self.dag.selected_node_ids()?;
+        let selected = self.dag.selected_node_ids();
         let dag_fixture = self.build_dag_fixture();
         self.dag = DagHost::from_fixture_without_layout(dag_fixture);
         self.dag.set_camera(self.camera.x, self.camera.y, self.camera.zoom);
@@ -863,29 +868,156 @@ struct SequenceArtifactStorePreparation {
     closing: bool,
 }
 
+
 struct SequenceBoundedByteCounter {
     written: usize,
     maximum_bytes: usize,
 }
 
-impl Write for SequenceBoundedByteCounter {
-    fn write(&mut self, bytes: &[u8]) -> std::io::Result<usize> {
-        let next = self.written.checked_add(bytes.len()).ok_or_else(|| std::io::Error::new(std::io::ErrorKind::InvalidData, "Sequence retained byte count overflow"))?;
-        if next > self.maximum_bytes {
-            return Err(std::io::Error::new(std::io::ErrorKind::InvalidData, "Sequence retained value exceeds its byte cap"));
-        }
+impl SequenceBoundedByteCounter {
+    fn add(&mut self, bytes: usize) -> Result<(), String> {
+        let next = self.written.checked_add(bytes).ok_or("Sequence retained byte count overflow")?;
+        if next > self.maximum_bytes { return Err("Sequence retained value exceeds its byte cap".into()); }
         self.written = next;
-        Ok(bytes.len())
+        Ok(())
     }
-
-    fn flush(&mut self) -> std::io::Result<()> {
+    fn object(&mut self, fields: &[(&str, &dyn SequenceRetainedJson)]) -> Result<(), String> {
+        self.add(2)?;
+        for (index, (key, value)) in fields.iter().enumerate() {
+            self.add(usize::from(index > 0) + 1)?;
+            key.measure(self)?;
+            value.measure(self)?;
+        }
         Ok(())
     }
 }
 
-fn sequence_bounded_serialized_bytes<T: serde::Serialize>(value: &T, maximum_bytes: usize) -> Result<usize, String> {
+trait SequenceRetainedJson {
+    fn measure(&self, counter: &mut SequenceBoundedByteCounter) -> Result<(), String>;
+}
+
+impl<T: SequenceRetainedJson + ?Sized> SequenceRetainedJson for &T {
+    fn measure(&self, counter: &mut SequenceBoundedByteCounter) -> Result<(), String> { (*self).measure(counter) }
+}
+
+impl SequenceRetainedJson for str {
+    fn measure(&self, counter: &mut SequenceBoundedByteCounter) -> Result<(), String> {
+        counter.add(2)?;
+        for byte in self.bytes() {
+            counter.add(match byte { b'"' | b'\\' | 8 | 12 | b'\n' | b'\r' | b'\t' => 2, 0..=31 => 6, _ => 1 })?;
+        }
+        Ok(())
+    }
+}
+
+impl SequenceRetainedJson for String {
+    fn measure(&self, counter: &mut SequenceBoundedByteCounter) -> Result<(), String> { self.as_str().measure(counter) }
+}
+
+impl SequenceRetainedJson for bool {
+    fn measure(&self, counter: &mut SequenceBoundedByteCounter) -> Result<(), String> { counter.add(if *self { 4 } else { 5 }) }
+}
+
+impl SequenceRetainedJson for f64 {
+    fn measure(&self, counter: &mut SequenceBoundedByteCounter) -> Result<(), String> { counter.add(dsl::os_pack::to_json_string(self).len()) }
+}
+
+impl<T: SequenceRetainedJson> SequenceRetainedJson for Option<T> {
+    fn measure(&self, counter: &mut SequenceBoundedByteCounter) -> Result<(), String> {
+        match self { Some(value) => value.measure(counter), None => counter.add(4) }
+    }
+}
+
+impl<T: SequenceRetainedJson> SequenceRetainedJson for Vec<T> {
+    fn measure(&self, counter: &mut SequenceBoundedByteCounter) -> Result<(), String> {
+        counter.add(2)?;
+        for (index, value) in self.iter().enumerate() { counter.add(usize::from(index > 0))?; value.measure(counter)?; }
+        Ok(())
+    }
+}
+
+impl<A: SequenceRetainedJson, B: SequenceRetainedJson> SequenceRetainedJson for (A, B) {
+    fn measure(&self, counter: &mut SequenceBoundedByteCounter) -> Result<(), String> {
+        counter.add(3)?;
+        self.0.measure(counter)?;
+        self.1.measure(counter)
+    }
+}
+
+impl SequenceRetainedJson for Dictionary {
+    fn measure(&self, counter: &mut SequenceBoundedByteCounter) -> Result<(), String> {
+        counter.add(2)?;
+        for (index, (key, value)) in self.iter().enumerate() {
+            counter.add(usize::from(index > 0) + 1)?;
+            key.measure(counter)?;
+            value.measure(counter)?;
+        }
+        Ok(())
+    }
+}
+
+impl SequenceRetainedJson for NeuralValue {
+    fn measure(&self, counter: &mut SequenceBoundedByteCounter) -> Result<(), String> {
+        match self {
+            Self::Dictionary(value) => value.measure(counter),
+            Self::Atom(neural_engine::Atom::String(value)) => value.measure(counter),
+            Self::Atom(value) => counter.add(dsl::os_pack::to_json_string(value).len()),
+        }
+    }
+}
+
+impl SequenceRetainedJson for StepParams {
+    fn measure(&self, counter: &mut SequenceBoundedByteCounter) -> Result<(), String> { self.0.measure(counter) }
+}
+
+macro_rules! sequence_json_record {
+    ($ty:path, $($key:literal => $field:ident),+ $(,)?) => {
+        impl SequenceRetainedJson for $ty {
+            fn measure(&self, counter: &mut SequenceBoundedByteCounter) -> Result<(), String> {
+                counter.object(&[$(($key, &self.$field)),+])
+            }
+        }
+    };
+}
+
+sequence_json_record!(SequenceStep, "id" => id, "kind" => kind, "params" => params, "x" => x, "y" => y, "slot" => slot, "collapsed" => collapsed);
+sequence_json_record!(SequenceEdge, "id" => id, "from" => from, "to" => to);
+sequence_json_record!(SlotRef, "owner" => owner, "name" => name);
+sequence_json_record!(SequenceCamera, "x" => x, "y" => y, "zoom" => zoom);
+sequence_json_record!(crate::editor::sequence::config::SetLastRun, "json" => json);
+sequence_json_record!(crate::editor::sequence::config::SetOrientation, "value" => value);
+sequence_json_record!(crate::editor::sequence::config::SetCamera, "camera" => camera);
+sequence_json_record!(crate::editor::sequence::config::SetLocale, "value" => value);
+
+impl SequenceRetainedJson for SequenceConfigMutation {
+    fn measure(&self, counter: &mut SequenceBoundedByteCounter) -> Result<(), String> {
+        match self {
+            Self::SetLastRun(payload) => counter.object(&[("SetLastRun", payload)]),
+            Self::SetOrientation(payload) => counter.object(&[("SetOrientation", payload)]),
+            Self::SetCamera(payload) => counter.object(&[("SetCamera", payload)]),
+            Self::SetLocale(payload) => counter.object(&[("SetLocale", payload)]),
+        }
+    }
+}
+
+impl SequenceRetainedJson for SequenceMutation {
+    fn measure(&self, counter: &mut SequenceBoundedByteCounter) -> Result<(), String> {
+        match self {
+            Self::CreateStep(payload) => counter.object(&[("mutation", &"createStep"), ("step", &payload.step)]),
+            Self::DeleteStep(payload) => counter.object(&[("mutation", &"deleteStep"), ("id", &payload.id)]),
+            Self::MoveStep(payload) => counter.object(&[("mutation", &"moveStep"), ("id", &payload.id), ("x", &payload.x), ("y", &payload.y)]),
+            Self::EditStepParams(payload) => counter.object(&[("mutation", &"editStepParams"), ("id", &payload.id), ("params", &payload.params)]),
+            Self::ChangeStepCollapsed(payload) => counter.object(&[("mutation", &"changeStepCollapsed"), ("id", &payload.id), ("collapsed", &payload.collapsed)]),
+            Self::ConnectSteps(payload) => counter.object(&[("mutation", &"connectSteps"), ("id", &payload.id), ("from", &payload.from), ("to", &payload.to)]),
+            Self::DisconnectSteps(payload) => counter.object(&[("mutation", &"disconnectSteps"), ("id", &payload.id)]),
+            Self::DuplicateStep(payload) => counter.object(&[("mutation", &"duplicateStep"), ("sourceId", &payload.source_id), ("newId", &payload.new_id), ("x", &payload.x), ("y", &payload.y)]),
+        }
+    }
+}
+
+fn sequence_bounded_serialized_bytes<T: SequenceRetainedJson>(value: &T, maximum_bytes: usize) -> Result<usize, String> {
     let mut counter = SequenceBoundedByteCounter { written: 0, maximum_bytes };
-    serde_json::to_writer(&mut counter, value).map_err(|error| error.to_string())?;
+    value.measure(&mut counter)?;
     Ok(counter.written)
 }
 
@@ -1087,10 +1219,10 @@ fn sequence_config_retained_bytes(config: &SequenceConfig) -> usize {
 
 fn sequence_config_mutation_retained_bytes(mutation: &SequenceConfigMutation) -> usize {
     match mutation {
-        SequenceConfigMutation::Snapshot { config } => sequence_config_retained_bytes(config),
-        SequenceConfigMutation::SetLastRun { json } => json.len(),
-        SequenceConfigMutation::SetOrientation { value } | SequenceConfigMutation::SetLocale { value } => value.len(),
-        SequenceConfigMutation::SetCamera { .. } => 0,
+        SequenceConfigMutation::SetLastRun(payload) => payload.json.len(),
+        SequenceConfigMutation::SetOrientation(payload) => payload.value.len(),
+        SequenceConfigMutation::SetLocale(payload) => payload.value.len(),
+        SequenceConfigMutation::SetCamera(_) => 0,
     }
 }
 
@@ -1107,15 +1239,9 @@ fn prepare_sequence_config(base: &SequenceConfig, mutation: SequenceConfigMutati
     if sequence_config_retained_bytes(base) > SEQUENCE_CONFIG_STORE_MAXIMUM_BYTES {
         return Err("Sequence config base exceeds its fixed retained preparation envelope".into());
     }
-    let mut post = base.clone();
-    match &mutation {
-        SequenceConfigMutation::Snapshot { config } => post = config.clone(),
-        SequenceConfigMutation::SetLastRun { json } => post.last_run_json = json.clone(),
-        SequenceConfigMutation::SetOrientation { value } => post.orientation = value.clone(),
-        SequenceConfigMutation::SetCamera { camera } => post.camera = camera.clone(),
-        SequenceConfigMutation::SetLocale { value } => post.locale = value.clone(),
-    }
-    Ok((post, vec![SequenceConfigMutation::Snapshot { config: base.clone() }], mutation))
+    let post = protocol::Mutation::diff(&mutation, base).into_parts().0;
+    let inverse = protocol::Mutation::inverse(&mutation, base);
+    Ok((post, inverse, mutation))
 }
 
 fn sequence_config_store_edit(forward: SequenceConfigMutation, inverse: Vec<SequenceConfigMutation>, description: Option<String>, authority: &store::ArtifactStoreOneItemLiveAuthority) -> protocol::Edit<SequenceConfigMutation> {
@@ -1343,13 +1469,13 @@ fn sequence_retained_artifact_emit(command: &SequenceCommand, snapshot: &Sequenc
         }
         SequenceCommand::RemoveStep(payload) => sequence_retained_delete_ids(scene, [payload.id.clone()]).into_iter().map(|id| SequenceMutation::DeleteStep(crate::artifacts::sequence::mutations::DeleteStep { id })).collect(),
         SequenceCommand::DeleteSelection(_) => {
-            let selected = interaction.selection(SEQUENCE_INTERACTION_STEPS).ids.clone();
+            let selected = interaction.selection.get(SEQUENCE_INTERACTION_STEPS).map(|selection| selection.ids.clone()).unwrap_or_default();
             if selected.len() > SEQUENCE_STORE_MAXIMUM_SCENE_ITEMS { return Err(Fault::from("sequence-retained-selection-capacity")); }
             sequence_retained_delete_ids(scene, selected).into_iter().map(|id| SequenceMutation::DeleteStep(crate::artifacts::sequence::mutations::DeleteStep { id })).collect()
         }
         SequenceCommand::MoveStep(payload) => scene.steps.iter().find(|step| step.id == payload.node_id).filter(|step| step.x != payload.x || step.y != payload.y).map(|_| vec![SequenceMutation::MoveStep(crate::artifacts::sequence::mutations::MoveStep { id: payload.node_id.clone(), x: payload.x, y: payload.y })]).unwrap_or_default(),
         SequenceCommand::SetStepParams(payload) => {
-            let params = serde_json::from_str::<StepParams>(&payload.params_json).ok();
+            let params = dsl::os_pack::from_json_str::<StepParams>(&payload.params_json).ok();
             match (scene.steps.iter().find(|step| step.id == payload.id), params) {
                 (Some(step), Some(params)) if step.params != params => vec![SequenceMutation::EditStepParams(crate::artifacts::sequence::mutations::EditStepParams { id: payload.id.clone(), params })],
                 _ => Vec::new(),
@@ -1398,7 +1524,7 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<semio_framewo
     fn workspace_identity(&self) -> u64 { self.workspace_identity }
     fn extent(&self, _command: &SequenceCommand, snapshot: &SequenceSnapshot, interaction: &protocol::InteractionState, _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<semio_framework_plugin::EditorApp<SequencePlayApp>>>) -> Option<usize> {
         let scene = snapshot.content.local_owner::<SequenceWorkingScene>()?;
-        (scene.steps.len() <= SEQUENCE_STORE_MAXIMUM_SCENE_ITEMS && scene.edges.len() <= SEQUENCE_STORE_MAXIMUM_SCENE_ITEMS && interaction.selection(SEQUENCE_INTERACTION_STEPS).ids.len() <= SEQUENCE_STORE_MAXIMUM_SCENE_ITEMS).then_some(SEQUENCE_RETAINED_MAXIMUM_UNITS)
+        (scene.steps.len() <= SEQUENCE_STORE_MAXIMUM_SCENE_ITEMS && scene.edges.len() <= SEQUENCE_STORE_MAXIMUM_SCENE_ITEMS && interaction.selection.get(SEQUENCE_INTERACTION_STEPS).is_none_or(|selection| selection.ids.len() <= SEQUENCE_STORE_MAXIMUM_SCENE_ITEMS)).then_some(SEQUENCE_RETAINED_MAXIMUM_UNITS)
     }
 
     fn step(&mut self, command: &SequenceCommand, snapshot: &SequenceSnapshot, _config: &SequenceConfig, _history: &semio_framework_plugin::HistoryView, interaction: &protocol::InteractionState, _hover: &semio_framework_plugin::app::InteractionHoverState, _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<semio_framework_plugin::EditorApp<SequencePlayApp>>>, _operation: &semio_framework_plugin::AppOperationContext) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<semio_framework_plugin::EditorApp<SequencePlayApp>>, Fault> {
@@ -1567,14 +1693,14 @@ impl SequenceNodeGraphState {
                 let operation = &self.operations[self.operation];
                 let target = self.target.as_mut().ok_or_else(|| Fault::from("sequence-node-graph-target"))?;
                 match operation.get("operation").and_then(Value::as_str).unwrap_or("") {
-                    "setFixture" => if let Some(fixture) = operation.get("fixtureJson").and_then(Value::as_str).and_then(|json| serde_json::from_str::<SequenceFixture>(json).ok()) {
+                    "setFixture" => if let Some(fixture) = operation.get("fixtureJson").and_then(Value::as_str).and_then(|json| dsl::os_pack::from_json_str::<SequenceFixture>(json).ok()) {
                         if fixture.schema == SEQUENCE_DOCUMENT_SCHEMA && fixture.steps.len() <= SEQUENCE_STORE_MAXIMUM_SCENE_ITEMS && fixture.edges.len() <= SEQUENCE_STORE_MAXIMUM_SCENE_ITEMS {
                             target.steps.clear(); target.edges.clear(); self.fixture_steps = fixture.steps.into(); self.fixture_edges = fixture.edges.into(); self.stage = SequenceNodeGraphStage::FixtureSteps;
                             return Ok(SequencePersistentAdvance::Progress("sequence-node-graph-fixture", b"{\"en\":\"Preparing bounded fixture replacement\",\"de\":\"Begrenzter Dokumentersatz wird vorbereitet\"}"));
                         }
                     },
                     "deleteSelection" => {
-                        let selected = &interaction.selection(SEQUENCE_INTERACTION_STEPS).ids;
+                        let selected = interaction.selection.get(SEQUENCE_INTERACTION_STEPS).map(|selection| selection.ids.as_slice()).unwrap_or_default();
                         if selected.len() > SEQUENCE_STORE_MAXIMUM_SCENE_ITEMS { return Err(Fault::from("sequence-node-graph-selection-capacity")); }
                         self.delete_frontier = selected.iter().cloned().collect(); self.stage = SequenceNodeGraphStage::DeleteSelectionDiscover;
                         return Ok(SequencePersistentAdvance::Progress("sequence-node-graph-selection", b"{\"en\":\"Preparing bounded graph selection\",\"de\":\"Begrenzte Graphauswahl wird vorbereitet\"}"));
@@ -1742,7 +1868,6 @@ impl SequenceRunOrder {
 
     fn complete(&self) -> bool { matches!(self.stage, SequenceRunOrderStage::Complete) }
     fn release_one(&mut self) -> bool { self.scoped.pop().is_some() || self.incoming.pop().is_some() || self.outgoing.pop().is_some() || self.heads.pop().is_some() || self.ordered.pop().is_some() || self.current.take().is_some() || self.owner.take().is_some() || self.name.take().is_some() }
-    fn empty(&self) -> bool { self.scoped.is_empty() && self.incoming.is_empty() && self.outgoing.is_empty() && self.heads.is_empty() && self.ordered.is_empty() && self.current.is_none() && self.owner.is_none() && self.name.is_none() }
 }
 
 struct SequenceRunFrame { order: SequenceRunOrder, cursor: usize, repeat_remaining: usize, repeat_total: usize, while_key: Option<String>, while_iterations: usize }
@@ -1781,9 +1906,9 @@ impl SequenceRunState {
         }
         let Some(frame) = self.frames.last_mut() else {
             let result = RunResult { scope: self.scope.clone(), effects: std::mem::take(&mut self.effects) };
-            let json = serde_json::to_string(&result).map_err(|_| Fault::from("sequence-run-result-json"))?;
+            let json = dsl::os_pack::to_json_string(&result);
             if json.len() > SEQUENCE_STORE_MAXIMUM_BYTES { return Err(Fault::from("sequence-run-result-capacity")); }
-            return Ok(SequencePersistentAdvance::Complete(Emit::config(vec![SequenceConfigMutation::SetLastRun { json }])));
+            return Ok(SequencePersistentAdvance::Complete(Emit::config(vec![SequenceConfigMutation::SetLastRun(crate::editor::sequence::config::SetLastRun { json })])));
         };
         if !frame.order.complete() {
             let stage = frame.order.advance(scene.as_ref());
@@ -2299,7 +2424,7 @@ impl ArtifactEditor for SequencePlayApp {
         };
         let value: Value = serde_json::from_str(json).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
         let params_value = if value.is_object() { value } else { json!({ "value": value }) };
-        let params: StepParams = serde_json::from_value(params_value).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
+        let params: StepParams = dsl::os_pack::from_json_str(&params_value.to_string()).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
         let fixture = doc.snapshot;
         let id = next_available_step_id(fixture);
         let live = fixture.to_fixture();
@@ -2371,8 +2496,8 @@ impl ArtifactEditor for SequencePlayApp {
             // 26/08/14's w3b-summary.md), so this always takes the "nothing selected" branch rather
             // than reading a stale/wrong selection.
             SEQUENCE_PLAY_BODY_INSPECTOR => inspection_panel::render(&live, &[], labels),
-            _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
-        }
+            _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "sequence diagnostic admission failed")),
+        }.map(semio_framework_plugin::built_to_component_tree)
     }
 
     /// 🕹️ `context_menu` carries no `InteractionView` (same gap as `render` above — see ticket
@@ -2540,8 +2665,8 @@ pub(crate) mod testkit {
     pub type SequenceApp = VcsArtifactApp<EditorApp<SequencePlayApp>>;
 
     /// 🧪️ A bare app instance — no `AppActionRegistry`, so undeclared internal commands dispatch freely.
-    pub fn new_app() -> SequenceApp {
-        semio_framework_plugin::testkit::new_app::<EditorApp<SequencePlayApp>>()
+    pub async fn new_app() -> SequenceApp {
+        semio_framework_plugin::testkit::new_app::<EditorApp<SequencePlayApp>>().await
     }
 
     /// 🧩️ `create_sequence_app` now returns `AppDefinition` (contract §2.4), not the runtime-shaped
@@ -2553,27 +2678,29 @@ pub(crate) mod testkit {
     }
 
     /// 🧪️ An app wired to the real manifest registry — enforces View/Shell kind discipline.
-    pub fn new_app_with_registry_wired() -> SequenceApp {
-        new_app_with_registry::<EditorApp<SequencePlayApp>>(sequence_manifest_for_testkit)
+    pub async fn new_app_with_registry_wired() -> SequenceApp {
+        new_app_with_registry::<EditorApp<SequencePlayApp>>(sequence_manifest_for_testkit).await
     }
 
-    pub fn dispatch(app: &mut SequenceApp, command: SequenceCommand) -> InvocationResult {
-        app.dispatch_typed(command, &meta("local")).expect("dispatch")
+    pub async fn dispatch(app: &mut SequenceApp, command: SequenceCommand) -> InvocationResult {
+        app.dispatch_typed(command, &meta("local")).await.expect("dispatch")
     }
 
-    pub fn render(app: &mut SequenceApp, body_key: &str) -> String {
-        serde_json::to_string(&app.render(body_key, None, &ViewModel::default()).expect("render")).expect("render json")
+    pub async fn render(app: &mut SequenceApp, body_key: &str) -> String {
+        let tree = app.render(body_key, None, &ViewModel::default()).await.expect("render");
+        let tree = semio_framework_plugin::testkit::project_and_retire_fixture_tree(tree).expect("retire rendered tree");
+        tree
     }
 
     /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: picking is now the framework's
     /// injected `interactionSelect` verb, dispatched against the "steps" domain declared on this app —
-    /// requires `new_app_with_registry_wired()` (a bare `new_app()` has no declared interaction
+    /// requires `new_app_with_registry_wired().await` (a bare `new_app().await` has no declared interaction
     /// domains to select against). `ids` are the steps' own raw document ids — the SAME ids the
     /// "steps" domain's topology/the document panel tree/the main node-graph canvas all use.
-    pub fn select_steps(app: &mut SequenceApp, ids: &[&str]) {
-        let target_list: Vec<serde_json::Value> = ids.iter().map(|id| serde_json::json!({ "granularity": "step", "id": id })).collect();
+    pub async fn select_steps(app: &mut SequenceApp, ids: &[&str]) {
+        let target_list: Vec<Value> = ids.iter().map(|id| serde_json::json!({ "granularity": "step", "id": id })).collect();
         let targets = serde_json::to_string(&target_list).expect("targets json");
-        app.handle_action("interactionSelect", Some(&serde_json::json!({ "domainId": SEQUENCE_INTERACTION_STEPS, "targets": targets, "merge": "replace" })), &meta("test")).expect("interactionSelect");
+        app.handle_action("interactionSelect", semio_framework_plugin::optional_json_to_dsl(Some(serde_json::json!({ "domainId": SEQUENCE_INTERACTION_STEPS, "targets": targets, "merge": "replace" }))).as_ref(), &meta("test")).await.expect("interactionSelect");
     }
 }
 //#endregion 🧪️Testkit
@@ -2582,18 +2709,18 @@ pub(crate) mod testkit {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::editor::sequence::testkit::{dispatch, new_app, new_app_with_registry_wired};
+    use crate::editor::sequence::testkit::{new_app, new_app_with_registry_wired};
     use semio_framework_plugin::{testkit::assert_undo_redo_round_trip, Locale, PluginApp, Terminology};
 
     #[semio_framework_async_macros::async_test]
     async fn default_snapshot_has_steps() {
-        assert_eq!(crate::artifacts::sequence::default_snapshot().to_fixture().steps.len(), 2);
+        assert_eq!(default_snapshot().to_fixture().steps.len(), 2);
     }
 
     #[semio_framework_async_macros::async_test]
     async fn undo_redo_round_trip_through_the_wrapper() {
-        let mut app = new_app();
-        assert_undo_redo_round_trip(&mut app, SequenceCommand::AddStep(add_step::AddStep { kind: "log.print".into(), x: 0.0, y: 0.0 }), |app| app.snapshot().expect("projection").to_fixture().steps.len(), 2, 3);
+        let mut app = new_app().await;
+        assert_undo_redo_round_trip(&mut app, SequenceCommand::AddStep(add_step::AddStep { kind: "log.print".into(), x: 0.0, y: 0.0 }), |app| app.snapshot().expect("projection").to_fixture().steps.len(), 2, 3).await;
     }
 
     /// 🧪️ The definitional regression proof: two independent instances start from the same fixture,
@@ -2606,7 +2733,7 @@ mod tests {
             SequenceCommand::MoveStep(move_step::MoveStep { node_id: "step-1".into(), x: 111.0, y: 0.0 }),
             SequenceCommand::MoveStep(move_step::MoveStep { node_id: "step-2".into(), x: 222.0, y: 0.0 }),
             |app| app.snapshot().expect("projection"),
-        );
+        ).await;
     }
 
     #[semio_framework_async_macros::async_test]
@@ -2624,8 +2751,8 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn an_unknown_body_key_renders_a_diagnostic_instead_of_panicking() {
-        let mut app = new_app();
-        assert!(testkit::render(&mut app, "sequence.play.nope").contains("Unknown body"));
+        let mut app = new_app().await;
+        assert!(testkit::render(&mut app, "sequence.play.nope").await.contains("Unknown body"));
     }
 
     //#region 🔖️ManifestSanity
@@ -2662,7 +2789,7 @@ mod tests {
     //#region 🔖️PortTests
     #[semio_framework_async_macros::async_test]
     async fn sequence_io_declares_steps_in_and_document_ports() {
-        let ports = SequencePlayApp::io().expect("io").all_ports();
+        let ports = SequencePlayApp::io().expect("io").all_ports().await;
         assert!(ports.iter().any(|port| port.id == "document:in"));
         assert!(ports.iter().any(|port| port.id == "document:out"));
         assert!(ports.iter().any(|port| port.id == "steps:in"));
@@ -2670,13 +2797,13 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn import_media_steps_in_inserts_a_new_step_from_an_object_payload() {
-        let mut app = new_app_with_registry_wired();
+        let mut app = new_app_with_registry_wired().await;
         let before = app.snapshot().expect("projection").to_fixture().steps.len();
         let media = Media {
             media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::Computation, form: semio_framework_plugin::MediaForm::Any },
             payload: MediaPayload::Structured { schema: "computation.value".into(), json: json!({ "message": "from upstream" }).to_string() },
         };
-        app.import_media("steps:in", &media, &semio_framework_plugin::testkit::meta("local")).expect("import steps:in");
+        app.import_media("steps:in", media, &semio_framework_plugin::testkit::meta("local")).await.expect("import steps:in");
         let after = app.snapshot().expect("projection").to_fixture();
         assert_eq!(after.steps.len(), before + 1);
         let imported = after.steps.last().expect("imported step");
@@ -2686,12 +2813,12 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn import_media_steps_in_wraps_a_bare_scalar_payload() {
-        let mut app = new_app_with_registry_wired();
+        let mut app = new_app_with_registry_wired().await;
         let media = Media {
             media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::Computation, form: semio_framework_plugin::MediaForm::Any },
             payload: MediaPayload::Structured { schema: "computation.value".into(), json: "42".into() },
         };
-        app.import_media("steps:in", &media, &semio_framework_plugin::testkit::meta("local")).expect("import steps:in");
+        app.import_media("steps:in", media, &semio_framework_plugin::testkit::meta("local")).await.expect("import steps:in");
         let after = app.snapshot().expect("projection").to_fixture();
         let imported = after.steps.last().expect("imported step");
         assert_eq!(imported.params.get("value").and_then(|value| value.as_atom()).and_then(|atom| atom.as_f64()), Some(42.0));
@@ -2699,12 +2826,12 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn import_media_rejects_unknown_port() {
-        let mut app = new_app_with_registry_wired();
+        let mut app = new_app_with_registry_wired().await;
         let media = Media {
             media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::Computation, form: semio_framework_plugin::MediaForm::Any },
             payload: MediaPayload::Structured { schema: "computation.value".into(), json: "{}".into() },
         };
-        assert!(app.import_media("not-a-port", &media, &semio_framework_plugin::testkit::meta("local")).is_err());
+        assert!(app.import_media("not-a-port", media, &semio_framework_plugin::testkit::meta("local")).await.is_err());
     }
     //#endregion 🔖️PortTests
 
@@ -2761,7 +2888,7 @@ mod tests {
             SequenceCommand::SetOrientation(set_orientation::SetOrientation { value: "topBottom".into() }),
             SequenceCommand::Run(run_command::Run {}),
             SequenceCommand::Stop(stop_command::Stop {}),
-            SequenceCommand::SetViewport(set_viewport::SetViewport { camera: crate::artifacts::sequence::SequenceCamera { x: 1.0, y: 2.0, zoom: 3.0 } }),
+            SequenceCommand::SetViewport(set_viewport::SetViewport { camera: SequenceCamera { x: 1.0, y: 2.0, zoom: 3.0 } }),
             SequenceCommand::SetLocale(set_locale::SetLocale { value: "de-DE".into() }),
         ]
     }
@@ -2848,7 +2975,7 @@ mod tests {
         host.dag.set_selection(&["step-1".into()]);
         host.snapshot.steps.push(SequenceStep { id: "step-3".into(), kind: "wait.delay".into(), params: StepParams::new().insert("ms", NeuralValue::Atom(Atom::Decimal(10.0))), x: 560.0, y: 0.0, slot: None, collapsed: false });
         host.rebuild_dag();
-        assert!(host.dag.selected_node_ids()?.contains(&"step-1".to_string()));
+        assert!(host.dag.selected_node_ids().contains(&"step-1".to_string()));
     }
 
     #[semio_framework_async_macros::async_test]
@@ -2888,13 +3015,13 @@ mod tests {
         let first = host.add_step("math.add", 40.0, 40.0);
         host.dag.set_selection(std::slice::from_ref(&first));
         let json = host.to_json().expect("fixture json");
-        let round_trip: SequenceFixture = serde_json::from_str(&json).expect("parse");
+        let round_trip: SequenceFixture = dsl::os_pack::from_json_str(&json).expect("parse");
         host.replace_snapshot(round_trip).expect("replace");
         let second = host.add_step("math.add", 80.0, 80.0);
         assert_ne!(first, second);
         assert!(host.snapshot.steps.iter().any(|step| step.id == first));
         assert!(host.snapshot.steps.iter().any(|step| step.id == second));
-        assert!(host.dag.selected_node_ids()?.contains(&first));
+        assert!(host.dag.selected_node_ids().contains(&first));
     }
 
     #[semio_framework_async_macros::async_test]
@@ -2902,7 +3029,7 @@ mod tests {
         let mut host = SequenceHost::default();
         let first = host.add_step_dropped("math.add", 10.0, 10.0, None);
         let json = host.to_json().expect("fixture json");
-        let round_trip: SequenceFixture = serde_json::from_str(&json).expect("parse");
+        let round_trip: SequenceFixture = dsl::os_pack::from_json_str(&json).expect("parse");
         host.replace_snapshot(round_trip).expect("replace");
         let second = host.add_step_dropped("math.add", 20.0, 20.0, None);
         assert_ne!(first, second);
@@ -3194,3 +3321,40 @@ mod tests {
     //#endregion 🔖️HostTests
 }
 //#endregion 🧪️Tests
+
+#[cfg(test)]
+mod retained_json_contract {
+    use super::*;
+
+    fn assert_measure<T: SequenceRetainedJson + dsl::ToValue>(value: &T) {
+        let encoded = dsl::os_pack::to_json_string(value);
+        let oracle: Value = serde_json::from_str(&encoded).expect("independent JSON parser");
+        let expected = serde_json::to_vec(&oracle).expect("independent JSON writer").len();
+        assert_eq!(sequence_bounded_serialized_bytes(value, expected).expect("exact admitted cap"), expected);
+        assert!(sequence_bounded_serialized_bytes(value, expected - 1).is_err());
+    }
+
+    #[test]
+    fn sequence_retained_json_measure_matches_the_json_oracle() {
+        let vectors: Value = serde_json::from_str(include_str!("🧪️fixtures/🔁️retained-json.json")).expect("neutral retained vectors");
+        for row in vectors["mutations"].as_array().expect("mutations") {
+            let mutation: SequenceMutation = dsl::os_pack::from_json_str(&row.to_string()).expect("owned mutation decoder");
+            assert_measure(&mutation);
+            neural_engine::ColdRetire::retire_cold(mutation);
+        }
+        let config: Value = serde_json::from_str(include_str!("🎚️config/🧪️fixtures/🔁️mutation-contracts.json")).expect("neutral config vectors");
+        for row in config["cases"].as_array().expect("config cases") {
+            let mutation: SequenceConfigMutation = dsl::os_pack::from_json_str(&row["mutation"].to_string()).expect("owned config decoder");
+            assert_measure(&mutation);
+        }
+        let carrier: Value = serde_json::from_str(include_str!("../🚪️io/🧪️fixtures/🔁️carrier-contracts.json")).expect("neutral carrier vectors");
+        for row in carrier["cases"].as_array().expect("carrier cases") {
+            let fixture: SequenceFixture = dsl::os_pack::from_json_str(&row["fixture"].to_string()).expect("owned fixture decoder");
+            let scene = (fixture.steps, fixture.edges);
+            assert_measure(&scene);
+            neural_engine::ColdRetire::retire_cold(scene.0);
+        }
+        let escaped = String::from("\u{0000}\u{0008}\u{000c}\n\r\t\"\\Grüße");
+        assert_measure(&escaped);
+    }
+}

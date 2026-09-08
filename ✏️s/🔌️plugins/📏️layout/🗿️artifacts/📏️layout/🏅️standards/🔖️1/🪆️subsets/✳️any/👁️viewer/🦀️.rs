@@ -10,7 +10,7 @@ use crate::viewer::layout::modes::view;
 use crate::viewer::layout::modes::view::windows::preview;
 use semio_framework::Dialect;
 use semio_framework_plugin::app::InteractionView;
-use semio_framework_plugin::{ArtifactView, ArtifactViewer, ConfigView, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, UiNode, ViewEmit, Viewer};
+use semio_framework_plugin::{ArtifactView, ArtifactViewer, ConfigView, Fault, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, ViewEmit, Viewer};
 use store::EngineHandles;
 
 //#region 🔖️Command
@@ -63,11 +63,12 @@ impl ArtifactViewer for LayoutViewer {
         Ok(ViewEmit::default())
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
-        match body_key {
-            preview::BODY_KEY => preview::render(doc.snapshot),
-            _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
-        }
+    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+        let node = match body_key {
+            preview::BODY_KEY => preview::render(doc.snapshot)?,
+            _ => return semio_framework_plugin::built_text_to_component_tree(semio_framework_plugin::Label::data(format!("Unknown body: {body_key}"))),
+        };
+        Ok(semio_framework_plugin::built_to_component_tree(node))
     }
 }
 //#endregion 🔖️Viewer

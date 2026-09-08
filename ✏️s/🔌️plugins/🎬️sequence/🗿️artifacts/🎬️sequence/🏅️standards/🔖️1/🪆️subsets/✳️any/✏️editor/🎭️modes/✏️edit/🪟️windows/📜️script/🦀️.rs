@@ -3,8 +3,7 @@
 use crate::artifacts::sequence::SequenceSnapshot;
 use crate::editor::sequence::config::SequenceConfig;
 use crate::editor::sequence::host_from_snapshot;
-use crate::editor::sequence::SEQUENCE_PLAY_APP_ID;
-use semio_framework_plugin::{build_text_editor_scene, LocalizedLabel, SurfaceKind, TextEditorScene, UiNode, WindowKindDefinition, WindowOptions};
+use semio_framework_plugin::{LocalizedLabel, SurfaceKind, TextEditorScene, BuiltNode, UiAssemblyResult, WindowKindDefinition, WindowOptions};
 
 //#region 🔖️Constants
 pub const SEQUENCE_PLAY_WINDOW_SCRIPT: &str = "sequence-script";
@@ -34,14 +33,14 @@ pub fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(fixture: &SequenceSnapshot, config: &SequenceConfig) -> UiNode {
+pub fn render(fixture: &SequenceSnapshot, config: &SequenceConfig) -> UiAssemblyResult<BuiltNode> {
     let host = host_from_snapshot(fixture);
     let mut text = host.compile_text();
     if !config.last_run_json.is_empty() {
         text.push_str("\n\n# run result\n");
         text.push_str(&config.last_run_json);
     }
-    build_text_editor_scene(SEQUENCE_PLAY_SURFACE_SCRIPT, SEQUENCE_PLAY_APP_ID, TextEditorScene::base(text, Some("imperative".into()), None))
+    semio_framework_plugin::scene_surface(SEQUENCE_PLAY_SURFACE_SCRIPT, semio_framework_ui_contract::SurfaceKind::TextEditor, &TextEditorScene::base(text, Some("imperative".into()), None))
 }
 //#endregion 🔖️Render
 
@@ -53,8 +52,8 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn renders_script_editor() {
-        let mut app = new_app();
-        assert!(render_body(&mut app, SEQUENCE_PLAY_BODY_SCRIPT).contains("text-editor"));
+        let mut app = new_app().await;
+        assert!(render_body(&mut app, SEQUENCE_PLAY_BODY_SCRIPT).await.contains("text-editor"));
     }
 
     #[semio_framework_async_macros::async_test]

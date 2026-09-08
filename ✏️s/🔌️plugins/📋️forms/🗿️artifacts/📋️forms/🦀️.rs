@@ -545,8 +545,8 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn forms_working_scene_is_owned_by_the_exact_snapshot_child() {
         let (owned, _) = forms_children_from_steps(&[FormStep { id: "step-one".into(), title: "One".into(), description: None, blocks: Vec::new() }]);
-        let wire = serde_json::to_vec(&owned).expect("Forms child wire identity");
-        let reconstructed: FormsStructureChild = serde_json::from_slice(&wire).expect("Forms child wire roundtrip");
+        let wire = dsl::os_pack::json::to_json_string(&owned).into_bytes();
+        let reconstructed: FormsStructureChild = dsl::os_pack::json::from_json_str(std::str::from_utf8(&wire).expect("child JSON UTF-8")).expect("Forms child wire roundtrip");
         let observed = serde_json::json!({
             "ownedHasScene": owned.local_owner::<FormsWorkingScene>().is_some(),
             "wireIdentityMatches": owned == reconstructed,

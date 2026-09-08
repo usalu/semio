@@ -1,0 +1,35 @@
+{
+  "base": {
+    "orientation": "leftRight",
+    "camera": {
+      "x": 0.25,
+      "y": -0.75,
+      "zoom": 1.5
+    }
+  },
+  "cases": [
+    {
+      "kind": "replace-presence",
+      "mutation": {
+        "ReplacePresence": {
+          "presence": {
+            "orientation": "topBottom",
+            "camera": {
+              "x": 2.5,
+              "y": -3.25,
+              "zoom": 1.75
+            }
+          }
+        }
+      },
+      "expected": {
+        "orientation": "topBottom",
+        "camera": {
+          "x": 2.5,
+          "y": -3.25,
+          "zoom": 1.75
+        }
+      }
+    }
+  ]
+}

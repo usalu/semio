@@ -24,7 +24,7 @@ use semio_framework_plugin::retained_command::{ArtifactCommandWork, ArtifactReta
 use semio_framework_plugin::{
     ActionArgDef, ActionArgOption, ActionKind, AppOperationContext, ArtifactEditor, ArtifactOwnedToolJobFactory, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView, CommandDefinition, ConfigView, Dialect, DomainTopology, DraftView, Editor, EditorApp, Emit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition,
     InteractionRef, InteractionTopology, Label, LocalizedLabel, Media, MediaError, MediaPayload, MergeMode, NoDraft, NoDraftMutation,
-    SelectionMethod, SelectionMode, SelectionSpec, TopologyNode, UiNode,
+    SelectionMethod, SelectionMode, SelectionSpec, TopologyNode,
 };
 use store::EngineHandles;
 
@@ -275,7 +275,7 @@ where
                 let post = protocol::MutationDiff::apply(mutation.diff(base.get()).diff(), base.get()).map_err(|error| error.to_string())?;
                 self.candidate = Some((post, inverse, mutation, retained_bytes));
                 self.phase = 1;
-                self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: retained_bytes, digest: [0; 32] };
+                self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: retained_bytes as u64, digest: [0; 32] };
                 Ok(store::ArtifactStoreOneItemPreparationStep::Progress(self.checkpoint))
             }
             1 => {
@@ -283,7 +283,7 @@ where
                 let authority = self.authority.as_ref().ok_or_else(|| "Playbook retained preparation lost its Store authority".to_string())?;
                 let prepared = authority.prepare_one_item(playbook_one_item_edit(mutation, inverse, self.description.take(), authority), std::sync::Arc::new(post))?;
                 self.phase = 2;
-                self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 2, completed_items: 2, completed_bytes: retained_bytes, digest: prepared.edit_digest() };
+                self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 2, completed_items: 2, completed_bytes: retained_bytes as u64, digest: prepared.edit_digest() };
                 self.prepared = Some(prepared);
                 Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint))
             }
@@ -323,8 +323,8 @@ impl ArtifactEditor for PlaybookPlayApp {
     type ConfigMutation = PlaybookConfigMutation;
     type Draft = NoDraft;
     type DraftMutation = NoDraftMutation;
-    type Presence = crate::editor::playbook::presence::PlaybookPresence;
-    type PresenceMutation = crate::editor::playbook::presence::PlaybookPresenceMutation;
+    type Presence = semio_framework_plugin::NoPresence;
+    type PresenceMutation = semio_framework_plugin::NoPresenceMutation;
     type Transient = semio_framework_plugin::app::NoTransient;
     type TransientMutation = semio_framework_plugin::app::NoTransientMutation;
 
@@ -449,10 +449,10 @@ impl ArtifactEditor for PlaybookPlayApp {
         Ok(Emit::mutations(operations))
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, PlaybookSnapshot>, cfg: &ConfigView<'_, PlaybookConfig>) -> UiNode {
+    fn render(body_key: &str, doc: &ArtifactView<'_, PlaybookSnapshot>, cfg: &ConfigView<'_, PlaybookConfig>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         match body_key {
-            PLAYBOOK_PLAY_BODY_BUILDER => builder_window::render(doc.snapshot, cfg.snapshot),
-            _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
+            PLAYBOOK_PLAY_BODY_BUILDER => Ok(semio_framework_plugin::built_to_component_tree(builder_window::render(doc.snapshot, cfg.snapshot)?)),
+            _ => semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
         }
     }
 }
@@ -464,6 +464,7 @@ impl ArtifactEditor for PlaybookPlayApp {
 /// out inline.
 pub fn create_playbook_play_app() -> semio_framework_plugin::AppDefinition {
     Editor::builder(PLAYBOOK_DIALECT)
+        .command(CommandDefinition { in_palette: false, ..CommandDefinition::bounded_catalog("setLocale", LocalizedLabel::native("Set Locale", "Gebietsschema festlegen"), "host", ActionKind::View).with_args([ActionArgDef::text("value", LocalizedLabel::native("Locale", "Gebietsschema"))]) })
         .command(CommandDefinition { in_palette: false, ..CommandDefinition::bounded_catalog("setContributions", LocalizedLabel::native("Set Contributions", "Beiträge festlegen"), "host", ActionKind::View).with_args([ActionArgDef::text("json", LocalizedLabel::native("Contributions", "Beiträge"))]) })
         .document(["semio", "playbook"])
         .artifact_kind(artifact_kind())
@@ -536,14 +537,14 @@ pub fn create_playbook_play_app() -> semio_framework_plugin::AppDefinition {
 #[cfg(test)]
 pub(crate) mod testkit {
     use super::*;
-    use semio_framework_plugin::testkit::{meta, new_app, new_app_with_registry};
+    use semio_framework_plugin::testkit::{meta, new_app_with_registry};
     use semio_framework_plugin::{App, EditorApp, InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
 
     pub type PlaybookApp = VcsArtifactApp<EditorApp<PlaybookPlayApp>>;
 
-    /// 🧪️ A bare app instance — no `AppActionRegistry`, so undeclared internal commands dispatch freely.
+    /// 🧪️ An app instance with its concrete command registry and retained job proofs.
     pub async fn playbook_app() -> PlaybookApp {
-        new_app::<EditorApp<PlaybookPlayApp>>().await
+        new_app_with_registry::<EditorApp<PlaybookPlayApp>>(playbook_manifest_for_testkit).await
     }
 
     /// 🧪️ Adapts `create_playbook_play_app`'s `AppDefinition` (contract §2.4) into the `App {
@@ -565,7 +566,7 @@ pub(crate) mod testkit {
     }
 
     pub async fn render(app: &mut PlaybookApp, body_key: &str) -> String {
-        serde_json::to_string(&app.render(body_key, None, &ViewModel::default()).await.expect("render")).expect("render json")
+        serde_json::to_string(&app.render(body_key, None, &ViewModel::default()).await.expect("render").root).expect("render json")
     }
 }
 //#endregion 🧪️Testkit
@@ -743,7 +744,7 @@ mod tests {
     async fn playbook_io_declares_the_extra_chapters_in_port_and_its_own_kind() {
         let io = playbook_io();
         assert_eq!(io.artifact.id, "text.playbook");
-        let ports = io.all_ports();
+        let ports = io.all_ports().await;
         let chapters_in = ports.iter().find(|port| port.id == "chapters:in").expect("chapters:in declared");
         assert_eq!(chapters_in.kind_id.as_deref(), Some("text.document"));
     }

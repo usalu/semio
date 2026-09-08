@@ -1,0 +1,46 @@
+{
+  "cases": [
+    {
+      "name": "All pages in reading order",
+      "pages": [
+        {
+          "width": 612,
+          "height": 792,
+          "text": "first"
+        },
+        {
+          "width": 612,
+          "height": 792,
+          "text": "second"
+        }
+      ],
+      "expected": "first\nsecond"
+    },
+    {
+      "name": "Empty middle page and Unicode",
+      "pages": [
+        {
+          "width": 612,
+          "height": 792,
+          "text": "Grüße"
+        },
+        {
+          "width": 612,
+          "height": 792,
+          "text": ""
+        },
+        {
+          "width": 612,
+          "height": 792,
+          "text": "世界"
+        }
+      ],
+      "expected": "Grüße\n\n世界"
+    },
+    {
+      "name": "Empty page collection",
+      "pages": [],
+      "expected": ""
+    }
+  ]
+}

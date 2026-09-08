@@ -5,9 +5,9 @@ import { join } from "node:path";
 import Ajv from "ajv";
 import { parseModuleDirectories, moduleDirectoryName, moduleIdForDirectoryName } from "./📦️deployment/🟦️.ts";
 import { pluginModuleUrl, extensionModuleUrl } from "./🤖️generated/🧩️plugins.ts";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { encodePackValue } from "../../../🟦️.ts";
-import { emitOwnerDescriptorPairV1 } from "../🖨️describe/📦️packages/🦀️rust/📜️script.ts";
+import { emitOwnerDescriptorPairV1, remainingDescriptorEmissionBudgetMs } from "../🖨️describe/📦️packages/🦀️rust/📜️script.ts";
 import {
   CATALOG_ARTIFACT_MAX_BYTES,
   CATALOG_COMMIT_MARKER_FILENAME,
@@ -132,6 +132,7 @@ async function syntheticDescriptor(pluginId: string, raw: Uint8Array, core: Uint
     role: "plugin",
     manifest: { pluginId, label: pluginId, version: "1.0.0", apps: [], examples: [], capabilities: [], topicContributions: [], commands: [], artifactKinds: [] },
     execution: "isolated",
+    executionProtocol: { appChannelVersion: 14 },
     quotas: {},
     contributions: {},
     hashes: { wasmSha256: await sha256(raw), coreWasmSha256: await sha256(core), descriptorSha256: "" },
@@ -325,6 +326,14 @@ describe("strict plugin catalog completion", () => {
     expect(pair.hashes.wasmSha256).toBe(rawSha256);
     expect(pair.hashes.coreWasmSha256).toBe(coreWasmSha256);
     expect(pair.hashes.descriptorSha256).toBe(createHash("sha256").update(encodePackValue({ ...descriptor, hashes: { ...descriptor.hashes, descriptorSha256: "" } })).digest("hex"));
+    for (const invalidProtocol of [undefined, null, {}, { appChannelVersion: 13 }, { appChannelVersion: 14, extra: true }]) {
+      const hostile: Record<string, any> = structuredClone(descriptor);
+      if (invalidProtocol === undefined) delete hostile.executionProtocol;
+      else hostile.executionProtocol = invalidProtocol;
+      hostile.hashes.descriptorSha256 = "";
+      hostile.hashes.descriptorSha256 = await sha256(encodePackValue(hostile));
+      expect(() => verifyDescriptorPairBytesV1(new TextEncoder().encode(`${JSON.stringify(hostile, null, 2)}\n`), encodePackValue(hostile), { wasmSha256: rawSha256, coreWasmSha256 })).toThrow(/executionProtocol/);
+    }
     const swapped = await syntheticDescriptor("parent", core, raw);
     expect(() => verifyDescriptorPairBytesV1(new TextEncoder().encode(`${JSON.stringify(swapped.descriptor, null, 2)}\n`), swapped.bytes, { wasmSha256: rawSha256, coreWasmSha256 })).toThrow(/exact raw\/core artifacts/);
     const divergent = structuredClone(descriptor);
@@ -355,6 +364,47 @@ describe("strict plugin catalog completion", () => {
     hostless.hashes.descriptorSha256 = "";
     hostless.hashes.descriptorSha256 = await sha256(encodePackValue(hostless));
     expect(() => verifyDescriptorPairBytesV1(new TextEncoder().encode(`${JSON.stringify(hostless, null, 2)}\n`), encodePackValue(hostless), { wasmSha256: rawSha256, coreWasmSha256 })).toThrow(/extension host must be its first dependency/);
+  });
+
+  it("preserves opt-in emission deadlines through guard and child-process budgets", async () => {
+    const fixtureDir = join(import.meta.dirname, "../🖨️describe/🧪️fixtures/⏱️emission-budget");
+    const cases = JSON.parse(readFileSync(join(fixtureDir, "🔣️.json"), "utf8"));
+    const validate = new Ajv({ strict: true }).compile(JSON.parse(readFileSync(join(fixtureDir, "🧬️.schema.json"), "utf8")));
+    expect(validate(cases)).toBe(true);
+    const { Decimal } = await import("decimal.js");
+    const repoRoot = temporaryRoot();
+    const artifactRoot = join(repoRoot, "artifacts");
+    const ownerRoot = join(repoRoot, "owner");
+    mkdirSync(artifactRoot);
+    mkdirSync(ownerRoot);
+    const rawComponentPath = join(artifactRoot, "component.wasm");
+    const extractedCorePath = join(artifactRoot, "component.core.wasm");
+    writeFileSync(rawComponentPath, "raw-component");
+    writeFileSync(extractedCorePath, "extracted-core");
+    writeFileSync(join(ownerRoot, "🔣️.json"), "old-json");
+    writeFileSync(join(ownerRoot, "🛂️.descriptor.semio"), "old-pack");
+    for (const row of cases.cases) {
+      const budget = new Decimal(row.budgetMs);
+      expect(!budget.isZero() && new Decimal(row.elapsedMs).greaterThan(budget), row.name).toBe(row.expired);
+      expect(budget.isZero() ? 0 : Decimal.max(1, budget.minus(row.elapsedMs)).toNumber(), row.name).toBe(row.remainingMs);
+      let now = 0;
+      const clock = vi.spyOn(Date, "now").mockImplementation(() => now);
+      try {
+        expect(() => emitOwnerDescriptorPairV1(repoRoot, { artifactRoot, ownerRoot, rawComponentPath, extractedCorePath }, {
+          deadlineMs: row.budgetMs,
+          checkpoint(stage) {
+            if (stage === "validate") now = row.elapsedMs;
+            if (stage === "emit") throw new Error("fixture stopped before native emission");
+          },
+        }), row.name).toThrow(row.expired ? /deadline of .*ms exceeded/ : /fixture stopped before native emission/);
+      } finally {
+        clock.mockRestore();
+      }
+      expect(remainingDescriptorEmissionBudgetMs(row.budgetMs, row.elapsedMs), row.name).toBe(row.remainingMs);
+      expect(readFileSync(join(ownerRoot, "🔣️.json"), "utf8")).toBe("old-json");
+      expect(readFileSync(join(ownerRoot, "🛂️.descriptor.semio"), "utf8")).toBe("old-pack");
+    }
+    console.log("[DEBUG] descriptor-emission-budget fixture=5 ajv=1 decimal=5 native-emitter-started=0");
   });
 
   it("refuses every unusable emission input and never half-publishes an owner pair", async () => {

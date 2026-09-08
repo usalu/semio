@@ -24,10 +24,10 @@ pub(crate) fn run_jack_query(fixture: &JackSnapshot, query: &str) -> (String, Ve
 }
 
 fn error_result_json(message: &str) -> String {
-    json!({ "error": message }).to_string()
+    pack::json!({ "error": message }).to_string()
 }
 
 pub(crate) fn load_example_query(fixture: &JackSnapshot, query: &str) -> Result<Emit<TrinityGraphMutation, JackConfigMutation>, Fault> {
     let (result_json, operations) = run_jack_query(fixture, query);
-    Ok(Emit { artifact_mutations: operations, config_mutations: vec![JackConfigMutation::SetQuery { value: query.to_string() }, JackConfigMutation::SetResult { value: result_json }], ..Default::default() })
+    Ok(Emit { artifact_mutations: operations, config_mutations: vec![JackConfigMutation::SetQuery(crate::editor::jack::config::SetQuery { value: query.to_string() }), JackConfigMutation::SetResult(crate::editor::jack::config::SetResult { value: result_json })], ..Default::default() })
 }

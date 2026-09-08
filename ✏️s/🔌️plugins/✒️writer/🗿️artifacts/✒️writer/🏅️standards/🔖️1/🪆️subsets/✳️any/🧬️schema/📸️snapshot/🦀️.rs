@@ -2,7 +2,6 @@
 
 use crate::artifacts::writer::{document_child_handle_with_text, WriterDocumentChild, WRITER_DOCUMENT_SCHEMA};
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 
 //#region 🔖️Snapshot
 /// 📸️ Persisted writer document snapshot. Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM`
@@ -10,8 +9,8 @@ use serde::{Deserialize, Serialize};
 /// composed `s.stdio.semio.document` CHILD slot — the writer plugin no longer defines its own
 /// text-block content model, it composes stdio's `document` subset instead. `#[child(...)]` drives
 /// `#[derive(ArtifactSchema)]`'s slot-table emission; never hand-written.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ArtifactSchema, dsl::ToValue, dsl::FromValue)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.writer.writer")]
 pub struct WriterSnapshot {
     #[state(artifact)]
@@ -21,7 +20,7 @@ pub struct WriterSnapshot {
     #[state(artifact)]
     pub language_id: String,
     #[state(artifact)]
-    #[serde(default = "crate::artifacts::writer::default_uri")]
+    #[value(default = "crate::artifacts::writer::default_uri")]
     pub uri: String,
     #[state(artifact)]
     #[child(kind = "s.stdio.semio.document")]

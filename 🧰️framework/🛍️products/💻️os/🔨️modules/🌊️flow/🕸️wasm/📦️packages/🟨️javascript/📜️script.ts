@@ -1,6 +1,6 @@
 /** 📝️ Emits the browser ABI declarations from the owned operation schema and checks their runtime surface. */
 import assert from "node:assert/strict";
-import { readFileSync, writeFileSync } from "node:fs";
+import { readFileSync, realpathSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
 //#region 📝️Declarations
@@ -35,14 +35,6 @@ export interface FlowWasmExports {
   flow_bridge_begin_close(): void;
   flow_bridge_terminal_is_empty(): number;
 }
-export interface FlowHost {
-  readonly state: unknown;
-  start(operation: number, args?: Readonly<Record<string, unknown>>, session?: FlowHandle): FlowTask<Uint8Array>;
-  cancel(requestId: bigint): boolean;
-  closeHandle(handle: FlowHandle): boolean;
-  close(): Promise<void>;
-  terminalIsEmpty(): boolean;
-}
 export interface FlowFeatures {
   readonly lifetime: { readonly session: FlowHandle; close(): Promise<void>; terminalIsEmpty(): boolean; };
 ${["document", "interaction", "editing", "surface", "drawing"].map((group, index) => {
@@ -53,10 +45,10 @@ ${["document", "interaction", "editing", "surface", "drawing"].map((group, index
 }).join("\n")}
 }
 export interface FlowBrowserOptions { readonly source: unknown; readonly imports?: WebAssembly.Imports; readonly instantiate?: typeof WebAssembly.instantiate; readonly schedule?: (callback: () => void) => void; readonly now?: () => number; readonly maximumInFlight?: number; }
-export declare function createFlowBrowserFeatures(options: FlowBrowserOptions): Promise<{ host: FlowHost; features: FlowFeatures; exports: FlowWasmExports }>;
-export default function init(source: unknown): Promise<FlowWasmExports>;
+export interface FlowBrowserRuntime { openSession(): FlowSession; close(): Promise<void>; terminalIsEmpty(): boolean; }
+export declare function createFlowBrowserRuntime(options: FlowBrowserOptions): Promise<FlowBrowserRuntime>;
 export declare class FlowSession {
-  constructor();
+  private constructor();
 ${methods.join("\n")}
   attachCanvas(canvas: HTMLCanvasElement, width: number, height: number, dpr: number): FlowTask<unknown>;
   renderCanvas(canvas: HTMLCanvasElement): FlowTask<unknown>;
@@ -76,7 +68,7 @@ export function writeFlowBrowserDeclaration(): string {
 //#endregion 📝️Declarations
 
 //#region 🧪️SchemaOracle
-export async function testFlowBrowserDeclaration(): Promise<void> {
+export async function testFlowBrowserDeclaration(packageRoot: string): Promise<void> {
   const { default: Ajv } = await import("ajv");
   const ts = await import("typescript");
   const { FlowSession } = await import("./🌐️flow-browser.js");
@@ -84,6 +76,19 @@ export async function testFlowBrowserDeclaration(): Promise<void> {
   const schema = JSON.parse(readFileSync(join(import.meta.dir, "../../🧪️fixtures/🧬️browser-types.schema.json"), "utf8"));
   const validate = new Ajv({ strict: true }).compile(schema);
   assert.equal(validate(fixture), true);
+  const manifest = JSON.parse(readFileSync(join(packageRoot, "package.json"), "utf8"));
+  assert.equal(manifest.name, fixture.package.name);
+  assert.deepEqual(manifest.files.slice().sort(), fixture.package.files.slice().sort());
+  assert.deepEqual(manifest.exports, fixture.package.exports);
+  for (const name of fixture.package.files) assert.ok(ts.sys.fileExists(join(packageRoot, name)), name);
+  for (const [subpath, entry] of Object.entries(fixture.package.exports)) {
+    if (typeof entry === "string") continue;
+    const binding = entry as { types: string; import: string };
+    const name = fixture.package.name + (subpath === "." ? "" : subpath.slice(1));
+    const resolved = ts.resolveModuleName(name, join(import.meta.dir, "consumer.ts"), { moduleResolution: ts.ModuleResolutionKind.Bundler, module: ts.ModuleKind.ESNext }, ts.sys).resolvedModule;
+    assert.ok(resolved, name);
+    assert.equal(realpathSync(resolved.resolvedFileName), realpathSync(join(packageRoot, binding.types)));
+  }
   const text = flowBrowserDeclaration();
   const declarationPath = join(import.meta.dir, declarationName);
   const program = ts.createProgram([declarationPath], { noLib: true, noResolve: true });
@@ -104,8 +109,8 @@ export async function testFlowBrowserDeclaration(): Promise<void> {
     assert.equal(method.type?.getText(parsed), fixture.result);
   }
   for (const name of fixture.excluded) assert.equal(names.includes(name), false);
-  for (const mutate of [(value: typeof fixture) => { value.operationMethods = 111; }, (value: typeof fixture) => { value.result = "void"; }, (value: typeof fixture) => { value.extra = true; }]) { const bad = structuredClone(fixture); mutate(bad); assert.equal(validate(bad), false); }
+  for (const mutate of [(value: typeof fixture) => { value.operationMethods = 111; }, (value: typeof fixture) => { value.result = "void"; }, (value: typeof fixture) => { value.extra = true; }, (value: typeof fixture) => { delete value.package.exports["."]; }, (value: typeof fixture) => { value.package.files.pop(); }]) { const bad = structuredClone(fixture); mutate(bad); assert.equal(validate(bad), false); }
   assert.equal(readFileSync(join(import.meta.dir, declarationName), "utf8"), text);
-  console.log(`[DEBUG] Flow browser declarations: ${fixture.operationMethods} schema methods, runtime prototype and TypeScript parser parity; 3 hostile fixtures rejected`);
+  console.log(`[DEBUG] Flow browser declarations: ${fixture.operationMethods} schema methods, runtime prototype and TypeScript parser parity; 3 package exports and 2 TypeScript resolutions; 5 hostile fixtures rejected`);
 }
 //#endregion 🧪️SchemaOracle

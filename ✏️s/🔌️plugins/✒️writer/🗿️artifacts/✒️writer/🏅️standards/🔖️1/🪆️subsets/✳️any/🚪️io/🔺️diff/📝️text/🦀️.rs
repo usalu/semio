@@ -166,11 +166,11 @@ pub fn diff_set_text(text: &str, id: &str, language_id: &str) -> WriterDiff {
 
 impl protocol::DiffCodec for WriterDiff {
     fn print_diff(&self) -> String {
-        serde_json::to_string(self).expect("serialize writer diff")
+        dsl::os_pack::json::to_json_string(self)
     }
 
     fn parse_diff(line: &str) -> Result<Self, store::TextError> {
-        serde_json::from_str(line).map_err(|error| dsl::__rt::field_error(error.to_string()))
+        dsl::os_pack::json::from_json_str(line).map_err(|error| dsl::__rt::field_error(error.to_string()))
     }
 
     fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {

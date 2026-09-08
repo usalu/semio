@@ -16,7 +16,7 @@ pub fn handle(_payload: &FormatDocument, doc: &ArtifactView<'_, WriterSnapshot>,
     let config = cfg.snapshot;
     let text = writer_text(document);
     let formatted = format_writer_text(&text, &document.language_id);
-    let mut emit = Emit::config(vec![WriterConfigMutation::SetFormatSignal { value: config.format_signal + 1 }]);
+    let mut emit = Emit::config(vec![WriterConfigMutation::SetFormatSignal(crate::editor::writer::config::SetFormatSignal { value: config.format_signal + 1 })]);
     if formatted != text {
         emit.artifact_mutations = vec![WriterMutation::EditText(EditText { text: formatted })];
     }

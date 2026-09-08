@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Set Reorganize Epoch",
+  "type": "object",
+  "properties": {
+    "value": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 18446744073709551615
+    }
+  },
+  "required": [
+    "value"
+  ],
+  "additionalProperties": false
+}

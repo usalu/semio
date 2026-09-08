@@ -10,7 +10,9 @@ use std::sync::{Arc, LazyLock, Mutex};
 use dag::{dag_fixture_execution_rows, dag_fixture_to_wire_literal, fit_node_size, would_create_cycle, DagFixture, DagFixtureEdge, DagHost, DagLayoutOptions, DagNodeKind, DagNodeSpec, EdgeRouteStyle};
 use graph::dsl::{WireEdge, WireNode};
 use graph::manifest::{PropertyBag, PropertyValue};
-use neural::{channel_output, compute_dirty_set, Atom, BudgetedEval, ColdRetire, Dictionary, EvalChannels, EvalError, Evaluator, NeuralCache, Neuron, OperatorInfo, Synapse, Tree, TreeSnapshot, Value as NeuralValue, CLUSTER_KIND, INPUT_KIND, OUTPUT_KIND};
+use neural::{
+    channel_output, compute_dirty_set, Atom, BudgetedEval, ColdRetire, Dictionary, EvalChannels, EvalError, Evaluator, NeuralCache, Neuron, OperatorInfo, Synapse, Tree, TreeSnapshot, Value as NeuralValue, CLUSTER_KIND, INPUT_KIND, OUTPUT_KIND,
+};
 use serde::{Deserialize, Serialize};
 
 use crate::artifact::*;
@@ -45,8 +47,14 @@ pub enum FlowCoreError {
     MaxOutputPortsReached(String),
     UnknownInputPort(String),
     UnknownOutputPort(String),
-    MinInputPorts { widget: String, min: usize },
-    MinOutputPorts { widget: String, min: usize },
+    MinInputPorts {
+        widget: String,
+        min: usize,
+    },
+    MinOutputPorts {
+        widget: String,
+        min: usize,
+    },
     NoOutputPort(String),
     NoInputPort(String),
     SelfConnection,
@@ -1303,6 +1311,7 @@ impl FlowHost {
         }
     }
 
+    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
     pub(crate) fn sync_dag_ghost(&mut self) {
         self.dag.set_ghost_node(self.ghost_node.clone());
     }
@@ -1528,12 +1537,7 @@ impl FlowHost {
             WidgetDescriptor::OutputExport { .. } => "export".into(),
         };
         let id_prefix = format!("{prefix}_");
-        let used = self
-            .fixture
-            .widgets
-            .iter()
-            .filter_map(|widget| widget_id_for(widget).strip_prefix(&id_prefix)?.parse::<u64>().ok())
-            .collect::<HashSet<_>>();
+        let used = self.fixture.widgets.iter().filter_map(|widget| widget_id_for(widget).strip_prefix(&id_prefix)?.parse::<u64>().ok()).collect::<HashSet<_>>();
         let mut serial = 2_u64;
         while used.contains(&serial) {
             serial = serial.checked_add(1).expect("the finite Flow widget set must leave a generated identifier");
@@ -2091,7 +2095,6 @@ pub struct FlowHostRetirementState {
     neural_cache: Option<neural::NeuralCacheRetirement>,
     previous_snapshot: Option<TreeSnapshot>,
     previous_channels: Option<EvalChannels>,
-    ghost_node: Option<DagNodeSpec>,
     history_store: Option<FlowStore>,
     pending_history_baseline: Option<FlowFixture>,
     pending_extension_eval: Option<neural::PendingExtensionEval>,
@@ -2103,9 +2106,26 @@ pub struct FlowHostRetirementState {
 }
 
 /// 🔒️ Host ownership is guarded until every retained field has crossed its close boundary.
-pub struct FlowHostRetirement { state: std::mem::ManuallyDrop<FlowHostRetirementState> }
-impl std::ops::Deref for FlowHostRetirement { type Target = FlowHostRetirementState; fn deref(&self) -> &Self::Target { &self.state } }
-impl std::ops::DerefMut for FlowHostRetirement { fn deref_mut(&mut self) -> &mut Self::Target { &mut self.state } }
+pub struct FlowHostRetirement {
+    state: std::mem::ManuallyDrop<FlowHostRetirementState>,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(crate) enum FlowHostRetirementFault {
+    NoCredit,
+    Failed,
+}
+impl std::ops::Deref for FlowHostRetirement {
+    type Target = FlowHostRetirementState;
+    fn deref(&self) -> &Self::Target {
+        &self.state
+    }
+}
+impl std::ops::DerefMut for FlowHostRetirement {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.state
+    }
+}
 
 impl FlowHostRetirement {
     pub fn new(host: FlowHost) -> Self {
@@ -2136,44 +2156,72 @@ impl FlowHostRetirement {
             interaction_revision: _,
             interaction_projection,
         } = host;
-        Self { state: std::mem::ManuallyDrop::new(FlowHostRetirementState {
-            fixture,
-            dag: Some(dag::DagHostRetirement::new(dag)),
-            outputs,
-            export_payloads,
-            last_eval_json,
-            eval_bridge,
-            host_catalogue_json,
-            kind_infos,
-            neural_cache: Some(neural::NeuralCacheRetirement::new(neural_cache)),
-            previous_snapshot,
-            previous_channels,
-            ghost_node,
-            history_store,
-            pending_history_baseline,
-            pending_extension_eval,
-            interaction_projection,
-            domain: crate::retained::FlowRetirement::default(),
-            neural: neural::ValueRetirement::default(),
-            terminal: false,
-            faulted: false,
-        }) }
+        let mut dag = dag::DagHostRetirement::new(dag);
+        if let Some(node) = ghost_node {
+            dag.retain_node_payload(node);
+        }
+        Self {
+            state: std::mem::ManuallyDrop::new(FlowHostRetirementState {
+                fixture,
+                dag: Some(dag),
+                outputs,
+                export_payloads,
+                last_eval_json,
+                eval_bridge,
+                host_catalogue_json,
+                kind_infos,
+                neural_cache: Some(neural::NeuralCacheRetirement::new(neural_cache)),
+                previous_snapshot,
+                previous_channels,
+                history_store,
+                pending_history_baseline,
+                pending_extension_eval,
+                interaction_projection,
+                domain: crate::retained::FlowRetirement::default(),
+                neural: neural::ValueRetirement::default(),
+                terminal: false,
+                faulted: false,
+            }),
+        }
     }
 
     pub fn close_step(&mut self, context: &mut semio_framework_job::StepContext<'_>) -> bool {
+        if context.should_yield() {
+            return false;
+        }
+        let complete = self.close_page(1, 4096).unwrap_or(false);
+        context.consume_fuel(1);
+        complete
+    }
+
+    /// 📏️ Advances one host owner with caller byte credit for its byte-backed retirement cursors.
+    pub(crate) fn close_page(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<bool, FlowHostRetirementFault> {
         use crate::os_store::ErasedSnapshotRetirement;
         use crate::retained::FlowOwner;
         let state = &mut *self.state;
-        if context.should_yield() || state.faulted { return false; }
+        if maximum_items == 0 || maximum_bytes == 0 {
+            return Err(FlowHostRetirementFault::NoCredit);
+        }
+        if state.faulted {
+            return Err(FlowHostRetirementFault::Failed);
+        }
         if let Some(dag) = state.dag.as_mut() {
-            if dag.close_step() {
-                if !dag.terminal_is_empty() { state.faulted = true; return false; }
-                state.dag = None;
+            match dag.close_step(maximum_items, maximum_bytes) {
+                dag::DagRetirementStep::Blocked | dag::DagRetirementStep::Pending { .. } => return Ok(false),
+                dag::DagRetirementStep::Complete => {
+                    if !dag.terminal_is_empty() {
+                        state.faulted = true;
+                        return Err(FlowHostRetirementFault::Failed);
+                    }
+                    state.dag = None;
+                }
             }
         } else if !state.domain.is_empty() {
-            if state.domain.close_step(1, 4096).is_err() { state.faulted = true; }
+            if state.domain.close_step(1, maximum_bytes).is_err() {
+                state.faulted = true;
+            }
         } else if !state.neural.terminal_is_empty() {
-            state.neural.close_step(1, 4096);
+            state.neural.close_step(1, maximum_bytes);
         } else if let Some(widget) = state.fixture.widgets.pop() {
             state.domain.push(FlowOwner::Widget(widget));
         } else if let Some(synapse) = state.fixture.synapses.pop() {
@@ -2183,15 +2231,18 @@ impl FlowHostRetirement {
         } else if !state.fixture.schema.is_empty() {
             state.domain.text(std::mem::take(&mut state.fixture.schema));
         } else if let Some((key, value)) = state.outputs.pop_first() {
-            state.neural.text(key); state.neural.push_dictionary(value);
+            state.neural.text(key);
+            state.neural.push_dictionary(value);
         } else if let Some((key, value)) = state.export_payloads.pop_first() {
-            state.neural.text(key); state.neural.push_dictionary(value);
+            state.neural.text(key);
+            state.neural.push_dictionary(value);
         } else if state.last_eval_json.capacity() != 0 {
             state.domain.text(std::mem::take(&mut state.last_eval_json));
         } else if state.host_catalogue_json.capacity() != 0 {
             state.domain.text(std::mem::take(&mut state.host_catalogue_json));
         } else if let Some((key, value)) = state.kind_infos.extract_if(|_, _| true).next() {
-            state.neural.text(key); state.neural.push_operator(value);
+            state.neural.text(key);
+            state.neural.push_operator(value);
         } else if let Some(snapshot) = state.previous_snapshot.take() {
             state.neural.push_snapshot(snapshot);
         } else if let Some(channels) = state.previous_channels.take() {
@@ -2199,20 +2250,33 @@ impl FlowHostRetirement {
         } else if let Some(fixture) = state.pending_history_baseline.take() {
             state.domain.push(FlowOwner::Fixture(fixture));
         } else if let Some(pending) = state.pending_extension_eval.take() {
-            state.neural.text(pending.extension_id); state.neural.text(pending.operator_id); state.neural.text(pending.input_json);
-        } else if state.eval_bridge.take().is_some() || state.ghost_node.take().is_some() || state.interaction_projection.take().is_some() {
+            state.neural.text(pending.extension_id);
+            state.neural.text(pending.operator_id);
+            state.neural.text(pending.input_json);
+        } else if state.eval_bridge.take().is_some() || state.interaction_projection.take().is_some() {
         } else if let Some(cache) = state.neural_cache.as_mut() {
-            if matches!(cache.close_step(1, 4096), neural::ValueRetirementStep::Complete) {
-                if !cache.terminal_nonopaque_is_empty() { state.faulted = true; return false; }
+            if matches!(cache.close_step(1, maximum_bytes), neural::ValueRetirementStep::Complete) {
+                if !cache.terminal_nonopaque_is_empty() {
+                    state.faulted = true;
+                    return Err(FlowHostRetirementFault::Failed);
+                }
                 state.neural_cache = None;
             }
         } else if let Some(store) = state.history_store.as_mut() {
-            match store.close_owned_step(1, 4096) {
+            match store.close_owned_step(1, maximum_bytes) {
                 Ok(SnapshotRetirementStep::Complete) if store.close_owned_terminal_is_empty() => state.history_store = None,
-                Ok(_) => {}, Err(_) => state.faulted = true,
+                Ok(_) => {}
+                Err(_) => state.faulted = true,
             }
-        } else { state.terminal = true; context.consume_fuel(1); return true; }
-        context.consume_fuel(1); false
+        } else {
+            state.terminal = true;
+            return Ok(true);
+        }
+        if state.faulted {
+            Err(FlowHostRetirementFault::Failed)
+        } else {
+            Ok(false)
+        }
     }
 
     pub fn terminal_nonopaque_is_empty(&self) -> bool {
@@ -2232,7 +2296,6 @@ impl FlowHostRetirement {
             && self.neural_cache.is_none()
             && self.previous_snapshot.is_none()
             && self.previous_channels.is_none()
-            && self.ghost_node.is_none()
             && self.history_store.is_none()
             && self.pending_history_baseline.is_none()
             && self.pending_extension_eval.is_none()
@@ -2244,8 +2307,13 @@ impl FlowHostRetirement {
 
 impl Drop for FlowHostRetirement {
     fn drop(&mut self) {
-        if !self.terminal_nonopaque_is_empty() { assert!(std::thread::panicking(), "FlowHostRetirement must reach terminal-empty before release"); return; }
-        unsafe { std::mem::ManuallyDrop::drop(&mut self.state); }
+        if !self.terminal_nonopaque_is_empty() {
+            assert!(std::thread::panicking(), "FlowHostRetirement must reach terminal-empty before release");
+            return;
+        }
+        unsafe {
+            std::mem::ManuallyDrop::drop(&mut self.state);
+        }
     }
 }
 
@@ -2303,12 +2371,27 @@ pub struct FlowEvalSessionState {
     closing: bool,
 }
 
-enum SessionCollectionOwner { Handles(BTreeSet<String>), Meshes(BTreeMap<String, String>), Pending(BTreeMap<u64, String>) }
+enum SessionCollectionOwner {
+    Handles(BTreeSet<String>),
+    Meshes(BTreeMap<String, String>),
+    Pending(BTreeMap<u64, String>),
+}
 
 /// 🔒️ Evaluation ownership stays guarded until every collection, domain, cache, and byte frontier is empty.
-pub struct FlowEvalSession { state: std::mem::ManuallyDrop<FlowEvalSessionState> }
-impl std::ops::Deref for FlowEvalSession { type Target = FlowEvalSessionState; fn deref(&self) -> &Self::Target { &self.state } }
-impl std::ops::DerefMut for FlowEvalSession { fn deref_mut(&mut self) -> &mut Self::Target { &mut self.state } }
+pub struct FlowEvalSession {
+    state: std::mem::ManuallyDrop<FlowEvalSessionState>,
+}
+impl std::ops::Deref for FlowEvalSession {
+    type Target = FlowEvalSessionState;
+    fn deref(&self) -> &Self::Target {
+        &self.state
+    }
+}
+impl std::ops::DerefMut for FlowEvalSession {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.state
+    }
+}
 
 impl Default for FlowEvalSession {
     fn default() -> Self {
@@ -2318,29 +2401,36 @@ impl Default for FlowEvalSession {
 
 impl Drop for FlowEvalSession {
     fn drop(&mut self) {
-        if !self.terminal_is_empty() { assert!(std::thread::panicking(), "FlowEvalSession must finish explicit close before drop"); return; }
-        unsafe { std::mem::ManuallyDrop::drop(&mut self.state); }
+        if !self.terminal_is_empty() {
+            assert!(std::thread::panicking(), "FlowEvalSession must finish explicit close before drop");
+            return;
+        }
+        unsafe {
+            std::mem::ManuallyDrop::drop(&mut self.state);
+        }
     }
 }
 
 impl FlowEvalSession {
     pub fn new() -> Self {
-        Self { state: std::mem::ManuallyDrop::new(FlowEvalSessionState {
-            session_id: NEXT_FLOW_SESSION_ID.fetch_add(1, AtomicOrdering::Relaxed),
-            neural_cache: Some(Arc::new(NeuralCache::new())),
-            previous_snapshot: None,
-            previous_channels: None,
-            eval_json: String::new(),
-            status_json: "{}".into(),
-            tick_scheduled: false,
-            live_geometry_handles: BTreeSet::new(),
-            preview_mesh_json_by_handle: BTreeMap::new(),
-            pending_tessellate_by_hash: BTreeMap::new(),
-            retiring_cache: None,
-            retirement: neural::ValueRetirement::default(),
-            retiring_collections: std::collections::LinkedList::new(),
-            closing: false,
-        }) }
+        Self {
+            state: std::mem::ManuallyDrop::new(FlowEvalSessionState {
+                session_id: NEXT_FLOW_SESSION_ID.fetch_add(1, AtomicOrdering::Relaxed),
+                neural_cache: Some(Arc::new(NeuralCache::new())),
+                previous_snapshot: None,
+                previous_channels: None,
+                eval_json: String::new(),
+                status_json: "{}".into(),
+                tick_scheduled: false,
+                live_geometry_handles: BTreeSet::new(),
+                preview_mesh_json_by_handle: BTreeMap::new(),
+                pending_tessellate_by_hash: BTreeMap::new(),
+                retiring_cache: None,
+                retirement: neural::ValueRetirement::default(),
+                retiring_collections: std::collections::LinkedList::new(),
+                closing: false,
+            }),
+        }
     }
 
     pub fn neural_cache(&self) -> Arc<NeuralCache> {
@@ -2354,13 +2444,19 @@ impl FlowEvalSession {
     pub fn capture_baseline_from(&mut self, host: &FlowHost) {
         let (snapshot, channels) = host.eval_baseline();
         let state = &mut *self.state;
-        if let Some(previous) = std::mem::replace(&mut state.previous_snapshot, snapshot) { state.retirement.push_snapshot(previous); }
-        if let Some(previous) = std::mem::replace(&mut state.previous_channels, channels) { state.retirement.push_channels(previous); }
+        if let Some(previous) = std::mem::replace(&mut state.previous_snapshot, snapshot) {
+            state.retirement.push_snapshot(previous);
+        }
+        if let Some(previous) = std::mem::replace(&mut state.previous_channels, channels) {
+            state.retirement.push_channels(previous);
+        }
         if let Some(channels) = state.previous_channels.as_ref() {
             let next = collect_live_geometry_handles_from_channels(channels).into_iter().collect();
             state.retiring_collections.push_back(SessionCollectionOwner::Handles(std::mem::replace(&mut state.live_geometry_handles, next)));
             if let Ok(mut map) = FLOW_SESSION_GEOMETRY.lock() {
-                if let Some(previous) = map.insert(state.session_id, state.live_geometry_handles.clone()) { state.retiring_collections.push_back(SessionCollectionOwner::Handles(previous)); }
+                if let Some(previous) = map.insert(state.session_id, state.live_geometry_handles.clone()) {
+                    state.retiring_collections.push_back(SessionCollectionOwner::Handles(previous));
+                }
             }
             sync_flow_geometry_retention();
         }
@@ -2407,14 +2503,20 @@ impl FlowEvalSession {
         let state = &mut *self.state;
         state.retirement.text(std::mem::replace(&mut state.eval_json, eval_json));
         state.tick_scheduled = false;
-        if let Some(previous) = state.previous_snapshot.take() { state.retirement.push_snapshot(previous); }
-        if let Some(previous) = state.previous_channels.take() { state.retirement.push_channels(previous); }
+        if let Some(previous) = state.previous_snapshot.take() {
+            state.retirement.push_snapshot(previous);
+        }
+        if let Some(previous) = state.previous_channels.take() {
+            state.retirement.push_channels(previous);
+        }
         state.retirement.text(std::mem::replace(&mut state.status_json, "{}".into()));
         state.retiring_collections.push_back(SessionCollectionOwner::Handles(std::mem::take(&mut state.live_geometry_handles)));
         state.retiring_collections.push_back(SessionCollectionOwner::Meshes(std::mem::take(&mut state.preview_mesh_json_by_handle)));
         state.retiring_collections.push_back(SessionCollectionOwner::Pending(std::mem::take(&mut state.pending_tessellate_by_hash)));
         if let Ok(mut map) = FLOW_SESSION_GEOMETRY.lock() {
-            if let Some(previous) = map.remove(&state.session_id) { state.retiring_collections.push_back(SessionCollectionOwner::Handles(previous)); }
+            if let Some(previous) = map.remove(&state.session_id) {
+                state.retiring_collections.push_back(SessionCollectionOwner::Handles(previous));
+            }
         }
         sync_flow_geometry_retention();
     }
@@ -2471,7 +2573,9 @@ impl FlowEvalSession {
         self.closing = true;
         self.tick_scheduled = false;
         if let Ok(mut map) = FLOW_SESSION_GEOMETRY.lock() {
-            if let Some(previous) = map.remove(&self.session_id) { self.retiring_collections.push_back(SessionCollectionOwner::Handles(previous)); }
+            if let Some(previous) = map.remove(&self.session_id) {
+                self.retiring_collections.push_back(SessionCollectionOwner::Handles(previous));
+            }
         }
         sync_flow_geometry_retention();
     }
@@ -2480,7 +2584,9 @@ impl FlowEvalSession {
     pub fn close_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> semio_framework_job::InteractiveJobCloseStep {
         use semio_framework_job::InteractiveJobCloseStep as Step;
         let state = &mut *self.state;
-        if !state.closing || maximum_items == 0 || maximum_bytes == 0 { return Step::Blocked; }
+        if !state.closing || maximum_items == 0 || maximum_bytes == 0 {
+            return Step::Blocked;
+        }
         if !state.retirement.terminal_is_empty() {
             return match state.retirement.close_step(maximum_items, maximum_bytes) {
                 neural::ValueRetirementStep::Pending { released_items, released_bytes } => Step::Pending { released_items, released_bytes },
@@ -2491,16 +2597,29 @@ impl FlowEvalSession {
         if let Some(owner) = state.retiring_collections.pop_front() {
             match owner {
                 SessionCollectionOwner::Handles(mut values) => {
-                    if let Some(value) = values.pop_first() { state.retirement.text(value); }
-                    if !values.is_empty() { state.retiring_collections.push_front(SessionCollectionOwner::Handles(values)); }
+                    if let Some(value) = values.pop_first() {
+                        state.retirement.text(value);
+                    }
+                    if !values.is_empty() {
+                        state.retiring_collections.push_front(SessionCollectionOwner::Handles(values));
+                    }
                 }
                 SessionCollectionOwner::Meshes(mut values) => {
-                    if let Some((key, value)) = values.pop_first() { state.retirement.text(key); state.retirement.text(value); }
-                    if !values.is_empty() { state.retiring_collections.push_front(SessionCollectionOwner::Meshes(values)); }
+                    if let Some((key, value)) = values.pop_first() {
+                        state.retirement.text(key);
+                        state.retirement.text(value);
+                    }
+                    if !values.is_empty() {
+                        state.retiring_collections.push_front(SessionCollectionOwner::Meshes(values));
+                    }
                 }
                 SessionCollectionOwner::Pending(mut values) => {
-                    if let Some((_, value)) = values.pop_first() { state.retirement.text(value); }
-                    if !values.is_empty() { state.retiring_collections.push_front(SessionCollectionOwner::Pending(values)); }
+                    if let Some((_, value)) = values.pop_first() {
+                        state.retirement.text(value);
+                    }
+                    if !values.is_empty() {
+                        state.retiring_collections.push_front(SessionCollectionOwner::Pending(values));
+                    }
                 }
             }
             return Step::Pending { released_items: 1, released_bytes: 0 };
@@ -2525,9 +2644,14 @@ impl FlowEvalSession {
             match cache.close_step(maximum_items, maximum_bytes) {
                 neural::ValueRetirementStep::Pending { released_items, released_bytes } => return Step::Pending { released_items, released_bytes },
                 neural::ValueRetirementStep::Blocked => return Step::Blocked,
-                neural::ValueRetirementStep::Complete => { assert!(cache.terminal_nonopaque_is_empty()); state.retiring_cache = None; }
+                neural::ValueRetirementStep::Complete => {
+                    assert!(cache.terminal_nonopaque_is_empty());
+                    state.retiring_cache = None;
+                }
             }
-        } else { return Step::Complete; }
+        } else {
+            return Step::Complete;
+        }
         Step::Pending { released_items: 1, released_bytes: 0 }
     }
 
@@ -2796,7 +2920,7 @@ mod tests {
     }
 
     fn test_kind_infos_json() -> String {
-        serde_json::to_string(&[
+        crate::os_pack::json::to_json_string(&vec![
             NeuronKindInfo {
                 id: "math.add".into(),
                 extension: "math".into(),
@@ -2820,7 +2944,6 @@ mod tests {
                 ..Default::default()
             },
         ])
-        .unwrap()
     }
 
     fn host_with_test_bridge() -> FlowHost {
@@ -2983,7 +3106,7 @@ mod tests {
     fn flow_eval_session_seeds_its_retained_neural_cache() {
         let session = FlowEvalSession::new();
         let expected = Dictionary::with_schema("number").insert("value", NeuralValue::Atom(Atom::Decimal(42.0)));
-        let output_json = serde_json::to_string(&expected).unwrap();
+        let output_json = crate::os_pack::json::to_json_string(&expected);
         session.seed_node_cache(17, &output_json).unwrap();
         assert_eq!(session.neural_cache().get(17), Some(expected));
     }
@@ -3578,7 +3701,13 @@ mod tests {
     fn replace_fixture_preserves_live_camera() {
         let mut host = host_with_test_bridge();
         host.set_camera(120.0, -45.0, 1.75);
-        host.replace_fixture(FlowFixture { schema: "flow.fixture".into(), camera: CameraJson { x: 0.0, y: 0.0, zoom: 1.0 }, widgets: vec![Widget::InputNote { id: "note".into(), text: "hello".into() }], synapses: vec![], layout: crate::OrderedMap::new() });
+        host.replace_fixture(FlowFixture {
+            schema: "flow.fixture".into(),
+            camera: CameraJson { x: 0.0, y: 0.0, zoom: 1.0 },
+            widgets: vec![Widget::InputNote { id: "note".into(), text: "hello".into() }],
+            synapses: vec![],
+            layout: crate::OrderedMap::new(),
+        });
         assert_eq!(host.fixture.camera.x, 120.0);
         assert_eq!(host.fixture.camera.y, -45.0);
         assert!((host.fixture.camera.zoom - 1.75).abs() < 1e-9);
@@ -3626,21 +3755,18 @@ mod tests {
             layout: crate::OrderedMap::new(),
         });
         host.set_eval_bridge_fn(Box::new(test_dictionary_merge_bridge));
-        host.set_neuron_kind_infos_json(
-            &serde_json::to_string(&[NeuronKindInfo {
-                id: "dictionary.merge".into(),
-                extension: "dictionary".into(),
-                name: "Merge".into(),
-                abbreviation: "Merge".into(),
-                icon: "emoji:🔀️".into(),
-                summary: "Merge".into(),
-                inputs: vec![],
-                outputs: vec![InputSpec::named("D", "Dic", "dictionary", "MergedDictionary")],
-                variadic_input: Some(neural::VariadicSpec { slot_key: "items".into(), min: 2, max: None }),
-                ..Default::default()
-            }])
-            .unwrap(),
-        );
+        host.set_neuron_kind_infos_json(&crate::os_pack::json::to_json_string(&vec![NeuronKindInfo {
+            id: "dictionary.merge".into(),
+            extension: "dictionary".into(),
+            name: "Merge".into(),
+            abbreviation: "Merge".into(),
+            icon: "emoji:🔀️".into(),
+            summary: "Merge".into(),
+            inputs: vec![],
+            outputs: vec![InputSpec::named("D", "Dic", "dictionary", "MergedDictionary")],
+            variadic_input: Some(neural::VariadicSpec { slot_key: "items".into(), min: 2, max: None }),
+            ..Default::default()
+        }]));
         host.previous_snapshot = None;
         host.outputs.clear();
         host.evaluate_internal();
@@ -3831,20 +3957,17 @@ mod tests {
     #[test]
     fn ghost_widget_matches_placed_neuron_size() {
         let mut host = host_with_test_bridge();
-        host.set_neuron_kind_infos_json(
-            &serde_json::to_string(&[NeuronKindInfo {
-                id: "brep.sketch2d.circle".into(),
-                extension: "brep".into(),
-                name: "Sketch Circle".into(),
-                abbreviation: "Circle".into(),
-                icon: "emoji:⚪️".into(),
-                summary: "Sketched circle profile".into(),
-                inputs: vec![InputSpec::number_default("radius", 1.0, NUMBER_OPS)],
-                outputs: vec![InputSpec::named("S", "Sld", "solid", "Solid")],
-                ..Default::default()
-            }])
-            .unwrap(),
-        );
+        host.set_neuron_kind_infos_json(&crate::os_pack::json::to_json_string(&vec![NeuronKindInfo {
+            id: "brep.sketch2d.circle".into(),
+            extension: "brep".into(),
+            name: "Sketch Circle".into(),
+            abbreviation: "Circle".into(),
+            icon: "emoji:⚪️".into(),
+            summary: "Sketched circle profile".into(),
+            inputs: vec![InputSpec::number_default("radius", 1.0, NUMBER_OPS)],
+            outputs: vec![InputSpec::named("S", "Sld", "solid", "Solid")],
+            ..Default::default()
+        }]));
         let descriptor = r#"{"kind":"neuron","neuronKind":"brep.sketch2d.circle"}"#;
         host.set_ghost_widget(descriptor, 40.0, 40.0).unwrap();
         let ghost_width = host.ghost_node.as_ref().expect("ghost").width;
@@ -3871,20 +3994,17 @@ mod tests {
     fn ghost_widget_label_overlay_matches_placed_at_micro() {
         let mut host = host_with_test_bridge();
         host.set_viewport(1280, 800, 1.0);
-        host.set_neuron_kind_infos_json(
-            &serde_json::to_string(&[NeuronKindInfo {
-                id: "brep.sketch2d.circle".into(),
-                extension: "brep".into(),
-                name: "Sketch Circle".into(),
-                abbreviation: "Circle".into(),
-                icon: "emoji:⚪️".into(),
-                summary: "Sketched circle profile".into(),
-                inputs: vec![InputSpec::number_default("radius", 1.0, NUMBER_OPS)],
-                outputs: vec![InputSpec::named("S", "Sld", "solid", "Solid")],
-                ..Default::default()
-            }])
-            .unwrap(),
-        );
+        host.set_neuron_kind_infos_json(&crate::os_pack::json::to_json_string(&vec![NeuronKindInfo {
+            id: "brep.sketch2d.circle".into(),
+            extension: "brep".into(),
+            name: "Sketch Circle".into(),
+            abbreviation: "Circle".into(),
+            icon: "emoji:⚪️".into(),
+            summary: "Sketched circle profile".into(),
+            inputs: vec![InputSpec::number_default("radius", 1.0, NUMBER_OPS)],
+            outputs: vec![InputSpec::named("S", "Sld", "solid", "Solid")],
+            ..Default::default()
+        }]));
         host.dag.set_automatic_lod(false);
         host.dag.set_forced_draw_lod_label("micro");
         let descriptor = r#"{"kind":"neuron","neuronKind":"brep.sketch2d.circle"}"#;
@@ -3926,20 +4046,17 @@ mod tests {
     fn rebuild_dag_preserves_ghost_overlay_at_micro() {
         let mut host = host_with_test_bridge();
         host.set_viewport(1280, 800, 1.0);
-        host.set_neuron_kind_infos_json(
-            &serde_json::to_string(&[NeuronKindInfo {
-                id: "brep.sketch2d.circle".into(),
-                extension: "brep".into(),
-                name: "Sketch Circle".into(),
-                abbreviation: "Circle".into(),
-                icon: "emoji:⚪️".into(),
-                summary: "Sketched circle profile".into(),
-                inputs: vec![InputSpec::number_default("radius", 1.0, NUMBER_OPS)],
-                outputs: vec![InputSpec::named("S", "Sld", "solid", "Solid")],
-                ..Default::default()
-            }])
-            .unwrap(),
-        );
+        host.set_neuron_kind_infos_json(&crate::os_pack::json::to_json_string(&vec![NeuronKindInfo {
+            id: "brep.sketch2d.circle".into(),
+            extension: "brep".into(),
+            name: "Sketch Circle".into(),
+            abbreviation: "Circle".into(),
+            icon: "emoji:⚪️".into(),
+            summary: "Sketched circle profile".into(),
+            inputs: vec![InputSpec::number_default("radius", 1.0, NUMBER_OPS)],
+            outputs: vec![InputSpec::named("S", "Sld", "solid", "Solid")],
+            ..Default::default()
+        }]));
         host.dag.set_automatic_lod(false);
         host.dag.set_forced_draw_lod_label("micro");
         host.set_ghost_widget(r#"{"kind":"neuron","neuronKind":"brep.sketch2d.circle"}"#, 12.0, 18.0).unwrap();
@@ -3980,12 +4097,12 @@ mod tests {
         host.dag.set_automatic_lod(false);
         host.dag.set_forced_draw_lod_label("detail");
         host.set_hover_channel(Some("add"), Some("a"));
-        let hovered: dag::DagChannelRef = serde_json::from_str(&host.hovered_channel_json()).unwrap();
+        let hovered: dag::DagChannelRef = crate::os_pack::json::from_json_str(&host.hovered_channel_json()).unwrap();
         assert_eq!(hovered.widget_id, "add");
         assert_eq!(hovered.port, "a");
         assert_eq!(hovered.direction, "in");
         host.set_selected_channels_json(r#"[{"widgetId":"add","port":"a","direction":"in"}]"#);
-        let selected: Vec<dag::DagChannelRef> = serde_json::from_str(&host.selected_channels_json()).unwrap();
+        let selected: Vec<dag::DagChannelRef> = crate::os_pack::json::from_json_str(&host.selected_channels_json()).unwrap();
         assert_eq!(selected.len(), 1);
         assert_eq!(selected[0].widget_id, "add");
         assert_eq!(selected[0].port, "a");
@@ -3994,21 +4111,18 @@ mod tests {
     #[test]
     fn drag_merge_node_preserves_single_fixture_widget() {
         let mut host = host_with_test_bridge();
-        host.set_neuron_kind_infos_json(
-            &serde_json::to_string(&[NeuronKindInfo {
-                id: "dictionary.merge".into(),
-                extension: "dictionary".into(),
-                name: "Merge".into(),
-                abbreviation: "Merge".into(),
-                icon: "emoji:🔀️".into(),
-                summary: "Merge".into(),
-                inputs: vec![],
-                outputs: vec![InputSpec::named("D", "Dic", "dictionary", "MergedDictionary")],
-                variadic_input: Some(neural::VariadicSpec { slot_key: "items".into(), min: 2, max: None }),
-                ..Default::default()
-            }])
-            .unwrap(),
-        );
+        host.set_neuron_kind_infos_json(&crate::os_pack::json::to_json_string(&vec![NeuronKindInfo {
+            id: "dictionary.merge".into(),
+            extension: "dictionary".into(),
+            name: "Merge".into(),
+            abbreviation: "Merge".into(),
+            icon: "emoji:🔀️".into(),
+            summary: "Merge".into(),
+            inputs: vec![],
+            outputs: vec![InputSpec::named("D", "Dic", "dictionary", "MergedDictionary")],
+            variadic_input: Some(neural::VariadicSpec { slot_key: "items".into(), min: 2, max: None }),
+            ..Default::default()
+        }]));
         let merge_id = host.add_widget(r#"{"kind":"neuron","neuronKind":"dictionary.merge"}"#, 120.0, 80.0).unwrap();
         host.set_viewport(800, 600, 1.0);
         let merge = host.dag.fixture.nodes.iter().find(|n| n.id == merge_id).expect("merge").clone();
@@ -4067,44 +4181,41 @@ mod tests {
         host.fixture.layout.insert("torus".into(), WidgetLayout { x: 0.0, y: 60.0 });
         host.fixture.layout.insert("cut".into(), WidgetLayout { x: 240.0, y: 0.0 });
         let solid_out = vec![InputSpec::named("S", "Sld", "solid", "Solid")];
-        host.set_neuron_kind_infos_json(
-            &serde_json::to_string(&[
-                NeuronKindInfo {
-                    id: "brep.prim3d.sphere".into(),
-                    extension: "brep".into(),
-                    name: "Sphere".into(),
-                    abbreviation: "Sphere".into(),
-                    icon: "emoji:⚪️".into(),
-                    summary: "Sphere".into(),
-                    inputs: vec![InputSpec::number_default("radius", 1.0, NUMBER_OPS)],
-                    outputs: solid_out.clone(),
-                    ..Default::default()
-                },
-                NeuronKindInfo {
-                    id: "brep.prim3d.torus".into(),
-                    extension: "brep".into(),
-                    name: "Torus".into(),
-                    abbreviation: "Torus".into(),
-                    icon: "emoji:🛢️".into(),
-                    summary: "Torus".into(),
-                    inputs: vec![InputSpec::number_default("major", 2.0, NUMBER_OPS), InputSpec::number_default("minor", 0.5, NUMBER_OPS)],
-                    outputs: solid_out.clone(),
-                    ..Default::default()
-                },
-                NeuronKindInfo {
-                    id: "brep.bool.cut".into(),
-                    extension: "brep".into(),
-                    name: "Cut".into(),
-                    abbreviation: "Cut".into(),
-                    icon: "emoji:🔗️".into(),
-                    summary: "Cut".into(),
-                    inputs: vec![InputSpec::requires("a", &["geometry"]), InputSpec::requires("b", &["geometry"])],
-                    outputs: solid_out,
-                    ..Default::default()
-                },
-            ])
-            .unwrap(),
-        );
+        host.set_neuron_kind_infos_json(&crate::os_pack::json::to_json_string(&vec![
+            NeuronKindInfo {
+                id: "brep.prim3d.sphere".into(),
+                extension: "brep".into(),
+                name: "Sphere".into(),
+                abbreviation: "Sphere".into(),
+                icon: "emoji:⚪️".into(),
+                summary: "Sphere".into(),
+                inputs: vec![InputSpec::number_default("radius", 1.0, NUMBER_OPS)],
+                outputs: solid_out.clone(),
+                ..Default::default()
+            },
+            NeuronKindInfo {
+                id: "brep.prim3d.torus".into(),
+                extension: "brep".into(),
+                name: "Torus".into(),
+                abbreviation: "Torus".into(),
+                icon: "emoji:🛢️".into(),
+                summary: "Torus".into(),
+                inputs: vec![InputSpec::number_default("major", 2.0, NUMBER_OPS), InputSpec::number_default("minor", 0.5, NUMBER_OPS)],
+                outputs: solid_out.clone(),
+                ..Default::default()
+            },
+            NeuronKindInfo {
+                id: "brep.bool.cut".into(),
+                extension: "brep".into(),
+                name: "Cut".into(),
+                abbreviation: "Cut".into(),
+                icon: "emoji:🔗️".into(),
+                summary: "Cut".into(),
+                inputs: vec![InputSpec::requires("a", &["geometry"]), InputSpec::requires("b", &["geometry"])],
+                outputs: solid_out,
+                ..Default::default()
+            },
+        ]));
         host.rebuild_dag();
         host.dag.set_proximity_distance(160.0);
         host.dag.set_automatic_lod(false);
@@ -4138,44 +4249,41 @@ mod tests {
         host.fixture.layout.insert("extrude".into(), WidgetLayout { x: 0.0, y: 0.0 });
         host.fixture.layout.insert("brep".into(), WidgetLayout { x: 200.0, y: 0.0 });
         host.fixture.layout.insert("get".into(), WidgetLayout { x: 400.0, y: 0.0 });
-        host.set_neuron_kind_infos_json(
-            &serde_json::to_string(&[
-                NeuronKindInfo {
-                    id: "brep.solid.extrude".into(),
-                    extension: "brep".into(),
-                    name: "Extrude".into(),
-                    abbreviation: "Extr".into(),
-                    icon: "emoji:⬆️".into(),
-                    summary: "Extrude".into(),
-                    inputs: vec![InputSpec::requires("wire", &["geometry"]), InputSpec::requires("vector", &["vector"])],
-                    outputs: vec![InputSpec::named("S", "Sld", "solid", "Solid")],
-                    ..Default::default()
-                },
-                NeuronKindInfo {
-                    id: "brep.brep".into(),
-                    extension: "brep".into(),
-                    name: "Brep".into(),
-                    abbreviation: "Brep".into(),
-                    icon: "emoji:🧊️".into(),
-                    summary: "Brep".into(),
-                    inputs: vec![InputSpec::requires("brep", &["brep.brep"]), InputSpec::list("vertex", &["brep.brep"]), InputSpec::list("edge", &["brep.brep"]), InputSpec::list("face", &["brep.brep"])],
-                    outputs: vec![InputSpec::named("B", "Brp", "brep", "Brep")],
-                    ..Default::default()
-                },
-                NeuronKindInfo {
-                    id: "list.get".into(),
-                    extension: "list".into(),
-                    name: "Get".into(),
-                    abbreviation: "Get".into(),
-                    icon: "emoji:📋️".into(),
-                    summary: "Get".into(),
-                    inputs: vec![InputSpec::list("list", &["list.get"]), InputSpec::number_default("index", 0.0, &["list.get"]), InputSpec::boolean_default("wrap", false, &["list.get"])],
-                    outputs: vec![InputSpec::named("V", "Val", "value", "ListValue")],
-                    ..Default::default()
-                },
-            ])
-            .unwrap(),
-        );
+        host.set_neuron_kind_infos_json(&crate::os_pack::json::to_json_string(&vec![
+            NeuronKindInfo {
+                id: "brep.solid.extrude".into(),
+                extension: "brep".into(),
+                name: "Extrude".into(),
+                abbreviation: "Extr".into(),
+                icon: "emoji:⬆️".into(),
+                summary: "Extrude".into(),
+                inputs: vec![InputSpec::requires("wire", &["geometry"]), InputSpec::requires("vector", &["vector"])],
+                outputs: vec![InputSpec::named("S", "Sld", "solid", "Solid")],
+                ..Default::default()
+            },
+            NeuronKindInfo {
+                id: "brep.brep".into(),
+                extension: "brep".into(),
+                name: "Brep".into(),
+                abbreviation: "Brep".into(),
+                icon: "emoji:🧊️".into(),
+                summary: "Brep".into(),
+                inputs: vec![InputSpec::requires("brep", &["brep.brep"]), InputSpec::list("vertex", &["brep.brep"]), InputSpec::list("edge", &["brep.brep"]), InputSpec::list("face", &["brep.brep"])],
+                outputs: vec![InputSpec::named("B", "Brp", "brep", "Brep")],
+                ..Default::default()
+            },
+            NeuronKindInfo {
+                id: "list.get".into(),
+                extension: "list".into(),
+                name: "Get".into(),
+                abbreviation: "Get".into(),
+                icon: "emoji:📋️".into(),
+                summary: "Get".into(),
+                inputs: vec![InputSpec::list("list", &["list.get"]), InputSpec::number_default("index", 0.0, &["list.get"]), InputSpec::boolean_default("wrap", false, &["list.get"])],
+                outputs: vec![InputSpec::named("V", "Val", "value", "ListValue")],
+                ..Default::default()
+            },
+        ]));
         host.rebuild_dag();
         let incoming = host.dag.engine.edges.get(&112).expect("incoming brep edge");
         let outgoing = host.dag.engine.edges.get(&113).expect("outgoing brep edge");
@@ -4228,21 +4336,18 @@ mod tests {
     #[test]
     fn add_input_port_inserts_variadic_slot() {
         let mut host = host_with_test_bridge();
-        host.set_neuron_kind_infos_json(
-            &serde_json::to_string(&[NeuronKindInfo {
-                id: "dictionary.merge".into(),
-                extension: "dictionary".into(),
-                name: "Merge".into(),
-                abbreviation: "Merge".into(),
-                icon: "emoji:🔀️".into(),
-                summary: "Merge".into(),
-                inputs: vec![],
-                outputs: vec![InputSpec::named("D", "Dic", "dictionary", "MergedDictionary")],
-                variadic_input: Some(neural::VariadicSpec { slot_key: "items".into(), min: 2, max: None }),
-                ..Default::default()
-            }])
-            .unwrap(),
-        );
+        host.set_neuron_kind_infos_json(&crate::os_pack::json::to_json_string(&vec![NeuronKindInfo {
+            id: "dictionary.merge".into(),
+            extension: "dictionary".into(),
+            name: "Merge".into(),
+            abbreviation: "Merge".into(),
+            icon: "emoji:🔀️".into(),
+            summary: "Merge".into(),
+            inputs: vec![],
+            outputs: vec![InputSpec::named("D", "Dic", "dictionary", "MergedDictionary")],
+            variadic_input: Some(neural::VariadicSpec { slot_key: "items".into(), min: 2, max: None }),
+            ..Default::default()
+        }]));
         let merge_id = host.add_widget(r#"{"kind":"neuron","neuronKind":"dictionary.merge"}"#, 0.0, 0.0).unwrap();
         host.add_input_port(&merge_id, 1).unwrap();
         let widget = host.fixture.widgets.iter().find(|widget| widget_id_for(widget) == merge_id).expect("merge");
@@ -4253,21 +4358,18 @@ mod tests {
     #[test]
     fn add_output_port_inserts_variadic_get_slot() {
         let mut host = host_with_test_bridge();
-        host.set_neuron_kind_infos_json(
-            &serde_json::to_string(&[NeuronKindInfo {
-                id: "list.get".into(),
-                extension: "list".into(),
-                name: "Get".into(),
-                abbreviation: "Get".into(),
-                icon: "emoji:📋️".into(),
-                summary: "Reads consecutive values by index".into(),
-                inputs: vec![InputSpec::list("list", &["list.get"]), InputSpec::number_default("index", 0.0, &["list.get"]), InputSpec::boolean_default("wrap", false, &["list.get"])],
-                outputs: vec![InputSpec::named("V", "Val", "value", "ListValue")],
-                variadic_output: Some(neural::VariadicSpec { slot_key: "value".into(), min: 1, max: None }),
-                ..Default::default()
-            }])
-            .unwrap(),
-        );
+        host.set_neuron_kind_infos_json(&crate::os_pack::json::to_json_string(&vec![NeuronKindInfo {
+            id: "list.get".into(),
+            extension: "list".into(),
+            name: "Get".into(),
+            abbreviation: "Get".into(),
+            icon: "emoji:📋️".into(),
+            summary: "Reads consecutive values by index".into(),
+            inputs: vec![InputSpec::list("list", &["list.get"]), InputSpec::number_default("index", 0.0, &["list.get"]), InputSpec::boolean_default("wrap", false, &["list.get"])],
+            outputs: vec![InputSpec::named("V", "Val", "value", "ListValue")],
+            variadic_output: Some(neural::VariadicSpec { slot_key: "value".into(), min: 1, max: None }),
+            ..Default::default()
+        }]));
         let get_id = host.add_widget(r#"{"kind":"neuron","neuronKind":"list.get"}"#, 0.0, 0.0).unwrap();
         let node = host.dag.fixture.nodes.iter().find(|node| node.id == get_id).expect("get");
         let labels: Vec<&str> = node.outputs().iter().map(|port| port.label.as_str()).collect();

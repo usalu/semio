@@ -493,7 +493,7 @@
     },
     "AdminIntentStateV1": {
       "type": "string",
-      "enum": ["succeeded", "accepted", "failed", "cancelled"]
+        "enum": ["succeeded", "accepted", "indeterminate", "failed", "cancelled"]
     },
     "AdminIntentOutcomeV1": {
       "type": "object",
@@ -1113,14 +1113,20 @@
         "package": {
           "type": "object",
           "additionalProperties": false,
-          "required": ["pluginId", "packageId", "version", "componentSha256", "componentBlake3", "descriptorByteSha256"],
+          "required": ["pluginId", "packageId", "version", "componentSha256", "componentBlake3", "descriptorByteSha256", "executionProtocol"],
           "properties": {
             "pluginId": { "type": "string", "minLength": 1, "maxLength": 256 },
             "packageId": { "type": "string", "minLength": 1, "maxLength": 256 },
             "version": { "type": "string", "minLength": 1, "maxLength": 256 },
             "componentSha256": { "$ref": "#/$defs/DocumentExecutionTargetHashV1" },
             "componentBlake3": { "$ref": "#/$defs/DocumentExecutionTargetHashV1" },
-            "descriptorByteSha256": { "$ref": "#/$defs/DocumentExecutionTargetHashV1" }
+            "descriptorByteSha256": { "$ref": "#/$defs/DocumentExecutionTargetHashV1" },
+            "executionProtocol": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["appChannelVersion"],
+              "properties": { "appChannelVersion": { "const": 14 } }
+            }
           }
         },
         "component": {

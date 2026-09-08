@@ -2,7 +2,7 @@
 
 use flow_extension_sdk::brep_geometry::*;
 use flow_extension_sdk::build_manifest_json;
-use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::{operation_quality, BrepKernel, BREP_KERNEL_OPERATIONS};
+use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::{operation_quality, BrepKernel};
 use neural_engine::{channel_output, ChannelSpec, Dictionary, EvalError, Operator, OperatorImpl, OperatorInfo, Registry, Value};
 
 /// 🎯️ Appends a node's live [`OpQuality`] (looked up by the `BrepKernel` method it wraps) to a
@@ -19,6 +19,7 @@ fn q(method: &str, summary: &str) -> String {
 /// reflectively derived (mirrors W1-A's `OPERATION_QUALITY` table's own documented rationale):
 /// whoever adds a node must add its row here, or `operation_quality_tags_match_the_kernel_contract`
 /// fails.
+#[cfg(test)]
 const NODE_KERNEL_METHOD: &[(&str, &str)] = &[
     ("brep.brep", "deconstruct"),
     ("brep.prim3d.box", "box_prim"),
@@ -119,6 +120,7 @@ const NODE_KERNEL_METHOD: &[(&str, &str)] = &[
 /// `every_kernel_operation_is_either_a_node_or_explicitly_unexposed` against
 /// [`BREP_KERNEL_OPERATIONS`] so a newly added trait method can never silently fall through both
 /// lists unnoticed.
+#[cfg(test)]
 const INTENTIONALLY_UNEXPOSED: &[(&str, &str)] = &[
     ("kind", "internal handle-kind lookup behind geometry_dict, not a graph operation"),
     ("tessellate", "internal preview/export bridge (tessellate_geometry), not a graph node"),
@@ -2351,3 +2353,6 @@ mod extension_guest {
     semio_framework_plugin::extension_exports!(bundle);
 }
 // #endregion 🔖️ExtensionGuest
+
+#[cfg(test)]
+use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::BREP_KERNEL_OPERATIONS;

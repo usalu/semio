@@ -6,8 +6,8 @@ use semio_framework_plugin::plugin_app_close_prelude::*;
 use semio_framework_plugin::{ExecutionMode, Plugin, PluginApp};
 
 //#region 🗃️Apps
-/// 🗃️ Closed runtime app fleet for the remodel editor and viewer surfaces.
 semio_framework_dispatch_macros::dyn_enum_close! {
+    /// 🗃️ Closed runtime app fleet for the remodel editor and viewer surfaces.
     pub enum RemodelApps: PluginApp {
         Editor(VcsArtifactApp<EditorApp<crate::editor::remodeling::RemodelingPlayApp>>),
         Viewer(VcsArtifactApp<ViewerApp<crate::viewer::remodeling::RemodelingViewer>>),

@@ -37,12 +37,14 @@ trait Copy: Retire + Sync + Sized { fn task(source: Rooted<Self>) -> Box<dyn Tas
 
 trait Copied: Send {
     fn into_any(self: Box<Self>) -> Box<dyn Any + Send>;
+    #[cfg(test)]
     fn retire(self: Box<Self>, retirement: &mut Retirement);
 }
 
 struct Value<T: Retire>(T);
 impl<T: Retire> Copied for Value<T> {
     fn into_any(self: Box<Self>) -> Box<dyn Any + Send> { Box::new(self.0) }
+    #[cfg(test)]
     fn retire(self: Box<Self>, retirement: &mut Retirement) { self.0.retire(retirement); }
 }
 

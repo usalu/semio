@@ -5,6 +5,24 @@
     "default": ["{workspaceRoot}/✏️s/🔌️plugins/🌍️gis/**/*.rs", "{projectRoot}/**/*"]
   },
   "targets": {
+    "component-cold-map-patch-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🌍️gis/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts component-cold-map-patch-check",
+        "forwardAllArgs": true
+      }
+    },
+    "component-cold-map-patch-native-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🌍️gis/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts component-cold-map-patch-native-check",
+        "forwardAllArgs": true
+      }
+    },
     "durable-three-store-assembly-check": {
       "executor": "nx:run-commands",
       "cache": false,

@@ -33,8 +33,8 @@ use semio_framework::{InteractiveJobClassification, ToolExecutionContract, ToolF
 use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::retained_command::{ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
 use semio_framework_plugin::{
-    ui_text, ActionDescriptor, AppOperationContext, ArtifactEditor, ArtifactOwnedToolJobFactory, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView, ConfigView, Dialect,
-    DraftView, Editor, EditorApp, Emit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, Label, LocalizedLabel, MergeMode, NoDraft, NoDraftMutation, SelectionMethod, SelectionMode, SelectionSpec, UiNode,
+    AppOperationContext, ArtifactEditor, ArtifactOwnedToolJobFactory, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView, ConfigView, Dialect,
+    DraftView, Editor, EditorApp, Emit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, Label, LocalizedLabel, MergeMode, NoDraft, NoDraftMutation, SelectionMethod, SelectionMode, SelectionSpec,
     INTERACTION_SELECT_ACTION_ID,
 };
 use serde_json::{json, Value};
@@ -55,6 +55,11 @@ pub fn wires_action(action: &str, args: Option<semio_framework_plugin::UiValue>)
 
 
 /// 🧱️ Admits one fixed UI text action value without JSON staging.
+pub fn ui_label(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_ui_contract::Label> {
+    semio_framework_ui_contract::Label::try_from(value.as_ref()).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.label-capacity", "wires label exceeds its fixed capacity"))
+}
+
+/// 📝️ Admits text into an action payload.
 pub fn ui_value_text(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiValue> {
     semio_framework_plugin::UiText::try_from_str(value.as_ref())
         .map(semio_framework_plugin::UiValue::Text)
@@ -116,7 +121,7 @@ pub fn ui_node_list(values: impl IntoIterator<Item = semio_framework_plugin::UiA
 pub fn reset_wires_document_effect(document: &WiresSnapshot) -> Effect {
     let pack = <WiresSnapshot as store::ArtifactPack>::encode_pack(document);
     let envelope = store::create_document_envelope::<WiresSnapshot, WiresMutation>(crate::artifacts::wires::MINDMAP_WIRES_SCHEMA, "reasoning-wires", document.clone(), None);
-    let spr = store::print_document_spr(&envelope).expect("wires document spr encode is infallible for a fresh, edit-free envelope");
+    let spr = semio_framework_plugin::resolve_ready(store::print_document_spr(&envelope)).expect("wires document spr encode is infallible for a fresh, edit-free envelope");
     Effect::LoadDocument { pack, spr }
 }
 //#endregion 🔖️Constants
@@ -212,8 +217,8 @@ fn wires_retained_reduce(
     _operation: &AppOperationContext,
 ) -> Result<Emit<WiresMutation, WiresConfigMutation, NoDraftMutation>, Fault> {
     match command {
-        WiresCommand::CanvasPointerUp(_) => Ok(Emit::config(vec![WiresConfigMutation::SetDrag { node_id: None, last_x: 0.0, last_y: 0.0 }])),
-        WiresCommand::SetLocale(payload) if payload.value.len() <= WIRES_RETAINED_RAW_BYTES => Ok(Emit::config(vec![WiresConfigMutation::SetLocale { value: payload.value.clone() }])),
+        WiresCommand::CanvasPointerUp(_) => Ok(Emit::config(vec![WiresConfigMutation::SetDrag(crate::editor::wires::config::SetDrag { node_id: None, last_x: 0.0, last_y: 0.0 })])),
+        WiresCommand::SetLocale(payload) if payload.value.len() <= WIRES_RETAINED_RAW_BYTES => Ok(Emit::config(vec![WiresConfigMutation::SetLocale(crate::editor::wires::config::SetLocale { value: payload.value.clone() })])),
         _ => Err(Fault::from("wires-retained-route-mismatch")),
     }
 }
@@ -291,8 +296,8 @@ struct WiresConfigPreparation {
 
 fn wires_config_mutation_bytes(mutation: &WiresConfigMutation) -> usize {
     match mutation {
-        WiresConfigMutation::SetDrag { node_id, .. } => node_id.as_ref().map_or(0, String::len),
-        WiresConfigMutation::SetLocale { value } => value.len(),
+        WiresConfigMutation::SetDrag(payload) => payload.node_id.as_ref().map_or(0, String::len),
+        WiresConfigMutation::SetLocale(payload) => payload.value.len(),
     }
 }
 
@@ -334,16 +339,9 @@ impl store::ArtifactStoreOneItemPreparation<WiresConfig, WiresConfigMutation> fo
             let base = self.base.as_ref().ok_or_else(|| "Wires config preparation lost its exact base root".to_string())?.get();
             if base.locale.len().saturating_add(base.drag_node_id.as_ref().map_or(0, String::len)) > store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES { return Err("Wires config base exceeds retained byte capacity".into()); }
             let mutation = self.mutation.take().ok_or_else(|| "Wires config preparation lost its mutation owner".to_string())?;
-            let mut post = base.clone();
-            let inverse = match &mutation {
-                WiresConfigMutation::SetDrag { node_id, last_x, last_y } => {
-                    let inverse = WiresConfigMutation::SetDrag { node_id: base.drag_node_id.clone(), last_x: base.drag_last_x, last_y: base.drag_last_y };
-                    post.drag_node_id = node_id.clone(); post.drag_last_x = *last_x; post.drag_last_y = *last_y;
-                    inverse
-                }
-                WiresConfigMutation::SetLocale { value } => { let inverse = WiresConfigMutation::SetLocale { value: base.locale.clone() }; post.locale = value.clone(); inverse }
-            };
-            self.candidate = Some((post, vec![inverse], mutation));
+            let post = protocol::Mutation::diff(&mutation, base).into_parts().0;
+            let inverse = protocol::Mutation::inverse(&mutation, base);
+            self.candidate = Some((post, inverse, mutation));
             self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: 0, digest: [0; 32] };
             return Ok(store::ArtifactStoreOneItemPreparationStep::Progress(self.checkpoint));
         }
@@ -491,9 +489,9 @@ impl ArtifactEditor for ReasoningWiresPlayApp {
             WIRES_PLAY_BODY_COMPOSITE => edit::windows::canvas::render(&crate::artifacts::wires::wires_working_board(document), &document.wires_fixture),
             WIRES_PLAY_BODY_DOCUMENT => document_panel::render(document, labels),
             WIRES_PLAY_BODY_CATALOGUE => catalogue_panel::render(&document.wires_fixture, labels),
-            WIRES_PLAY_BODY_PROPERTIES => inspection_panel::render(document),
-            _ => ui_text(Label::data(format!("Unknown body: {body_key}"))),
-        }
+            WIRES_PLAY_BODY_PROPERTIES => inspection_panel::render(document, labels),
+            _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "wires diagnostic admission failed")),
+        }.map(semio_framework_plugin::built_to_component_tree)
     }
 }
 //#endregion 🔖️ReasoningWiresPlayApp
@@ -580,8 +578,8 @@ pub(crate) mod testkit {
     pub type WiresApp = VcsArtifactApp<EditorApp<ReasoningWiresPlayApp>>;
 
     /// 🧪️ A bare app instance — no `AppActionRegistry`, so undeclared internal commands dispatch freely.
-    pub fn new_app() -> WiresApp {
-        new_test_app::<EditorApp<ReasoningWiresPlayApp>>()
+    pub async fn new_app() -> WiresApp {
+        new_test_app::<EditorApp<ReasoningWiresPlayApp>>().await
     }
 
     /// 🧪️ Framework testkit gap (SDK GAP, see this ticket's `📓️w0-f-report.md` handoff #3):
@@ -595,26 +593,27 @@ pub(crate) mod testkit {
 
     /// 🧪️ An app wired to the real manifest registry — required to resolve the "graph" interaction
     /// domain's declaration when dispatching a framework-injected verb like `interactionSelect`.
-    pub fn app_with_registry() -> WiresApp {
-        new_app_with_registry::<EditorApp<ReasoningWiresPlayApp>>(wires_manifest_for_testkit)
+    pub async fn app_with_registry() -> WiresApp {
+        new_app_with_registry::<EditorApp<ReasoningWiresPlayApp>>(wires_manifest_for_testkit).await
     }
 
     /// 🧪️ An app pre-loaded with the metabolism example document, for tests exercising a populated board.
-    pub fn metabolism_app() -> WiresApp {
-        let mut app = new_app();
+    pub async fn metabolism_app() -> WiresApp {
+        let mut app = new_app().await;
         let document = crate::artifacts::wires::schema::metabolism_wires_example_snapshot().expect("valid metabolism fixture mutations");
         let envelope = store::create_document_envelope::<WiresSnapshot, WiresMutation>(crate::artifacts::wires::MINDMAP_WIRES_SCHEMA, "reasoning-wires", document, None);
-        let files = store::print_document_pack(&envelope).expect("print document pack");
-        app.load_document_pack(&files).expect("load metabolism");
+        let files = store::print_document_pack(&envelope).await.expect("print document pack");
+        app.load_document_pack(&files).await.expect("load metabolism");
         app
     }
 
-    pub fn dispatch(app: &mut WiresApp, command: WiresCommand) -> InvocationResult {
-        app.dispatch_typed(command, &meta("local")).expect("dispatch")
+    pub async fn dispatch(app: &mut WiresApp, command: WiresCommand) -> InvocationResult {
+        app.dispatch_typed(command, &meta("local")).await.expect("dispatch")
     }
 
-    pub fn render(app: &mut WiresApp, body_key: &str) -> String {
-        serde_json::to_string(&app.render(body_key, None, &ViewModel::default()).expect("render")).expect("render json")
+    pub async fn render(app: &mut WiresApp, body_key: &str) -> String {
+        let tree = app.render(body_key, None, &ViewModel::default()).await.expect("render");
+        semio_framework_plugin::testkit::project_and_retire_fixture_tree(tree).expect("retire rendered tree")
     }
 }
 //#endregion 🧪️Testkit
@@ -651,9 +650,9 @@ mod tests {
     fn config_preparation_rejects_wrong_lane_and_oversized_locale() {
         use store::ArtifactStoreOneItemPreparationFactory;
         let factory = WiresConfigPreparationFactory;
-        assert!(factory.preflight(&WiresConfigMutation::SetLocale { value: "de-DE".into() }, None, store::HistoryLane::Document).is_ok());
-        assert!(factory.preflight(&WiresConfigMutation::SetLocale { value: "de-DE".into() }, None, store::HistoryLane::Interaction).is_err());
-        assert!(factory.preflight(&WiresConfigMutation::SetLocale { value: "x".repeat(WIRES_RETAINED_RAW_BYTES + 1) }, None, store::HistoryLane::Document).is_err());
+        assert!(factory.preflight(&WiresConfigMutation::SetLocale(crate::editor::wires::config::SetLocale { value: "de-DE".into() }), None, store::HistoryLane::Document).is_ok());
+        assert!(factory.preflight(&WiresConfigMutation::SetLocale(crate::editor::wires::config::SetLocale { value: "de-DE".into() }), None, store::HistoryLane::Interaction).is_err());
+        assert!(factory.preflight(&WiresConfigMutation::SetLocale(crate::editor::wires::config::SetLocale { value: "x".repeat(WIRES_RETAINED_RAW_BYTES + 1) }), None, store::HistoryLane::Document).is_err());
     }
 
     //#region 🔖️CommandSurface
@@ -715,7 +714,7 @@ mod tests {
     /// (ordinal 0, before the deleted rows).
     #[semio_framework_async_macros::async_test]
     async fn commands_keep_their_pre_migration_wire_bytes() {
-        let node = dsl::to_dsl_value(&serde_json::json!({ "id": "node-1", "nodeKind": "identity", "shape": "circle", "x": 0.0, "y": 0.0, "radius": 24.0, "text": "Alpha", "handles": [] })).unwrap();
+        let node = dsl::to_dsl_value(&dsl::json!({ "id": "node-1", "nodeKind": "identity", "shape": "circle", "x": 0.0, "y": 0.0, "radius": 24.0, "text": "Alpha", "handles": [] })).unwrap();
         let _ = node;
         let cases: [(WiresCommand, &str, &str); 3] = [
             (WiresCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: "metabolism".into() }), "active-example active-example example-id=metabolism", "0100010a6d657461626f6c69736d01000600"),
@@ -789,10 +788,10 @@ mod tests {
     //#region 🔖️CrossCutting
     #[semio_framework_async_macros::async_test]
     async fn wires_labels_resolve_native_by_default() {
-        let mut app = metabolism_app();
-        let json = render(&mut app, WIRES_PLAY_BODY_DOCUMENT);
+        let mut app = metabolism_app().await;
+        let json = render(&mut app, WIRES_PLAY_BODY_DOCUMENT).await;
         assert!(json.contains("Identities") && json.contains("Relationships"));
-        let catalogue_json = render(&mut app, WIRES_PLAY_BODY_CATALOGUE);
+        let catalogue_json = render(&mut app, WIRES_PLAY_BODY_CATALOGUE).await;
         assert!(catalogue_json.contains("Identity kinds"));
         assert!(catalogue_json.contains("Relationship kinds"));
     }
@@ -807,27 +806,27 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn an_unknown_body_key_renders_a_diagnostic_instead_of_panicking() {
-        let mut app = new_app();
-        assert!(render(&mut app, "reasoning.wires.nope").contains("Unknown body"));
+        let mut app = new_app().await;
+        assert!(render(&mut app, "reasoning.wires.nope").await.contains("Unknown body"));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn undo_redo_round_trip_through_the_wrapper() {
-        let mut app = new_app();
+        let mut app = new_app().await;
         semio_framework_plugin::testkit::assert_undo_redo_round_trip(
             &mut app,
             WiresCommand::AddNode(add_node::AddNode { kind: "identity".into() }),
             |app| crate::artifacts::wires::schema::fixture_nodes(&crate::artifacts::wires::wires_working_board(&app.snapshot().expect("snapshot"))).len(),
             0,
             1,
-        );
+        ).await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn ingest_operations_is_idempotent() {
         semio_framework_plugin::testkit::assert_ingest_idempotent::<EditorApp<ReasoningWiresPlayApp>, usize>(WiresCommand::AddNode(add_node::AddNode { kind: "identity".into() }), |app| {
             crate::artifacts::wires::schema::fixture_nodes(&crate::artifacts::wires::wires_working_board(&app.snapshot().expect("snapshot"))).len()
-        });
+        }).await;
     }
 
     /// 🧪️ The definitional merge proof: A adds a node while B renames another node — disjoint edits
@@ -839,30 +838,30 @@ mod tests {
         use semio_framework_plugin::PluginApp;
         use store::MemoryBackbone;
 
-        let mut instance_a = new_app();
-        let mut instance_b = new_app();
+        let mut instance_a = new_app().await;
+        let mut instance_b = new_app().await;
         // Seed both from an identical base projection carrying node-1/node-2 (as initial state, not
         // as edits) so the only edits on the channel are A's and B's disjoint ones.
-        let seed_node = |id: &str| dsl::to_dsl_value(&serde_json::json!({ "id": id, "nodeKind": "identity", "shape": "circle", "x": 0.0, "y": 0.0, "radius": 24.0, "text": id, "handles": [] })).expect("seed node");
+        let seed_node = |id: &str| dsl::to_dsl_value(&dsl::json!({ "id": id, "nodeKind": "identity", "shape": "circle", "x": 0.0, "y": 0.0, "radius": 24.0, "text": id, "handles": [] })).expect("seed node");
         let mut base = crate::artifacts::wires::empty_wires_snapshot();
         base = store::apply_mutation(&base, &crate::artifacts::wires::mutations::create_node(seed_node("node-1"))).expect("valid mutation").0;
         base = store::apply_mutation(&base, &crate::artifacts::wires::mutations::create_node(seed_node("node-2"))).expect("valid mutation").0;
         let base_envelope = store::create_document_envelope::<WiresSnapshot, WiresMutation>(crate::artifacts::wires::MINDMAP_WIRES_SCHEMA, "reasoning-wires", base, None);
-        let base_files = store::print_document_pack(&base_envelope).expect("print document pack");
-        instance_a.load_document_pack(&base_files).expect("load a");
-        instance_b.load_document_pack(&base_files).expect("load b");
-        let (backbone_a, backbone_b) = MemoryBackbone::pair("mem://mindmap-convergence", "mem://mindmap-convergence");
-        instance_a.attach_backbone(Box::new(backbone_a)).expect("attach a");
-        instance_b.attach_backbone(Box::new(backbone_b)).expect("attach b");
+        let base_files = store::print_document_pack(&base_envelope).await.expect("print document pack");
+        instance_a.load_document_pack(&base_files).await.expect("load a");
+        instance_b.load_document_pack(&base_files).await.expect("load b");
+        let (backbone_a, backbone_b) = MemoryBackbone::pair("mem://mindmap-convergence", "mem://mindmap-convergence").await;
+        instance_a.attach_backbone(store::Backbones::Memory(backbone_a)).await.expect("attach a");
+        instance_b.attach_backbone(store::Backbones::Memory(backbone_b)).await.expect("attach b");
 
         // A adds node-3 (a new node); B moves node-2 (a PatchNode) — disjoint edits on the graph.
-        instance_a.dispatch_typed(WiresCommand::AddNode(add_node::AddNode { kind: "identity".into() }), &meta("actor-a")).expect("a adds node");
-        instance_b.dispatch_typed(WiresCommand::CanvasPointerDown(canvas_pointer_down::CanvasPointerDown { id: Some("node-2".into()), x: 0.0, y: 0.0 }), &meta("actor-b")).expect("b down");
-        instance_b.dispatch_typed(WiresCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove { x: 50.0, y: 60.0 }), &meta("actor-b")).expect("b move");
-        instance_b.dispatch_typed(WiresCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp {}), &meta("actor-b")).expect("b up");
+        instance_a.dispatch_typed(WiresCommand::AddNode(add_node::AddNode { kind: "identity".into() }), &meta("actor-a")).await.expect("a adds node");
+        instance_b.dispatch_typed(WiresCommand::CanvasPointerDown(canvas_pointer_down::CanvasPointerDown { id: Some("node-2".into()), x: 0.0, y: 0.0 }), &meta("actor-b")).await.expect("b down");
+        instance_b.dispatch_typed(WiresCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove { x: 50.0, y: 60.0 }), &meta("actor-b")).await.expect("b move");
+        instance_b.dispatch_typed(WiresCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp {}), &meta("actor-b")).await.expect("b up");
 
-        instance_a.handle_action("commitCheckpoint", None, &meta("actor-a")).expect("pump a");
-        instance_b.handle_action("commitCheckpoint", None, &meta("actor-b")).expect("pump b");
+        instance_a.handle_action("commitCheckpoint", None, &meta("actor-a")).await.expect("pump a");
+        instance_b.handle_action("commitCheckpoint", None, &meta("actor-b")).await.expect("pump b");
 
         let projection_a = instance_a.snapshot().expect("projection a");
         let projection_b = instance_b.snapshot().expect("projection b");

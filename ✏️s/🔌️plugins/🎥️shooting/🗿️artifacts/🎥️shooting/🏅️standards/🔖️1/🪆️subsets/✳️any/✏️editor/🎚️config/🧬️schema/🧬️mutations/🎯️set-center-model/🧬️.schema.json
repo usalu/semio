@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Set Center Model",
+  "type": "object",
+  "properties": {
+    "value": {
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "value"
+  ],
+  "additionalProperties": false
+}

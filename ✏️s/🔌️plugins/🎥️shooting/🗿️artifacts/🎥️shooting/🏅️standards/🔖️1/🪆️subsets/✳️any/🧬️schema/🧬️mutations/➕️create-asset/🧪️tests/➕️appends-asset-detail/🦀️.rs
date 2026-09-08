@@ -16,10 +16,10 @@ const DIFF: &str = include_str!("🔺️diff/🔣️.json");
 const OUTCOME: &str = include_str!("🎯️outcome/🔣️.json");
 
 fn before() -> ShootingSnapshot {
-    serde_json::from_str(BEFORE).expect("before snapshot decodes")
+    dsl::os_pack::from_json_str(BEFORE).expect("before snapshot decodes")
 }
 fn expected_after() -> ShootingSnapshot {
-    serde_json::from_str(AFTER).expect("after snapshot decodes")
+    dsl::os_pack::from_json_str(AFTER).expect("after snapshot decodes")
 }
 fn mutation() -> ShootingMutation {
     serde_json::from_str(MUTATION).expect("mutation decodes")
@@ -57,8 +57,8 @@ async fn inverse_deletes_the_created_asset() {
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {
-        let decoded: ShootingSnapshot = serde_json::from_str(text).expect("snapshot decodes");
-        let reencoded = serde_json::to_value(&decoded).expect("snapshot encodes");
+        let decoded: ShootingSnapshot = dsl::os_pack::from_json_str(text).expect("snapshot decodes");
+        let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::os_pack::to_json_string(&decoded)).expect("snapshot encodes");
         let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
         assert_eq!(reencoded, original, "create-asset/appends-asset-detail: committed {label} JSON is not canonical");
     }
@@ -89,7 +89,7 @@ async fn declared_outcome_holds_and_duplicate_id_is_fatal() {
 #[semio_framework_async_macros::async_test]
 async fn produces_committed_diff() {
     let outcome = mutation().diff(&before());
-    let produced = serde_json::to_value(outcome.diff()).expect("produced diff encodes");
+    let produced = serde_json::from_str::<serde_json::Value>(&dsl::os_pack::to_json_string(outcome.diff())).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
     assert_eq!(produced, committed, "create-asset/appends-asset-detail: produced diff differs from the committed 🔺️diff/🔣️.json");
     assert_eq!(committed["assets"]["added"][0]["id"], "asset-detail", "create-asset/appends-asset-detail: the new record travels in `assets.added`, by value");
@@ -100,8 +100,8 @@ async fn produces_committed_diff() {
 /// 🔣️ The committed diff is itself canonical and decodes to `ShootingDiff` — the committed create-asset delta round-trips through `ShootingDiff` unchanged.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical() {
-    let decoded: ShootingDiff = serde_json::from_str(DIFF).expect("committed diff decodes");
-    let reencoded = serde_json::to_value(&decoded).expect("diff re-encodes");
+    let decoded: ShootingDiff = dsl::os_pack::from_json_str(DIFF).expect("committed diff decodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::os_pack::to_json_string(&decoded)).expect("diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
     assert_eq!(reencoded, original, "create-asset/appends-asset-detail: committed diff JSON is not canonical");
 }
@@ -109,7 +109,7 @@ async fn committed_diff_is_canonical() {
 /// 🩹 Applying the committed diff straight to `before` yields `after` — the `assets.added` entry alone is enough to rebuild the after-snapshot.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
-    let decoded: ShootingDiff = serde_json::from_str(DIFF).expect("committed diff decodes");
+    let decoded: ShootingDiff = dsl::os_pack::from_json_str(DIFF).expect("committed diff decodes");
     let produced = decoded.apply(&before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "create-asset/appends-asset-detail: committed diff did not carry before to after");
 }

@@ -4,7 +4,7 @@
 //! overlay), `db_wal` (durability), `db_storage` (the pluggable substrate), and `protocol`
 //! (`MutationEnvelope`/`MutationDiff`) into `ArtifactEngine`, the crate's central type, plus a
 //! thin `db_actor`-mailbox wrapper (`ArtifactAuthority`) around it. Frozen contract:
-//! `.🦑️repo/🎫️tickets/26/07/27/INTRODUCE-DB-PROTOCOL-COMMAND-LAYER-AND-VCS-SLIMMING/contract.md`
+//! `.🧬semio/🦑️repo/🎫️tickets/26/07/27/INTRODUCE-DB-PROTOCOL-COMMAND-LAYER-AND-VCS-SLIMMING/contract.md`
 //! (`## db crate family`, `db_artifact` row).
 //!
 //! 🎯️ Design choice (compatibility surface — re-checked against `db_engine`'s live state, which
@@ -4128,7 +4128,7 @@ impl HistoryReplayFuture {
             .and_then(|items| items.checked_add(1))
             .ok_or(DbError::LimitExceeded("history retained result items"));
         let retained_items = retained_items?;
-        let Some(mut reservation) = self.reservation.take() else {
+        let Some(reservation) = self.reservation.take() else {
             return Err(DbError::Closed);
         };
         if reservation.scratch.is_some() || !reservation.source_pages.is_empty() {

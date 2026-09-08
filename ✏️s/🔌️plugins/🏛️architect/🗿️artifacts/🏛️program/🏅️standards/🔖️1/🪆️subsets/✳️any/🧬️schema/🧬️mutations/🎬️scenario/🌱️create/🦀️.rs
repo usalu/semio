@@ -1,6 +1,6 @@
 //! 🦠️ ProgramSnapshot mutation — `create-scenario` leaf (create). Split from the
 //! pre-migration `🎬scenarios` noun-keyed triad per Wave C's one-triad-dir-per-variant
-//! restructuring (`.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📓️fanout-brief.md`
+//! restructuring (`.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📓️fanout-brief.md`
 //! Phase 2). Behavior unchanged from the wave-2 pass — pure directory/module restructuring.
 
 use crate::artifacts::program::registers::Scenario;

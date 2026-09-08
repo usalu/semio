@@ -1,0 +1,52 @@
+{
+  "capture": {
+    "identity": {
+      "appInstanceId": 7,
+      "generation": "9007199254740993",
+      "revision": "1111111111111111111111111111111111111111111111111111111111111111",
+      "documentRevision": "2222222222222222222222222222222222222222222222222222222222222222",
+      "topologyRevision": "3333333333333333333333333333333333333333333333333333333333333333"
+    },
+    "state": {
+      "selection": {
+        "mesh": { "granularity": "face", "ids": ["face,west", "face-east"], "anchorId": "face,west" },
+        "special.domain": { "granularity": "node", "ids": ["owned"] }
+      },
+      "activeMode": { "mesh": "multiple" },
+      "activeGranularity": { "mesh": "face" }
+    }
+  },
+  "observed": {
+    "selection": {
+      "mesh": { "granularity": "face", "ids": ["face,west", "face-east"], "anchorId": "face,west" },
+      "special.domain": { "granularity": "node", "ids": ["owned"] }
+    },
+    "hover": { "mesh": { "channel": "pointer", "ids": ["face-east"] } },
+    "activeMode": { "mesh": "multiple" },
+    "activeGranularity": { "mesh": "face" }
+  },
+  "playbackBefore": {
+    "selection": { "mesh": { "granularity": "edge", "ids": ["edge-old"] } },
+    "hover": { "mesh": { "channel": "pointer", "ids": ["edge-old"] } },
+    "activeMode": { "mesh": "single" },
+    "activeGranularity": { "mesh": "edge" }
+  },
+  "snapshotSelection": {
+    "mesh": { "granularity": "face", "ids": ["face,west", "face-east"], "anchorId": "face,west" },
+    "special.domain": { "granularity": "node", "ids": ["owned"] }
+  },
+  "delta": { "kind": "selection", "domainId": "mesh", "granularity": "face", "ids": ["face-west", "face,east"] },
+  "afterDelta": {
+    "selection": { "mesh": { "granularity": "face", "ids": ["face-west", "face,east"] } },
+    "hover": { "mesh": { "channel": "pointer", "ids": ["edge-old"] } },
+    "activeMode": { "mesh": "single" },
+    "activeGranularity": { "mesh": "edge" }
+  },
+  "clearDelta": { "kind": "selection", "domainId": "mesh", "granularity": "face", "ids": [] },
+  "afterClear": {
+    "selection": {},
+    "hover": { "mesh": { "channel": "pointer", "ids": ["edge-old"] } },
+    "activeMode": { "mesh": "single" },
+    "activeGranularity": { "mesh": "edge" }
+  }
+}

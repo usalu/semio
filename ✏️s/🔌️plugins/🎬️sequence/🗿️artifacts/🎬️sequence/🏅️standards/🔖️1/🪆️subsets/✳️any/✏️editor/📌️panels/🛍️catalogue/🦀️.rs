@@ -2,10 +2,10 @@
 //! expanded control-flow steps.
 
 use crate::artifacts::sequence::SequenceFixture;
-use crate::editor::sequence::sequence_action;
+use crate::editor::sequence::{sequence_action, ui_label};
 use crate::editor::sequence::terminology::SequenceLabels;
 use crate::editor::sequence::{control_slots, is_control_kind};
-use semio_framework_plugin::{tree_item_with_action, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL};
+use semio_framework_plugin::{tree_item_with_action, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL};
 
 //#region 🔖️Constants
 pub const SEQUENCE_PLAY_BODY_CATALOGUE: &str = "sequence.play.catalogue";
@@ -29,7 +29,7 @@ pub fn render(fixture: &SequenceFixture, labels: &SequenceLabels) -> semio_frame
     let mut items = semio_framework_plugin::UiFixedList::default();
     for (kind, label) in actions {
         let args = crate::editor::sequence::ui_value_map([("kind", crate::editor::sequence::ui_value_text(kind)?)])?;
-        let item = tree_item_with_action(format!("sequence-play-catalogue.action.{kind}"), label, Some(kind.into()), sequence_action("addStep", Some(args))?)?;
+        let item = tree_item_with_action(format!("sequence-play-catalogue.action.{kind}"), label.as_str(), Some(kind.into()), sequence_action("addStep", Some(args))?)?;
         items.try_push(item).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.catalogue.items", "fixed catalogue admission failed"))?;
     }
     for owner in fixture.steps.iter().filter(|step| is_control_kind(&step.kind)) {
@@ -41,14 +41,14 @@ pub fn render(fixture: &SequenceFixture, labels: &SequenceLabels) -> semio_frame
             ])?;
             let item = tree_item_with_action(
                 format!("sequence-play-catalogue.slot.{}.{}", owner.id, slot_name),
-                Label::data(format!("{} {} → {slot_name}", labels.add_to.as_str(), owner.id)),
+                format!("{} {} → {slot_name}", labels.add_to.as_str(), owner.id),
                 Some(format!("{slot_name} @ {}", owner.id)),
                 sequence_action("addStepToSlot", Some(args))?,
             )?;
             items.try_push(item).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.catalogue.items", "fixed catalogue admission failed"))?;
         }
     }
-    PanelTreeBuilder::new("sequence-play-catalogue")?.section("sequence-play-catalogue.actions", Some(Label::data(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL)), true, items)?.selected([])?.build()
+    PanelTreeBuilder::new("sequence-play-catalogue")?.section("sequence-play-catalogue.actions", Some(ui_label(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL)?), true, items)?.selected([])?.build()
 }
 //#endregion 🔖️Render
 
@@ -60,8 +60,8 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn catalogue_lists_step_kind_actions() {
-        let mut app = new_app();
-        assert!(render_body(&mut app, SEQUENCE_PLAY_BODY_CATALOGUE).contains("sequence-play-catalogue.action.log.print"));
+        let mut app = new_app().await;
+        assert!(render_body(&mut app, SEQUENCE_PLAY_BODY_CATALOGUE).await.contains("sequence-play-catalogue.action.log.print"));
     }
 }
 //#endregion 🧪️Tests

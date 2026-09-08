@@ -10,8 +10,8 @@ use semio_framework_plugin::plugin_app_close_prelude::*;
 use semio_framework_plugin::{ExecutionMode, Plugin, PluginApp};
 
 //#region 🗃️Apps
-/// 🗃️ Closed runtime app fleet for the block editor and viewer surfaces.
 semio_framework_dispatch_macros::dyn_enum_close! {
+    /// 🗃️ Closed runtime app fleet for the block editor and viewer surfaces.
     pub enum BlockApps: PluginApp {
         Block2dEditor(VcsArtifactApp<EditorApp<crate::editor::block2d::Block2dPlayApp>>),
         Block2dViewer(VcsArtifactApp<ViewerApp<crate::viewer::block2d::Block2dViewer>>),

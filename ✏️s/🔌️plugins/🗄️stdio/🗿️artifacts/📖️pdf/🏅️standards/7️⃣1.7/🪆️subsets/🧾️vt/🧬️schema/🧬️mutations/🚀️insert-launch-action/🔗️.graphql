@@ -1,0 +1,4 @@
+# 🚀️ Direct insert-launch-action GraphQL payload.
+input InsertLaunchActionMutationInput {
+  target: String!
+}

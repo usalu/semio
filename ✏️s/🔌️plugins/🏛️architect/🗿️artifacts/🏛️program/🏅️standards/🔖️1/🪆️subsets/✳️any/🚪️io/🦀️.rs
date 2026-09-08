@@ -1,5 +1,4 @@
 //! 🚪️ IO s.program (1/✳️any) — the artifact declaration owns this composer table.
-use dsl::ToValue as _;
 
 pub fn import_stdio_kinds() -> &'static [&'static str] {
     &["stdio.csv", "stdio.json", "stdio.txt", "stdio.xlsx", "stdio.zip"]

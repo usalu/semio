@@ -1,6 +1,7 @@
 //! 🧪️ Borrowed validation preserves retained Flow owners through ordered rejection.
 use super::*;
 use crate::os_spr::Identified;
+use crate::vcs::apply_flow_collection_delta;
 use std::cell::Cell;
 use std::rc::Rc;
 

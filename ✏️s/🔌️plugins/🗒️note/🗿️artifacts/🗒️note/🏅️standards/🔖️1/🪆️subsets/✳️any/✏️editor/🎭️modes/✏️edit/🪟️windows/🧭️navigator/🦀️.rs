@@ -4,7 +4,7 @@ use crate::artifacts::note::{NoteCamera, NoteSnapshot};
 use crate::editor::note::config::NoteConfig;
 use crate::editor::note::modes::edit::windows::navigator::options;
 use crate::editor::note::terminology::NotePlayLabels;
-use semio_framework_plugin::{LocalizedLabel, SurfaceKind, UiNode, WindowEngagement, WindowEngagementInput, WindowEngagementStatus, WindowKindDefinition, WindowMeasure, WindowOptions};
+use semio_framework_plugin::{LocalizedLabel, SurfaceKind, BuiltNode, UiAssemblyResult, WindowEngagement, WindowEngagementInput, WindowEngagementStatus, WindowKindDefinition, WindowMeasure, WindowOptions};
 
 //#region 🔖️Constants
 pub const NOTE_PLAY_WINDOW_NAVIGATOR: &str = "note-navigator";
@@ -64,7 +64,7 @@ pub fn engagement(active_utility: &str) -> WindowEngagement {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(document: &NoteSnapshot, cfg: &NoteConfig) -> UiNode {
+pub fn render(document: &NoteSnapshot, cfg: &NoteConfig) -> UiAssemblyResult<BuiltNode> {
     crate::editor::note::modes::edit::windows::composite::render_canvas_scene(document, &cfg.camera, &cfg.active_utility_id, NOTE_PLAY_SURFACE_NAVIGATOR, "navigator")
 }
 //#endregion 🔖️Render
@@ -78,8 +78,8 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn renders_navigator_canvas() {
-        let mut app = note_app();
-        let json = render_body(&mut app, BODY_NAVIGATOR);
+        let mut app = note_app().await;
+        let json = render_body(&mut app, BODY_NAVIGATOR).await;
         assert!(json.contains("ink-canvas"));
         assert!(json.contains("\"viewMode\":\"navigator\""));
     }

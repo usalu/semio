@@ -1,0 +1,29 @@
+[
+  {
+    "name": "München",
+    "count": 3,
+    "nested": {
+      "numbers": [
+        1,
+        2.5,
+        null
+      ],
+      "flag": true
+    }
+  },
+  {
+    "name": "quoted \"text\"\n",
+    "count": 18446744073709551615,
+    "nested": [
+      "é",
+      {
+        "i": -9223372036854775808
+      }
+    ]
+  },
+  {
+    "name": "",
+    "count": 0,
+    "nested": {}
+  }
+]

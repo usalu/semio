@@ -5,9 +5,8 @@ use semio_framework_plugin::plugin_app_close_prelude::*;
 use semio_framework_plugin::{ExecutionMode, FlowExtensionDeclaration, FlowExtensionExecutableIdentity, FlowExtensionManifest, HostMediaHandlerDeclaration, Plugin, PluginApp};
 
 //#region 🗃️Apps
-/// 🗃️ Closed runtime app fleet for the procedural 2D and 3D surfaces.
-#[allow(unused_doc_comments, unused_qualifications)]
 semio_framework_dispatch_macros::dyn_enum_close! {
+    /// 🗃️ Closed runtime app fleet for the procedural 2D and 3D surfaces.
     pub enum ProceduralApps: PluginApp {
         Generation2dEditor(VcsArtifactApp<EditorApp<crate::editor::generation2d::Generation2dPlayApp>>),
         Generation2dViewer(VcsArtifactApp<ViewerApp<crate::viewer::generation2d::Generation2dViewer>>),

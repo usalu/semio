@@ -19,8 +19,7 @@ use std::collections::BTreeMap;
 
 //#region 🔖️Diff
 /// 🔺️ Sparse field delta for the note artifact; persistent entries apply via [`MutationDiff`](protocol::MutationDiff).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue, ArtifactSchema)]
-#[serde(rename_all = "camelCase", default)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, ArtifactSchema)]
 #[value(rename_all = "camelCase", default)]
 #[artifact_schema(id = "s.note.note")]
 pub struct NoteDiff {
@@ -94,8 +93,7 @@ pub struct NoteStringList {
 }
 
 /// 🧩 Identified-collection delta for `blocks`.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
-#[serde(rename_all = "camelCase", default)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
 #[value(rename_all = "camelCase", default)]
 pub struct NoteBlocksDelta {
     pub added: Vec<NoteAddedBlockEntry>,
@@ -108,8 +106,7 @@ pub struct NoteBlocksDelta {
 /// append) place it — `create-block`/`duplicate-block(s)`/`move-block-to-container` all diff
 /// through this, never a whole-`blocks` vec swap. No `Default` derive: `NoteBlockNode` (a tagged
 /// enum) has no sensible default value, and every construction site fills all three fields anyway.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct NoteAddedBlockEntry {
     pub parent_id: Option<String>,
@@ -250,7 +247,7 @@ pub fn apply_blocks_delta(blocks: &[NoteBlockNode], delta: &NoteBlocksDelta) -> 
                 .block_json
                 .as_ref()
                 .map(|json| {
-                    serde_json::from_str::<NoteBlockNode>(json)
+                    dsl::os_pack::from_json_str::<NoteBlockNode>(json)
                         .map_err(|error| protocol::MutationApplyError::new("mutation.apply.invalid-value", format!("block patch is not valid JSON: {error}")).at(["patched".to_string(), index.to_string(), "blockJson".to_string()]))
                 })
                 .transpose()
@@ -445,7 +442,7 @@ impl MutationDiff<NoteSnapshot> for NoteDiff {
 /// updated `NoteBlockNode` value from `(payload, base)` and hands it here.
 pub fn note_block_patch_diff(id: &str, block: NoteBlockNode) -> NoteDiff {
     NoteDiff {
-        blocks: Some(NoteBlocksDelta { patched: vec![NoteBlockPatchEntry { id: id.to_string(), patch: NoteBlockPatch { block_json: Some(serde_json::to_string(&block).expect("NoteBlockNode is always json-serializable")) } }], ..Default::default() }),
+        blocks: Some(NoteBlocksDelta { patched: vec![NoteBlockPatchEntry { id: id.to_string(), patch: NoteBlockPatch { block_json: Some(dsl::os_pack::to_json_string(&block)) } }], ..Default::default() }),
         ..Default::default()
     }
 }

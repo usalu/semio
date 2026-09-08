@@ -1,0 +1,14 @@
+# 🧬️ PDF 1.7/UA direct mutation aggregate.
+input PdfUaMutationInput {
+  setMarkInfo: SetMarkInfoMutationInput
+  removeMarkInfo: RemoveMarkInfoMutationInput
+  setStructTreeRoot: SetStructTreeRootMutationInput
+  removeStructTreeRoot: RemoveStructTreeRootMutationInput
+  setLang: SetLangMutationInput
+  removeLang: RemoveLangMutationInput
+  setDisplayDocTitle: SetDisplayDocTitleMutationInput
+  removeDisplayDocTitle: RemoveDisplayDocTitleMutationInput
+  setInfoTitle: SetInfoTitleMutationInput
+  embedFontFile: EmbedFontFileMutationInput
+  removeFontFile: RemoveFontFileMutationInput
+}

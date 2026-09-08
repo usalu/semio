@@ -297,15 +297,173 @@ class GisMapInferencePortCheckScript extends BundleScript {
 }
 //#endregion 💡️InferencePortCheck
 
+//#region 🪪️DocumentOpeningAttemptCheck
+/** 🪪️ Proves one Shell opening attempt owns every asynchronous outer worker lifecycle frame. */
+async function proveDocumentOpeningAttempt(repoRoot: string): Promise<number> {
+  const root = join(repoRoot, "🧰️framework/🛍️products/💻️os/🧫️fixtures/📇️directory");
+  const fixture = JSON.parse(readFileSync(join(root, "🧵️document-opening-attempt-v1.json"), "utf8"));
+  const Ajv2020 = (await import("ajv/dist/2020.js")).default;
+  const validate = new Ajv2020({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(root, "🧬️document-opening-attempt-v1.schema.json"), "utf8")));
+  if (!validate(fixture)) throw new Error(`invalid document opening attempt fixture: ${JSON.stringify(validate.errors)}`);
+  const deepEqual = (await import("fast-deep-equal")).default;
+  const observed = fixture.cases.map((row: Record<string, unknown>) => {
+    const current = row.current as string | null;
+    const incoming = row.incoming as string | null;
+    const valid = incoming === "a" || incoming === "b";
+    if (!valid) return { accepted: false, replaced: false, currentAfter: current };
+    if (row.kind === "open") {
+      if (current === incoming) return { accepted: false, replaced: false, currentAfter: current };
+      return { accepted: true, replaced: current !== null, currentAfter: incoming };
+    }
+    const accepted = current === incoming;
+    return { accepted, replaced: false, currentAfter: accepted && row.kind === "close" ? null : current };
+  });
+  const expected = fixture.cases.map((row: Record<string, unknown>) => ({ accepted: row.accepted, replaced: row.replaced, currentAfter: row.currentAfter }));
+  if (!deepEqual(observed, expected)) throw new Error("document opening attempt independent model differs from the corpus");
+  const rebootstrapObserved = fixture.rebootstrapCases.map((row: Record<string, unknown>) => {
+    const accepted = row.entryClient === row.messageClient;
+    const removed = accepted && row.currentOwner !== null;
+    const ownerAfter = removed ? null : row.currentOwner;
+    return { messageAccepted: accepted, ownerRemoved: removed, ownerAfter, freshBaseZeroAccepted: accepted && ownerAfter === null };
+  });
+  const rebootstrapExpected = fixture.rebootstrapCases.map((row: Record<string, unknown>) => ({ messageAccepted: row.messageAccepted, ownerRemoved: row.ownerRemoved, ownerAfter: row.ownerAfter, freshBaseZeroAccepted: row.freshBaseZeroAccepted }));
+  if (!deepEqual(rebootstrapObserved, rebootstrapExpected)) throw new Error("document rebootstrap owner retirement differs from the corpus");
+
+  const protocol = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🟦️.ts"), "utf8");
+  const worker = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts"), "utf8");
+  const shell = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🟦️.tsx"), "utf8");
+  const storeWire = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/🦀️.rs"), "utf8");
+  const storeWorker = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/🦀️.rs"), "utf8");
+  const patchHandoff = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🩹️patch-handoff/🟦️.ts"), "utf8");
+  const conforms = (candidateProtocol: string, candidateWorker: string, candidateShell: string, candidateStoreWire: string, candidateStoreWorker: string): boolean =>
+    candidateProtocol.includes('readonly kind: "open"; readonly clientInstanceId?: string') &&
+    candidateProtocol.includes('readonly kind: "close"; readonly documentId: string; readonly spaceId?: string; readonly clientInstanceId?: string') &&
+    candidateProtocol.includes('readonly kind: "send"; readonly documentId: string; readonly spaceId?: string; readonly clientInstanceId?: string') &&
+    candidateProtocol.includes("workerWireClientInstanceIdV1") &&
+    candidateProtocol.includes('readonly clientInstanceId: string') &&
+    candidateWorker.includes('type DocumentExecutionOwnerEntry = Readonly<{ owner: DocumentExecutionOwner; documentId: string; clientInstanceId: string; spaceId?: string }>') &&
+    candidateWorker.includes("previous.clientInstanceId") &&
+    candidateWorker.includes("request.clientInstanceId !== current.clientInstanceId") &&
+    candidateWorker.includes("openClientInstanceId: request.clientInstanceId ?? crypto.randomUUID()") &&
+    candidateWorker.includes('post({ kind: "event", documentId: state.config.documentId, clientInstanceId: state.openClientInstanceId') &&
+    candidateWorker.includes("post({ ...offer, clientInstanceId: this.state.openClientInstanceId })") &&
+    candidateWorker.includes("retireArtifactBeforeReplacement(runtimeKey);") &&
+    candidateShell.includes('if (message.kind === "artifact-rebootstrap-required") {\n          if (browserActorUiByRuntimeKeyRef.current.delete(runtimeKey)) setBrowserActorUiVersion((current) => current + 1);\n          const active = sessionRef.current;') &&
+    candidateShell.includes("const openingAttempt = { clientInstanceId: crypto.randomUUID() }") &&
+    candidateShell.includes('const socketActorReadyRef = useRef<Map<string, { readonly clientInstanceId: string;') &&
+    candidateShell.includes("if (waiter !== undefined && waiter.clientInstanceId === clientInstanceId)") &&
+    candidateShell.includes('const request: BackboneWorkerRequest = { kind: "close", documentId: entry.documentId, clientInstanceId: entry.clientInstanceId') &&
+    candidateStoreWire.includes("client_instance_id: Option<String>") &&
+    candidateStoreWorker.includes("entry.client_instance_id") &&
+    !patchHandoff.includes("clientInstanceId") &&
+    !candidateProtocol.includes("type Bad =");
+  if (!conforms(protocol, worker, shell, storeWire, storeWorker)) throw new Error("document opening attempt production correlation is incomplete");
+  const hostiles = [
+    [protocol, worker, shell.replace("const openingAttempt = { clientInstanceId: crypto.randomUUID() }", 'const openingAttempt = { clientInstanceId: "" }'), storeWire, storeWorker],
+    [protocol, worker, shell.replace('const socketActorReadyRef = useRef<Map<string, { readonly clientInstanceId: string;', 'const socketActorReadyRef = useRef<Map<string, {'), storeWire, storeWorker],
+    [protocol, worker, shell.replace("if (waiter !== undefined && waiter.clientInstanceId === clientInstanceId)", "if (waiter !== undefined)"), storeWire, storeWorker],
+    [protocol, worker, shell.replace('const request: BackboneWorkerRequest = { kind: "close", documentId: entry.documentId, clientInstanceId: entry.clientInstanceId', 'const request: BackboneWorkerRequest = { kind: "close", documentId: entry.documentId'), storeWire, storeWorker],
+    [protocol, worker.replace("openClientInstanceId: request.clientInstanceId ?? crypto.randomUUID()", "openClientInstanceId: crypto.randomUUID()"), shell, storeWire, storeWorker],
+    [protocol, worker.replace('type DocumentExecutionOwnerEntry = Readonly<{ owner: DocumentExecutionOwner; documentId: string; clientInstanceId: string; spaceId?: string }>', 'type DocumentExecutionOwnerEntry = Readonly<{ owner: DocumentExecutionOwner; documentId: string; spaceId?: string }>'), shell, storeWire, storeWorker],
+    [protocol, worker.replace("request.clientInstanceId !== current.clientInstanceId", "false"), shell, storeWire, storeWorker],
+    [protocol, worker.replace("previous.clientInstanceId", "request.clientInstanceId"), shell, storeWire, storeWorker],
+    [protocol, worker.replace('post({ kind: "event", documentId: state.config.documentId, clientInstanceId: state.openClientInstanceId', 'post({ kind: "event", documentId: state.config.documentId'), shell, storeWire, storeWorker],
+    [protocol, worker.replace("post({ ...offer, clientInstanceId: this.state.openClientInstanceId })", "post(offer)"), shell, storeWire, storeWorker],
+    [`${protocol}\ntype Bad = BrowserActorUiPatchOfferV1 & { readonly clientInstanceId: string };`, worker, shell, storeWire, storeWorker],
+    [protocol, worker.replace("retireArtifactBeforeReplacement(runtimeKey);", "closeArtifactRuntime(runtimeKey);"), shell, storeWire, storeWorker],
+    [protocol, worker, shell.replace('if (message.kind === "artifact-rebootstrap-required") {\n          if (browserActorUiByRuntimeKeyRef.current.delete(runtimeKey)) setBrowserActorUiVersion((current) => current + 1);', 'if (message.kind === "artifact-rebootstrap-required") {'), storeWire, storeWorker],
+  ];
+  if (hostiles.length !== fixture.sourceHostiles.length) throw new Error("document opening attempt hostile count differs");
+  hostiles.forEach(([candidateProtocol, candidateWorker, candidateShell, candidateStoreWire, candidateStoreWorker], index) => {
+    if (conforms(candidateProtocol!, candidateWorker!, candidateShell!, candidateStoreWire!, candidateStoreWorker!)) throw new Error(`document opening attempt source oracle admitted ${fixture.sourceHostiles[index]}`);
+  });
+  console.log(`document-opening-attempt-oracle: AJV=1 opening=${observed.length} rebootstrap=${rebootstrapObserved.length} source-hostiles=${hostiles.length}`);
+  return 1 + observed.length + rebootstrapObserved.length + hostiles.length;
+}
+
+class DocumentOpeningAttemptCheckScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    if (segments.length !== 0) throw new Error("document-opening-attempt-check accepts no arguments");
+    const checks = await proveDocumentOpeningAttempt(this.repoRoot);
+    await runVitest(this.root, ["--testNamePattern", "document opening attempt"], "🧪️tests/🟦️.ts");
+    console.log(`document-opening-attempt-check: checks=${checks}`);
+  }
+}
+//#endregion 🪪️DocumentOpeningAttemptCheck
+
+//#region 🗺️GisMapPeerRebootstrapCheck
+async function proveGisMapPeerRebootstrap(repoRoot: string): Promise<number> {
+  const fixtureRoot = join(repoRoot, "🧰️framework/🛍️products/💻️os/🧫️fixtures/🗺️gis-map-peer-rebootstrap-v1");
+  const fixture = JSON.parse(readFileSync(join(fixtureRoot, "🔣️.json"), "utf8"));
+  const Ajv2020 = (await import("ajv/dist/2020.js")).default;
+  const validate = new Ajv2020({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(fixtureRoot, "🧬️.schema.json"), "utf8")));
+  if (!validate(fixture)) throw new Error(`invalid GIS Map peer rebootstrap fixture: ${JSON.stringify(validate.errors)}`);
+  const deepEqual = (await import("fast-deep-equal")).default;
+  const observed = fixture.clients.map((client: { clientInstanceId: string }) => {
+    let phase = "live",
+      currentPair: string | null = "prior",
+      uiOwner: string | null = "prior",
+      frontier: unknown = null,
+      scene: unknown = null;
+    for (const event of fixture.order as string[]) {
+      if (event === "rebootstrap-required") {
+        phase = "connecting";
+        currentPair = null;
+        uiOwner = null;
+      } else if (event === "fresh-authority") phase = "authorized";
+      else if (event === "artifact-bootstrap") currentPair = fixture.published.aggregateSha256;
+      else if (event === "applied") frontier = fixture.published.frontier;
+      else if (event === "scene-patch") {
+        scene = fixture.published.scene;
+        uiOwner = client.clientInstanceId;
+      } else if (event === "patch-ack") phase = "live";
+    }
+    return { phase, currentPair, uiOwner, frontier, scene };
+  });
+  const expected = fixture.clients.map((client: { clientInstanceId: string }) => ({ phase: "live", currentPair: fixture.published.aggregateSha256, uiOwner: client.clientInstanceId, frontier: fixture.published.frontier, scene: fixture.published.scene }));
+  if (!deepEqual(observed, expected) || !deepEqual(observed[0]?.frontier, observed[1]?.frontier) || !deepEqual(observed[0]?.scene, observed[1]?.scene)) throw new Error("GIS Map peer rebootstrap model diverged");
+  const worker = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts"), "utf8");
+  const shell = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🟦️.tsx"), "utf8");
+  const conforms = (candidateWorker: string, candidateShell: string): boolean =>
+    candidateWorker.includes("control.space_id !== binding.spaceId || control.document_id !== state.config.documentId") &&
+    candidateWorker.includes("await requireArtifactRebootstrap(state);") &&
+    candidateWorker.includes("state.currentPack = null;") &&
+    candidateWorker.includes("const authority = await requestDocumentSocketAuthority(state, binding);") &&
+    candidateWorker.includes("await startArtifactBootstrap(state, bootstrap.ArtifactBootstrap") &&
+    candidateWorker.includes("owner.assertApplied(status, lifetime);") &&
+    candidateWorker.includes("await this.renderSurface(child, assertCurrent);") &&
+    candidateWorker.includes("if (!equalFrontiers(bootstrap.required_tail_frontier, serverFrontier))") &&
+    candidateShell.includes('if (message.kind === "artifact-rebootstrap-required") {\n          if (browserActorUiByRuntimeKeyRef.current.delete(runtimeKey))');
+  if (!conforms(worker, shell)) throw new Error("GIS Map peer production rebootstrap closure is incomplete");
+  const hostiles = [
+    [worker.replace("control.space_id !== binding.spaceId || control.document_id !== state.config.documentId", "false"), shell],
+    [worker, shell.replace("if (browserActorUiByRuntimeKeyRef.current.delete(runtimeKey))", "if (false)")],
+    [worker.replace("const authority = await requestDocumentSocketAuthority(state, binding);", "const authority = null as never;"), shell],
+    [worker.replace("await startArtifactBootstrap(state, bootstrap.ArtifactBootstrap", "await Promise.resolve(state, bootstrap.ArtifactBootstrap"), shell],
+    [worker.replace("owner.assertApplied(status, lifetime);", "void status; void lifetime;"), shell],
+    [worker.replace("await this.renderSurface(child, assertCurrent);", "void child; void assertCurrent;"), shell],
+    [worker.replace("if (!equalFrontiers(bootstrap.required_tail_frontier, serverFrontier))", "if (false)"), shell],
+  ];
+  if (hostiles.length !== fixture.sourceHostiles.length) throw new Error("GIS Map peer source hostile count differs");
+  hostiles.forEach(([candidateWorker, candidateShell], index) => {
+    if (conforms(candidateWorker!, candidateShell!)) throw new Error(`GIS Map peer source oracle admitted ${fixture.sourceHostiles[index]}`);
+  });
+  console.log(`gis-map-peer-rebootstrap-oracle: AJV=1 deep-equal=${observed.length} source-hostiles=${hostiles.length}`);
+  return 1 + observed.length + hostiles.length;
+}
+//#endregion 🗺️GisMapPeerRebootstrapCheck
+
 /** 🧵️ Executes the authenticated Session lifecycle and exact 64 KiB page-transfer browser laws. */
 class ColdDocumentPairBrowserCheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
+    const checks = await proveGisMapPeerRebootstrap(this.repoRoot);
     await runVitest(
       this.root,
-      ["--testNamePattern", "(?:browser document actor (?:reservation activates only after an exact current socket Session|transfers one verified cold pair only after lifecycle ACK and exact page receipts)|browser actor patch handoff validates the neutral schema)", ...rest],
+      ["--testNamePattern", "(?:browser document first open (?:verifies server assets without a prior installed target|rejects hostile assets and retired owners before socket authority)|browser document actor (?:reservation activates only after an exact current socket Session|transfers one verified cold pair only after lifecycle ACK and exact page receipts)|browser document peers refetch the same exact pair after scoped rebootstrap|browser actor patch handoff validates the neutral schema)", ...rest],
       "🧪️tests/🟦️.ts",
     );
+    console.log(`cold-document-pair-browser-check: peer-checks=${checks}`);
   }
 }
 
@@ -315,6 +473,7 @@ const router = new ScriptRouter(import.meta.dir)
   .register("check-wgpu", CheckWgpuScript)
   .register("preview-generated", PreviewGeneratedScript)
   .register("gis-map-inference-port-check", GisMapInferencePortCheckScript)
+  .register("document-opening-attempt-check", DocumentOpeningAttemptCheckScript)
   .register("cold-document-pair-browser-check", ColdDocumentPairBrowserCheckScript);
 
 await runBundleScriptMain(router, import.meta.url, { defaultCommand: "test" });

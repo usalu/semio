@@ -105,7 +105,7 @@ function heroCameraKeyframe(at: number, position: readonly [number, number, numb
   return {
     at,
     windowId: PUZZLE3D_MAIN_WINDOW_ID,
-    camera: { kind: "orbit", position, target, up: [0, 0, 1], fov: 45 },
+    camera: { kind: "orbit", position: [...position], target: [...target], up: [0, 0, 1], fov: 45 },
     easing: "easeInOut",
   };
 }
@@ -152,6 +152,7 @@ export const ENTWERFEN_MIT_BESTAND_TUTORIAL: TutorialDefinition = {
       focusedWindowId: PUZZLE3D_MAIN_WINDOW_ID,
       activeUtilityByWindowId: {},
       activePanelTabByGroup: {},
+      interactionSelection: {},
       expandedTreeIds: [],
       commandPanelOpen: false,
     },

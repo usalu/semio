@@ -8,6 +8,7 @@
 //! survives into the document either.
 
 use crate::artifacts::writer::WriterCamera;
+#[cfg(test)]
 use protocol::Mutation;
 use serde::{Deserialize, Serialize};
 
@@ -20,8 +21,9 @@ pub use crate::artifacts::writer::{WriterEditorSelection, WriterEditorSettings};
 /// `shooting_engine::ShootingConfig`'s B1 shape. AST selection/hover moved OUT (ticket
 /// 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM): the framework now owns them as the `ast`
 /// interaction domain.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslArtifact)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslArtifact, dsl::ToValue, dsl::FromValue)]
 #[serde(rename_all = "camelCase", default)]
+#[value(rename_all = "camelCase", default)]
 #[dsl(extension = "writer.config")]
 #[dsl(layout = "lines")]
 pub struct WriterConfig {
@@ -101,124 +103,10 @@ impl Default for WriterConfig {
 store::impl_whole_record_config!(WriterConfig);
 //#endregion 🔖️Config
 
-//#region 🔖️ConfigOperations
-/// @emoji 🧮️ B1: `WriterConfig`'s operation enum — one variant per settled interaction (mirrors the
-/// pre-B1 `WriterPlayRuntime` field writes), plus a generic `Snapshot` every variant's `backwards()`
-/// returns — mirrors `shooting_op::ShootingConfigOperation` exactly (see that type's doc comment for the
-/// whole-config-snapshot inverse rationale).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
-pub enum WriterConfigMutation {
-    #[dsl(key = "snapshot")]
-    Snapshot {
-        #[dsl(block)]
-        config: WriterConfig,
-    },
-    #[dsl(key = "editor-selection")]
-    SetEditorSelection {
-        #[dsl(block)]
-        selection: Option<WriterEditorSelection>,
-    },
-    #[dsl(key = "format-signal")]
-    SetFormatSignal { value: u32 },
-    #[dsl(key = "lint-signal")]
-    SetLintSignal { value: u32 },
-    #[dsl(key = "revision")]
-    SetRevision { value: u32 },
-    #[dsl(key = "editor-settings")]
-    SetEditorSettings {
-        #[dsl(block)]
-        settings: WriterEditorSettings,
-    },
-    #[dsl(key = "engagement-input")]
-    SetEngagementInput { value: String },
-    #[dsl(key = "camera")]
-    SetCamera {
-        #[dsl(block)]
-        camera: WriterCamera,
-    },
-    #[dsl(key = "locale")]
-    SetLocale { value: String },
-}
+#[path = "🧬️schema/🧬️mutations/🦀️.rs"]
+mod mutations;
+pub use mutations::*;
 
-//#region 🔖️OpCodec
-impl protocol::OpText for WriterConfigMutation {
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        let variants = <Self as dsl::DslVariants>::variants();
-        for (keyword, spec_fn) in &variants {
-            let probe = format!("{} ", keyword);
-            if line == keyword.as_str() || line.starts_with(&probe) {
-                let record = dsl::parse(line, &spec_fn(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline })?;
-                return <Self as dsl::DslVariants>::from_named_record(keyword, &record);
-            }
-        }
-        Err(dsl::__rt::field_error(format!("unknown operation line '{line}'")))
-    }
-    fn print_op(&self) -> String {
-        let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
-        let variants = <Self as dsl::DslVariants>::variants();
-        let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
-        dsl::print(&record, &spec_fn(), dsl::JoinMode::Inline)
-    }
-}
-
-/// 🎯️ Handcrafted OpBinary (P6).
-impl protocol::OpBinary for WriterConfigMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        const OP_BINARY_FORMAT: u8 = 1;
-        let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
-        let variants = <Self as dsl::DslVariants>::variants();
-        let ordinal = variants.iter().position(|(k, _)| *k == keyword).ok_or(protocol::ProtocolError::Malformed { what: "op variant", offset: 0, detail: format!("keyword {keyword:?} is not a declared variant") })?;
-        let spec = (variants[ordinal].1)();
-        let body = store::pack_rt::encode_record_body(&spec, &record, &store::PackEncodeOptions::default()).map_err(protocol::ProtocolError::from)?;
-        let mut out = Vec::with_capacity(body.len() + 3);
-        out.push(OP_BINARY_FORMAT);
-        store::pack_rt::write_varint_u64(&mut out, ordinal as u64);
-        out.extend_from_slice(&body);
-        Ok(out)
-    }
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        const OP_BINARY_FORMAT: u8 = 1;
-        let mut reader = store::pack_rt::ByteReader::new(bytes);
-        let format = reader.read_u8()?;
-        if format != OP_BINARY_FORMAT {
-            return Err(protocol::ProtocolError::Malformed { what: "op format", offset: 0, detail: format!("unsupported op format {format}") });
-        }
-        let ordinal = reader.read_varint_u64()?;
-        let variants = <Self as dsl::DslVariants>::variants();
-        let (keyword, spec_fn) = variants.get(ordinal as usize).ok_or(protocol::ProtocolError::Malformed { what: "op variant", offset: 1, detail: format!("ordinal {ordinal} out of range for {} declared variants", variants.len()) })?;
-        let spec = spec_fn();
-        let body = &bytes[reader.position()..];
-        let (record, _report) = store::pack_rt::decode_record_body(body, &spec, &store::PackDecodeOptions::default()).map_err(protocol::ProtocolError::from)?;
-        <Self as dsl::DslVariants>::from_named_record(keyword, &record).map_err(|error| protocol::ProtocolError::Malformed { what: "op record", offset: reader.position() as u64, detail: error.to_string() })
-    }
-}
-
-//#endregion 🔖️OpCodec
-
-impl Mutation<WriterConfig> for WriterConfigMutation {
-    type Diff = WriterConfig;
-
-    fn diff(&self, base: &WriterConfig) -> protocol::MutationOutcome<WriterConfig> {
-        let mut next = base.clone();
-        match self {
-            WriterConfigMutation::Snapshot { config } => return protocol::MutationOutcome::new(config.clone()),
-            WriterConfigMutation::SetEditorSelection { selection } => next.editor_selection = selection.clone(),
-            WriterConfigMutation::SetFormatSignal { value } => next.format_signal = *value,
-            WriterConfigMutation::SetLintSignal { value } => next.lint_signal = *value,
-            WriterConfigMutation::SetRevision { value } => next.revision = *value,
-            WriterConfigMutation::SetEditorSettings { settings } => next.editor_settings = settings.clone(),
-            WriterConfigMutation::SetEngagementInput { value } => next.engagement_input = value.clone(),
-            WriterConfigMutation::SetCamera { camera } => next.camera = camera.clone(),
-            WriterConfigMutation::SetLocale { value } => next.locale = value.clone(),
-        }
-        protocol::MutationOutcome::new(next)
-    }
-
-    fn inverse(&self, base: &WriterConfig) -> Vec<Self> {
-        vec![WriterConfigMutation::Snapshot { config: base.clone() }]
-    }
-}
-//#endregion 🔖️ConfigOperations
 
 //#region 🧪️Tests
 #[cfg(test)]
@@ -235,15 +123,15 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn writer_config_operation_backwards_restores_pre_state() {
         let pre = WriterConfig::default();
-        store::os_store::test_support::assert_operation_round_trip(&pre, WriterConfigMutation::SetLocale { value: "de-DE".into() });
-        store::os_store::test_support::assert_operation_round_trip(&pre, WriterConfigMutation::SetEditorSelection { selection: Some(WriterEditorSelection { start: 1, end: 2 }) });
-        store::os_store::test_support::assert_operation_round_trip(&pre, WriterConfigMutation::SetCamera { camera: WriterCamera { x: 5.0, y: -2.0, zoom: 1.5 } });
+        store::os_store::test_support::assert_operation_round_trip(&pre, WriterConfigMutation::SetLocale(SetLocale { value: "de-DE".into() })).await;
+        store::os_store::test_support::assert_operation_round_trip(&pre, WriterConfigMutation::SetEditorSelection(SetEditorSelection { selection: Some(WriterEditorSelection { start: 1, end: 2 }) })).await;
+        store::os_store::test_support::assert_operation_round_trip(&pre, WriterConfigMutation::SetCamera(SetCamera { camera: WriterCamera { x: 5.0, y: -2.0, zoom: 1.5 } })).await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn writer_config_operation_binary_matches_text() {
-        store::os_store::test_support::assert_op_text_binary_equivalence(&WriterConfigMutation::SetLocale { value: "de-DE".into() });
-        store::os_store::test_support::assert_op_text_binary_equivalence(&WriterConfigMutation::Snapshot { config: WriterConfig::default() });
+        store::os_store::test_support::assert_op_text_binary_equivalence(&WriterConfigMutation::SetLocale(SetLocale { value: "de-DE".into() }));
+        store::os_store::test_support::assert_op_text_binary_equivalence(&WriterConfigMutation::ReplaceConfig(ReplaceConfig { config: WriterConfig::default() }));
     }
 
     #[semio_framework_async_macros::async_test]
@@ -255,3 +143,29 @@ mod tests {
     }
 }
 //#endregion 🧪️Tests
+
+#[cfg(test)]
+mod contract_vectors {
+    use super::*;
+    use protocol::{Mutation, MutationDiff, OpBinary, OpText};
+    use dsl::os_pack as pack;
+    #[test]
+    fn writer_configuration_contract_vectors_match_the_json_oracle() {
+        let vectors: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🔁️mutation-contracts.json")).unwrap();
+        let base: WriterConfig = pack::from_json_str(&vectors["base"].to_string()).unwrap();
+        assert_eq!(<WriterConfigMutation as Mutation<WriterConfig>>::DESCRIPTORS.len(), vectors["cases"].as_array().unwrap().len());
+        for vector in vectors["cases"].as_array().unwrap() {
+            let mutation: WriterConfigMutation = pack::from_json_str(&vector["mutation"].to_string()).unwrap();
+            assert_eq!(serde_json::from_str::<serde_json::Value>(&pack::to_json_string(&mutation)).unwrap(), vector["mutation"]);
+            assert_eq!(mutation.descriptor().semantic_kind, vector["kind"].as_str().unwrap());
+            assert_eq!(WriterConfigMutation::parse_op(&mutation.print_op()).unwrap(), mutation);
+            assert_eq!(WriterConfigMutation::decode_op(&mutation.encode_op().unwrap()).unwrap(), mutation);
+            let outcome = mutation.diff(&base);
+            assert!(outcome.messages().is_empty());
+            let next = outcome.diff().apply(&base).unwrap();
+            assert_eq!(serde_json::from_str::<serde_json::Value>(&pack::to_json_string(&next)).unwrap(), vector["expected"]);
+            let restored = mutation.inverse(&base).into_iter().fold(next, |state, inverse| inverse.diff(&state).diff().apply(&state).unwrap());
+            assert_eq!(restored, base);
+        }
+    }
+}

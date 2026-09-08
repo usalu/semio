@@ -20,7 +20,7 @@
 use crate::artifacts::equation::standards::v1::subsets::geometry::schema::mutations::insert_point::InsertPoint;
 use crate::artifacts::equation::standards::v1::subsets::geometry::schema::mutations::remove_point::RemovePoint;
 use crate::artifacts::equation::{equation_children_from_state, equation_geometry, EquationDiff, EquationGeometry, EquationGraph, EquationMutation, EquationPoint, EquationSnapshot};
-use semio_framework_os_kernel::{FromValue, ToValue};
+use semio_framework_os_kernel::ToValue;
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");

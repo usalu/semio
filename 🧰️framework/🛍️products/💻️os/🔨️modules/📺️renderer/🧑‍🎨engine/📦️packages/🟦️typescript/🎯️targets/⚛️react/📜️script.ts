@@ -14,9 +14,64 @@ class TestScript extends BundleScript {
   }
 }
 
+/** 📍 Executes exact document-scope and newly-created session handoff laws. */
+class DocumentOpeningScopeCheckScript extends BundleScript {
+  run(segments: string[]): void {
+    if (segments.length !== 0) throw new Error("document-opening-scope-check accepts no arguments");
+    process.env.SEMIO_TEST_LEVEL = "long";
+    runVitest(this.root, ["🚪️opening.test.ts", "--silent=false", "--reporter=verbose"], "🧪️tests/🟦️.ts");
+  }
+}
+
+/** 🔗️ Executes the registered AgentBridge codec and inference-state laws. */
+class AgentBridgeCheckScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    if (segments.length !== 0) throw new Error("agent-bridge-check accepts no arguments");
+    process.env.SEMIO_TEST_LEVEL = "long";
+    process.env.SEMIO_INCLUDE_AGENT_BRIDGE = "1";
+    await runVitest(this.root, ["--run", "--silent=false"], "🧪️tests/🟦️.ts");
+  }
+}
+
 class TypecheckScript extends BundleScript {
   run(segments: string[]): void {
     runBunx(["tsc", "--noEmit", "-p", "tsconfig.json", ...segments], this.root);
+  }
+}
+
+/** 🎥️ Executes the typed InteractionState tutorial capture, diff, and playback laws. */
+class TutorialInteractionCheckScript extends BundleScript {
+  run(segments: string[]): void {
+    if (segments.length !== 0) throw new Error("tutorial-interaction-check accepts no arguments");
+    process.env.SEMIO_TEST_LEVEL = "long";
+    runVitest(
+      this.root,
+      [
+        "🔬️index.test.ts",
+        "--silent=false",
+        "--reporter=verbose",
+        "--testNamePattern=interaction recording|decodes the bounded actor interaction capture|captures the observed typed interaction|plays full and sparse typed selections|projects tutorial selection playback|records comma-bearing selection|APPLY_TUTORIAL_UI_SNAPSHOT restores",
+      ],
+      "🧪️tests/🟦️.ts",
+    );
+  }
+}
+
+/** 🌊️ Executes the shared Flow browser runtime and mounted React session-retirement laws. */
+class FlowBrowserRuntimeCheckScript extends BundleScript {
+  run(segments: string[]): void {
+    if (segments.length !== 0) throw new Error("flow-browser-runtime-check accepts no arguments");
+    process.env.SEMIO_TEST_LEVEL = "long";
+    runVitest(
+      this.root,
+      [
+        "🔬️index.test.ts",
+        "--silent=false",
+        "--reporter=verbose",
+        "--testNamePattern=retains one shared Flow browser runtime|retires a graph host unmounted before its open reply",
+      ],
+      "🧪️tests/🟦️.ts",
+    );
   }
 }
 
@@ -36,11 +91,17 @@ export function directoryHomeBootstrapOracle(repoRoot: string): number {
   const receipt = (value: unknown): boolean => {
     if (!value || typeof value !== "object" || Array.isArray(value) || JSON.stringify(Object.keys(value).sort()) !== JSON.stringify(receiptKeys)) return false;
     const row = value as Record<string, unknown>;
-    return row.schema === "semio.space.home.directory-projection-receipt.v1"
-      && typeof row.sessionBindingSha256 === "string" && /^[0-9a-f]{64}$/u.test(row.sessionBindingSha256)
-      && Number.isSafeInteger(row.authorizationGeneration) && Number(row.authorizationGeneration) > 0
-      && Number.isSafeInteger(row.throughSeqInclusive) && Number(row.throughSeqInclusive) >= 0
-      && typeof row.receiptSha256 === "string" && /^[0-9a-f]{64}$/u.test(row.receiptSha256);
+    return (
+      row.schema === "semio.space.home.directory-projection-receipt.v1" &&
+      typeof row.sessionBindingSha256 === "string" &&
+      /^[0-9a-f]{64}$/u.test(row.sessionBindingSha256) &&
+      Number.isSafeInteger(row.authorizationGeneration) &&
+      Number(row.authorizationGeneration) > 0 &&
+      Number.isSafeInteger(row.throughSeqInclusive) &&
+      Number(row.throughSeqInclusive) >= 0 &&
+      typeof row.receiptSha256 === "string" &&
+      /^[0-9a-f]{64}$/u.test(row.receiptSha256)
+    );
   };
   assert(receipt(fixture.receipt));
   for (const row of fixture.hostile) assert.equal(receipt({ ...structuredClone(fixture.receipt), ...row.patch }), false, row.id);
@@ -92,7 +153,13 @@ export function directoryInviteCapabilityOracle(repoRoot: string): number {
   const validate = new Ajv2020({ strict: true, allErrors: true }).compile(schema);
   assert(validate(fixture), JSON.stringify(validate.errors));
   assert.deepEqual(fixture.states, ["available", "copying", "failed", "copied", "closed"]);
-  assert.deepEqual(fixture.transitions.filter((row) => row.discloses).map((row) => [row.from, row.input, row.to]), [["available", "request", "copying"], ["failed", "request", "copying"]]);
+  assert.deepEqual(
+    fixture.transitions.filter((row) => row.discloses).map((row) => [row.from, row.input, row.to]),
+    [
+      ["available", "request", "copying"],
+      ["failed", "request", "copying"],
+    ],
+  );
   assert(fixture.transitions.filter((row) => row.erases).every((row) => row.to === "copied" || row.to === "closed"));
   assert.equal(fixture.duplicateResult, "reject-without-disclosure");
   assert.deepEqual(fixture.shellRoute, { actionId: "os.directory.open-administration", spaceId: "space-admin-01", operationEpoch: 7, openingPhase: "loading", requestKind: "directory-administration-open" });
@@ -148,7 +215,10 @@ export function scopedPresenceOracle(repoRoot: string): number {
   };
   assert(fixture.cases.every((row) => row.scope.documentId === fixture.documentId && runtimeKey(row.scope) === row.runtimeKey));
   assert.equal(new Set(fixture.cases.map((row) => row.scope.spaceId)).size, 2);
-  assert.deepEqual(fixture.routes, fixture.cases.map((row) => `actor://${row.runtimeKey}`));
+  assert.deepEqual(
+    fixture.routes,
+    fixture.cases.map((row) => `actor://${row.runtimeKey}`),
+  );
   assert.notEqual(fixture.close.clearsRuntimeKey, fixture.close.preservesRuntimeKey);
   assert.deepEqual(fixture.rejected, ["missing-scope", "mismatched-scope", "missing-surface", "mismatched-surface"]);
   const shell = readFileSync(join(contractRoot, "../../🟦️.tsx"), "utf8");
@@ -242,6 +312,16 @@ class LintScript extends BundleScript {
 }
 //#endregion 🔖️LintScript
 
-const router = new ScriptRouter(fileURLToPath(new URL(".", import.meta.url))).register("test", TestScript).register("lint", LintScript).register("typecheck", TypecheckScript).register("directory-home-bootstrap-check", DirectoryHomeBootstrapCheckScript).register("directory-invite-capability-check", DirectoryInviteCapabilityCheckScript).register("scoped-presence-check", ScopedPresenceCheckScript);
+const router = new ScriptRouter(fileURLToPath(new URL(".", import.meta.url)))
+  .register("test", TestScript)
+  .register("lint", LintScript)
+  .register("typecheck", TypecheckScript)
+  .register("tutorial-interaction-check", TutorialInteractionCheckScript)
+  .register("flow-browser-runtime-check", FlowBrowserRuntimeCheckScript)
+  .register("agent-bridge-check", AgentBridgeCheckScript)
+  .register("directory-home-bootstrap-check", DirectoryHomeBootstrapCheckScript)
+  .register("directory-invite-capability-check", DirectoryInviteCapabilityCheckScript)
+  .register("scoped-presence-check", ScopedPresenceCheckScript)
+  .register("document-opening-scope-check", DocumentOpeningScopeCheckScript);
 
 await runBundleScriptMain(router, import.meta.url);

@@ -5,7 +5,7 @@
     "runtime-check": {
       "executor": "nx:run-commands",
       "cache": false,
-      "options": { "cwd": "{projectRoot}", "command": "bun ./📜️script.ts" }
+      "options": { "cwd": "{projectRoot}", "command": "bun ./📜️script.ts runtime-check" }
     },
     "pending-host-close-check": {
       "executor": "nx:run-commands",

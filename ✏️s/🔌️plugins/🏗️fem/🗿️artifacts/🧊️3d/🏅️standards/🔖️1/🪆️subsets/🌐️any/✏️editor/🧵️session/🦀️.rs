@@ -10,10 +10,12 @@ use semio_framework::kernel::{Effect, JobPlacement};
 use semio_framework_job::{Generation, InteractiveJob, OperationId, RetainedJobPayload, RevisionId, StepBudget, StepContext, StepOutcome};
 use semio_framework_plugin::reactor::jobs::{BoundedJob, BoundedJobFactory, JobBudget, JobStep};
 use semio_framework_plugin::{AppRenderOperationContext, ArtifactView, PluginCloseStep};
+#[cfg(test)]
+use semio_framework_ui_scene::world3d_snapshot_with_page;
 use semio_framework_ui_scene::{
     world3d_snapshot_abort_write, world3d_snapshot_abort_write_step, world3d_snapshot_admit_page, world3d_snapshot_begin, world3d_snapshot_begin_close, world3d_snapshot_close_step, world3d_snapshot_recover_lease, world3d_snapshot_recover_page,
-    world3d_snapshot_recover_write, world3d_snapshot_recovery_close_step, world3d_snapshot_seal, world3d_snapshot_terminal_is_empty, world3d_snapshot_with_page, world3d_snapshot_write_terminal_is_empty, World3dSnapshotDescriptor,
-    World3dSnapshotFault, World3dSnapshotItem, World3dSnapshotLease, World3dSnapshotPage, World3dSnapshotPageKind, World3dSnapshotWriteToken, WORLD3D_SNAPSHOT_PAGE_BYTE_CAPACITY, WORLD3D_SNAPSHOT_PAGE_ITEM_CAPACITY,
+    world3d_snapshot_recover_write, world3d_snapshot_recovery_close_step, world3d_snapshot_seal, world3d_snapshot_terminal_is_empty, world3d_snapshot_write_terminal_is_empty, World3dSnapshotDescriptor,
+    World3dSnapshotItem, World3dSnapshotLease, World3dSnapshotPage, World3dSnapshotPageKind, World3dSnapshotWriteToken, WORLD3D_SNAPSHOT_PAGE_BYTE_CAPACITY, WORLD3D_SNAPSHOT_PAGE_ITEM_CAPACITY,
 };
 use std::cell::{Cell, RefCell};
 use std::rc::Rc;
@@ -92,20 +94,6 @@ pub enum Fem3dVisualState {
     FaultedCancelled,
 }
 
-impl Fem3dVisualState {
-    fn id(self) -> &'static str {
-        match self {
-            Self::Unmeshed => "unmeshed",
-            Self::CoarseMesh => "coarse-mesh",
-            Self::RefinedMesh => "refined-mesh",
-            Self::Assembling => "assembling",
-            Self::SolvingUnconverged => "solving-unconverged",
-            Self::SolvingConverged => "solving-converged",
-            Self::ValidatedFinal => "validated-final",
-            Self::FaultedCancelled => "faulted-cancelled-last-valid",
-        }
-    }
-}
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Fem3dVisualField {
@@ -2204,7 +2192,6 @@ pub struct Fem3dPageVisualJob {
     admit_cursor: usize,
     validated: bool,
     complete: Option<Fem3dPageVisualLease>,
-    close_lane: u8,
     abort_started: bool,
 }
 
@@ -2249,7 +2236,6 @@ impl Fem3dPageVisualJob {
             admit_cursor: 0,
             validated: false,
             complete: None,
-            close_lane: 0,
             abort_started: false,
         }
     }
@@ -4001,7 +3987,7 @@ mod tests {
         let mut model = MountedAnalysisModel::new();
         assert_eq!(model.admit_node_one(MAXIMUM_FIELDS + 1), Err(()));
         assert_eq!(model.nodes_len(), 0);
-        let node = Node { id: "returned-node".into(), x: 0.0, y: 0.0, z: 0.0 };
+        let node = Node { id: "returned-node".into(), pos: [0.0; 3] };
         let node_pointer = node.id.as_ptr();
         let returned = model.push_node(node).expect_err("unadmitted node returns producer");
         assert_eq!(returned.id.as_ptr(), node_pointer);
@@ -4031,6 +4017,7 @@ mod tests {
         };
         let operation = semio_framework_job::Operation::new(OperationId(13), RevisionId(11), Generation(19), 23);
         let mut child = Fem3dNumericalChild::new();
+        let mut backing = Fem3dBackingCredit::new();
         let mut fields = Fem3dSolverView::new(freshness(19), doc.nodes.len());
         let cancel = semio_framework_job::root_cancel_token();
         let mut preview = 0;
@@ -4039,7 +4026,7 @@ mod tests {
             let deadline = semio_framework_job::default_now_us().unwrap().checked_add(8_000).unwrap();
             let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(1, deadline), cancel.clone(), semio_framework_job::default_now_us, &mut preview);
             let started = std::time::Instant::now();
-            terminal = child.step(&doc, &mut fields, freshness(19), operation, &mut context).expect("production numerical child");
+            terminal = child.step(&doc, &mut fields, &mut backing, freshness(19), operation, &mut context).expect("production numerical child");
             assert_eq!(context.fuel_remaining(), 0);
             assert!(started.elapsed().as_micros() < 8_000);
             if terminal {
@@ -4166,6 +4153,7 @@ mod tests {
                     assert!(released_bytes <= WORLD3D_SNAPSHOT_PAGE_BYTE_CAPACITY);
                 }
                 PluginCloseStep::Complete => {}
+                PluginCloseStep::AwaitingInput { reason } => panic!("unexpected recovery input: {reason}"),
                 PluginCloseStep::Blocked { reason } => panic!("{reason}"),
             }
             if !registry.recoveries[shell as usize].contains(identity.app_instance_id) {

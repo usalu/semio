@@ -2,7 +2,7 @@
 //! index ⇒ `Vec::new()`.
 
 use crate::artifacts::equation::standards::v1::subsets::geometry::schema::mutations::insert_point;
-use crate::artifacts::equation::{equation_geometry, EquationMutation, EquationSnapshot};
+use crate::artifacts::equation::{EquationMutation, EquationSnapshot};
 
 //#region 🔖️Inverse
 pub fn inverse(payload: &super::RemovePoint, base: &EquationSnapshot) -> Vec<EquationMutation> {

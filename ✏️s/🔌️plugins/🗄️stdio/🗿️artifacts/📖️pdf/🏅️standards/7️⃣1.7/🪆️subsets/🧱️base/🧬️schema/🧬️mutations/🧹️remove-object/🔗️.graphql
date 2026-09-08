@@ -1,0 +1,4 @@
+# 🧹️ Direct remove-object GraphQL payload.
+input RemoveObjectMutationInput {
+  id: String
+}

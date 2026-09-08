@@ -101,6 +101,7 @@ pub struct PushVideoReport {
 /// 🧭️ Gradient-energy sharpness proxy (mean squared Scharr gradient magnitude): high for crisp edges,
 /// collapsing toward zero for a flat/blurred frame — the signal the relative blur gate thresholds
 /// against.
+#[cfg(test)]
 fn sharpness_score(image: &remodeling_image::ImageRgba8) -> f32 {
     let gray = remodeling_image::ImageGray::from_rgba8_luma(image);
     let grad = remodeling_image::scharr_gradients(&gray);
@@ -121,6 +122,7 @@ fn rolling_median(scores: &VecDeque<f32>) -> f32 {
 
 /// 🏷️ Human-facing codec/dimension/duration summary of a [`remodeling_video::VideoProbe`], regardless of
 /// container family, for [`PushVideoReport`].
+#[cfg(test)]
 fn describe_probe(probe: &remodeling_video::VideoProbe) -> (String, u32, u32, f64) {
     match probe {
         remodeling_video::VideoProbe::Mp4(info) => (format!("{:?}", info.codec), info.width, info.height, info.duration_ms),
@@ -189,6 +191,7 @@ impl FrameSource {
 
     /// 🚦️ Shared gate: optional stride counting, then `max_frames`, then the relative blur threshold
     /// against the rolling median of recently accepted scores.
+    #[cfg(test)]
     fn accept(&mut self, index: u32, image: remodeling_image::ImageRgba8, timestamp_ms: f64, apply_stride: bool) -> FrameAcceptance {
         let score = sharpness_score(&image);
         self.accept_with_sharpness(index, image, timestamp_ms, apply_stride, score)
@@ -359,58 +362,6 @@ fn neighbor_camera_indices(ci: usize, n: usize, k: usize) -> Vec<usize> {
     idxs
 }
 
-/// 🎞️ Evenly spaced camera-slot indices for dense stereo / fusion when a reconstruction has more
-/// registered views than [`EngineParams::max_dense_cameras`] (0 = unlimited). Full SfM cameras stay in
-/// [`Reconstruction`] for gauge alignment; only the expensive depth/TSDF work is subsampled.
-fn subsample_camera_indices(n: usize, max: usize) -> Vec<usize> {
-    if n == 0 {
-        return Vec::new();
-    }
-    if max == 0 || n <= max {
-        return (0..n).collect();
-    }
-    if max == 1 {
-        return vec![0];
-    }
-    (0..max).map(|i| i * (n - 1) / (max - 1)).collect()
-}
-
-/// 📦️ Voxel-index bounds covering `points` with a 20% margin plus a 2-voxel padding shell, for
-/// `remodeling_mesh::MeshPipeline::new`'s `bounds_min`/`bounds_max`. Falls back to a small centered cube
-/// when there are no points yet (degenerate input).
-fn compute_voxel_bounds(points: &[[f64; 3]], voxel_size: f64) -> ([i32; 3], [i32; 3]) {
-    const MAX_CELLS_PER_AXIS: i32 = 32;
-    if points.is_empty() || voxel_size <= 0.0 {
-        return ([-4, -4, -4], [4, 4, 4]);
-    }
-    // 🎯️ 5th/95th-percentile bounds per axis rather than raw min/max: a single badly-triangulated
-    // outlier point (a real risk from a noisy incremental reconstruction) must not be able to blow the
-    // TSDF/marching-cubes grid up to an unbounded size.
-    let mut lo = [0.0; 3];
-    let mut hi = [0.0; 3];
-    for k in 0..3 {
-        let mut vs: Vec<f64> = points.iter().map(|p| p[k]).collect();
-        vs.sort_by(f64::total_cmp);
-        let p05 = vs[((vs.len() as f64 - 1.0) * 0.05).round() as usize];
-        let p95 = vs[((vs.len() as f64 - 1.0) * 0.95).round() as usize];
-        lo[k] = p05;
-        hi[k] = p95;
-    }
-    let mut bounds_min = [0i32; 3];
-    let mut bounds_max = [0i32; 3];
-    for k in 0..3 {
-        let span = (hi[k] - lo[k]).max(voxel_size);
-        let pad = span * 0.2;
-        let raw_min = ((lo[k] - pad) / voxel_size).floor() as i32 - 2;
-        let raw_max = ((hi[k] + pad) / voxel_size).ceil() as i32 + 2;
-        let center = (raw_min + raw_max) / 2;
-        let half_span = ((raw_max - raw_min) / 2).clamp(4, MAX_CELLS_PER_AXIS / 2);
-        bounds_min[k] = center - half_span;
-        bounds_max[k] = center + half_span;
-    }
-    (bounds_min, bounds_max)
-}
-
 fn compute_voxel_bounds_from_extrema(lo: [f64; 3], hi: [f64; 3], voxel_size: f64) -> ([i32; 3], [i32; 3]) {
     const MAX_CELLS_PER_AXIS: i32 = 32;
     if !lo.iter().all(|value| value.is_finite()) || !hi.iter().all(|value| value.is_finite()) || voxel_size <= 0.0 {
@@ -429,24 +380,6 @@ fn compute_voxel_bounds_from_extrema(lo: [f64; 3], hi: [f64; 3], voxel_size: f64
         maximum[axis] = center + half;
     }
     (minimum, maximum)
-}
-
-/// 🧵️ `(camera_slot_index, point_index, observed_pixel)` triples for `remodeling_geo::build_quality_report`,
-/// derived from a finished [`remodeling_sfm::Reconstruction`]'s tracks and each frame's detected keypoints.
-fn build_observations(recon: &remodeling_sfm::Reconstruction, tracks: Option<&remodeling_sfm::FeatureTracks>, keypoints_per_frame: &[Vec<remodeling_feature::Keypoint>]) -> Vec<(usize, usize, [f64; 2])> {
-    let Some(tracks) = tracks else { return Vec::new() };
-    let camera_index_of: std::collections::BTreeMap<usize, usize> = recon.cameras.iter().enumerate().map(|(ci, &(f, _))| (f, ci)).collect();
-    let mut out = Vec::new();
-    for (point_index, &track_id) in recon.point_track_ids.iter().enumerate() {
-        let Some(track) = tracks.tracks.get(track_id) else { continue };
-        for &(frame, kp) in track {
-            let Some(&ci) = camera_index_of.get(&frame) else { continue };
-            let Some(kp_list) = keypoints_per_frame.get(frame) else { continue };
-            let Some(k) = kp_list.get(kp as usize) else { continue };
-            out.push((ci, point_index, [f64::from(k.x), f64::from(k.y)]));
-        }
-    }
-    out
 }
 
 /// ⚙️ The cooperative staged pipeline: [`advance`](Self::advance) performs one bounded slice of work per

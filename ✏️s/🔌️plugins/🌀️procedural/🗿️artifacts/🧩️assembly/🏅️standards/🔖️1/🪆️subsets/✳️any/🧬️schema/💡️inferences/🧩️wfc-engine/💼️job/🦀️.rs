@@ -35,6 +35,7 @@ fn empty_job_fault() -> JobFault {
     JobFault { detail: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Fault) }
 }
 
+#[cfg(test)]
 fn retained_payload_bytes(payload: &semio_framework_job::RetainedJobPayload) -> Vec<u8> {
     let mut bytes = Vec::with_capacity(payload.len());
     for index in 0..payload.page_count() {
@@ -111,6 +112,7 @@ pub struct WfcCommit {
 pub enum WfcSampler {
     #[default]
     WeightedRoulette,
+    #[cfg(test)]
     Uniform,
 }
 
@@ -156,6 +158,7 @@ impl JobRng {
         (self.next_u64() >> 11) as f64 * (1.0 / (1u64 << 53) as f64)
     }
 
+    #[cfg(test)]
     fn range(&mut self, hi: u64) -> u64 {
         if hi == 0 {
             return 0;
@@ -241,6 +244,7 @@ struct ChoiceCursor {
     total: f64,
     target: f64,
     running: f64,
+    #[cfg(test)]
     ordinal: u64,
     candidate: Option<PatternId>,
 }
@@ -489,6 +493,7 @@ impl<T: Topology + Clone> WfcJob<T> {
         Self { operation, model, topology, config, initial_domains, fixed, state, checkpoint_build: None, final_checkpoint: None, commit_build: None, completed_commit: None, preview_units: 0, last_preview_ms: None, closing: false }
     }
 
+    #[cfg(test)]
     pub fn from_checkpoint(operation: Operation, model: CompiledModel, topology: T, config: WfcJobConfig, initial_domains: Option<Vec<PatternSet>>, fixed: Vec<(NodeId, PatternId)>, bytes: &[u8]) -> Result<Self, String>
     where
         T: Send + 'static,
@@ -800,19 +805,15 @@ impl<T: Topology + Clone> WfcJob<T> {
         self.state.stage = if self.state.singleton_count == self.state.domains.len() { WfcStage::Complete } else { WfcStage::DetectContradiction };
     }
 
-    fn begin_choice(&mut self, node: NodeId) {
-        let count = self.state.domain_counts[node.index()] as u64;
-        let cursor = match self.config.sampler {
-            WfcSampler::Uniform => ChoiceCursor { phase: ChoicePhase::Select, pattern: 0, total: 0.0, target: 0.0, running: 0.0, ordinal: self.state.rng.range(count), candidate: None },
-            WfcSampler::WeightedRoulette => ChoiceCursor { phase: ChoicePhase::Weigh, pattern: 0, total: 0.0, target: 0.0, running: 0.0, ordinal: 0, candidate: None },
-        };
-        self.state.choice_cursor = Some(cursor);
-    }
-
     fn choose_one(&mut self) {
         let node = self.state.active_slot.expect("choose stage has active slot");
         if self.state.choice_cursor.is_none() {
-            self.begin_choice(node);
+            let cursor = match self.config.sampler {
+                #[cfg(test)]
+                WfcSampler::Uniform => ChoiceCursor { phase: ChoicePhase::Select, pattern: 0, total: 0.0, target: 0.0, running: 0.0, ordinal: self.state.rng.range(self.state.domain_counts[node.index()] as u64), candidate: None },
+                WfcSampler::WeightedRoulette => ChoiceCursor { phase: ChoicePhase::Weigh, pattern: 0, total: 0.0, target: 0.0, running: 0.0, #[cfg(test)] ordinal: 0, candidate: None },
+            };
+            self.state.choice_cursor = Some(cursor);
             return;
         }
         let cursor = self.state.choice_cursor.as_mut().expect("choice cursor");
@@ -836,6 +837,7 @@ impl<T: Topology + Clone> WfcJob<T> {
                     cursor.pattern += 1;
                     if self.state.domains[node.index()].get(pattern) {
                         let selected = match self.config.sampler {
+                            #[cfg(test)]
                             WfcSampler::Uniform => {
                                 let selected = cursor.ordinal == 0;
                                 cursor.ordinal = cursor.ordinal.saturating_sub(1);

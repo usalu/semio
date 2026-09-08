@@ -1,0 +1,4 @@
+# Direct remove-javascript-action GraphQL payload.
+input RemoveJavascriptActionMutationInput {
+  script: String!
+}

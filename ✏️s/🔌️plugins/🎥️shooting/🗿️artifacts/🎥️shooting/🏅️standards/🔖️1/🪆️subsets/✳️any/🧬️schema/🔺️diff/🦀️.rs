@@ -6,8 +6,6 @@ use schema::ArtifactSchema;
 //#region 🔖️Diff
 /// 🔺️ Sparse field delta for the shooting artifact; persistent entries apply via [`MutationDiff`](protocol::MutationDiff).
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
 #[value(rename_all = "camelCase", default)]
 #[artifact_schema(id = "s.shooting.shooting")]
 pub struct ShootingDiff {
@@ -59,8 +57,6 @@ pub struct ShootingDiff {
 //#region 🔖️DeltaHelpers
 /// 📋 String-list wrapper so optional list diffs stay scalar across formats.
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
 #[value(rename_all = "camelCase", default)]
 pub struct ShootingStringList {
     pub values: Vec<String>,
@@ -68,8 +64,6 @@ pub struct ShootingStringList {
 
 /// 🧩 Identified-collection delta for `assets`.
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
 #[value(rename_all = "camelCase", default)]
 pub struct ShootingAssetsDelta {
     pub added: Vec<ShootingAsset>,
@@ -80,8 +74,6 @@ pub struct ShootingAssetsDelta {
 
 /// 🧩 Identified-collection delta for `shots`.
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
 #[value(rename_all = "camelCase", default)]
 pub struct ShootingShotsDelta {
     pub added: Vec<ShootingShot>,
@@ -92,8 +84,6 @@ pub struct ShootingShotsDelta {
 
 /// 🧩 Identified-collection delta for `savedCameras`.
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
 #[value(rename_all = "camelCase", default)]
 pub struct ShootingSavedCamerasDelta {
     pub added: Vec<ShootingSavedCamera>,
@@ -104,8 +94,6 @@ pub struct ShootingSavedCamerasDelta {
 
 /// 🩹 One patched asset entry.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub struct ShootingAssetPatchEntry {
     pub id: String,
@@ -114,8 +102,6 @@ pub struct ShootingAssetPatchEntry {
 
 /// 🩹 One patched shot entry.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub struct ShootingShotPatchEntry {
     pub id: String,
@@ -124,8 +110,6 @@ pub struct ShootingShotPatchEntry {
 
 /// 🩹 One patched saved-camera entry.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub struct ShootingSavedCameraPatchEntry {
     pub id: String,

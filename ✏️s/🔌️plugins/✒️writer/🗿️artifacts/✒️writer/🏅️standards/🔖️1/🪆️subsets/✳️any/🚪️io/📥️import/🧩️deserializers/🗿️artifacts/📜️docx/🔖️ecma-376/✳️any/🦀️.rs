@@ -20,7 +20,7 @@ impl Deserializer<WriterSnapshot> for DocxIntoWriter {
     /// 🪧️ Lossy: only paragraph run text survives — `schema`/`id`/`uri`/`language_id` have no home
     /// in a docx package, tables are dropped, and run-level formatting is not modeled.
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
-    fn deserialize(payload: &IoPayload) -> IoResult<WriterSnapshot> {
+    async fn deserialize(payload: &IoPayload) -> IoResult<WriterSnapshot> {
         let IoPayload::Binary(bytes) = payload else {
             return Err(IoError { message: "DocxIntoWriter: expected a binary payload".to_string(), diagnostics: Vec::new() });
         };
@@ -52,7 +52,7 @@ mod tests {
         let body: Vec<DocxBlock> = "line one\nline two".split('\n').map(DocxBlock::paragraph).collect();
         let docx = build_minimal_docx(DocxDocument { body, styles: Vec::new() });
         let bytes = <DocxSnapshot as store::ArtifactPack>::encode_pack(&docx);
-        let outcome = DocxIntoWriter::deserialize(&IoPayload::Binary(bytes)).expect("deserialize");
+        let outcome = DocxIntoWriter::deserialize(&IoPayload::Binary(bytes)).await.expect("deserialize");
         assert_eq!(crate::artifacts::writer::writer_text(&outcome.value), "line one\nline two");
     }
 }

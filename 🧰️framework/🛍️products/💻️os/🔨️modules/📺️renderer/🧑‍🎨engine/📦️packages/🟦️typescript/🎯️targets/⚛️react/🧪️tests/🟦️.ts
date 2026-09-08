@@ -8,6 +8,7 @@ const repoRoot = resolve(root, "../../../../../../../../../..");
 const wasmEngineStub = resolve(repoRoot, "./🧰️framework/🔨️modules/🖱️ui/🎨️styling/🟦️.ts");
 const testLevel = process.env.SEMIO_TEST_LEVEL ?? "fundamental";
 const includeBackboneWorker = process.env.SEMIO_INCLUDE_BACKBONE_WORKER === "1";
+const includeAgentBridge = process.env.SEMIO_INCLUDE_AGENT_BRIDGE === "1";
 const backboneWorkerSuite = resolve(repoRoot, "./🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts");
 const longInSourceSuites = [
   resolve(repoRoot, "./🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧵️retained/📦️wire/🧾️typed/🟦️.ts"),
@@ -41,13 +42,13 @@ export default defineConfig({
     name: "@semio-tech/framework-renderer-react",
     environment: "jsdom",
     coverage: { include: ["index.tsx"] },
-    ...(testLevel === "fundamental" || testLevel === "quick" ? { include: ["⚡️quick.test.ts"] } : {}),
+    ...(includeAgentBridge ? { include: [resolve(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔗️AgentBridge/🧪️component.test.ts")] } : testLevel === "fundamental" || testLevel === "quick" ? { include: ["⚡️quick.test.ts"] } : {}),
     testNamePattern: testLevel === "fundamental" ? /validates the language-neutral renderer resident capacity with the Node oracle/ : undefined,
     // 🧪️ In-source (`import.meta.vitest`) suites in the `🧑‍🎨engine/🧱️elements/` co-location dirs —
     // NOT under this package's own `root`, so the default `include` glob never finds them. Fundamental
     // and quick deliberately select the bounded resident-composition file; long restores the default
     // package corpus plus moderate in-source suites; exhaustive adds the expensive incremental ownership
     // matrices. A file must never appear in both `include` and `includeSource`, which would double-count it.
-    includeSource: includeBackboneWorker ? [backboneWorkerSuite] : testLevel === "exhaustive" ? [...exhaustiveInSourceSuites] : testLevel === "long" ? [...longInSourceSuites] : [],
+    includeSource: includeAgentBridge ? [] : includeBackboneWorker ? [backboneWorkerSuite] : testLevel === "exhaustive" ? [...exhaustiveInSourceSuites] : testLevel === "long" ? [...longInSourceSuites] : [],
   },
 });

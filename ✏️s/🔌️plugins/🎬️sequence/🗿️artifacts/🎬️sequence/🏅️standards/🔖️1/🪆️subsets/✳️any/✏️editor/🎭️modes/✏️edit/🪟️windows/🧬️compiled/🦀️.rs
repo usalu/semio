@@ -2,8 +2,7 @@
 
 use crate::artifacts::sequence::SequenceSnapshot;
 use crate::editor::sequence::host_from_snapshot;
-use crate::editor::sequence::SEQUENCE_PLAY_APP_ID;
-use semio_framework_plugin::{build_text_editor_scene, LocalizedLabel, SurfaceKind, TextEditorScene, UiNode, WindowKindDefinition, WindowOptions};
+use semio_framework_plugin::{LocalizedLabel, SurfaceKind, TextEditorScene, BuiltNode, UiAssemblyResult, WindowKindDefinition, WindowOptions};
 
 //#region 🔖️Constants
 pub const SEQUENCE_PLAY_WINDOW_COMPILED: &str = "sequence-compiled-dag";
@@ -33,9 +32,9 @@ pub fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(fixture: &SequenceSnapshot) -> UiNode {
+pub fn render(fixture: &SequenceSnapshot) -> UiAssemblyResult<BuiltNode> {
     let host = host_from_snapshot(fixture);
-    build_text_editor_scene(SEQUENCE_PLAY_SURFACE_COMPILED, SEQUENCE_PLAY_APP_ID, TextEditorScene::base(host.compiled_wire_literal(), Some("wire".into()), None))
+    semio_framework_plugin::scene_surface(SEQUENCE_PLAY_SURFACE_COMPILED, semio_framework_ui_contract::SurfaceKind::TextEditor, &TextEditorScene::base(host.compiled_wire_literal(), Some("wire".into()), None))
 }
 //#endregion 🔖️Render
 
@@ -47,8 +46,8 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn renders_compiled_wire_editor() {
-        let mut app = new_app();
-        assert!(render_body(&mut app, SEQUENCE_PLAY_BODY_COMPILED).contains("text-editor"));
+        let mut app = new_app().await;
+        assert!(render_body(&mut app, SEQUENCE_PLAY_BODY_COMPILED).await.contains("text-editor"));
     }
 }
 //#endregion 🧪️Tests

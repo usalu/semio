@@ -1,0 +1,19 @@
+syntax = "proto3";
+package semio.s_stdio_pdf_1_7_e.mutation;
+
+message PdfEMutation {
+  oneof mutation {
+    InsertEncryptionDictionaryMutation insert_encryption_dictionary = 1;
+    RemoveEncryptionDictionaryMutation remove_encryption_dictionary = 2;
+    InsertJavascriptActionMutation insert_javascript_action = 3;
+    RemoveJavascriptActionMutation remove_javascript_action = 4;
+    InsertLaunchActionMutation insert_launch_action = 5;
+    RemoveLaunchActionMutation remove_launch_action = 6;
+    InsertMediaAnnotationMutation insert_media_annotation = 7;
+    RemoveMediaAnnotationMutation remove_media_annotation = 8;
+    SetOutputIntentMutation set_output_intent = 9;
+    RemoveOutputIntentMutation remove_output_intent = 10;
+    EmbedFontFileMutation embed_font_file = 11;
+    RemoveFontFileMutation remove_font_file = 12;
+  }
+}

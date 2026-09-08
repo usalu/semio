@@ -7,7 +7,7 @@
 use crate::artifacts::sequence::{default_snapshot, SequenceSnapshot, SEQUENCE_DIALECT, SEQUENCE_DOCUMENT_SCHEMA};
 use crate::viewer::sequence::modes::view;
 use crate::viewer::sequence::modes::view::windows::main;
-use semio_framework_plugin::{app::InteractionView, ArtifactView, ArtifactViewer, ConfigView, Dialect, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, UiNode, ViewEmit, Viewer};
+use semio_framework_plugin::{app::InteractionView, ArtifactView, ArtifactViewer, ConfigView, Dialect, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, ComponentTree, UiAssemblyResult, ViewEmit, Viewer};
 use store::EngineHandles;
 
 //#region 🔖️Command
@@ -60,11 +60,11 @@ impl ArtifactViewer for SequenceViewer {
         Ok(ViewEmit::default())
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
+    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiAssemblyResult<ComponentTree> {
         match body_key {
             main::SEQUENCE_VIEW_BODY_MAIN => main::render(doc.snapshot),
-            _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
-        }
+            _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "sequence viewer diagnostic admission failed")),
+        }.map(semio_framework_plugin::built_to_component_tree)
     }
 }
 //#endregion 🔖️Viewer

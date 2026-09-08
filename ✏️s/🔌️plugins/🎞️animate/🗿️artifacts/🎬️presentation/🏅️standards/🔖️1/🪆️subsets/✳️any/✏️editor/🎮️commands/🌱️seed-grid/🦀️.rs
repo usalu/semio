@@ -40,7 +40,7 @@ mod tests {
     async fn seed_grid_action_adds_tiles() {
         let mut app = presentation_app().await;
         dispatch(&mut app, PresentationCommand::SeedGrid(SeedGrid { rows: 2, columns: 2 })).await;
-        assert_eq!(crate::artifacts::presentation::presentation_working_scene(&app.snapshot().await.expect("projection")).1.len(), 4);
+        assert_eq!(crate::artifacts::presentation::presentation_working_scene(&app.snapshot().expect("projection")).1.len(), 4);
     }
 
     /// 🧬️ Whole-document replace is not an in-history mutation (a whole-snapshot variant is banned outright), so
@@ -53,9 +53,9 @@ mod tests {
         use semio_framework_plugin::Effect;
         let mut app = presentation_app().await;
         dispatch(&mut app, PresentationCommand::SeedGrid(SeedGrid { rows: 2, columns: 2 })).await;
-        let deck = app.snapshot().await.expect("projection");
-        let history = semio_framework_plugin::HistoryView::empty().await;
-        let doc = ArtifactView::new(&deck, &history).await;
+        let deck = app.snapshot().expect("projection");
+        let history = semio_framework_plugin::HistoryView::empty();
+        let doc = ArtifactView::new(&deck, &history);
         let cfg_snapshot = PresentationConfig::default();
         let cfg = ConfigView { snapshot: &cfg_snapshot };
         let mut ctx = PresentationDispatchCtx { selected_ids: Vec::new() };
@@ -77,7 +77,7 @@ mod tests {
         let mut app = presentation_app().await;
         dispatch(&mut app, PresentationCommand::SeedGrid(SeedGrid { rows: 2, columns: 2 })).await;
         let result = dispatch(&mut app, PresentationCommand::ClearTiles(clear_tiles::ClearTiles {})).await;
-        assert!(crate::artifacts::presentation::presentation_working_scene(&app.snapshot().await.expect("projection")).1.is_empty());
+        assert!(crate::artifacts::presentation::presentation_working_scene(&app.snapshot().expect("projection")).1.is_empty());
         assert!(matches!(result.requested_effects.as_slice(), [Effect::ReplayShellCommand { action_id, .. }] if action_id == semio_framework::INTERACTION_SELECT_ACTION_ID));
     }
 }

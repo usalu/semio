@@ -24,8 +24,8 @@ pub const S_WORKFLOW_SCHEMA: &str = "os.workflow";
 /// deliberately NOT built in W3 (SpaceRunner rework is W5, automation dispatcher is W6); inventing a
 /// shape now without the runner rework driving it risks rework. See
 /// `.claude/plans/the-final-goal-for-jolly-spindle.md` `### Workflow / Run / Automation (Track C)`.
+#[cfg(any(test, not(all(target_arch = "wasm32", target_env = "p2"))))]
 pub const S_RUN_SCHEMA: &str = "os.run";
-pub const S_AUTOMATION_SCHEMA: &str = "os.automation";
 
 //#region 🔖️MediaContract
 /// 🤝️ A connect-time negotiated wire contract between two `WorkflowMediaPort`s — stored on
@@ -788,14 +788,6 @@ pub enum WorkflowParameterType {
     Text,
 }
 
-#[derive(Clone, Debug, PartialEq, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue)]
-#[value(rename_all = "camelCase")]
-pub struct WorkflowParameterFieldSpec {
-    pub field_path: String,
-    pub label: String,
-    #[value(rename = "type")]
-    pub parameter_type: WorkflowParameterType,
-}
 
 /// 🎯️ `field_path` names a `ConfigFieldSpec.key` in the target node's app's declared `ConfigSpec` —
 /// see `validate_workflow_parameter_config_binding` (type-checks against the field's `ConfigFieldShape`).
@@ -1002,18 +994,6 @@ pub async fn validate_workflow_parameter_config_binding(binding: &WorkflowParame
             op_index: None,
         })
     }
-}
-
-/// @emoji 🎛️ Resolves bound parameter values for a workflow node as a field-path map.
-pub async fn resolve_workflow_parameter_values(bindings: &[WorkflowParameterBinding], parameters: &[WorkflowParameter], node_id: &str) -> HashMap<String, dsl::DslValue> {
-    let mut values = HashMap::new();
-    for binding in bindings.iter().filter(|entry| entry.node_id == node_id) {
-        let Some(parameter) = parameters.iter().find(|entry| workflow_parameter_id(entry) == binding.parameter_id) else {
-            continue;
-        };
-        values.insert(binding.field_path.clone(), workflow_parameter_value(parameter));
-    }
-    values
 }
 
 // 🚫️async: E1 transitive — consumed by std Iterator/Option combinators (external traits) in
@@ -1927,6 +1907,7 @@ pub struct RunArtifact {
     pub sealed: bool,
 }
 
+#[cfg(any(test, not(all(target_arch = "wasm32", target_env = "p2"))))]
 pub async fn empty_run_document() -> RunArtifact {
     RunArtifact {
         schema: S_RUN_SCHEMA.into(),
@@ -2126,6 +2107,7 @@ impl protocol::MutationDiff<RunArtifact> for RunDiff {
 /// 🔒️ The one real write seam for a `RunArtifact`: preserves rejecting outcome diagnostics and
 /// delegates every admission decision to the same `RunDiff::apply` implementation as ordinary
 /// mutation application.
+#[cfg(any(test, not(all(target_arch = "wasm32", target_env = "p2"))))]
 pub async fn apply_run_operation_checked(document: &RunArtifact, operation: RunMutation) -> protocol::MutationApplyResult<RunArtifact> {
     let outcome = protocol::Mutation::diff(&operation, document);
     if let Some(message) = outcome.messages().iter().find(|message| protocol::MergePolicy::default().rejects(message.level)) {

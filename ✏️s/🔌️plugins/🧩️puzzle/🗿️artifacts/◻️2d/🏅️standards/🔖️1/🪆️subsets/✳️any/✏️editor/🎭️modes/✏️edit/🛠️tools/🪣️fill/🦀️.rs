@@ -1,7 +1,7 @@
 //! 🪣️ Edit-mode tool — Fill: a whole-document generator (not a window utility), so its count slider
 //! is a mode-level *tool* measure keyed by the tool id rather than a window utility-options group.
 
-use crate::editor::puzzle2d::config::{Puzzle2dFillLifecycle, Puzzle2dFillText};
+use crate::editor::puzzle2d::config::Puzzle2dFillLifecycle;
 use crate::editor::puzzle2d::terminology::Puzzle2dLabels;
 use crate::editor::puzzle2d::{puzzle2d_action, Puzzle2dScene};
 use semio_framework_plugin::{LocalizedLabel, ToolDefinition, WindowMeasure};

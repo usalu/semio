@@ -4,7 +4,7 @@
 //! `framework/core/rs/lib.rs`'s `🔖️Sync` region (`MutationEnvelope` L6246, `ArtifactDiff` L6121,
 //! `InverseMutation` L6137, `MutationDag`/`InsertResult`/`MutationDagError` L6266-6380 including its existing
 //! unit tests at L6488-6572) and `vcs/rs/lib.rs`'s `mutation_envelope_from_edit`. Frozen contract:
-//! `.🦑️repo/🎫️tickets/26/07/27/PROTOCOL-BINARY-OP-LOG-LAYER/contract.md` `## Amendment` §`protocol_causal`.
+//! `.🧬semio/🦑️repo/🎫️tickets/26/07/27/PROTOCOL-BINARY-OP-LOG-LAYER/contract.md` `## Amendment` §`protocol_causal`.
 //!
 //! This crate's `FrontierSummary`/`frontier_delta` are the runtime/wire twin of
 //! `protocol_history`'s durable-log-derived pair — deliberately kept separate, see `🔖️Frontier`.

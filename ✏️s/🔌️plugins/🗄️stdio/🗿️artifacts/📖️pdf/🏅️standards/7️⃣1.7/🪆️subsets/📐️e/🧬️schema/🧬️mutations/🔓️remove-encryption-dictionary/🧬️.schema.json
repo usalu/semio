@@ -1,0 +1,25 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/s.stdio.pdf.1.7.e/mutation/remove-encryption-dictionary.json",
+  "title": "RemoveEncryptionDictionary",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "version",
+    "revision"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "removeEncryptionDictionary"
+    },
+    "version": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "revision": {
+      "type": "integer",
+      "minimum": 0
+    }
+  }
+}

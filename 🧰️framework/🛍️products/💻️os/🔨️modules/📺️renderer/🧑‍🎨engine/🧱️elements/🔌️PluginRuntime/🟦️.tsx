@@ -43,8 +43,14 @@ import {
   SemioFaultError,
   orderPluginRegistryEntries,
 } from "@semio-tech/framework";
-import { AppChannelClient, AppChannelRequestSequence, type AppFrameValue, decodeAppFrame, decodeConflictsFromWire, decodeFaultFromWire, decodeMergeReportFromWire, decodeMutationEnvelopesPack, decodePackValue, decodePackWire, encodePackValue, faultDisplayMessage, packWireNatural } from "@semio-tech/framework-os";
-import type { ArtifactPresencePeer } from "@semio-tech/framework-replication";
+import { AppChannelClient, AppChannelRequestSequence, type AppFrameValue, decodeAppFrame, decodeConflictsFromWire, decodeFaultFromWire, decodeInvocationResultPacks, decodeMergeReportFromWire, decodeMutationEnvelopesPack, decodePackValue, decodePackWire, encodePackValue, faultDisplayMessage, packWireNatural } from "@semio-tech/framework-os";
+import {
+  decodeLocalInteractionCaptureJson,
+  LOCAL_INTERACTION_CAPTURE_MAX_BYTES,
+  localInteractionIdentityEquals,
+  type ArtifactPresencePeer,
+  type LocalInteractionCapture,
+} from "@semio-tech/framework-replication";
 import { type BuiltNode, type UiNodeRecord, type UiPatchOp, type UiSnapshot } from "@semio-tech/framework";
 import { applyUiPatch, emptyUiDocumentState, type UiDocumentState } from "../📃️UiDocumentStore/🟦️.tsx";
 import {
@@ -175,6 +181,8 @@ export type PluginWasmHandle = {
    * `AppChannelClient.readConflicts`. */
   readonly readConflicts: (instanceId: number) => Promise<readonly Conflict[]>;
   //#endregion 🔖️Merge
+  /** 🏠️ Reads one exact retained local-interaction capture and ACKs every native-owned page. */
+  readonly readLocalInteraction: (instanceId: number, signal?: AbortSignal) => Promise<LocalInteractionCapture>;
   readonly dispose: () => void;
 };
 
@@ -1055,7 +1063,7 @@ function uiRefreshBodyKeys(request: PluginUiRefreshRequest): string[] {
 
 /** 📬️ Projects retained bodies back to their requested window and panel keys. */
 function retainedUiRefreshResponse(instanceId: number, request: PluginUiRefreshRequest, retained: ReadonlyMap<string, RetainedSurface>, effects: readonly WireVariant[] = []): PluginUiRefreshResponse {
-  const project = (targets: PluginUiRefreshRequest["🪟️windows"]) => (targets ?? []).flatMap((target) => {
+  const project = (targets: PluginUiRefreshRequest["windows"]) => (targets ?? []).flatMap((target) => {
     const surface = retained.get(retainedSurfaceId(instanceId, target.bodyKey ?? target.key));
     const value = surface && retainedSurfaceToBuiltNode(surface);
     return surface && value ? [{ key: target.key, hash: retainedSurfaceHash(retainedSurfaceToSnapshot(surface)), value }] : [];
@@ -1392,6 +1400,8 @@ async function performInvocation(client: AppChannelClient, instanceId: number, i
 function invocationFromFrames(frames: readonly AppFrameValue[], leftover: readonly WireVariant[], invocationKind: string): InvocationResponse {
   let output: unknown = null;
   let diagnostics: InvocationResponse["diagnostics"] = [];
+  let mutations: InvocationResponse["mutations"] = [];
+  let inverseGroup: InvocationResponse["inverseGroup"] = { invocationId: "", mutations: [], inverseMutations: [] };
   let uiScope: InvocationResponse["uiScope"];
   let historyPatch: InvocationResponse["historyPatch"];
   for (const frame of frames) {
@@ -1406,6 +1416,7 @@ function invocationFromFrames(frames: readonly AppFrameValue[], leftover: readon
         const decodedHistoryPatch = decodePackValue(new Uint8Array(frame.Invocation.history_patch));
         historyPatch = decodedHistoryPatch && typeof decodedHistoryPatch === "object" ? (decodedHistoryPatch as InvocationResponse["historyPatch"]) : undefined;
       }
+      ({ mutations, inverseGroup } = decodeInvocationResultPacks(frame.Invocation));
     } else if ("Error" in frame) {
       const fault = decodeFaultFromWire(frame.Error.fault, decodePackValue);
       if (fault) throw new SemioFaultError(fault);
@@ -1419,8 +1430,8 @@ function invocationFromFrames(frames: readonly AppFrameValue[], leftover: readon
   const requestedEffects = leftover.filter((effect) => effect.tag !== TYPED_OPERATION_TERMINAL_OUTPUT && effect.tag !== TYPED_OPERATION_TERMINAL_SEEN).map(wireEffectToFriendly).filter((effect): effect is Effect => effect !== null);
   return {
     output,
-    mutations: [],
-    inverseGroup: { invocationId: "", mutations: [], inverseMutations: [] },
+    mutations,
+    inverseGroup,
     diagnostics,
     requestedEffects,
     events: [],
@@ -1606,6 +1617,24 @@ export async function adaptPluginHandle(pluginId: string, lease: { readonly hand
       return conflictsFrame ? decodeConflictsFromWire(conflictsFrame.Conflicts.conflicts, decodePackValue) : [];
     },
     //#endregion 🔖️Merge
+    readLocalInteraction: async (instanceId, signal) => {
+      const pages: Uint8Array[] = [];
+      let length = 0;
+      const identity = await requireChannel(instanceId).readLocalInteractionPages(async (page) => {
+        length += page.bytes.length;
+        if (length > LOCAL_INTERACTION_CAPTURE_MAX_BYTES) throw new Error("local-interaction.capture-length");
+        pages.push(Uint8Array.from(page.bytes));
+      }, signal);
+      const bytes = new Uint8Array(length);
+      let offset = 0;
+      for (const page of pages) {
+        bytes.set(page, offset);
+        offset += page.length;
+      }
+      const capture = decodeLocalInteractionCaptureJson(bytes);
+      if (!localInteractionIdentityEquals(capture.identity, identity)) throw new Error("local-interaction.capture-authority");
+      return capture;
+    },
     dispose: () => lease.release(),
   };
 }
@@ -2172,7 +2201,7 @@ if (import.meta.vitest) {
         if (submitted.length === 1) return { uiPatches: [], effects: [{ tag: "notify", val: { message: fixture.completion.notification } }], nextWake: null, status: { tag: "more-work" } };
         if (submitted.length === 2) return {
           uiPatches: [{ surface: pluginSurfaceRef(instance, fixture.completion.surface), revision: 1n, baseRevision: 0n, ops: [{ tag: "upsert", val: { node: bytes(root) } }, { tag: "set-root", val: 0n }] }],
-          effects: [{ tag: "send-message", val: { target: { tag: "shell", val: String(instance) }, payload: Array.from(encodeAppFrame({ Invocation: { in_reply_to: 0, output: bytes(fixture.response), diagnostics: bytes([]), ui_scope: bytes(fixture.completion.uiScope), history_patch: bytes(fixture.completion.historyPatch), messages: [] } })) } }],
+          effects: [{ tag: "send-message", val: { target: { tag: "shell", val: String(instance) }, payload: Array.from(encodeAppFrame({ Invocation: { in_reply_to: 0, output: bytes(fixture.response), diagnostics: bytes([]), ui_scope: bytes(fixture.completion.uiScope), history_patch: bytes(fixture.completion.historyPatch), messages: [], mutations: [], inverse_group: [] } })) } }],
           nextWake: null, status: { tag: "idle" },
           uiPatchReceipt: encodeActorUiPatchReceipt(completionPatchReceipt),
         };
@@ -2417,6 +2446,11 @@ if (import.meta.vitest) {
     readonly pack?: { readonly pack: Uint8Array; readonly spr: Uint8Array } | null;
   };
 
+  const fakeLocalInteraction = (instanceId: number): LocalInteractionCapture => ({
+    identity: { appInstanceId: instanceId, generation: "1", revision: "0".repeat(64), documentRevision: "0".repeat(64), topologyRevision: "0".repeat(64) },
+    state: { selection: {}, activeMode: {}, activeGranularity: {} },
+  });
+
   function fakeHandle(pluginId: string, calls: string[], commitOrder: string[], options: FakeHandleOptions = {}): PluginWasmHandle {
     return {
       pluginId,
@@ -2428,6 +2462,7 @@ if (import.meta.vitest) {
       refreshUi: async () => ({}),
       contextMenu: async () => [],
       readHistory: async () => ({ cursor: 0 }) as unknown as HistoryPatch,
+      readLocalInteraction: async (instanceId) => fakeLocalInteraction(instanceId),
       documentPack: (instanceId) => (options.pack !== undefined ? options.pack : { pack: new Uint8Array([1]), spr: new Uint8Array([instanceId]) }),
       transactionPrepare: async (instanceId, _txnId, _request) => {
         calls.push(`${pluginId}:${instanceId}:prepare`);
@@ -2727,6 +2762,7 @@ if (import.meta.vitest) {
         refreshUi: async () => ({}),
         contextMenu: async () => [],
         readHistory: async () => ({ cursor: 0 }) as unknown as HistoryPatch,
+        readLocalInteraction: async (instanceId) => fakeLocalInteraction(instanceId),
         documentPack: () => ({ pack: new Uint8Array([1]), spr: new Uint8Array([2]) }),
         transactionPrepare: async (instanceId) => {
           calls.push(`chain:${instanceId}:prepare`);
@@ -2953,7 +2989,7 @@ if (import.meta.vitest) {
             const frames = commands.map((command) => {
               if (!("ReadDocument" in command)) throw new Error(`unexpected command ${JSON.stringify(command)}`);
               const seq = command.ReadDocument.seq;
-              return replyWithDocument ? encodeAppFrame({ Document: { in_reply_to: seq, pack: [7, 8], spr: [9], ops: [] } }) : encodeAppFrame({ Done: { in_reply_to: seq } });
+              return replyWithDocument ? encodeAppFrame({ Document: { in_reply_to: seq, pack: [7, 8], spr: [9], ops: "" } }) : encodeAppFrame({ Done: { in_reply_to: seq } });
             });
             turnBroadcast.push({ instanceId, frames });
           },
@@ -3105,6 +3141,11 @@ if (import.meta.vitest) {
 
     it("continues admitted operations after surfaces are retained and ACKs each exact result", async () => {
       const { Buffer } = await import("node:buffer");
+      const { default: Ajv } = await import("ajv");
+      const { default: equal } = await import("fast-deep-equal");
+      const { default: settlement } = await import("./🧪️fixtures/📬️typed-operation-settlement.json");
+      const { default: schema } = await import("./🧪️fixtures/📐️typed-operation-settlement.schema.json");
+      expect(new Ajv({ strict: true }).compile(schema)(settlement)).toBe(true);
       const { default: fixture } = await import("../../../../🔌️plugin/⚛️reactor/🧪️fixtures/🔣️.json");
       const token = Buffer.alloc(25);
       token.writeUInt32LE(fixture.wire.receiver, 0);
@@ -3125,13 +3166,19 @@ if (import.meta.vitest) {
       }, async () => {
         const result = await settlePluginTurn("retained-operation#7", { uiPatches: [], effects: [], nextWake: null, status: { tag: "more-work" } }, "Interactive", new Set(), undefined, true);
         expect(turns).toBe(fixture.wire.lanes.length + 1);
-        expect(result.effects).toEqual([]);
-        expect(result.status).toEqual({ tag: "idle" });
+        expect(result.effects).toEqual(settlement.retainedEffects);
+        expect(equal(result.effects, settlement.retainedEffects)).toBe(true);
+        expect(result.status).toEqual(settlement.status);
+        const invocation = invocationFromFrames([], result.effects, "action");
+        expect({ output: invocation.output, requestedEffects: invocation.requestedEffects }).toEqual(settlement.invocation);
+        console.info("[DEBUG] typed-operation settlement: exact ACKs=%d retainedTerminal=1 hostEffects=%d", fixture.wire.lanes.length, invocation.requestedEffects?.length);
       });
     });
 
     it("does not replay already acknowledged ingress publications during settlement", async () => {
       const { Buffer } = await import("node:buffer");
+      const { default: equal } = await import("fast-deep-equal");
+      const { default: settlement } = await import("./🧪️fixtures/📬️typed-operation-settlement.json");
       const { default: fixture } = await import("../../../../🔌️plugin/⚛️reactor/🧪️fixtures/🔣️.json");
       const results: WireTurnResult[] = fixture.wire.lanes.map((lane, sequence) => {
         const header = Buffer.alloc(30);
@@ -3149,8 +3196,12 @@ if (import.meta.vitest) {
         return { uiPatches: [], effects: [], nextWake: null, status: { tag: "idle" } };
       }, async () => {
         const result = await settleAcknowledgedPluginTurns("retained-ingress#7", results, pending);
-        expect(result.effects).toEqual([]);
-        expect(result.status).toEqual({ tag: "idle" });
+        expect(result.effects).toEqual(settlement.retainedEffects);
+        expect(equal(consumeTypedOperationEffects(result.effects), settlement.retainedEffects)).toBe(true);
+        expect(result.status).toEqual(settlement.status);
+        const invocation = invocationFromFrames([], result.effects, "action");
+        expect({ output: invocation.output, requestedEffects: invocation.requestedEffects }).toEqual(settlement.invocation);
+        console.info("[DEBUG] typed-operation ingress settlement: retainedTerminal=1 replayedPublications=0 hostEffects=%d", invocation.requestedEffects?.length);
       });
     });
 
@@ -3204,8 +3255,8 @@ if (import.meta.vitest) {
       const { default: fixture } = await import("../../../../🔌️plugin/⚛️reactor/🧪️fixtures/🔣️.json");
       const bytes = (value: unknown) => Array.from(encodePackValue(value));
       const frames = [
-        { Invocation: { in_reply_to: 1, output: bytes({ operationId: fixture.wire.operation }), diagnostics: bytes([]), ui_scope: bytes({ kind: "none" }), history_patch: [], messages: [] } },
-        { Invocation: { in_reply_to: 0, output: [], diagnostics: [], ui_scope: bytes({ kind: "full" }), history_patch: [], messages: [] } },
+        { Invocation: { in_reply_to: 1, output: bytes({ operationId: fixture.wire.operation }), diagnostics: bytes([]), ui_scope: bytes({ kind: "none" }), history_patch: [], messages: [], mutations: [], inverse_group: [] } },
+        { Invocation: { in_reply_to: 0, output: [], diagnostics: [], ui_scope: bytes({ kind: "full" }), history_patch: [], messages: [], mutations: [], inverse_group: [] } },
       ];
       const client = { command: async () => frames } as unknown as AppChannelClient;
       const result = await performInvocation(client, 7, {}, "action", {});

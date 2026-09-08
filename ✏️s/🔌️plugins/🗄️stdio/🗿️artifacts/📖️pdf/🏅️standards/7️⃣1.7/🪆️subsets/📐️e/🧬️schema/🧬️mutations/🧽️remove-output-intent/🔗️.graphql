@@ -1,0 +1,4 @@
+# Direct remove-output-intent GraphQL payload.
+input RemoveOutputIntentMutationInput {
+  _unit: Boolean
+}

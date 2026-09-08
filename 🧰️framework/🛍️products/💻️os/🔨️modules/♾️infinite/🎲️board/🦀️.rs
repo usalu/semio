@@ -80,7 +80,13 @@ pub mod scene_json {
                 ("text".to_string(), dsl::ToValue::to_value(&self.text)),
                 ("iconKind".to_string(), dsl::ToValue::to_value(&self.icon_kind)),
                 ("nodeKind".to_string(), dsl::ToValue::to_value(&self.node_kind)),
-                ("userData".to_string(), match &self.user_data { Some(v) => dsl::DslValue::from(v), None => dsl::DslValue::Null }),
+                (
+                    "userData".to_string(),
+                    match &self.user_data {
+                        Some(v) => dsl::DslValue::from(v),
+                        None => dsl::DslValue::Null,
+                    },
+                ),
                 ("visible".to_string(), dsl::ToValue::to_value(&self.visible)),
                 ("locked".to_string(), dsl::ToValue::to_value(&self.locked)),
                 ("root".to_string(), dsl::ToValue::to_value(&self.root)),
@@ -605,8 +611,17 @@ pub struct GraphEngine<P: GraphPortModel, D: Directedness> {
     drag_start_positions: BTreeMap<NodeId, Point>,
     proximity_connection: Option<ProximityConnection>,
     next_edge_id: u64,
+    retirement_backing_credited_bytes: usize,
     _directedness: std::marker::PhantomData<D>,
     _port: std::marker::PhantomData<P>,
+}
+
+/// 🧱️ One graph-backing retirement turn with current credit and physical release split.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum GraphEngineBackingRetirementStep {
+    Blocked,
+    Pending { credited_bytes: usize, released_bytes: usize },
+    Complete,
 }
 
 impl<P: GraphPortModel, D: Directedness> Default for GraphEngine<P, D> {
@@ -636,6 +651,7 @@ impl<P: GraphPortModel, D: Directedness> Default for GraphEngine<P, D> {
             drag_start_positions: BTreeMap::new(),
             proximity_connection: None,
             next_edge_id: 1000,
+            retirement_backing_credited_bytes: 0,
             _directedness: std::marker::PhantomData,
             _port: std::marker::PhantomData,
         }
@@ -706,6 +722,35 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
             && self.hover.is_none()
             && self.proximity_distance_override.is_none()
             && self.proximity_connection.is_none()
+    }
+
+    /// 🧹️ Releases one empty engine vector backing only when the caller grants its full retained capacity.
+    pub fn close_backing_page(&mut self, maximum_bytes: usize) -> GraphEngineBackingRetirementStep {
+        if !self.terminal_is_empty() {
+            return GraphEngineBackingRetirementStep::Blocked;
+        }
+        macro_rules! retire_backing {
+            ($field:expr, $element:ty) => {
+                if $field.capacity() != 0 {
+                    let released_bytes = $field.capacity().saturating_mul(std::mem::size_of::<$element>());
+                    let remaining_bytes = released_bytes.saturating_sub(self.retirement_backing_credited_bytes);
+                    let credited_bytes = maximum_bytes.min(remaining_bytes);
+                    self.retirement_backing_credited_bytes = self.retirement_backing_credited_bytes.saturating_add(credited_bytes);
+                    if self.retirement_backing_credited_bytes != released_bytes {
+                        return GraphEngineBackingRetirementStep::Pending { credited_bytes, released_bytes: 0 };
+                    }
+                    drop(std::mem::take($field));
+                    self.retirement_backing_credited_bytes = 0;
+                    return GraphEngineBackingRetirementStep::Pending { credited_bytes, released_bytes };
+                }
+            };
+        }
+        retire_backing!(&mut self.events, BoardEvent);
+        retire_backing!(&mut self.selection_preview_points, Point);
+        retire_backing!(&mut self.area_points, Point);
+        retire_backing!(&mut self.area_screen_points, Point);
+        debug_assert_eq!(self.retirement_backing_credited_bytes, 0);
+        GraphEngineBackingRetirementStep::Complete
     }
 }
 

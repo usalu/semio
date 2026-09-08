@@ -1,0 +1,141 @@
+{
+  "schema": "semio.renderer.document-opening-scope.v1",
+  "cases": [
+    {
+      "id": "shared-scope-wins-over-route",
+      "ref": {
+        "documentId": "map-1",
+        "schema": "s.gis.map",
+        "spaceId": "space-a"
+      },
+      "context": {
+        "currentSpaceId": "space-b",
+        "identity": {
+          "hubBaseUrl": "https://hub.invalid"
+        },
+        "dataDir": "workspace",
+        "surface": "s.gis.map@1/*#editor"
+      },
+      "expected": [
+        {
+          "kind": "hub",
+          "baseUrl": "https://hub.invalid",
+          "spaceId": "space-a",
+          "requestedSurfaceId": "s.gis.map@1/*#editor"
+        },
+        {
+          "kind": "folder",
+          "path": "workspace/spaces/space-a"
+        }
+      ]
+    },
+    {
+      "id": "local-never-inherits-route",
+      "ref": {
+        "documentId": "map-local",
+        "schema": "s.gis.map"
+      },
+      "context": {
+        "currentSpaceId": "space-b",
+        "identity": {
+          "hubBaseUrl": "https://hub.invalid"
+        },
+        "dataDir": "workspace",
+        "surface": "s.gis.map@1/*#editor"
+      },
+      "expected": []
+    },
+    {
+      "id": "shared-requires-identity",
+      "ref": {
+        "documentId": "map-1",
+        "schema": "s.gis.map",
+        "spaceId": "space-a"
+      },
+      "context": {
+        "currentSpaceId": "space-a",
+        "identity": null,
+        "dataDir": "workspace",
+        "surface": "s.gis.map@1/*#editor"
+      },
+      "error": "opening.identity-required"
+    },
+    {
+      "id": "shared-without-local-storage",
+      "ref": {
+        "documentId": "map-2",
+        "schema": "s.gis.map",
+        "spaceId": "space-c"
+      },
+      "context": {
+        "currentSpaceId": null,
+        "identity": {
+          "hubBaseUrl": "https://hub.invalid"
+        },
+        "surface": "s.gis.map@1/*#viewer"
+      },
+      "expected": [
+        {
+          "kind": "hub",
+          "baseUrl": "https://hub.invalid",
+          "spaceId": "space-c",
+          "requestedSurfaceId": "s.gis.map@1/*#viewer"
+        }
+      ]
+    },
+    {
+      "id": "local-without-identity",
+      "ref": {
+        "documentId": "map-local",
+        "schema": "s.gis.map"
+      },
+      "context": {
+        "currentSpaceId": null,
+        "identity": null,
+        "dataDir": "workspace"
+      },
+      "expected": []
+    },
+    {
+      "id": "shared-requires-exact-surface",
+      "ref": {
+        "documentId": "map-1",
+        "schema": "s.gis.map",
+        "spaceId": "space-a"
+      },
+      "context": {
+        "currentSpaceId": "space-a",
+        "identity": {
+          "hubBaseUrl": "https://hub.invalid"
+        },
+        "dataDir": "workspace"
+      },
+      "error": "opening.surface-required"
+    }
+  ],
+  "firstOpen": {
+    "requestedSurfaceOnly": true,
+    "requestStages": ["open-plan", "manifest", "component", "descriptor", "socket-grants"],
+    "socketCount": 1,
+    "localSocketFailures": 0,
+    "unselectedSocketFailures": 1,
+    "hostile": [
+      {
+        "id": "foreign-plan-scope",
+        "requestStages": ["open-plan", "manifest"]
+      },
+      {
+        "id": "corrupt-component",
+        "requestStages": ["open-plan", "manifest", "component", "descriptor"]
+      },
+      {
+        "id": "cancel-at-manifest",
+        "requestStages": ["open-plan", "manifest"]
+      },
+      {
+        "id": "retire-at-component",
+        "requestStages": ["open-plan", "manifest", "component"]
+      }
+    ]
+  }
+}

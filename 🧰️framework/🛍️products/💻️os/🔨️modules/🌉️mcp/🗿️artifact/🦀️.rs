@@ -26,7 +26,7 @@
 use crate::catalog::{CapabilityDefinition, CapabilityKind, CapabilityOwner, CapabilityPresentation, CapabilityRef, CapabilitySource, ToolExposure};
 use crate::errors::{GatewayError, GatewayErrorCode};
 use crate::tool_from_capability;
-use crate::protocol::{CallToolResult, ContentBlock, GatewayBackend, InMemoryToolRegistry, Tool};
+use crate::protocol::{CallToolResult, ContentBlock, GatewayBackend, InMemoryToolRegistry};
 use crate::schema::RevisionStamp;
 use crate::workspace::{find_plugin_entry, find_repo_root, load_package_descriptor, load_plugin_registry, HeadlessWorkspace};
 use std::sync::Arc;

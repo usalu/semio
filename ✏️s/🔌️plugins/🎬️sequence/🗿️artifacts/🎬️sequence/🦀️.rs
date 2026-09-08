@@ -42,10 +42,12 @@ pub const SEQUENCE_DIALECT: semio_framework_plugin::Dialect = semio_framework_pl
 /// block"). Genuine ENGINE GAP (`Shape::Embed` inside a `Shape::Table` column), out of scope here —
 /// verified empirically, not worked around.
 #[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(transparent)]
-#[cfg_attr(test, serde(transparent))]
 pub struct StepParams(pub Dictionary);
+
+impl neural_engine::ColdRetire for StepParams { fn retire_cold(self) { self.0.retire_cold(); } }
+impl neural_engine::ColdRetire for SequenceStep { fn retire_cold(self) { self.params.retire_cold(); } }
+impl neural_engine::ColdRetire for SequenceWorkingScene { fn retire_cold(self) { self.steps.retire_cold(); } }
 
 impl StepParams {
     pub fn new() -> Self {
@@ -114,28 +116,21 @@ pub struct SlotRef {
 }
 
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct SequenceStep {
     #[dsl(defines = "step")]
     pub id: String,
     pub kind: String,
     #[value(default)]
-    #[cfg_attr(test, serde(default))]
     pub params: StepParams,
     #[value(default)]
-    #[cfg_attr(test, serde(default))]
     pub x: f64,
     #[value(default)]
-    #[cfg_attr(test, serde(default))]
     pub y: f64,
     #[value(default)]
-    #[cfg_attr(test, serde(default))]
     #[dsl(block)]
     pub slot: Option<SlotRef>,
     #[value(default)]
-    #[cfg_attr(test, serde(default))]
     pub collapsed: bool,
 }
 
@@ -400,7 +395,7 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
 /// `ArtifactCapability` rows above (kept per debt D1, deleted repo-wide only in W6); wiring them
 /// into this field too is real follow-up work, not required for the tree to register or for any
 /// law to hold (mirrors the stdio pilot's own documented deviation, `📓️w2-p-report.md`).
-pub fn artifact() -> semio_framework_plugin::app::declarations::ArtifactDeclaration {
+pub fn artifact() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<crate::plugin::SequenceApps> {
     use semio_framework_plugin::app::declarations::ArtifactDeclaration;
     use store::os_io::ArtifactKindId;
     ArtifactDeclaration { kind: ArtifactKindId::parse("s.sequence.sequence").expect("canonical sequence.sequence kind"), localization: &[], standards: vec![crate::artifacts::sequence::standards::v1::standard()] }

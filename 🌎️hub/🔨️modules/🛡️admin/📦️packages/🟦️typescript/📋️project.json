@@ -3,7 +3,10 @@
   "$schema": "../../../../../node_modules/nx/schemas/project-schema.json",
   "projectType": "application",
   "namedInputs": {
-    "default": ["{projectRoot}/**/*", "{workspaceRoot}/🌎️hub/🔨️modules/🛡️admin/🧱️elements/**/*"]
+    "default": [
+      "{projectRoot}/**/*",
+      "{workspaceRoot}/🌎️hub/🔨️modules/🛡️admin/🧱️elements/**/*"
+    ]
   },
   "targets": {
     "dev": {
@@ -22,7 +25,11 @@
         "cwd": "🌎️hub/🔨️modules/🛡️admin/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts build",
         "forwardAllArgs": true
-      }
+      },
+      "cache": true,
+      "outputs": [
+        "{projectRoot}/📤️dist"
+      ]
     },
     "test": {
       "executor": "nx:run-commands",

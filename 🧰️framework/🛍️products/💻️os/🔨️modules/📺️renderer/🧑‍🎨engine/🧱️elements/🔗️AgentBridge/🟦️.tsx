@@ -175,6 +175,7 @@ export function createDefaultShellState(): ShellState {
     syncCardKind: null,
     syncDraftPath: "",
     syncStatusByDocument: {},
+    inferencePortByDocument: {},
     mergePolicy: "manual",
     conflicts: [],
     selectedConflictId: null,
@@ -332,6 +333,7 @@ export function useAgentBridge(options: UseAgentBridgeOptions = {}): UseAgentBri
       setStatus("disabled");
       return;
     }
+    const admittedConfig = config;
     let disposed = false;
 
     const clearReconnectTimer = () => {
@@ -404,7 +406,7 @@ export function useAgentBridge(options: UseAgentBridgeOptions = {}): UseAgentBri
       setStatus(reconnectAttemptRef.current > 0 ? "reconnecting" : "connecting");
       let socket: WebSocket;
       try {
-        socket = new WebSocket(config.url, [...bridgeProtocols(config)]);
+        socket = new WebSocket(admittedConfig.url, [...bridgeProtocols(admittedConfig)]);
       } catch (error) {
         setLastError(error instanceof Error ? error.message : "failed to open bridge socket");
         scheduleReconnect();

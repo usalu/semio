@@ -11,7 +11,6 @@ use semio_framework_value_derive::{FromValue, ToValue};
 //#region 🔖️Helpers
 /// ✂️ Nudge step magnitudes: `1px` fine, `10px` fast.
 const NUDGE_STEP: f64 = 1.0;
-const NUDGE_STEP_FAST: f64 = 10.0;
 
 /// 🧬️ Offsets every unlocked selected block by `(dx, dy)` — one `drag-blocks` mutation for the
 /// whole gesture (real multi-select drag), never a whole-`blocks` vec swap.

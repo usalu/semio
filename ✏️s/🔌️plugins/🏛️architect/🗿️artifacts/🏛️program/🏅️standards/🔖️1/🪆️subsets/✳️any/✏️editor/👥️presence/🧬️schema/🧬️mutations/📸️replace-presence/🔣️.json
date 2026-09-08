@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🧬️schema/🧬️mutations/📸️replace-presence",
+  "semanticKind": "replace-presence",
+  "displayName": "Replace Presence",
+  "emoji": "📸️",
+  "aggregateVariant": "ReplacePresence",
+  "payloadSchema": "🧬️.schema.json",
+  "textOpcode": "replace-presence",
+  "binaryTag": 0,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "apply-only",
+  "outcomeClasses": [
+    "applied",
+    "warning"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "text",
+    "binary",
+    "json-schema"
+  ]
+}

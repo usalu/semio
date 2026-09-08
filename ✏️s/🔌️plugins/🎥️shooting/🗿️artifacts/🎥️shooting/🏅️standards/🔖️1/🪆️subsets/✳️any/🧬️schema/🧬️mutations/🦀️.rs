@@ -103,7 +103,7 @@ pub const KINDS: &[&str] = &[
 /// external Rust callers use when they cannot name this crate's private `protocol` extern-crate
 /// item. Same shape as `🎬️presentation`'s `apply_presentation_mutation`.
 pub fn apply_shooting_mutation(snapshot: &ShootingSnapshot, mutation: &ShootingMutation) -> protocol::MutationApplyResult<ShootingSnapshot> {
-    semio_framework_plugin::resolve_ready(vcs::apply_mutation(snapshot, mutation)).map(|(next, _messages)| next)
+    store::apply_mutation(snapshot, mutation).map(|(next, _messages)| next)
 }
 
 /// ↩️ Computes `mutation`'s inverse mutations against `snapshot` (pre-state).
@@ -159,7 +159,7 @@ pub fn encode_shooting_projection_json(snapshot: &ShootingSnapshot) -> String {
 mod tests {
     use super::*;
     use crate::artifacts::shooting::{ShootingAsset, ShootingCamera, ShootingSavedCamera, ShootingShot, SHOOTING_DOCUMENT_SCHEMA};
-    use protocol::testkit::{assert_fatal_never_applies, assert_missing_target_is_error};
+    use protocol::os_spr::testkit::{assert_fatal_never_applies, assert_missing_target_is_error};
     use protocol::{Mutation, MutationDiff};
 
     fn sample_asset(id: &str) -> ShootingAsset {
@@ -171,11 +171,11 @@ mod tests {
     }
 
     fn round_trip(snapshot: &ShootingSnapshot, operation: &ShootingMutation) -> ShootingSnapshot {
-        let forward = vcs::apply_mutation(snapshot, operation).expect("valid mutation").0;
+        let forward = store::apply_mutation(snapshot, operation).expect("valid mutation").0;
         let backwards = operation.inverse(snapshot);
         let mut restored = forward.clone();
         for back in &backwards {
-            restored = vcs::apply_mutation(&restored, back).expect("valid inverse mutation").0;
+            restored = store::apply_mutation(&restored, back).expect("valid inverse mutation").0;
         }
         assert_eq!(&restored, snapshot, "backwards() must exactly restore the pre-operation fixture");
         forward
@@ -459,25 +459,25 @@ mod tests {
     async fn create_asset_obeys_the_inverse_and_absorb_laws() {
         let base = representative_snapshot();
         let create = ShootingMutation::CreateAsset(super::super::create_asset::CreateAsset { asset: sample_asset("a9"), index: None });
-        protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &create);
+        protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &create).await;
         let d1 = create.diff(&base).into_parts().0;
         let after = d1.apply(&base).expect("valid mutation diff");
         let d2 = ShootingMutation::RenameAsset(super::super::rename_asset::RenameAsset { id: "a9".into(), new_name: "Renamed".into() }).diff(&after).into_parts().0;
-        protocol::os_spr::testkit::assert_mutation_diff_absorb_law(&base, d1, d2);
+        protocol::os_spr::testkit::assert_mutation_diff_absorb_law(&base, d1, d2).await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn drag_assets_obeys_the_inverse_law() {
         let base = representative_snapshot();
         let drag = ShootingMutation::DragAssets(super::super::drag_assets::DragAssets { asset_ids: vec!["a1".into()], dx: 4.0, dy: -1.0, dz: 0.5 });
-        protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &drag);
+        protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &drag).await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn set_active_shot_obeys_the_inverse_law() {
         let base = representative_snapshot();
         let set = ShootingMutation::SetActiveShot(super::super::set_active_shot::SetActiveShot { shot_id: Some("s2".into()) });
-        protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &set);
+        protocol::os_spr::testkit::assert_mutation_inverse_law(&base, &set).await;
     }
     //#endregion ⚖️SemanticLaws
 
@@ -489,45 +489,45 @@ mod tests {
     async fn create_asset_duplicate_id_is_fatal() {
         let base = representative_snapshot();
         let outcome = ShootingMutation::CreateAsset(super::super::create_asset::CreateAsset { asset: sample_asset("a1"), index: None }).diff(&base);
-        assert_fatal_never_applies(&outcome);
+        assert_fatal_never_applies(&outcome).await;
         assert_eq!(outcome.worst_level(), Some(protocol::Severity::Fatal));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn delete_asset_missing_target_is_error() {
         let base = representative_snapshot();
-        assert_missing_target_is_error(&base, &ShootingMutation::DeleteAsset(super::super::delete_asset::DeleteAsset { id: "ghost".into() }));
+        assert_missing_target_is_error(&base, &ShootingMutation::DeleteAsset(super::super::delete_asset::DeleteAsset { id: "ghost".into() })).await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn rename_asset_missing_target_is_error() {
         let base = representative_snapshot();
-        assert_missing_target_is_error(&base, &ShootingMutation::RenameAsset(super::super::rename_asset::RenameAsset { id: "ghost".into(), new_name: "x".into() }));
+        assert_missing_target_is_error(&base, &ShootingMutation::RenameAsset(super::super::rename_asset::RenameAsset { id: "ghost".into(), new_name: "x".into() })).await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn change_asset_url_missing_target_is_error() {
         let base = representative_snapshot();
-        assert_missing_target_is_error(&base, &ShootingMutation::ChangeAssetUrl(super::super::change_asset_url::ChangeAssetUrl { id: "ghost".into(), new_url: "/x.glb".into() }));
+        assert_missing_target_is_error(&base, &ShootingMutation::ChangeAssetUrl(super::super::change_asset_url::ChangeAssetUrl { id: "ghost".into(), new_url: "/x.glb".into() })).await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn reorder_assets_missing_target_is_error() {
         let base = representative_snapshot();
-        assert_missing_target_is_error(&base, &ShootingMutation::ReorderAssets(super::super::reorder_assets::ReorderAssets { id: "ghost".into(), to_index: 0 }));
+        assert_missing_target_is_error(&base, &ShootingMutation::ReorderAssets(super::super::reorder_assets::ReorderAssets { id: "ghost".into(), to_index: 0 })).await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn drag_assets_missing_target_is_error() {
         let base = representative_snapshot();
-        assert_missing_target_is_error(&base, &ShootingMutation::DragAssets(super::super::drag_assets::DragAssets { asset_ids: vec!["ghost".into()], dx: 1.0, dy: 1.0, dz: 1.0 }));
+        assert_missing_target_is_error(&base, &ShootingMutation::DragAssets(super::super::drag_assets::DragAssets { asset_ids: vec!["ghost".into()], dx: 1.0, dy: 1.0, dz: 1.0 })).await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn scale_assets_non_finite_is_fatal() {
         let base = representative_snapshot();
         let outcome = ShootingMutation::ScaleAssets(super::super::scale_assets::ScaleAssets { asset_ids: vec!["a1".into()], sx: f64::NAN, sy: 1.0, sz: 1.0 }).diff(&base);
-        assert_fatal_never_applies(&outcome);
+        assert_fatal_never_applies(&outcome).await;
         assert_eq!(outcome.worst_level(), Some(protocol::Severity::Fatal));
     }
 
@@ -535,40 +535,40 @@ mod tests {
     async fn rotate_assets_non_finite_is_fatal() {
         let base = representative_snapshot();
         let outcome = ShootingMutation::RotateAssets(super::super::rotate_assets::RotateAssets { asset_ids: vec!["a1".into()], ax: f64::NAN, ay: 0.0, az: 1.0, angle: 1.0 }).diff(&base);
-        assert_fatal_never_applies(&outcome);
+        assert_fatal_never_applies(&outcome).await;
         assert_eq!(outcome.worst_level(), Some(protocol::Severity::Fatal));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn replace_saved_camera_view_missing_target_is_error() {
         let base = representative_snapshot();
-        assert_missing_target_is_error(&base, &ShootingMutation::ReplaceSavedCameraView(super::super::replace_saved_camera_view::ReplaceSavedCameraView { id: "ghost".into(), new_camera: ShootingCamera::default() }));
+        assert_missing_target_is_error(&base, &ShootingMutation::ReplaceSavedCameraView(super::super::replace_saved_camera_view::ReplaceSavedCameraView { id: "ghost".into(), new_camera: ShootingCamera::default() })).await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn set_active_shot_missing_target_is_error() {
         let base = representative_snapshot();
-        assert_missing_target_is_error(&base, &ShootingMutation::SetActiveShot(super::super::set_active_shot::SetActiveShot { shot_id: Some("ghost".into()) }));
+        assert_missing_target_is_error(&base, &ShootingMutation::SetActiveShot(super::super::set_active_shot::SetActiveShot { shot_id: Some("ghost".into()) })).await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn create_shot_duplicate_id_is_fatal() {
         let base = representative_snapshot();
         let outcome = ShootingMutation::CreateShot(super::super::create_shot::CreateShot { shot: sample_shot("s1"), index: None }).diff(&base);
-        assert_fatal_never_applies(&outcome);
+        assert_fatal_never_applies(&outcome).await;
         assert_eq!(outcome.worst_level(), Some(protocol::Severity::Fatal));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn delete_shot_missing_target_is_error() {
         let base = representative_snapshot();
-        assert_missing_target_is_error(&base, &ShootingMutation::DeleteShot(super::super::delete_shot::DeleteShot { id: "ghost".into() }));
+        assert_missing_target_is_error(&base, &ShootingMutation::DeleteShot(super::super::delete_shot::DeleteShot { id: "ghost".into() })).await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn change_shot_width_missing_target_is_error() {
         let base = representative_snapshot();
-        assert_missing_target_is_error(&base, &ShootingMutation::ChangeShotWidth(super::super::change_shot_width::ChangeShotWidth { id: "ghost".into(), new_width: 100 }));
+        assert_missing_target_is_error(&base, &ShootingMutation::ChangeShotWidth(super::super::change_shot_width::ChangeShotWidth { id: "ghost".into(), new_width: 100 })).await;
     }
     //#endregion 🔖️OutcomeLaws
 

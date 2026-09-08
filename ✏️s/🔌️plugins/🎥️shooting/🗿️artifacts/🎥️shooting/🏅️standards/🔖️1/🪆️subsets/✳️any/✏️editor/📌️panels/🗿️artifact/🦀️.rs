@@ -56,7 +56,7 @@ pub fn render(snapshot: &ShootingSnapshot, labels: &ShootingLabels) -> semio_fra
         let item = crate::editor::shooting::tree_item_with_icon(format!("shooting-asset:{}", asset.id), Label::data(asset.name.clone()), "box", asset_select_action(&asset.id))?;
         asset_items.try_push(item).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.document.assets", "fixed asset list admission failed"))?;
     }
-    PanelTreeBuilder::new("shooting-play-document")?.section("shooting-play-document.shots", Some(labels.shots.into()), true, shot_items)?.section("shooting-play-document.assets", Some(labels.assets.into()), true, asset_items)?.build()
+    PanelTreeBuilder::new("shooting-play-document")?.section("shooting-play-document.shots", Some(crate::editor::shooting::ui_label(labels.shots.as_str())?), true, shot_items)?.section("shooting-play-document.assets", Some(crate::editor::shooting::ui_label(labels.assets.as_str())?), true, asset_items)?.build()
 }
 //#endregion 🔖️Render
 
@@ -68,8 +68,8 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn document_lists_shots_and_assets() {
-        let mut app = shooting_app();
-        let json = render_body(&mut app, SHOOTING_PLAY_BODY_DOCUMENT);
+        let mut app = shooting_app().await;
+        let json = render_body(&mut app, SHOOTING_PLAY_BODY_DOCUMENT).await;
         assert!(json.contains("Overview Svg"));
         assert!(json.contains("Base"));
     }

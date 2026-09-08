@@ -5,7 +5,6 @@
 use crate::artifacts::flow::FlowSnapshot;
 use crate::artifacts::flow::schema::diff::text::FlowDiff;
 use crate::artifacts::flow::schema::mutations::FlowMutation;
-use flow::SynapseSpec;
 use protocol::{MutationKind, SemanticDescriptor};
 
 //#region 🔗️ConnectWidgets

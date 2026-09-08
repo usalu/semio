@@ -4,7 +4,8 @@ use crate::artifacts::sequence::{SequenceFixture, SequenceSnapshot};
 use semio_framework::io::io_mechanism::Deserializer;
 use semio_framework::io_schema::{Dialect, IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_plugin::{StandardId, SubsetId};
-use semio_s_plugin_stdio::artifacts::md::{MdBlock, MdSnapshot, STDIO_MD_DOCUMENT_SCHEMA};
+use semio_s_plugin_stdio::artifacts::md::schema::snapshot::MdBlock;
+use semio_s_plugin_stdio::artifacts::md::{MdSnapshot};
 
 pub const MD_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.md", standard: StandardId("commonmark"), subset: SubsetId::ANY };
 
@@ -17,7 +18,6 @@ impl Deserializer<SequenceSnapshot> for MdIntoSequence {
         let IoPayload::Binary(bytes) = payload else {
             return Err(IoError { message: "MdIntoSequence: expected a binary md payload".to_string(), diagnostics: Vec::new() });
         };
-        let _ = STDIO_MD_DOCUMENT_SCHEMA;
         let md = <MdSnapshot as store::ArtifactPack>::decode_pack(bytes).map_err(|error| IoError { message: format!("MdIntoSequence: md decode failed: {error}"), diagnostics: Vec::new() })?;
         let literal = match md.blocks.as_slice() {
             [MdBlock::CodeBlock { info: Some(info), literal }] if info == "json" => literal,

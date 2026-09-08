@@ -1,7 +1,7 @@
 //! 🪶️ Bounded SQLite private-job ledger with durable idempotency and first-terminal-wins.
 
-use super::{schema::*, sha256, InferenceErrorV1, InferencePrivateBytesV1};
-use rusqlite::{params, Connection, OptionalExtension, Transaction, TransactionBehavior};
+use super::{InferenceErrorV1, InferencePrivateBytesV1, schema::*, sha256};
+use rusqlite::{Connection, OptionalExtension, Transaction, TransactionBehavior, params};
 use std::path::Path;
 use std::sync::Mutex;
 
@@ -307,13 +307,13 @@ impl InferenceJobLedgerV1 {
             tx.commit().map_err(storage)?;
             return Err(if now >= expires_at { InferenceErrorV1::Expired } else { InferenceErrorV1::Conflict });
         }
-        let (current_epoch, _, cancel_requested) = run_lease(&tx, job_id)?;
+        let (current_epoch, lease, cancel_requested) = run_lease(&tx, job_id)?;
         if cancel_requested {
             terminate(&tx, job_id, "cancelled", now)?;
             tx.commit().map_err(storage)?;
             return Err(InferenceErrorV1::Cancelled);
         }
-        if phase != "running" || current_epoch != run_epoch || run_epoch == 0 {
+        if phase != "running" || current_epoch != run_epoch || run_epoch == 0 || now >= lease {
             return Ok(false);
         }
         tx.execute("UPDATE inference_job_v1 SET state='succeeded',proposal_state='offered',input=X'',result=?2,proposal=?3,terminal_at=?4 WHERE job_id=?1", params![job_id, result.as_slice(), proposal.as_slice(), sql_integer(now)?])
@@ -323,8 +323,8 @@ impl InferenceJobLedgerV1 {
         Ok(true)
     }
 
-    /// 📈️ Appends one bounded monotonic progress row on behalf of the current claiming epoch.
-    pub fn progress(&self, job_id: &str, reader: &InferenceReaderV1<'_>, run_epoch: u64, completed: u64, total: u64, now: u64) -> Result<u64, InferenceErrorV1> {
+    /// 💓️ Renews one exact live claim while appending its bounded monotonic progress row.
+    pub fn heartbeat(&self, job_id: &str, reader: &InferenceReaderV1<'_>, run_epoch: u64, completed: u64, total: u64, now: u64) -> Result<u64, InferenceErrorV1> {
         if now > SAFE_INTEGER_MAX || total == 0 || completed > total || total > SAFE_INTEGER_MAX {
             return Err(InferenceErrorV1::Bounds);
         }
@@ -338,6 +338,7 @@ impl InferenceJobLedgerV1 {
         if phase != "running" || current_epoch != run_epoch || run_epoch == 0 || now >= lease || now >= expires_at {
             return Err(InferenceErrorV1::Conflict);
         }
+        let lease_expires_at = now.checked_add(CLAIM_LEASE_MAX_MS).map(|value| value.min(expires_at)).filter(|value| *value <= SAFE_INTEGER_MAX).ok_or(InferenceErrorV1::Bounds)?;
         let cursor: u64 = tx.query_row("SELECT progress_cursor FROM inference_job_v1 WHERE job_id=?1", [job_id], |row| read_integer(row, 0)).map_err(storage)?;
         let next = cursor.checked_add(1).ok_or(InferenceErrorV1::Bounds)?;
         if next > PROGRESS_MAX_CURSOR {
@@ -352,9 +353,82 @@ impl InferenceJobLedgerV1 {
             params![job_id, sql_integer(next)?, sql_integer(run_epoch)?, sql_integer(completed)?, sql_integer(total)?, sql_integer(now)?],
         )
         .map_err(storage)?;
-        tx.execute("UPDATE inference_job_v1 SET progress_cursor=?2 WHERE job_id=?1", params![job_id, sql_integer(next)?]).map_err(storage)?;
+        tx.execute("UPDATE inference_job_v1 SET progress_cursor=?2,lease_expires_at=?3 WHERE job_id=?1 AND run_epoch=?4", params![job_id, sql_integer(next)?, sql_integer(lease_expires_at)?, sql_integer(run_epoch)?]).map_err(storage)?;
         tx.commit().map_err(storage)?;
         Ok(next)
+    }
+
+    /// 📈️ Preserves the public progress operation as the claim-renewing heartbeat boundary.
+    pub fn progress(&self, job_id: &str, reader: &InferenceReaderV1<'_>, run_epoch: u64, completed: u64, total: u64, now: u64) -> Result<u64, InferenceErrorV1> {
+        self.heartbeat(job_id, reader, run_epoch, completed, total, now)
+    }
+
+    /// 🔄️ Renews an exact live epoch after its bounded progress page is already full.
+    pub fn renew_claim(&self, job_id: &str, reader: &InferenceReaderV1<'_>, run_epoch: u64, now: u64) -> Result<u64, InferenceErrorV1> {
+        if now > SAFE_INTEGER_MAX || run_epoch == 0 {
+            return Err(InferenceErrorV1::Bounds);
+        }
+        let mut connection = self.connection.lock().map_err(|_| InferenceErrorV1::Storage)?;
+        let tx = connection.transaction_with_behavior(TransactionBehavior::Immediate).map_err(storage)?;
+        if !reader.matches(&identity(&tx, job_id)?) {
+            return Err(InferenceErrorV1::Denied);
+        }
+        let (phase, _, expires_at) = state(&tx, job_id)?;
+        let (current_epoch, lease, cancel_requested) = run_lease(&tx, job_id)?;
+        if phase != "running" || current_epoch != run_epoch || now >= lease || now >= expires_at {
+            return Err(InferenceErrorV1::Conflict);
+        }
+        if cancel_requested {
+            return Err(InferenceErrorV1::Cancelled);
+        }
+        let lease_expires_at = now.checked_add(CLAIM_LEASE_MAX_MS).map(|value| value.min(expires_at)).filter(|value| *value <= SAFE_INTEGER_MAX).ok_or(InferenceErrorV1::Bounds)?;
+        tx.execute("UPDATE inference_job_v1 SET lease_expires_at=?2 WHERE job_id=?1 AND run_epoch=?3", params![job_id, sql_integer(lease_expires_at)?, sql_integer(run_epoch)?]).map_err(storage)?;
+        tx.commit().map_err(storage)?;
+        Ok(lease_expires_at)
+    }
+
+    /// 🛑️ Cancels only the still-current execution epoch and publishes its durable request first.
+    pub fn cancel_run(&self, job_id: &str, reader: &InferenceReaderV1<'_>, run_epoch: u64, now: u64) -> Result<bool, InferenceErrorV1> {
+        if now > SAFE_INTEGER_MAX || run_epoch == 0 {
+            return Err(InferenceErrorV1::Bounds);
+        }
+        let mut connection = self.connection.lock().map_err(|_| InferenceErrorV1::Storage)?;
+        let tx = connection.transaction_with_behavior(TransactionBehavior::Immediate).map_err(storage)?;
+        if !reader.matches(&identity(&tx, job_id)?) {
+            return Err(InferenceErrorV1::Denied);
+        }
+        let (phase, _, _) = state(&tx, job_id)?;
+        let (current_epoch, _, cancel_requested) = run_lease(&tx, job_id)?;
+        if phase != "running" || current_epoch != run_epoch {
+            return Ok(false);
+        }
+        if !cancel_requested {
+            tx.execute("UPDATE inference_job_v1 SET cancel_requested_at=?2 WHERE job_id=?1", params![job_id, sql_integer(now)?]).map_err(storage)?;
+            event(&tx, job_id, "cancel-requested", now)?;
+        }
+        terminate(&tx, job_id, "cancelled", now)?;
+        tx.commit().map_err(storage)?;
+        Ok(true)
+    }
+
+    /// 🧯️ Fails only the still-current execution epoch; a late worker cannot retire its successor.
+    pub fn fail_run(&self, job_id: &str, reader: &InferenceReaderV1<'_>, run_epoch: u64, now: u64) -> Result<bool, InferenceErrorV1> {
+        if now > SAFE_INTEGER_MAX || run_epoch == 0 {
+            return Err(InferenceErrorV1::Bounds);
+        }
+        let mut connection = self.connection.lock().map_err(|_| InferenceErrorV1::Storage)?;
+        let tx = connection.transaction_with_behavior(TransactionBehavior::Immediate).map_err(storage)?;
+        if !reader.matches(&identity(&tx, job_id)?) {
+            return Err(InferenceErrorV1::Denied);
+        }
+        let (phase, _, _) = state(&tx, job_id)?;
+        let (current_epoch, _, _) = run_lease(&tx, job_id)?;
+        if phase != "running" || current_epoch != run_epoch {
+            return Ok(false);
+        }
+        terminate(&tx, job_id, "failed", now)?;
+        tx.commit().map_err(storage)?;
+        Ok(true)
     }
 
     /// 🛑️ Records a durable cancel request the executor observes at its next bounded checkpoint.
@@ -511,19 +585,27 @@ impl InferenceJobLedgerV1 {
         if phase != "succeeded" || proposal_phase != "offered" {
             return Err(InferenceErrorV1::Conflict);
         }
-        let existing: Option<(String, String, String, u64)> = tx
-            .query_row("SELECT mutation_id,command_hash,proposal_hash,prepared_at FROM inference_approval_outbox_v1 WHERE job_id=?1 AND phase='prepared'", [job_id], |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?, read_integer(row, 3)?)))
+        let existing: Option<(String, String, String, u64, String)> = tx
+            .query_row("SELECT mutation_id,command_hash,proposal_hash,prepared_at,phase FROM inference_approval_outbox_v1 WHERE job_id=?1", [job_id], |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?, read_integer(row, 3)?, row.get(4)?)))
             .optional()
             .map_err(storage)?;
         let command_hash = sha256(command.as_slice());
-        if let Some((mutation_id, previous_command_hash, previous_proposal_hash, prepared_at_ms)) = existing {
+        if let Some((mutation_id, previous_command_hash, previous_proposal_hash, prepared_at_ms, outbox_phase)) = existing {
             if previous_command_hash != command_hash || previous_proposal_hash != proposal_hash || accepted != *current {
                 return Err(InferenceErrorV1::Conflict);
             }
             if now >= expires_at {
                 return Err(InferenceErrorV1::Expired);
             }
-            return Ok(InferenceApprovalOutboxV1 { job_id: job_id.to_string(), mutation_id, command_hash, proposal_hash: proposal_hash.to_string(), prepared_at_ms, command: InferencePrivateBytesV1::new(command.as_slice().to_vec(), 8192)? });
+            if outbox_phase == "prepared" {
+                return Ok(InferenceApprovalOutboxV1 { job_id: job_id.to_string(), mutation_id, command_hash, proposal_hash: proposal_hash.to_string(), prepared_at_ms, command: InferencePrivateBytesV1::new(command.as_slice().to_vec(), 8192)? });
+            }
+            if outbox_phase != "abandoned" {
+                return Err(InferenceErrorV1::Conflict);
+            }
+            tx.execute("UPDATE inference_approval_outbox_v1 SET command=?2,prepared_at=?3,phase='prepared' WHERE job_id=?1 AND phase='abandoned'", params![job_id, command.as_slice(), sql_integer(now)?]).map_err(storage)?;
+            tx.commit().map_err(storage)?;
+            return Ok(InferenceApprovalOutboxV1 { job_id: job_id.to_string(), mutation_id, command_hash, proposal_hash: proposal_hash.to_string(), prepared_at_ms: now, command: InferencePrivateBytesV1::new(command.as_slice().to_vec(), 8192)? });
         }
         if accepted != *current || now >= expires_at {
             tx.execute("UPDATE inference_job_v1 SET proposal_state='stale',result=X'',proposal=X'' WHERE job_id=?1", [job_id]).map_err(storage)?;
@@ -539,6 +621,33 @@ impl InferenceJobLedgerV1 {
         event(&tx, job_id, "approval-prepared", now)?;
         tx.commit().map_err(storage)?;
         Ok(InferenceApprovalOutboxV1 { job_id: job_id.to_string(), mutation_id, command_hash, proposal_hash: proposal_hash.to_string(), prepared_at_ms: now, command: InferencePrivateBytesV1::new(command.as_slice().to_vec(), 8192)? })
+    }
+
+    pub(crate) fn abandon_prepared_approval(&self, reader: &InferenceReaderV1<'_>, job_id: &str, mutation_id: &str, command_hash: &str, proposal_hash: &str) -> Result<bool, InferenceErrorV1> {
+        if !hex(job_id, 32) || !hex(mutation_id, 32) || !hex(command_hash, 64) || !hex(proposal_hash, 64) {
+            return Err(InferenceErrorV1::Invalid);
+        }
+        let mut connection = self.connection.lock().map_err(|_| InferenceErrorV1::Storage)?;
+        let tx = connection.transaction_with_behavior(TransactionBehavior::Immediate).map_err(storage)?;
+        if !reader.matches(&identity(&tx, job_id)?) {
+            return Err(InferenceErrorV1::Denied);
+        }
+        let row: Option<(String, String, String, String)> =
+            tx.query_row("SELECT mutation_id,command_hash,proposal_hash,phase FROM inference_approval_outbox_v1 WHERE job_id=?1", [job_id], |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?, row.get(3)?))).optional().map_err(storage)?;
+        let Some((stored_mutation, stored_command, stored_proposal, phase)) = row else { return Err(InferenceErrorV1::Denied) };
+        if stored_mutation != mutation_id || stored_command != command_hash || stored_proposal != proposal_hash {
+            return Err(InferenceErrorV1::Conflict);
+        }
+        if phase == "abandoned" {
+            tx.commit().map_err(storage)?;
+            return Ok(false);
+        }
+        if phase != "prepared" {
+            return Err(InferenceErrorV1::Conflict);
+        }
+        tx.execute("UPDATE inference_approval_outbox_v1 SET command=X'',phase='abandoned' WHERE job_id=?1 AND phase='prepared'", [job_id]).map_err(storage)?;
+        tx.commit().map_err(storage)?;
+        Ok(true)
     }
 
     pub fn pending_approvals(&self, after: Option<&str>, control: &super::InferenceOperationControlV1) -> Result<InferenceApprovalPageV1, InferenceErrorV1> {
@@ -575,17 +684,13 @@ impl InferenceJobLedgerV1 {
         }
         let connection = self.connection.lock().map_err(|_| InferenceErrorV1::Storage)?;
         let row: Option<(String, String, String, String, u64, Vec<u8>)> = connection
-            .query_row(
-                "SELECT job_id,mutation_id,command_hash,proposal_hash,prepared_at,command FROM inference_approval_outbox_v1 WHERE mutation_id=?1 AND phase='prepared'",
-                [mutation_id],
-                |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?, row.get(3)?, read_integer(row, 4)?, row.get(5)?)),
-            )
+            .query_row("SELECT job_id,mutation_id,command_hash,proposal_hash,prepared_at,command FROM inference_approval_outbox_v1 WHERE mutation_id=?1 AND phase='prepared'", [mutation_id], |row| {
+                Ok((row.get(0)?, row.get(1)?, row.get(2)?, row.get(3)?, read_integer(row, 4)?, row.get(5)?))
+            })
             .optional()
             .map_err(storage)?;
-        row.map(|(job_id, mutation_id, command_hash, proposal_hash, prepared_at_ms, command)| {
-            Ok(InferenceApprovalOutboxV1 { job_id, mutation_id, command_hash, proposal_hash, prepared_at_ms, command: InferencePrivateBytesV1::new(command, 8192)? })
-        })
-        .transpose()
+        row.map(|(job_id, mutation_id, command_hash, proposal_hash, prepared_at_ms, command)| Ok(InferenceApprovalOutboxV1 { job_id, mutation_id, command_hash, proposal_hash, prepared_at_ms, command: InferencePrivateBytesV1::new(command, 8192)? }))
+            .transpose()
     }
 
     pub(crate) fn approval_recovery_by_mutation(&self, mutation_id: &str) -> Result<Option<(InferenceApprovalOutboxV1, InferenceIdentityV1, bool)>, InferenceErrorV1> {
@@ -595,11 +700,9 @@ impl InferenceJobLedgerV1 {
         let mut connection = self.connection.lock().map_err(|_| InferenceErrorV1::Storage)?;
         let tx = connection.transaction_with_behavior(TransactionBehavior::Immediate).map_err(storage)?;
         let row: Option<(String, String, String, String, u64, Vec<u8>, String)> = tx
-            .query_row(
-                "SELECT job_id,mutation_id,command_hash,proposal_hash,prepared_at,command,phase FROM inference_approval_outbox_v1 WHERE mutation_id=?1 AND phase IN ('prepared','committed')",
-                [mutation_id],
-                |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?, row.get(3)?, read_integer(row, 4)?, row.get(5)?, row.get(6)?)),
-            )
+            .query_row("SELECT job_id,mutation_id,command_hash,proposal_hash,prepared_at,command,phase FROM inference_approval_outbox_v1 WHERE mutation_id=?1 AND phase IN ('prepared','committed')", [mutation_id], |row| {
+                Ok((row.get(0)?, row.get(1)?, row.get(2)?, row.get(3)?, read_integer(row, 4)?, row.get(5)?, row.get(6)?))
+            })
             .optional()
             .map_err(storage)?;
         let Some((job_id, mutation_id, command_hash, proposal_hash, prepared_at_ms, command, phase)) = row else {
@@ -608,19 +711,12 @@ impl InferenceJobLedgerV1 {
         };
         let accepted = identity(&tx, &job_id)?;
         tx.commit().map_err(storage)?;
-        let outbox = InferenceApprovalOutboxV1 {
-            job_id,
-            mutation_id,
-            command_hash,
-            proposal_hash,
-            prepared_at_ms,
-            command: InferencePrivateBytesV1::new(command, 8192)?,
-        };
+        let outbox = InferenceApprovalOutboxV1 { job_id, mutation_id, command_hash, proposal_hash, prepared_at_ms, command: InferencePrivateBytesV1::new(command, 8192)? };
         Ok(Some((outbox, accepted, phase == "committed")))
     }
 
     pub(crate) fn reconcile_committed_approval(&self, job_id: &str, witness: &super::wal::CommittedInferenceWalWitnessV1, document_generation: u64, now: u64) -> Result<bool, InferenceErrorV1> {
-        if !hex(job_id, 32) || document_generation == 0 || document_generation > SAFE_INTEGER_MAX || now > SAFE_INTEGER_MAX {
+        if !hex(job_id, 32) || document_generation > SAFE_INTEGER_MAX || now > SAFE_INTEGER_MAX {
             return Err(InferenceErrorV1::Bounds);
         }
         let mut connection = self.connection.lock().map_err(|_| InferenceErrorV1::Storage)?;
@@ -917,14 +1013,26 @@ mod tests {
         assert_eq!(prepared.mutation_id, repeated.mutation_id);
         assert_eq!(prepared.prepared_at_ms, repeated.prepared_at_ms);
         assert_eq!(ledger.cancel(&receipt.job_id, &reader(&selected), 1005), Err(InferenceErrorV1::Conflict));
+        let foreign = InferenceReaderV1 { authorization_generation: selected.authorization_generation + 1, ..reader(&selected) };
+        assert_eq!(ledger.abandon_prepared_approval(&foreign, &receipt.job_id, &prepared.mutation_id, &prepared.command_hash, &prepared.proposal_hash), Err(InferenceErrorV1::Denied),);
+        assert_eq!(ledger.abandon_prepared_approval(&reader(&selected), &receipt.job_id, &prepared.mutation_id, &"0".repeat(64), &prepared.proposal_hash), Err(InferenceErrorV1::Conflict),);
+        assert!(ledger.abandon_prepared_approval(&reader(&selected), &receipt.job_id, &prepared.mutation_id, &prepared.command_hash, &prepared.proposal_hash).unwrap());
+        assert!(!ledger.abandon_prepared_approval(&reader(&selected), &receipt.job_id, &prepared.mutation_id, &prepared.command_hash, &prepared.proposal_hash).unwrap());
+        assert!(ledger.pending_approvals(None, &super::super::InferenceOperationControlV1::new(1000, 5).unwrap()).unwrap().rows.is_empty());
         drop(ledger);
         let reopened = InferenceJobLedgerV1::open(&path).unwrap();
         let control = super::super::InferenceOperationControlV1::new(1000, 5).unwrap();
+        assert!(reopened.pending_approvals(None, &control).unwrap().rows.is_empty(), "an abandoned request survives restart without blocking the document");
+        let revived = reopened.prepare_approval(&receipt.job_id, &selected, &hash, &command, 1006).unwrap();
+        assert_eq!((revived.mutation_id.as_str(), revived.command_hash.as_str(), revived.proposal_hash.as_str()), (prepared.mutation_id.as_str(), prepared.command_hash.as_str(), prepared.proposal_hash.as_str()));
+        assert_eq!(revived.prepared_at_ms, 1006);
         let pending = reopened.pending_approvals(None, &control).unwrap();
         assert_eq!(pending.rows.len() as u64, outbox["preparedCount"].as_u64().unwrap());
         assert_eq!(pending.rows[0].mutation_id, prepared.mutation_id);
         assert_eq!(pending.rows[0].command.as_slice(), command.as_slice());
         assert!(pending.next_cursor.is_none());
+        let prepared_events = reopened.events(&receipt.job_id, &reader(&selected), 0, 1007).unwrap().events.into_iter().filter(|event| event.kind == "approval-prepared").count();
+        assert_eq!(prepared_events, 1, "reviving the exact abandoned row never fabricates a second prepared event");
         assert!(matches!(reopened.read(&receipt.job_id, &reader(&selected), receipt.expires_at_ms), Err(InferenceErrorV1::Expired)));
         #[cfg(feature = "native-artifact-execution")]
         {
@@ -935,6 +1043,11 @@ mod tests {
             fence.invalidate();
             assert_eq!(reopened.reconcile_committed_approval(&receipt.job_id, &witness, 17, receipt.expires_at_ms), Err(InferenceErrorV1::Conflict));
             assert!(reopened.pending_approvals(None, &control).unwrap().rows.is_empty());
+            assert_eq!(
+                reopened.abandon_prepared_approval(&reader(&selected), &receipt.job_id, &prepared.mutation_id, &prepared.command_hash, &prepared.proposal_hash),
+                Err(InferenceErrorV1::Conflict),
+                "a committed decision cannot be demoted back to abandoned",
+            );
             let count = reopened.connection.lock().unwrap().query_row("SELECT COUNT(*) FROM inference_job_event_v1 WHERE kind='approved'", [], |row| read_integer(row, 0)).unwrap();
             assert_eq!(count, outbox["reconciledCount"].as_u64().unwrap());
         }

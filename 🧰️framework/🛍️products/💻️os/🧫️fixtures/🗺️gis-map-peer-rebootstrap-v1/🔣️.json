@@ -1,0 +1,18 @@
+{
+  "schema": "semio.os.gis-map-peer-rebootstrap/v1",
+  "scope": { "spaceId": "space-shared-map", "documentId": "doc-map-1" },
+  "clients": [
+    { "clientInstanceId": "11111111-1111-4111-8111-111111111111" },
+    { "clientInstanceId": "22222222-2222-4222-8222-222222222222" }
+  ],
+  "published": {
+    "checkpointId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "descriptorDigestV1": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "aggregateSha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+    "frontier": { "documentId": "doc-map-1", "headEditOrdinal": 9, "headEditId": "edit-inference-job-a", "lastCommitSeq": 7, "chainHash": [3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3] },
+    "scene": { "revision": 1, "nodeKind": "tiled-map", "region": { "id": "inference-job-a", "kind": "inference-bounds" } }
+  },
+  "order": ["rebootstrap-required", "fresh-authority", "artifact-bootstrap", "page-accepted", "applied", "scene-patch", "patch-ack"],
+  "sourceHostiles": ["unscoped-rebootstrap", "retained-old-ui-owner", "reused-socket-authority", "bootstrap-bypass", "missing-applied-receipt", "missing-render-drive", "cross-client-frontier"],
+  "nonclaims": ["genuine-gis-component", "simultaneous-browser-workers", "mounted-chromium", "visible-map-canvas"]
+}

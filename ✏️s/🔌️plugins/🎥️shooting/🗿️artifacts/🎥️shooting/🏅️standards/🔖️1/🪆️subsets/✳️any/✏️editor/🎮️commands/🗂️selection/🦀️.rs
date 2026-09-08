@@ -30,7 +30,7 @@ pub mod set_shot_selection {
     }
 
     pub fn handle(payload: &SetShotSelection, _doc: &ArtifactView<'_, ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>, _ctx: &mut ShootingDispatchCtx) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
-        Ok(Emit::config(vec![ShootingConfigMutation::SetShotSelection { shot_ids: payload.shot_ids.clone() }]))
+        Ok(Emit::config(vec![ShootingConfigMutation::SetShotSelection(crate::editor::shooting::config::SetShotSelection { shot_ids: payload.shot_ids.clone() })]))
     }
 }
 //#endregion 🔖️SetShotSelection
@@ -76,9 +76,9 @@ pub mod set_center_model {
     pub fn handle(payload: &SetCenterModel, _doc: &ArtifactView<'_, ShootingSnapshot>, cfg: &ConfigView<'_, ShootingConfig>, _ctx: &mut ShootingDispatchCtx) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
         let config = cfg.snapshot;
         let next = payload.pressed.unwrap_or(!config.center_model);
-        let mut config_mutations = vec![ShootingConfigMutation::SetCenterModel { value: next }];
+        let mut config_mutations = vec![ShootingConfigMutation::SetCenterModel(crate::editor::shooting::config::SetCenterModel { value: next })];
         if next && !config.center_model {
-            config_mutations.push(ShootingConfigMutation::SetFitRevision { value: config.fit_revision + 1 });
+            config_mutations.push(ShootingConfigMutation::SetFitRevision(crate::editor::shooting::config::SetFitRevision { value: config.fit_revision + 1 }));
         }
         Ok(Emit::config(config_mutations))
     }
@@ -100,7 +100,7 @@ pub mod set_active_utility {
     /// `interactionHover` dispatch writes it), so switching the transform utility no longer clears
     /// hover. Documented behavior change, matching this wave's other apps (e.g. `raster`'s `add-layer`).
     pub fn handle(payload: &SetActiveUtility, _doc: &ArtifactView<'_, ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>, _ctx: &mut ShootingDispatchCtx) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
-        Ok(Emit::config(vec![ShootingConfigMutation::SetActiveUtility { utility_id: payload.utility_id.clone() }]))
+        Ok(Emit::config(vec![ShootingConfigMutation::SetActiveUtility(crate::editor::shooting::config::SetActiveUtility { utility_id: payload.utility_id.clone() })]))
     }
 }
 //#endregion 🔖️SetActiveUtility
@@ -117,28 +117,28 @@ mod tests {
         use crate::editor::shooting::testkit::render;
         use crate::editor::shooting::SHOOTING_PLAY_BODY_INSPECTION;
 
-        let mut app = shooting_app();
+        let mut app = shooting_app().await;
         let shot_id = app.snapshot().expect("snapshot").shots.first().expect("fixture shot").id.clone();
-        let result = dispatch(&mut app, ShootingCommand::SetShotSelection(set_shot_selection::SetShotSelection { shot_ids: vec![shot_id] }));
+        let result = dispatch(&mut app, ShootingCommand::SetShotSelection(set_shot_selection::SetShotSelection { shot_ids: vec![shot_id] })).await;
         assert!(result.mutations.is_empty(), "shot selection is config-only");
-        assert!(render(&mut app, SHOOTING_PLAY_BODY_INSPECTION).contains("shooting-play-inspector.shot"), "inspector renders the shot group for the selected shot");
+        assert!(render(&mut app, SHOOTING_PLAY_BODY_INSPECTION).await.contains("shooting-play-inspector.shot"), "inspector renders the shot group for the selected shot");
     }
 
     #[semio_framework_async_macros::async_test]
     async fn set_active_utility_emits_no_artifact_mutations() {
-        let mut app = shooting_app();
-        let result = dispatch(&mut app, ShootingCommand::SetActiveUtility(set_active_utility::SetActiveUtility { utility_id: "rotate".into() }));
+        let mut app = shooting_app().await;
+        let result = dispatch(&mut app, ShootingCommand::SetActiveUtility(set_active_utility::SetActiveUtility { utility_id: "rotate".into() })).await;
         assert!(result.mutations.is_empty(), "utility switching never emits document operations");
     }
 
     #[semio_framework_async_macros::async_test]
     async fn center_model_toggle_bumps_fit_revision_only_on_the_off_to_on_edge() {
-        let mut app = shooting_app();
-        dispatch(&mut app, ShootingCommand::SetCenterModel(set_center_model::SetCenterModel { pressed: Some(false) }));
-        dispatch(&mut app, ShootingCommand::SetCenterModel(set_center_model::SetCenterModel { pressed: Some(true) }));
+        let mut app = shooting_app().await;
+        dispatch(&mut app, ShootingCommand::SetCenterModel(set_center_model::SetCenterModel { pressed: Some(false) })).await;
+        dispatch(&mut app, ShootingCommand::SetCenterModel(set_center_model::SetCenterModel { pressed: Some(true) })).await;
         // fit_revision itself is asserted end-to-end (render fitJson) in the scene window's own tests;
         // here we just assert the command round-trips without error under both edges.
-        let result = dispatch(&mut app, ShootingCommand::SetCenterModel(set_center_model::SetCenterModel { pressed: None }));
+        let result = dispatch(&mut app, ShootingCommand::SetCenterModel(set_center_model::SetCenterModel { pressed: None })).await;
         assert!(result.mutations.is_empty(), "center-model is config-only");
     }
 }

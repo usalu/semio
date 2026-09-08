@@ -7,8 +7,6 @@ use semio_framework_value_derive::{FromValue, ToValue};
 //#region 🔖️Artifact
 /// 🧬️ Full layout artifact state across the artifact, presence and config lanes.
 #[derive(Clone, Debug, PartialEq, ArtifactSchema, ToValue, FromValue)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.layout.layout")]
 pub struct LayoutArtifact {
@@ -38,12 +36,10 @@ pub struct LayoutArtifact {
     pub data_fields_json: Option<String>,
     #[state(artifact)]
     #[child(kind = "s.stdio.semio.drawing")]
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub background_drawing: Option<LayoutDrawingChild>,
     #[state(artifact)]
     #[link_slot(roles("model"))]
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub referenced_model: Option<store::ArtifactLink>,
     #[state(presence)]
@@ -310,7 +306,7 @@ pub use derived_analysis::*;
 /// 📄️ Relocated from the deleted `⚙️engine` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES)
 /// — pure over `LayoutSnapshot`/`Page`, no engine state, no app type.
 pub fn parse_layout_document(json: &str) -> Result<crate::artifacts::layout::LayoutSnapshot, crate::artifacts::layout::io::LayoutError> {
-    let doc: crate::artifacts::layout::LayoutSnapshot = serde_json::from_str(json)?;
+    let doc: crate::artifacts::layout::LayoutSnapshot = dsl::os_pack::json::from_json_str(json)?;
     if doc.schema != LAYOUT_DOCUMENT_SCHEMA {
         return Err(crate::artifacts::layout::io::LayoutError::UnexpectedSchema(doc.schema));
     }
@@ -447,7 +443,7 @@ fn build_demo_layout_snapshot() -> crate::artifacts::layout::LayoutSnapshot {
 /// on its `document_json` parameter (shared framework machinery, out of scope for this DSL migration) —
 /// derives the JSON from the DSL fixture rather than keeping a second, redundant JSON copy of it on disk.
 pub fn layout_sample_document_json() -> String {
-    serde_json::to_string(&default_document()).unwrap_or_default()
+    dsl::os_pack::json::to_json_string(&default_document())
 }
 
 /// 🎨️ Formats an optional RGBA color as a comma-separated text field value; two consumers
@@ -495,7 +491,7 @@ mod document_tests {
     #[semio_framework_async_macros::async_test]
     async fn resolve_page_marks_overridden_parent_frames_and_ignores_missing_parent() {
         let mut doc = base_doc();
-        doc.parent_pages.push(crate::artifacts::layout::ParentPage {
+        doc.parent_pages.push(ParentPage {
             id: "parent-1".into(),
             name: "Master".into(),
             width: 100.0,

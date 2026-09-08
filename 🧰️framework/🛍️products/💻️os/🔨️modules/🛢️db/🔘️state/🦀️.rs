@@ -5,7 +5,7 @@
 //! overlays and conflict detection on top of. No `im`/`im-rc`/`rpds`/`imbl` dependency — every
 //! `PMap` uses `Arc`-based path-copying so document authority state can move between process-pool
 //! turns; the other single-owner structures remain `Rc`-based. All follow the frozen contract at
-//! `.🦑️repo/🎫️tickets/26/07/27/INTRODUCE-DB-PROTOCOL-COMMAND-LAYER-AND-VCS-SLIMMING/contract.md`
+//! `.🧬semio/🦑️repo/🎫️tickets/26/07/27/INTRODUCE-DB-PROTOCOL-COMMAND-LAYER-AND-VCS-SLIMMING/contract.md`
 //! (`## db crate family`, `db_state` row).
 //!
 //! 🎯️ Design choice: every structure clones in O(1) (an `Arc` or `Rc` bump) regardless of whether its

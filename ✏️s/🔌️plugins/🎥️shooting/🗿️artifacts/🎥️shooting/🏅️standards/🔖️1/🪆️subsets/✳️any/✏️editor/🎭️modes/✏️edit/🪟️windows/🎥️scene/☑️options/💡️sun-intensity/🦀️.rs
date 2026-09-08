@@ -19,7 +19,7 @@ pub fn measure(snapshot: &ShootingSnapshot, labels: &ShootingLabels) -> WindowMe
         waiting: None,
         disabled: None,
         reveal: None,
-        on_change: crate::editor::shooting::shooting_action("setSunIntensity", None),
+        on_change: crate::editor::shooting::shooting_window_action("setSunIntensity", None),
     }
 }
 //#endregion 🔖️Measure

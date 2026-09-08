@@ -29,15 +29,15 @@ const OUTCOME: &str = include_str!("🎯️outcome/🔣️.json");
 const CACHED_BODY: &str = "# Mission Brief\n\nHold the current draft.\n";
 
 fn before() -> WriterSnapshot {
-    let mut snapshot: WriterSnapshot = serde_json::from_str(BEFORE).expect("before writer document decodes");
+    let mut snapshot: WriterSnapshot = dsl::os_pack::json::from_json_str(BEFORE).expect("before writer document decodes");
     crate::artifacts::writer::attach_writer_document_text(&mut snapshot.document, CACHED_BODY);
     snapshot
 }
 fn expected_after() -> WriterSnapshot {
-    serde_json::from_str(AFTER).expect("after writer document decodes")
+    dsl::os_pack::json::from_json_str(AFTER).expect("after writer document decodes")
 }
 fn mutation() -> WriterMutation {
-    serde_json::from_str(MUTATION).expect("edit-text mutation decodes")
+    dsl::os_pack::json::from_json_str(MUTATION).expect("edit-text mutation decodes")
 }
 
 /// ▶️ Resending the same body is accepted and changes nothing — most importantly the
@@ -75,12 +75,12 @@ async fn the_inverse_resends_the_identical_body() {
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {
-        let decoded: WriterSnapshot = serde_json::from_str(text).expect("writer document decodes");
-        let reencoded = serde_json::to_value(&decoded).expect("writer document encodes");
+        let decoded: WriterSnapshot = dsl::os_pack::json::from_json_str(text).expect("writer document decodes");
+        let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::os_pack::json::to_json_string(&decoded)).expect("writer document encodes");
         let original: serde_json::Value = serde_json::from_str(text).expect("writer document reparses");
         assert_eq!(reencoded, original, "edit-text/warns-that-the-brief-body-is-unchanged: committed {label} document JSON is not canonical");
     }
-    let reencoded = serde_json::to_value(mutation()).expect("editText payload encodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::os_pack::json::to_json_string(&(mutation()))).expect("editText payload encodes");
     let original: serde_json::Value = serde_json::from_str(MUTATION).expect("editText payload reparses");
     assert_eq!(reencoded, original, "edit-text/warns-that-the-brief-body-is-unchanged: committed editText JSON is not canonical");
 }
@@ -102,7 +102,7 @@ async fn declared_outcome_holds() {
 #[semio_framework_async_macros::async_test]
 async fn produces_committed_diff() {
     let outcome = <WriterMutation as protocol::Mutation<WriterSnapshot>>::diff(&mutation(), &before());
-    let produced = serde_json::to_value(outcome.diff()).expect("produced edit-text diff encodes");
+    let produced = serde_json::from_str::<serde_json::Value>(&dsl::os_pack::json::to_json_string(outcome.diff())).expect("produced edit-text diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
     assert_eq!(produced, committed, "edit-text/warns-that-the-brief-body-is-unchanged: produced diff differs from the committed 🔺️diff/🔣️.json");
 }
@@ -111,9 +111,9 @@ async fn produces_committed_diff() {
 /// emitted as `null` because none carries `skip_serializing_if`.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical() {
-    let decoded: WriterDiff = serde_json::from_str(DIFF).expect("committed edit-text diff decodes");
+    let decoded: WriterDiff = dsl::os_pack::json::from_json_str(DIFF).expect("committed edit-text diff decodes");
     assert_eq!(decoded, WriterDiff::default(), "edit-text/warns-that-the-brief-body-is-unchanged: a no-op's committed diff must be the type's own default");
-    let reencoded = serde_json::to_value(&decoded).expect("committed diff re-encodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::os_pack::json::to_json_string(&decoded)).expect("committed diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
     assert_eq!(reencoded, original, "edit-text/warns-that-the-brief-body-is-unchanged: committed diff JSON is not canonical");
 }
@@ -122,7 +122,7 @@ async fn committed_diff_is_canonical() {
 /// it must still be the committed diff that does it.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
-    let decoded: WriterDiff = serde_json::from_str(DIFF).expect("committed edit-text diff decodes");
+    let decoded: WriterDiff = dsl::os_pack::json::from_json_str(DIFF).expect("committed edit-text diff decodes");
     let produced = protocol::MutationDiff::apply(&decoded, &before()).expect("committed diff applies to the before-document");
     assert_eq!(produced, expected_after(), "edit-text/warns-that-the-brief-body-is-unchanged: committed diff did not carry before to after");
 }

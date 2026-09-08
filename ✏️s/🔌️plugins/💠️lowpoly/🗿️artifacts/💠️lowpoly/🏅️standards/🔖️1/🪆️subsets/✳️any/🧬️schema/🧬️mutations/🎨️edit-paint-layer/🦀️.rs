@@ -8,6 +8,7 @@
 
 use crate::artifacts::lowpoly::mutations::PixelRun;
 use crate::artifacts::lowpoly::{LowpolyMutation, LowpolySnapshot};
+#[cfg(test)]
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Payload

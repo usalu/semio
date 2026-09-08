@@ -1,0 +1,34 @@
+{
+  "name": "@semio-tech/repo-mcp-go",
+  "projectType": "application",
+  "targets": {
+    "build": {
+      "cache": true,
+      "outputs": [
+        "{projectRoot}/../../../mcp",
+        "{projectRoot}/../../../mcp.exe"
+      ],
+      "options": {
+        "command": "bun ./📜️script.ts build"
+      }
+    },
+    "dev": {
+      "cache": false,
+      "continuous": true,
+      "dependsOn": [
+        "build"
+      ],
+      "options": {
+        "command": "bun ./📜️script.ts dev",
+        "forwardAllArgs": true
+      }
+    },
+    "test": {
+      "outputs": [],
+      "options": {
+        "command": "bun ./📜️script.ts test",
+        "forwardAllArgs": true
+      }
+    }
+  }
+}

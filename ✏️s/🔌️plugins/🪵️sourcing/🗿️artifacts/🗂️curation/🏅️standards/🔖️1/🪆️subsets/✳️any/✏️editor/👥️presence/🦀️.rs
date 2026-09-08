@@ -27,7 +27,7 @@ impl Default for SourcingCurationPresence {
 
 impl protocol::MutationDiff<SourcingCurationPresence> for SourcingCurationPresence {
     fn apply(&self, _base: &SourcingCurationPresence) -> protocol::MutationApplyResult<SourcingCurationPresence> {
-        Ok({ self.clone() })
+        Ok(self.clone())
     }
     fn absorb(&mut self, other: Self) {
         *self = other;

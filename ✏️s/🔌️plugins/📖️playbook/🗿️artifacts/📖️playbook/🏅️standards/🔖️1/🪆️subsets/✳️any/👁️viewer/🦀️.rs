@@ -7,7 +7,7 @@
 use crate::artifacts::playbook::{PlaybookSnapshot, PLAYBOOK_DIALECT, PLAYBOOK_DOCUMENT_SCHEMA};
 use crate::viewer::playbook::modes::view;
 use crate::viewer::playbook::modes::view::windows::steps;
-use semio_framework_plugin::{ArtifactView, ConfigView, Dialect, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, UiNode, ViewEmit, Viewer};
+use semio_framework_plugin::{ArtifactView, ConfigView, Dialect, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, ViewEmit, Viewer};
 // 🚧️ SDK GAP: `ArtifactViewer` is reachable bare (w0-f gap 1 closed it), but this trait's own
 // `InteractionView` parameter type is NOT in the crate-root curated re-export list yet — only
 // reachable through `app`. Flagged for the coordinator (see this packet's notes file).
@@ -64,10 +64,10 @@ impl semio_framework_plugin::ArtifactViewer for PlaybookViewer {
         Ok(ViewEmit::default())
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
+    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         match body_key {
-            steps::PLAYBOOK_VIEW_BODY_STEPS => steps::render(doc.snapshot),
-            _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
+            steps::PLAYBOOK_VIEW_BODY_STEPS => Ok(semio_framework_plugin::built_to_component_tree(steps::render(doc.snapshot)?)),
+            _ => semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
         }
     }
 }

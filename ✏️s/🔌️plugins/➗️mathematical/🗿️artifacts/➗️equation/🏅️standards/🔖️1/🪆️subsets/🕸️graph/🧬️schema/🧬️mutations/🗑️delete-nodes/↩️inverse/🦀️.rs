@@ -2,7 +2,7 @@
 //! captured from BASE state.
 
 use crate::artifacts::equation::standards::v1::subsets::graph::schema::mutations::{connect_nodes, create_node};
-use crate::artifacts::equation::{equation_graph, EquationMutation, EquationSnapshot};
+use crate::artifacts::equation::{EquationMutation, EquationSnapshot};
 
 //#region 🔖️Inverse
 pub fn inverse(payload: &super::DeleteNodes, base: &EquationSnapshot) -> Vec<EquationMutation> {

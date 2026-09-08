@@ -16,5 +16,5 @@ pub struct SetLocale {
 }
 
 pub fn handle(payload: &SetLocale, _doc: &ArtifactView<'_, PresentationSnapshot>, _cfg: &ConfigView<'_, PresentationConfig>, _ctx: &mut PresentationDispatchCtx) -> Result<Emit<PresentationMutation, PresentationConfigMutation>, Fault> {
-    Ok(Emit::config(vec![PresentationConfigMutation::SetLocale { value: payload.value.clone() }]))
+    Ok(Emit::config(vec![PresentationConfigMutation::SetLocale(crate::editor::animate::config::SetLocale { value: payload.value.clone() })]))
 }

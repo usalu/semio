@@ -30,10 +30,7 @@ fn query(stores: &[TestStore; 3], generation: u64) -> Query {
         generation,
         identity,
         Some(stores[0].snapshot_read().unwrap()),
-        stores[0].generation_now(),
         Some(stores[1].snapshot_read().unwrap()),
-        stores[1].generation_now(),
-        stores[1].content_revision_now(),
         Some(stores[2].snapshot_read().unwrap()),
     )
 }
@@ -150,7 +147,7 @@ async fn local_interaction_live_reopened_request_rejects_old_started_cancel() {
 async fn local_interaction_live_partial_admission_retains_successful_roots() {
     let mut stores = stores().await;
     let identity = LocalInteractionIdentity { app_instance_id: 7, generation: 0, revision: [1; 32], document_revision: stores[0].content_revision_now(), topology_revision: [3; 32] };
-    let mut query = Query::new(13, 41, identity, Some(stores[0].snapshot_read().unwrap()), stores[0].generation_now(), None, 0, [2; 32], Some(stores[2].snapshot_read().unwrap()));
+    let mut query = Query::new(13, 41, identity, Some(stores[0].snapshot_read().unwrap()), None, Some(stores[2].snapshot_read().unwrap()));
     assert!(query.take_reply().is_none());
     assert_eq!(query.advance(ArtifactStoreOneItemGrant { maximum_items: 0, maximum_bytes: 4096 }).unwrap(), LocalInteractionLiveStep::Blocked);
     assert!(matches!(finish_close(&mut stores, &mut query, 1), LocalInteractionQueryReply::Rejected { code: LocalInteractionQueryRejection::SourceFailed, .. }));
@@ -170,7 +167,7 @@ fn local_interaction_live_partial_error_preserves_wrapper_emission_and_retiremen
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🔨️modules/📡️replication/📡️wire/🏠️local-interaction/🧫️fixtures/📃️query/🔣️.json")).unwrap();
     for bytes in [1, 64, 4096] {
         let source = crate::local_interaction::query::tests::hostile_capture_for_live_law();
-        let inputs = LocalInteractionInputReads::<(), ()>::from_optional(None, 0, [0; 32], None, 0, [0; 32]);
+        let inputs = LocalInteractionInputReads::<(), ()>::from_optional(None, None);
         let mut query = LocalInteractionLiveQuery {
             owned: ManuallyDrop::new(LiveState { query: Some(LocalInteractionQuery::new(source, 13, 41)), inputs, error_bytes: None }),
             request_id: 13,

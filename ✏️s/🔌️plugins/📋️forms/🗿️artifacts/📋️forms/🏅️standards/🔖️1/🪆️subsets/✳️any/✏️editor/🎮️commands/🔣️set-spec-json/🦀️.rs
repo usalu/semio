@@ -64,8 +64,8 @@ mod tests {
         // 🩹️ `replace_spec_operations` deliberately never touches `id` (only title/steps — `id` is the
         // document's own stable identity, not part of the "example" content it swaps) — assert on the
         // steps/title it does replace, not on `id`.
-        let mut app = forms_app();
-        dispatch(&mut app, FormsCommand::SetActiveExample(SetActiveExample { example_id: "onboarding".into() }));
+        let mut app = forms_app().await;
+        dispatch(&mut app, FormsCommand::SetActiveExample(SetActiveExample { example_id: "onboarding".into() })).await;
         let spec = app.snapshot().expect("projection");
         assert_eq!(forms_steps(&spec).len(), 3);
         assert_eq!(spec.title, onboarding_example_spec().title);
@@ -73,8 +73,8 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn set_active_example_with_blank_id_clears_the_document() {
-        let mut app = forms_app();
-        dispatch(&mut app, FormsCommand::SetActiveExample(SetActiveExample { example_id: "".into() }));
+        let mut app = forms_app().await;
+        dispatch(&mut app, FormsCommand::SetActiveExample(SetActiveExample { example_id: "".into() })).await;
         let spec = app.snapshot().expect("projection");
         assert!(crate::artifacts::forms::schema::flatten_questions(&spec).is_empty());
     }
@@ -86,7 +86,7 @@ mod tests {
         // — `onboarding_example_spec()` itself now serializes as `FormsSnapshot`'s OWN composed
         // `structure`/`results`-handle shape, so the test input is built from the playbook spec
         // directly, not from `serde_json::to_string(&onboarding_example_spec())`.
-        let mut app = forms_app();
+        let mut app = forms_app().await;
         let onboarding_snapshot = onboarding_example_spec();
         let onboarding_playbook = flow::playbook::PlaybookSpec {
             schema: onboarding_snapshot.schema.clone(),
@@ -96,7 +96,7 @@ mod tests {
             steps: forms_steps(&onboarding_snapshot),
         };
         let onboarding = dsl::os_pack::json::to_json_string(&onboarding_playbook);
-        dispatch(&mut app, FormsCommand::SetSpecJson(SetSpecJson { json: onboarding }));
+        dispatch(&mut app, FormsCommand::SetSpecJson(SetSpecJson { json: onboarding })).await;
         let spec = app.snapshot().expect("projection");
         assert_eq!(forms_steps(&spec).len(), 3);
         assert_eq!(spec.title, onboarding_example_spec().title);
@@ -104,9 +104,9 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn set_spec_json_with_invalid_json_is_a_no_operation() {
-        let mut app = forms_app();
+        let mut app = forms_app().await;
         let before = app.snapshot().expect("projection");
-        dispatch(&mut app, FormsCommand::SetSpecJson(SetSpecJson { json: "not json".into() }));
+        dispatch(&mut app, FormsCommand::SetSpecJson(SetSpecJson { json: "not json".into() })).await;
         assert_eq!(app.snapshot().expect("projection"), before);
     }
 }

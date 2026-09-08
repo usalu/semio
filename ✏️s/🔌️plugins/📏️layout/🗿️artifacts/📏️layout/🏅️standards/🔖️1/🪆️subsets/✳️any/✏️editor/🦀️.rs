@@ -30,10 +30,12 @@ use crate::editor::layout::engine::export::LayoutMediaExportJobFactory;
 use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::app::{ArtifactMediaExportJobRequest, ArtifactOwnedToolJobRequest, ArtifactReservedToolJob, ArtifactToolFactoryRegistry};
 use semio_framework_plugin::{
-    ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, App, ArtifactEditor, ArtifactKindSpec, ArtifactView, ConfigView, DraftView, Editor, EditorApp, Emit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec,
-    InteractionDefinition, InteractionRef, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, MergeMode, NoDraft, NoDraftMutation, OsMediaCapability, SelectionMethod, SelectionMode, SelectionSpec, UiNode,
+    ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, ArtifactEditor, ArtifactKindSpec, ArtifactView, ConfigView, DraftView, Editor, EditorApp, Emit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec,
+    InteractionDefinition, InteractionRef, Label, LocalizedLabel, Media, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, MergeMode, NoDraft, NoDraftMutation, OsMediaCapability, SelectionMethod, SelectionMode, SelectionSpec,
     WindowEngagement, WindowEngagementInput, WindowEngagementPossible, WindowEngagementStatus, CLEAR_SELECTION_ACTION_ID, INTERACTION_HOVER_ACTION_ID, INTERACTION_SELECT_ACTION_ID,
 };
+#[cfg(test)]
+use semio_framework_plugin::App;
 use serde_json::{json, Value};
 use std::collections::HashMap;
 use store::EngineHandles;
@@ -41,7 +43,7 @@ use store::EngineHandles;
 use crate::editor::layout::engine::scene::LayoutEngine;
 
 //#region 🔖️Constants
-pub const LAYOUT_PLAY_APP_ID: &str = "layout-play";
+pub const LAYOUT_PLAY_APP_ID: &str = "s.layout.layout@1/*#editor";
 pub use blueprint::{LAYOUT_PLAY_BODY_BLUEPRINT, LAYOUT_PLAY_SURFACE_BLUEPRINT, LAYOUT_PLAY_WINDOW_BLUEPRINT};
 pub(crate) use catalogue_panel::LAYOUT_PLAY_BODY_CATALOGUE;
 pub use document_panel::LAYOUT_PLAY_BODY_DOCUMENT;
@@ -53,6 +55,11 @@ pub use preview::{LAYOUT_PLAY_BODY_PREVIEW, LAYOUT_PLAY_SURFACE_PREVIEW, LAYOUT_
 /// (`📌️panels/*`) builds its `on_change`/item actions with.
 pub fn layout_action(action: &str, args: Option<semio_framework_plugin::UiValue>) -> semio_framework_plugin::UiAssemblyResult<(semio_framework_plugin::ActionId, Option<semio_framework_plugin::UiValue>)> {
     semio_framework_plugin::ActionFactory::new(LAYOUT_PLAY_APP_ID).action(action, args)
+}
+
+/// 🏷️ Admits display text into the bounded semantic label contract.
+pub fn ui_label(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::plugin_app_close_prelude::Label> {
+    value.as_ref().try_into().map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "layout label admission failed"))
 }
 
 /// 🧱️ Admits one fixed UI text action value without JSON staging.
@@ -80,7 +87,8 @@ pub fn ui_value_list(values: impl IntoIterator<Item = semio_framework_plugin::Ui
 }
 
 /// 🗺️ Admits one ordered fixed UI map action value without JSON staging.
-pub fn ui_value_map(values: impl IntoIterator<Item = (&'static str, semio_framework_plugin::UiValue)>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiValue> {
+pub fn ui_value_map<const N: usize>(mut values: [(&'static str, semio_framework_plugin::UiValue); N]) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiValue> {
+    values.sort_unstable_by(|left, right| left.0.cmp(right.0));
     let mut builder = semio_framework_plugin::UiMapBuilder::try_new().ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI map admission failed"))?;
     for (key, value) in values {
         builder.push(key.to_owned(), value).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "fixed UI map entry admission failed"))?;
@@ -324,10 +332,10 @@ fn layout_config_text_bytes(config: &LayoutConfig) -> usize {
 
 fn layout_config_publication_bytes(mutation: &LayoutConfigMutation) -> Result<usize, String> {
     let bytes = match mutation {
-        LayoutConfigMutation::SetActivePage { page_id } => page_id.len(),
-        LayoutConfigMutation::SetDropPreview { preview } => preview.kind.len(),
-        LayoutConfigMutation::SetEngagementInput { value } | LayoutConfigMutation::SetLocale { value } => value.len(),
-        LayoutConfigMutation::SetCamera { .. } | LayoutConfigMutation::SetPreviewCamera { .. } => 0,
+        LayoutConfigMutation::SetActivePage(crate::editor::layout::config::SetActivePage { page_id }) => page_id.len(),
+        LayoutConfigMutation::SetDropPreview(crate::editor::layout::config::SetDropPreview { preview }) => preview.kind.len(),
+        LayoutConfigMutation::SetEngagementInput(crate::editor::layout::config::SetEngagementInput { value }) | LayoutConfigMutation::SetLocale(crate::editor::layout::config::SetLocale { value }) => value.len(),
+        LayoutConfigMutation::SetCamera(crate::editor::layout::config::SetCamera { .. }) | LayoutConfigMutation::SetPreviewCamera(crate::editor::layout::config::SetPreviewCamera { .. }) => 0,
     };
     if bytes > LAYOUT_CONFIG_TEXT_MAXIMUM_BYTES { return Err("layout-config-text-envelope".into()); }
     Ok(LAYOUT_CONFIG_PUBLICATION_MAXIMUM_BYTES)
@@ -376,12 +384,12 @@ impl store::ArtifactStoreOneItemPreparation<LayoutConfig, LayoutConfigMutation> 
         let mutation = self.mutation.as_ref().ok_or_else(|| "layout-config-mutation-owner-missing".to_string())?;
         let mut next = base.get().clone();
         let inverse = match mutation {
-            LayoutConfigMutation::SetActivePage { page_id } => { next.active_page_id = page_id.clone(); LayoutConfigMutation::SetActivePage { page_id: base.get().active_page_id.clone() } }
-            LayoutConfigMutation::SetDropPreview { preview } => { next.drop_preview = preview.clone(); LayoutConfigMutation::SetDropPreview { preview: base.get().drop_preview.clone() } }
-            LayoutConfigMutation::SetEngagementInput { value } => { next.engagement_input = value.clone(); LayoutConfigMutation::SetEngagementInput { value: base.get().engagement_input.clone() } }
-            LayoutConfigMutation::SetCamera { camera } => { next.camera = camera.clone(); LayoutConfigMutation::SetCamera { camera: base.get().camera.clone() } }
-            LayoutConfigMutation::SetPreviewCamera { camera } => { next.preview_camera = camera.clone(); LayoutConfigMutation::SetPreviewCamera { camera: base.get().preview_camera.clone() } }
-            LayoutConfigMutation::SetLocale { value } => { next.locale = value.clone(); LayoutConfigMutation::SetLocale { value: base.get().locale.clone() } }
+            LayoutConfigMutation::SetActivePage(crate::editor::layout::config::SetActivePage { page_id }) => { next.active_page_id = page_id.clone(); LayoutConfigMutation::SetActivePage(crate::editor::layout::config::SetActivePage { page_id: base.get().active_page_id.clone() }) }
+            LayoutConfigMutation::SetDropPreview(crate::editor::layout::config::SetDropPreview { preview }) => { next.drop_preview = preview.clone(); LayoutConfigMutation::SetDropPreview(crate::editor::layout::config::SetDropPreview { preview: base.get().drop_preview.clone() }) }
+            LayoutConfigMutation::SetEngagementInput(crate::editor::layout::config::SetEngagementInput { value }) => { next.engagement_input = value.clone(); LayoutConfigMutation::SetEngagementInput(crate::editor::layout::config::SetEngagementInput { value: base.get().engagement_input.clone() }) }
+            LayoutConfigMutation::SetCamera(crate::editor::layout::config::SetCamera { camera }) => { next.camera = camera.clone(); LayoutConfigMutation::SetCamera(crate::editor::layout::config::SetCamera { camera: base.get().camera.clone() }) }
+            LayoutConfigMutation::SetPreviewCamera(crate::editor::layout::config::SetPreviewCamera { camera }) => { next.preview_camera = camera.clone(); LayoutConfigMutation::SetPreviewCamera(crate::editor::layout::config::SetPreviewCamera { camera: base.get().preview_camera.clone() }) }
+            LayoutConfigMutation::SetLocale(crate::editor::layout::config::SetLocale { value }) => { next.locale = value.clone(); LayoutConfigMutation::SetLocale(crate::editor::layout::config::SetLocale { value: base.get().locale.clone() }) }
         };
         if layout_config_text_bytes(&next) > LAYOUT_CONFIG_TEXT_MAXIMUM_BYTES { return Err("layout-config-post-text-envelope".into()); }
         let authority = self.authority.as_ref().ok_or_else(|| "layout-config-authority-missing".to_string())?;
@@ -434,9 +442,9 @@ mod layout_config_preparation_laws {
     #[test]
     fn admitted_maximum_and_production_grant_make_bounded_progress() {
         let factory = LayoutConfigPreparationFactory;
-        let maximum = LayoutConfigMutation::SetLocale { value: "x".repeat(LAYOUT_CONFIG_TEXT_MAXIMUM_BYTES) };
+        let maximum = LayoutConfigMutation::SetLocale(crate::editor::layout::config::SetLocale { value: "x".repeat(LAYOUT_CONFIG_TEXT_MAXIMUM_BYTES) });
         assert_eq!(factory.preflight(&maximum, None, store::HistoryLane::Document).expect("maximum admission").retained_bytes, 4_096);
-        let overflow = LayoutConfigMutation::SetLocale { value: "x".repeat(LAYOUT_CONFIG_TEXT_MAXIMUM_BYTES + 1) };
+        let overflow = LayoutConfigMutation::SetLocale(crate::editor::layout::config::SetLocale { value: "x".repeat(LAYOUT_CONFIG_TEXT_MAXIMUM_BYTES + 1) });
         assert!(factory.preflight(&overflow, None, store::HistoryLane::Document).is_err());
         assert!(factory.preflight(&maximum, Some(&"x".repeat(65)), store::HistoryLane::Document).is_err());
         let mut work = LayoutConfigPreparation {
@@ -490,8 +498,8 @@ fn layout_window_engagement(config: &LayoutConfig, label: &str, labels: &LayoutL
             value: Some(config.engagement_input.clone()),
             placeholder: Some("undo, redo, export png".into()),
             disabled: None,
-            on_change: Some(layout_action("engagementInput", None)),
-            on_submit: Some(layout_action("engagementSubmit", None)),
+            on_change: Some(ActionDescriptor { controller_id: LAYOUT_PLAY_APP_ID.into(), action: "engagementInput".into(), args: None }),
+            on_submit: Some(ActionDescriptor { controller_id: LAYOUT_PLAY_APP_ID.into(), action: "engagementSubmit".into(), args: None }),
             on_repeat_last: None,
             on_abort: None,
         }),
@@ -499,8 +507,8 @@ fn layout_window_engagement(config: &LayoutConfig, label: &str, labels: &LayoutL
         controls: None,
         status: Some(vec![WindowEngagementStatus { id: format!("layout-status-{label}"), text: format!("{} {}", labels.page.as_str(), config.active_page_id) }]),
         possible_engagements: Some(vec![
-            WindowEngagementPossible { id: "layout.eng.undo".into(), label: labels.undo.into(), detail: None, action: Some(layout_action("undo", None)) },
-            WindowEngagementPossible { id: "layout.eng.redo".into(), label: labels.redo.into(), detail: None, action: Some(layout_action("redo", None)) },
+            WindowEngagementPossible { id: "layout.eng.undo".into(), label: labels.undo.into(), detail: None, action: Some(ActionDescriptor { controller_id: LAYOUT_PLAY_APP_ID.into(), action: "undo".into(), args: None }) },
+            WindowEngagementPossible { id: "layout.eng.redo".into(), label: labels.redo.into(), detail: None, action: Some(ActionDescriptor { controller_id: LAYOUT_PLAY_APP_ID.into(), action: "redo".into(), args: None }) },
         ]),
     }
 }
@@ -665,8 +673,8 @@ impl ArtifactEditor for LayoutPlayApp {
             LAYOUT_PLAY_BODY_CATALOGUE => catalogue_panel::render(labels),
             LAYOUT_PLAY_BODY_INSPECTION => inspection_panel::render(document, config, labels),
             LAYOUT_PLAY_BODY_PREFLIGHT => preflight_panel::render(document, config),
-            _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
-        }
+            _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "layout error text admission failed")),
+        }.map(semio_framework_plugin::built_to_component_tree)
     }
 
     fn window_engagements(_doc: &ArtifactView<'_, LayoutSnapshot>, cfg: &ConfigView<'_, LayoutConfig>) -> HashMap<String, WindowEngagement> {
@@ -822,8 +830,8 @@ pub(crate) mod testkit {
     /// `PluginBuilder::editor::<LayoutPlayApp>` builds it.
 
     /// 🧪️ A bare app instance — no `AppActionRegistry`, so undeclared internal commands dispatch freely.
-    pub fn layout_app() -> LayoutApp {
-        new_app::<EditorApp<LayoutPlayApp>>()
+    pub async fn layout_app() -> LayoutApp {
+        new_app::<EditorApp<LayoutPlayApp>>().await
     }
 
     /// 🧪️ Adapts `create_layout_app`'s `AppDefinition` (contract §2.4) into the `App { definition,
@@ -834,16 +842,16 @@ pub(crate) mod testkit {
     }
 
     /// 🧪️ An app wired to the real manifest registry — enforces View/Shell kind discipline.
-    pub fn layout_app_with_registry() -> LayoutApp {
-        new_app_with_registry::<EditorApp<LayoutPlayApp>>(layout_app_manifest_for_testkit)
+    pub async fn layout_app_with_registry() -> LayoutApp {
+        new_app_with_registry::<EditorApp<LayoutPlayApp>>(layout_app_manifest_for_testkit).await
     }
 
-    pub fn dispatch(app: &mut LayoutApp, command: LayoutCommand) -> InvocationResult {
-        app.dispatch_typed(command, &meta("local")).expect("dispatch")
+    pub async fn dispatch(app: &mut LayoutApp, command: LayoutCommand) -> InvocationResult {
+        app.dispatch_typed(command, &meta("local")).await.expect("dispatch")
     }
 
-    pub fn render(app: &mut LayoutApp, body_key: &str) -> String {
-        serde_json::to_string(&app.render(body_key, None, &ViewModel::default()).expect("render")).expect("render json")
+    pub async fn render(app: &mut LayoutApp, body_key: &str) -> String {
+        semio_framework_plugin::testkit::project_and_retire_fixture_tree(app.render(body_key, None, &ViewModel::default()).await.expect("render")).expect("fixture projection")
     }
 
     pub fn test_screen_point(camera_x: f64, camera_y: f64, zoom: f64, width: f64, height: f64, world_x: f64, world_y: f64) -> (f64, f64) {
@@ -1015,8 +1023,8 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn an_unknown_body_key_renders_a_diagnostic_instead_of_panicking() {
-        let mut app = layout_app();
-        assert!(render(&mut app, "layout.play.nope").contains("Unknown body"));
+        let mut app = layout_app().await;
+        assert!(render(&mut app, "layout.play.nope").await.contains("Unknown body"));
     }
 
     // 🕹️ `selected_and_hovered_frames_get_chrome_strokes` deleted: selection/hover chrome strokes read
@@ -1027,8 +1035,8 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn window_engagements_cover_both_windows() {
-        let mut app = layout_app();
-        let engagements = app.window_engagements();
+        let mut app = layout_app().await;
+        let engagements = app.window_engagements().await;
         let blueprint_engagement = engagements.get(LAYOUT_PLAY_WINDOW_BLUEPRINT).expect("blueprint engagement");
         let status = blueprint_engagement.status.as_ref().and_then(|rows| rows.first()).expect("status");
         assert!(status.text.contains("Page"));
@@ -1040,8 +1048,8 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn registry_backed_add_frame_emits_operation() {
         // 🧬️ addFrame is declared `Mutation`: the registry-backed wrapper must let its operations through.
-        let mut app = layout_app_with_registry();
-        let result = dispatch(&mut app, LayoutCommand::AddFrame(add_frame::AddFrame { kind: "rect".into(), x: None, y: None }));
+        let mut app = layout_app_with_registry().await;
+        let result = dispatch(&mut app, LayoutCommand::AddFrame(add_frame::AddFrame { kind: "rect".into(), x: None, y: None })).await;
         assert_eq!(result.mutations.len(), 1);
     }
 
@@ -1049,9 +1057,9 @@ mod tests {
     async fn registry_backed_pointer_move_is_view_only() {
         // 🧬️ canvasPointerMove is declared `View`: it mutates only config hover state and must never emit
         // an operation, which the registry kind-discipline check enforces.
-        let mut app = layout_app_with_registry();
+        let mut app = layout_app_with_registry().await;
         let (sx, sy) = test_screen_point(0.0, 0.0, 1.0, 800.0, 600.0, 156.0, 220.0);
-        let result = dispatch(&mut app, LayoutCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove { surface_id: Some(LAYOUT_PLAY_SURFACE_BLUEPRINT.into()), x: sx, y: sy, width: 800.0, height: 600.0 }));
+        let result = dispatch(&mut app, LayoutCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove { surface_id: Some(LAYOUT_PLAY_SURFACE_BLUEPRINT.into()), x: sx, y: sy, width: 800.0, height: 600.0 })).await;
         assert!(result.mutations.is_empty(), "View action must not emit document operations");
     }
     //#endregion 🔖️CrossCutting
@@ -1059,21 +1067,20 @@ mod tests {
     //#region 🔖️MediaPorts
     #[semio_framework_async_macros::async_test]
     async fn direct_layout_out_reducer_is_fail_closed_for_runtime_job_interception() {
-        let app = layout_app();
+        let app = layout_app().await;
         let document = app.snapshot().expect("projection");
         let history = semio_framework_plugin::HistoryView::empty();
         let doc = ArtifactView::new(&document, &history);
-        assert!(matches!(semio_framework_plugin::resolve_ready(LayoutPlayApp::export_media("layout:out", &doc)), Err(MediaError::NotImplemented)));
+        assert!(matches!(LayoutPlayApp::export_media("layout:out", &doc), Err(MediaError::NotImplemented)));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn export_media_document_out_round_trips_through_pack() {
-        let app = layout_app();
+        let app = layout_app().await;
         let document = app.snapshot().expect("projection");
         let history = semio_framework_plugin::HistoryView::empty();
         let doc = ArtifactView::new(&document, &history);
-        let app = LayoutPlayApp::default();
-        let media = semio_framework_plugin::resolve_ready(LayoutPlayApp::export_media("document:out", &doc)).expect("export document:out");
+        let media = LayoutPlayApp::export_media("document:out", &doc).expect("export document:out");
         let MediaPayload::Structured { schema, json } = media.payload else { panic!("expected structured payload") };
         assert_eq!(schema, crate::artifacts::layout::LAYOUT_DOCUMENT_SCHEMA);
         let bytes = store::pack_rt::pack_value_from_base64(&json).expect("decode base64 pack");
@@ -1083,9 +1090,9 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn import_media_fields_in_sets_data_fields_json() {
-        let mut app = layout_app();
+        let mut app = layout_app().await;
         let media = Media { media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value }, payload: MediaPayload::Structured { schema: "form.dictionary".into(), json: r#"{"name":"Ada"}"#.into() } };
-        app.import_media("fields:in", &media, &testkit::meta("local")).expect("import fields:in");
+        app.import_media("fields:in", media, &testkit::meta("local")).await.expect("import fields:in");
         let document = app.snapshot().expect("projection");
         assert_eq!(document.data_fields_json.as_deref(), Some(r#"{"name":"Ada"}"#));
     }
@@ -1110,7 +1117,7 @@ mod tests {
         assert_eq!(layout_out.direction, semio_framework_plugin::MediaPortDirection::Out);
         assert_eq!(layout_out.kind_id.as_deref(), Some("2d.layout"));
         assert_eq!(layout_out.multiplicity, semio_framework::PortMultiplicity::Many);
-        let all_ports = io.all_ports();
+        let all_ports = io.all_ports().await;
         assert!(all_ports.iter().any(|port| port.id == "document:in"));
         assert!(all_ports.iter().any(|port| port.id == "document:out"));
     }

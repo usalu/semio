@@ -114,18 +114,6 @@ impl Inner {
         Some(unsafe { self.slots[index].assume_init_read() })
     }
 
-    fn insert(&mut self, entry: SlotEntry) -> Result<(), SlotEntry> {
-        if !self.allocation_admitted {
-            return Err(entry);
-        }
-        let index = Self::index(entry.id);
-        if self.occupied(index) {
-            return Err(entry);
-        }
-        self.slots[index].write(entry);
-        self.set_occupied(index, true);
-        Ok(())
-    }
 
     fn insert_admitted(&mut self, entry: SlotEntry) {
         let index = Self::index(entry.id);

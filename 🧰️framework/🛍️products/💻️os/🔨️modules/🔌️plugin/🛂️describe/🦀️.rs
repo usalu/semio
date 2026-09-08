@@ -13,7 +13,7 @@
 //! from E1's own placeholder.
 
 use semio_framework::{
-    AppDefinition, ComposerEntryDescriptor, ContributedInferenceMetadata, ContributionSet, FileTypeContribution, IoEntryDescriptor, IoEntryDirection, PackageDescriptor, PackageHashes, PackageRole, PanelTabDefinition, PluginManifest, io, kernel,
+    AppDefinition, ComposerEntryDescriptor, ContributedInferenceMetadata, ContributionSet, ExecutionProtocol, FileTypeContribution, IoEntryDescriptor, IoEntryDirection, PackageDescriptor, PackageHashes, PackageRole, PanelTabDefinition, PluginManifest, io, kernel,
 };
 
 /// 🗂️ Whether `artifact_kind` is owned by `plugin_id` — every plugin's own IO `Dialect.artifact_kind`
@@ -134,7 +134,7 @@ fn encode_package_descriptor(descriptor: &PackageDescriptor) -> Vec<u8> {
     store::pack_rt::encode_wire_value(&value)
 }
 
-pub async fn describe_plugin<PA: crate::app::PluginApp>(runtime: &crate::plugin_runtime::PluginRuntime<PA>) -> Vec<u8> {
+async fn plugin_descriptor<PA: crate::app::PluginApp>(runtime: &crate::plugin_runtime::PluginRuntime<PA>) -> PackageDescriptor {
     let manifest = crate::plugin_runtime::plugin_manifest(runtime).await;
     let extras = crate::plugin_runtime::plugin_descriptor_extras().await;
     let contributions = plugin_contributions(runtime, &manifest).await;
@@ -147,11 +147,41 @@ pub async fn describe_plugin<PA: crate::app::PluginApp>(runtime: &crate::plugin_
         capability_requests: extras.capability_requests,
         extension_points: extras.extension_points,
         execution: extras.execution,
+        execution_protocol: ExecutionProtocol { app_channel_version: protocol::CHANNEL_VERSION },
         quotas: extras.quotas,
         contributions,
         assets: extras.assets,
         hashes: PackageHashes { wasm_sha256: String::new(), core_wasm_sha256: String::new(), descriptor_sha256: String::new() },
     };
+    descriptor
+}
+
+/// 🔌️ Encodes the plugin's installed runtime descriptor.
+pub async fn describe_plugin<PA: crate::app::PluginApp>(runtime: &crate::plugin_runtime::PluginRuntime<PA>) -> Vec<u8> {
+    encode_package_descriptor(&plugin_descriptor(runtime).await)
+}
+
+/// 🧩️ Combines an extension's metadata with its installed typed application runtime.
+pub async fn describe_extension_with_apps<PA: crate::app::PluginApp>(runtime: &crate::plugin_runtime::PluginRuntime<PA>) -> Vec<u8> {
+    let mut descriptor = plugin_descriptor(runtime).await;
+    let extension = crate::plugin_runtime::extension_manifest().await;
+    assert_eq!(descriptor.manifest.plugin_id, extension.extension_id, "extension and app bundle identities must match");
+    assert_eq!(descriptor.manifest.version, extension.version, "extension and app bundle versions must match");
+    descriptor.role = PackageRole::Extension;
+    descriptor.package_id = extension.package_id;
+    descriptor.manifest.label = extension.label;
+    descriptor.execution = extension.execution;
+    for capability in extension.capabilities { if !descriptor.manifest.capabilities.contains(&capability) { descriptor.manifest.capabilities.push(capability); } }
+    for dependency in extension.dependencies { if !descriptor.manifest.dependencies.contains(&dependency) { descriptor.manifest.dependencies.push(dependency); } }
+    for request in extension.capability_requests { if !descriptor.capability_requests.contains(&request) { descriptor.capability_requests.push(request); } }
+    for contribution in extension.topic_contributions {
+        if !descriptor.manifest.topic_contributions.contains(&contribution) { descriptor.manifest.topic_contributions.push(contribution.clone()); }
+        if !descriptor.contributions.topic_contributions.contains(&contribution) { descriptor.contributions.topic_contributions.push(contribution); }
+    }
+    for contribution in extension.contributions {
+        if !descriptor.manifest.contributions.contains(&contribution) { descriptor.manifest.contributions.push(contribution.clone()); }
+        if !descriptor.contributions.artifact_contributions.contains(&contribution) { descriptor.contributions.artifact_contributions.push(contribution); }
+    }
     encode_package_descriptor(&descriptor)
 }
 
@@ -205,6 +235,7 @@ pub async fn describe_extension() -> Vec<u8> {
         capability_requests: extension.capability_requests,
         extension_points: Vec::new(),
         execution: extension.execution,
+        execution_protocol: ExecutionProtocol { app_channel_version: protocol::CHANNEL_VERSION },
         quotas: kernel::QuotaSchema::default(),
         contributions,
         assets: Vec::new(),

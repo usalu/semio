@@ -56,5 +56,7 @@ semio-framework-value-derive = { path = "../../../../../🧰️framework/🔨️
 pack = { path = "../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust", package = "semio-framework-pack" }
 
 [dev-dependencies]
+serde.workspace = true
+serde_json.workspace = true
 semio-framework-ui-scene = { path = "../../../../../🧰️framework/🔨️modules/🖱️ui/🎬️scene/📦️packages/🦀️rust" }
 semio-framework-async-macros = { path = "../../../../../🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }

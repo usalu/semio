@@ -2,7 +2,7 @@
 //! `📸️snapshot/🦀️.rs`'s `En1994Snapshot` shape (a flat set of persistent scalar
 //! calculation inputs — national annex choice, design actions, resistances, fire/fatigue
 //! parameters; no id-keyed or ordered collections in this artifact) per
-//! `.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📓️taxonomy.md`/
+//! `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📓️taxonomy.md`/
 //! `📓️derivation-rules.md` rule 1 (document-level scalars). Every persistent field gets its own
 //! `change-<field>` mutation — none of these 22 fields forms an inseparable multi-field facet
 //! that's "never meaningfully set one-field-at-a-time" (derivation-rules rule 1's `update`

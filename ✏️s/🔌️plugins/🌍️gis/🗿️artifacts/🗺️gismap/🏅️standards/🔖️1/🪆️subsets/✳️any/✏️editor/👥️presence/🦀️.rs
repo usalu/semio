@@ -1,5 +1,6 @@
 //! 👥️ Gis2d presence — shareable live ephemeral state + mutations.
 
+#[cfg(test)]
 use serde::{Deserialize, Serialize};
 use store::ArtifactPack;
 use semio_framework_value_derive::{FromValue, ToValue};

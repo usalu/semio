@@ -16,9 +16,6 @@ pub const WINDOW_KIND_ID: &str = "cad-view-shape";
 pub const BODY_KEY: &str = "cad.view.shape";
 pub const SURFACE_ID: &str = "cad.view.scene3d/shape";
 pub const PANE: CadPaneId = CadPaneId::Shape;
-/// 👁️ Read-only counterpart of the editor's `CAD_PLAY_APP_ID` controller id — kept distinct so a
-/// viewer session's world-3d controller can never be mistaken for an editor session's.
-const CAD_VIEW_CONTROLLER_ID: &str = "cad-view";
 /// 👁️ Matches the editor's `CAD_FALLBACK_MESH_KIND` literal ("box") — duplicated on purpose rather
 /// than imported through the sibling `✏️editor` module, which `policyViewerPurityBreaches` forbids outright.
 const CAD_VIEW_FALLBACK_MESH_KIND: &str = "box";
@@ -72,31 +69,6 @@ pub fn render(_document: &CadSnapshot) -> UiAssemblyResult<BuiltNode> {
     MeshWindowKit::render(&MeshView { camera_json, meshes_json, instances_json, selection_json })
 }
 
-/// 👁️ Read-only twin of the editor's `edit::world_references_json` — background reference overlays
-/// are pure document content (`CadSnapshot.references_by_model_definition_id`), safe for a viewer to
-/// render directly.
-fn world_references_json(document: &CadSnapshot, pane: CadPaneId) -> Option<String> {
-    let references = document.references_by_model_definition_id.get(pane.model_definition_id())?;
-    if references.is_empty() {
-        return None;
-    }
-    let records: Vec<protocol::DslValue> = references
-        .iter()
-        .filter(|reference| !reference.hidden)
-        .map(|reference| {
-            protocol::DslValue::object([
-                ("id".to_string(), protocol::DslValue::String(reference.id.clone())),
-                ("url".to_string(), protocol::DslValue::String(reference.source_url.clone())),
-                ("origin".to_string(), protocol::DslValue::Array(reference.origin.iter().map(|v| protocol::DslValue::float(*v)).collect())),
-                ("widthWorld".to_string(), protocol::DslValue::float(if reference.width_world > 0.0 { reference.width_world } else { 1.0 })),
-                ("locked".to_string(), protocol::DslValue::Bool(reference.locked)),
-                ("hidden".to_string(), protocol::DslValue::Bool(reference.hidden)),
-                ("opacity".to_string(), protocol::DslValue::float(reference.opacity.unwrap_or(1.0))),
-            ])
-        })
-        .collect();
-    Some(protocol::json::to_json_string(&records))
-}
 //#endregion 🔖️Render
 
 //#region 🧪️Tests

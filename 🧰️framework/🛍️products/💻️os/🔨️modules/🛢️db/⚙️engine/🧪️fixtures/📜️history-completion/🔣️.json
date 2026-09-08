@@ -1,0 +1,82 @@
+{
+  "schema": "semio.db.history-completion/v1",
+  "document": "history-completion",
+  "operations": [
+    "history-completion-1",
+    "history-completion-2"
+  ],
+  "publication": [
+    {
+      "name": "before-poll-success",
+      "publication": "before-poll",
+      "outcome": "success",
+      "firstReady": true,
+      "wakes": 0,
+      "waiterEmpty": true,
+      "exactResult": true,
+      "admissionReleased": true,
+      "registryEmpty": true,
+      "wakeLockReleased": true
+    },
+    {
+      "name": "before-poll-cancelled",
+      "publication": "before-poll",
+      "outcome": "cancelled",
+      "firstReady": true,
+      "wakes": 0,
+      "waiterEmpty": true,
+      "exactResult": true,
+      "admissionReleased": true,
+      "registryEmpty": true,
+      "wakeLockReleased": true
+    },
+    {
+      "name": "before-registration-success",
+      "publication": "before-registration",
+      "outcome": "success",
+      "firstReady": true,
+      "wakes": 0,
+      "waiterEmpty": true,
+      "exactResult": true,
+      "admissionReleased": true,
+      "registryEmpty": true,
+      "wakeLockReleased": true
+    },
+    {
+      "name": "before-registration-cancelled",
+      "publication": "before-registration",
+      "outcome": "cancelled",
+      "firstReady": true,
+      "wakes": 0,
+      "waiterEmpty": true,
+      "exactResult": true,
+      "admissionReleased": true,
+      "registryEmpty": true,
+      "wakeLockReleased": true
+    },
+    {
+      "name": "after-pending-success",
+      "publication": "after-pending",
+      "outcome": "success",
+      "firstReady": false,
+      "wakes": 1,
+      "waiterEmpty": true,
+      "exactResult": true,
+      "admissionReleased": true,
+      "registryEmpty": true,
+      "wakeLockReleased": true
+    },
+    {
+      "name": "after-pending-cancelled",
+      "publication": "after-pending",
+      "outcome": "cancelled",
+      "firstReady": false,
+      "wakes": 1,
+      "waiterEmpty": true,
+      "exactResult": true,
+      "admissionReleased": true,
+      "registryEmpty": true,
+      "wakeLockReleased": true
+    }
+  ]
+}

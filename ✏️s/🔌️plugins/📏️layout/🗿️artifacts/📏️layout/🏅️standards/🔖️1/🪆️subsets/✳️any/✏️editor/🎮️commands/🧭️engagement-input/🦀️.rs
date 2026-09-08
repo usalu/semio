@@ -12,5 +12,5 @@ pub struct EngagementInput {
 }
 
 pub fn handle(payload: &EngagementInput, _doc: &ArtifactView<'_, LayoutSnapshot>, _cfg: &ConfigView<'_, LayoutConfig>) -> Result<Emit<LayoutMutation, LayoutConfigMutation>, Fault> {
-    Ok(Emit::config(vec![LayoutConfigMutation::SetEngagementInput { value: payload.value.clone() }]))
+    Ok(Emit::config(vec![LayoutConfigMutation::SetEngagementInput(crate::editor::layout::config::SetEngagementInput { value: payload.value.clone() })]))
 }

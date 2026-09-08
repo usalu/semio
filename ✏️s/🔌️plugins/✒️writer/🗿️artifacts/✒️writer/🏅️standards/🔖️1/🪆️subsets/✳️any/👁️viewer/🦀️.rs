@@ -109,7 +109,7 @@ mod tests {
         let config = NoConfig::default();
         let cfg = ConfigView { snapshot: &config };
         let node = WriterViewer::render("writer.view.nope", &doc, &cfg);
-        assert!(serde_json::to_string(&node).unwrap().contains("Unknown body"));
+        assert!(semio_framework_plugin::testkit::project_and_retire_fixture_tree(node.expect("viewer render")).unwrap().contains("Unknown body"));
     }
 }
 //#endregion 🧪️Tests

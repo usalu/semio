@@ -2,12 +2,14 @@
 //!
 //! Everything the pre-B1 `RefCell<ArchitectPlayRuntime>` held (selection, active register, search,
 //! cached report/analysis JSON, adjacency filter, graph camera) lives here, written via whole-snapshot
-//! `ArchitectConfigMutation::Snapshot`s from the `🎮️commands/*` handlers.
+//! `ArchitectConfigMutation::ReplaceConfig` values from the `🎮️commands/*` handlers.
 
 use crate::artifacts::program::registers::AdjacencyKind;
 use crate::artifacts::program::standards::v1::subsets::any::schema::inferences::ProgramReport;
 use crate::artifacts::program::standards::v1::subsets::any::schema::inferences::SearchQuery;
-use protocol::{Mutation, MutationDiff};
+use protocol::MutationDiff;
+#[cfg(test)]
+use protocol::Mutation;
 
 //#region 🔖️Config
 /// @emoji 🧮️ B1: `ArchitectPlayApp`'s `ArtifactEditor::Config` — the pure replacement for the pre-B1
@@ -105,102 +107,16 @@ impl store::ConfigRecord for ArchitectConfig {}
 
 impl MutationDiff<ArchitectConfig> for ArchitectConfig {
     fn apply(&self, _base: &ArchitectConfig) -> protocol::MutationApplyResult<ArchitectConfig> {
-        Ok({ self.clone() })
+        Ok(self.clone())
     }
     fn absorb(&mut self, other: Self) {
         *self = other;
     }
 }
 
-/// @emoji 🧮️ `ArchitectConfig`'s operation enum — a single whole-snapshot `Snapshot` variant is the
-/// generic inverse every `🎮️commands/*` config edit uses (mirrors `norm::NormConfigOperation`
-/// and `cad`'s `snapshot_of` helper; architect's config has no single hot-path field worth its own
-/// granular operation variant the way `NormConfig::selected_check_index` did).
-#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslOps)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-pub enum ArchitectConfigMutation {
-    #[dsl(key = "snapshot")]
-    Snapshot {
-        #[dsl(block)]
-        config: ArchitectConfig,
-    },
-}
-
-//#region 🔖️OpCodec
-impl protocol::OpText for ArchitectConfigMutation {
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        let variants = <Self as dsl::DslVariants>::variants();
-        for (keyword, spec_fn) in &variants {
-            let probe = format!("{} ", keyword);
-            if line == keyword.as_str() || line.starts_with(&probe) {
-                let record = dsl::parse(line, &spec_fn(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline })?;
-                return <Self as dsl::DslVariants>::from_named_record(keyword, &record);
-            }
-        }
-        Err(dsl::__rt::field_error(format!("unknown mutation line '{line}'")))
-    }
-    fn print_op(&self) -> String {
-        let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
-        let variants = <Self as dsl::DslVariants>::variants();
-        let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
-        dsl::print(&record, &spec_fn(), dsl::JoinMode::Inline)
-    }
-}
-
-/// 🎯️ Handcrafted OpBinary (P6).
-impl protocol::OpBinary for ArchitectConfigMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        const OP_BINARY_FORMAT: u8 = 1;
-        let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
-        let variants = <Self as dsl::DslVariants>::variants();
-        let ordinal = variants.iter().position(|(k, _)| *k == keyword).ok_or(protocol::ProtocolError::Malformed { what: "op variant", offset: 0, detail: format!("keyword {keyword:?} is not a declared variant") })?;
-        let spec = (variants[ordinal].1)();
-        let body = store::pack_rt::encode_record_body(&spec, &record, &store::PackEncodeOptions::default()).map_err(protocol::ProtocolError::from)?;
-        let mut out = Vec::with_capacity(body.len() + 3);
-        out.push(OP_BINARY_FORMAT);
-        store::pack_rt::write_varint_u64(&mut out, ordinal as u64);
-        out.extend_from_slice(&body);
-        Ok(out)
-    }
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        const OP_BINARY_FORMAT: u8 = 1;
-        let mut reader = store::pack_rt::ByteReader::new(bytes);
-        let format = reader.read_u8()?;
-        if format != OP_BINARY_FORMAT {
-            return Err(protocol::ProtocolError::Malformed { what: "op format", offset: 0, detail: format!("unsupported op format {format}") });
-        }
-        let ordinal = reader.read_varint_u64()?;
-        let variants = <Self as dsl::DslVariants>::variants();
-        let (keyword, spec_fn) = variants.get(ordinal as usize).ok_or(protocol::ProtocolError::Malformed { what: "op variant", offset: 1, detail: format!("ordinal {ordinal} out of range for {} declared variants", variants.len()) })?;
-        let spec = spec_fn();
-        let body = &bytes[reader.position()..];
-        let (record, _report) = store::pack_rt::decode_record_body(body, &spec, &store::PackDecodeOptions::default()).map_err(protocol::ProtocolError::from)?;
-        <Self as dsl::DslVariants>::from_named_record(keyword, &record).map_err(|error| protocol::ProtocolError::Malformed { what: "op record", offset: reader.position() as u64, detail: error.to_string() })
-    }
-}
-
-//#endregion 🔖️OpCodec
-
-impl Mutation<ArchitectConfig> for ArchitectConfigMutation {
-    type Diff = ArchitectConfig;
-
-    /// ✏️ Warning `mutation.no-op` if `config` already equals `base` (empty diff), else the
-    /// whole-snapshot replacement.
-    fn diff(&self, base: &ArchitectConfig) -> protocol::MutationOutcome<ArchitectConfig> {
-        match self {
-            ArchitectConfigMutation::Snapshot { config } => {
-                if config == base {
-                    return protocol::MutationOutcome::empty().warn("mutation.no-op", "Config already matches the requested value.");
-                }
-                protocol::MutationOutcome::new(config.clone())
-            }
-        }
-    }
-
-    fn inverse(&self, base: &ArchitectConfig) -> Vec<Self> {
-        vec![ArchitectConfigMutation::Snapshot { config: base.clone() }]
-    }
-}
+#[path = "🧬️schema/🧬️mutations/🦀️.rs"]
+mod mutations;
+pub use mutations::*;
 //#endregion 🔖️Config
 
 //#region 🔖️Readers
@@ -227,7 +143,7 @@ pub fn parse_active_report(cfg: &ArchitectConfig) -> Option<ProgramReport> {
 
 /// 🧮️ The whole-snapshot config edit every command handler emits.
 pub fn snapshot(next: ArchitectConfig) -> Vec<ArchitectConfigMutation> {
-    vec![ArchitectConfigMutation::Snapshot { config: next }]
+    vec![ArchitectConfigMutation::ReplaceConfig(ReplaceConfig { config: next })]
 }
 //#endregion 🔖️Readers
 
@@ -246,9 +162,9 @@ mod tests {
     async fn a_snapshot_operation_replaces_the_whole_config_and_inverts_to_the_base() {
         let base = ArchitectConfig::default();
         let next = ArchitectConfig { search_query: "hall".into(), ..ArchitectConfig::default() };
-        let operation = ArchitectConfigMutation::Snapshot { config: next.clone() };
+        let operation = ArchitectConfigMutation::ReplaceConfig(ReplaceConfig { config: next.clone() });
         assert_eq!(operation.diff(&base).diff(), &next);
-        assert_eq!(operation.inverse(&base), vec![ArchitectConfigMutation::Snapshot { config: base }]);
+        assert_eq!(operation.inverse(&base), vec![ArchitectConfigMutation::ReplaceConfig(ReplaceConfig { config: base })]);
     }
 
     #[semio_framework_async_macros::async_test]
@@ -258,3 +174,33 @@ mod tests {
     }
 }
 //#endregion 🧪️Tests
+
+#[cfg(test)]
+mod contract_vectors {
+    use super::*;
+    use protocol::{Mutation, MutationDiff, OpBinary, OpText};
+    use dsl::os_pack as pack;
+
+    #[test]
+    fn architect_configuration_contract_vectors_match_the_json_oracle() {
+        let vectors: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🔁️mutation-contracts.json")).expect("neutral contract vectors");
+        let base: ArchitectConfig = pack::from_json_str(&vectors["base"].to_string()).expect("owned base decoder");
+        assert_eq!(<ArchitectConfigMutation as Mutation<ArchitectConfig>>::DESCRIPTORS.len(), vectors["cases"].as_array().expect("cases").len());
+        for vector in vectors["cases"].as_array().expect("cases") {
+            let mutation: ArchitectConfigMutation = pack::from_json_str(&vector["mutation"].to_string()).expect("owned operation decoder");
+            assert_eq!(serde_json::from_str::<serde_json::Value>(&pack::to_json_string(&mutation)).expect("independent operation oracle"), vector["mutation"]);
+            assert_eq!(mutation.descriptor().semantic_kind, vector["kind"].as_str().expect("semantic kind"));
+            assert_eq!(ArchitectConfigMutation::parse_op(&mutation.print_op()).expect("operation text"), mutation);
+            assert_eq!(ArchitectConfigMutation::decode_op(&mutation.encode_op().expect("operation binary")).expect("binary decode"), mutation);
+            let outcome = mutation.diff(&base);
+            assert!(outcome.messages().is_empty());
+            let next = outcome.diff().apply(&base).expect("apply diff");
+            assert_eq!(serde_json::from_str::<serde_json::Value>(&pack::to_json_string(&next)).expect("independent state oracle"), vector["expected"]);
+            let next_for_noop = next.clone();
+            let restored = mutation.inverse(&base).into_iter().fold(next, |state, inverse| inverse.diff(&state).diff().apply(&state).expect("apply inverse"));
+            assert_eq!(restored, base);
+            let noop = mutation.diff(&next_for_noop);
+            assert!(!noop.messages().is_empty());
+        }
+    }
+}

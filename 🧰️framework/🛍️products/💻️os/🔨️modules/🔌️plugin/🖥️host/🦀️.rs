@@ -3410,7 +3410,7 @@ async fn run_guest_relay_request(
     instance_gate: Arc<semio_framework_async::Semaphore>,
     pool: WorkerPool,
     cancel: semio_framework_async::CancelToken,
-    cancel_scheduled: Arc<AtomicBool>,
+    _cancel_scheduled: Arc<AtomicBool>,
     cancel_admitted: Arc<AtomicBool>,
     job: u64,
     request: GuestRelayRequest,
@@ -9129,7 +9129,7 @@ mod app_router_tests {
     /// 🔗️ Lane 1-D parity reconciliation (ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET,
     /// `📓️w1-d-report.md`): the SAME ordered fixture — owner surface, two contributed surfaces
     /// from different plugins, a duplicate, an unknown dialect — is asserted here AND in the TS
-    /// twin (`.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET/🧪️w1-d-parity.ts`),
+    /// twin (`.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET/🧪️w1-d-parity.ts`),
     /// which builds the identical manifests through `AppRouter.build`/`resolveOpeningApp`. Both
     /// sides must produce identical `surfaces_for` ordering and identical fault codes — run both,
     /// paste both outputs into the report, per the ticket's verification rule.

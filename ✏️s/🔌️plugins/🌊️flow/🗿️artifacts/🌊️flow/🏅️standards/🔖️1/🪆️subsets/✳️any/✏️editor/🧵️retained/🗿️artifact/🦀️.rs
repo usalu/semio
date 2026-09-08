@@ -3,7 +3,9 @@
 use super::{Owner, Retirement};
 use crate::artifacts::flow::retirement::SceneRetirementFactory;
 use super::super::FlowWorkingScene;
-use flow::{neural, Widget};
+use flow::Widget;
+#[cfg(test)]
+use flow::neural;
 use flow::retained::{FlowCopyAllocationBudget, FlowSynapseCopy, FlowWidgetCopy};
 use std::mem::ManuallyDrop;
 use std::sync::Arc;
@@ -208,7 +210,6 @@ impl SceneHash {
 
     pub(super) fn complete(&self) -> bool { self.digest.is_some() }
     pub(super) fn take(&mut self) -> Option<(Arc<FlowWorkingScene>, [u8; 32])> { let digest = self.digest.take()?; Some((self.reader.take_root()?, digest)) }
-    pub(super) fn cancel(&mut self) { self.reader.cancel(); }
     pub(super) fn begin_close(&mut self) { self.reader.begin_close(); self.hash = None; self.digest = None; }
     pub(super) fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::SnapshotRetirementStep, String> {
         if !self.retirement.is_empty() { return store::ErasedSnapshotRetirement::close_step(&mut self.retirement, grant.maximum_items, grant.maximum_bytes); }

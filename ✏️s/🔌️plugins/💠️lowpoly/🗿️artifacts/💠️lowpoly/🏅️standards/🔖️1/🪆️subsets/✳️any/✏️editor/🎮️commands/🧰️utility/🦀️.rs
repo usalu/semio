@@ -8,6 +8,7 @@ use crate::editor::lowpoly::config::{LowpolyConfig, LowpolyConfigMutation};
 use crate::editor::lowpoly::session::LowpolyScratch;
 use crate::editor::lowpoly::view::{is_paint_utility, utility_params_value};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+#[cfg(test)]
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️SetUtilityParam

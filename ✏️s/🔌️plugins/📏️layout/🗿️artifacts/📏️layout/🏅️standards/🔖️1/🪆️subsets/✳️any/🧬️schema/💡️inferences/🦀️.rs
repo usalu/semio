@@ -109,7 +109,7 @@ mod tests {
             ],
             "printTarget": null
         });
-        serde_json::from_value(json).expect("valid layout snapshot json")
+        dsl::os_pack::from_json_str(&json.to_string()).expect("valid layout snapshot json")
     }
     //#endregion 🧸️Fixtures
 
@@ -122,13 +122,13 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn inference_default_law() {
-        let empty = serde_json::from_value::<LayoutSnapshot>(serde_json::json!({
+        let empty = dsl::os_pack::from_json_str::<LayoutSnapshot>(&(serde_json::json!({
             "schema": "semio.layout/v1",
             "name": "",
             "grid": { "baselineGrid": 12.0, "baselineOffset": 0.0, "snapToBaseline": false },
             "paragraphStyles": [], "characterStyles": [], "stories": [], "links": [],
             "parentPages": [], "spreads": [], "pages": [], "printTarget": null
-        }))
+        })).to_string())
         .expect("valid empty layout snapshot json");
         assert_eq!(LayoutInference::infer(&empty), LayoutInference::default());
     }

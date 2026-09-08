@@ -1,6 +1,7 @@
 //! 🧾️ Typed borrowed Flow JSON in lexical object order, with retained native map iterators.
 
-use super::{neural, FlowGui, FlowLayoutEntry, FlowMutation, FlowPreviewGui, NodeChrome, Widget};
+use flow::NodeChrome;
+use super::{neural, FlowGui, FlowLayoutEntry, FlowMutation, FlowPreviewGui, Widget};
 use store::{ArtifactCanonicalJson, ArtifactCanonicalJsonArray as Array, ArtifactCanonicalJsonNode as Node, ArtifactCanonicalJsonObject as Object, ArtifactCanonicalJsonValue as Value};
 
 //#region 🔣️Scalars

@@ -155,6 +155,7 @@ pub(crate) async fn primary_selected_node_id(selected: &[String], config: &Space
 /// command handler needs the POST-command config (not the pre-command `cfg.snapshot`) to build a
 /// derived side value (the presence broadcast) in the very same call, without reaching back into a
 /// store this pure function doesn't own.
+#[cfg(test)]
 pub(crate) async fn apply_config_mutations(config: &SpaceConfig, operations: &[SpaceConfigMutation]) -> SpaceConfig {
     use protocol::Mutation;
     operations.iter().fold(config.clone(), |acc, operation| operation.diff(&acc).diff().clone())
@@ -307,6 +308,7 @@ const SPACE_BOUNDED_TOOL_IDS: &[&str] = &[
 /// 🧵️ Still batch-only, honestly: every id here is a workflow-graph or media edit the shell never
 /// dispatches on its own (no `🏛️ShellHost`/`🕸️NodeGraph` call site, verified by id), and each needs
 /// its own reducer/extent review before it can claim a bounded first step.
+#[cfg(test)]
 const SPACE_BATCH_ONLY_TOOL_IDS: &[&str] = &[
     "patchParameter",
     "addParameter",
@@ -748,11 +750,6 @@ impl ArtifactApp for SpaceApp {
     const APP_ID: &'static str = S_PLAY_APP_ID;
     const DOCUMENT_SCHEMA: &'static str = S_WORKFLOW_SCHEMA;
 
-    /// 🧾️ `controller:` is the runtime tool controller — the surface app id `tool_job_registration`
-    /// is called with, NOT the manifest's UI `controller_id` (`s-play`); `contract:` reads the one
-    /// `space_bounded_contract()` the factory itself publishes, so the exact-equality join in
-    /// `validate_tool_job_rows` can never drift. Both are pinned by
-    /// `interactive_job_catalog_tests::tool_proof_catalogs_match_the_runtime_identity_they_are_joined_against`.
     semio_framework_plugin::bounded_first_step_tool_proofs! {
         owner: SpaceApp,
         owner_file: "✏️s/🔌️plugins/🪐️space/⚙️engine/🪐️space/🦀️.rs",
@@ -1200,7 +1197,7 @@ pub async fn create_space_app() -> App {
         .keybinding("mod+shift+z", "redo").await
         .keybinding("mod+s", "commitCheckpoint").await;
     let definition = builder.build_definition();
-    let mut app = App { definition, examples: Vec::new() };
+    let app = App { definition, examples: Vec::new() };
     let mut app = app.workflow("s", "S Studio", "studio").await;
     for (id, label) in S_STUDIO_EXAMPLES {
         // 🚧️ `OsWorkflowArtifactDocument` (= `BackboneDocument<WorkflowSnapshot, WorkflowMutation>`)

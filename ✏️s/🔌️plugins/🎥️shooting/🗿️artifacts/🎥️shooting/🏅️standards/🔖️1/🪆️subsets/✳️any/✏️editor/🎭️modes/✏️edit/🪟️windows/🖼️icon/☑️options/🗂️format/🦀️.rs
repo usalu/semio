@@ -16,7 +16,7 @@ pub fn measure(snapshot: &ShootingSnapshot, labels: &ShootingLabels) -> WindowMe
             MeasureSelectItem { id: "shooting.measure.format.svg".into(), value: "svg".into(), label: labels.format_svg.into() },
             MeasureSelectItem { id: "shooting.measure.format.png".into(), value: "png".into(), label: labels.format_png.into() },
         ],
-        on_change: crate::editor::shooting::shooting_action("setActiveShotFormat", None),
+        on_change: crate::editor::shooting::shooting_window_action("setActiveShotFormat", None),
     }
 }
 //#endregion 🔖️Measure

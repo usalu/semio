@@ -1152,6 +1152,11 @@ export function testCacheRoot(repoRoot: string): string {
 export function testCacheDir(repoRoot: string, child: string): string {
   const taxonomy = testTaxonomy(repoRoot);
   if (!taxonomy.testOutputChildDirs.includes(child)) throw new Error(`unknown test cache child dir ${JSON.stringify(child)}`);
+  const scope = process.env.SEMIO_TEST_OUTPUT_SCOPE;
+  if (scope !== undefined) {
+    if (!/^[a-zA-Z0-9_-]+\/[a-zA-Z0-9_-]+$/.test(scope)) throw new Error(`invalid test output scope ${JSON.stringify(scope)}`);
+    return join(testCacheRoot(repoRoot), "tasks", scope, child);
+  }
   return join(testCacheRoot(repoRoot), child);
 }
 
@@ -5595,16 +5600,15 @@ export function markReferencedBlobs(repoRoot: string, registry: OracleRegistry):
   const manifestRoot = fixtureManifestRoot(repoRoot);
   if (existsSync(manifestRoot)) {
     for (const name of readdirSync(manifestRoot)) {
+      if (!name.endsWith(".json")) continue;
       try {
         const fixture = JSON.parse(readFileSync(join(manifestRoot, name), "utf8")) as FixtureManifest;
         for (const file of fixture.files ?? []) marked.add(file.sha256);
-      } catch {
-        /* 🧭️A manifest mid-write by a peer agent is not evidence that its blobs are unreachable. */
-      }
+      } catch (cause) { throw new Error(`Cannot determine fixture reachability from ${join(manifestRoot, name)}`, { cause }); }
     }
   }
-  const resultsRoot = testCacheDir(repoRoot, "results");
-  if (existsSync(resultsRoot)) {
+  for (const resultsRoot of [join(testCacheRoot(repoRoot), "results"), join(testCacheRoot(repoRoot), "tasks")]) {
+    if (!existsSync(resultsRoot)) continue;
     const stack = [resultsRoot];
     while (stack.length > 0) {
       const dir = stack.pop()!;
@@ -5625,9 +5629,7 @@ export function markReferencedBlobs(repoRoot: string, registry: OracleRegistry):
         try {
           const manifest = JSON.parse(readFileSync(full, "utf8")) as RunManifest;
           for (const artifact of manifest.artifacts ?? []) marked.add(artifact.sha256);
-        } catch {
-          /* 🧭️Same. */
-        }
+        } catch (cause) { throw new Error(`Cannot determine retained run reachability from ${full}`, { cause }); }
       }
     }
   }
@@ -5658,7 +5660,7 @@ export function collectGarbage(repoRoot: string, registry: OracleRegistry, opts:
   const removed: string[] = [];
   let reclaimedBytes = 0;
 
-  for (const child of ["work", "hosts", "oracles", "results", "diffs"]) {
+  for (const child of ["work", "hosts", "oracles", "results", "diffs", "tasks"]) {
     const root = join(cacheRoot, child);
     if (!existsSync(root)) continue;
     const stack: string[] = [root];
@@ -5702,6 +5704,7 @@ export function collectGarbage(repoRoot: string, registry: OracleRegistry, opts:
   }
 
   const marked = markReferencedBlobs(repoRoot, registry);
+  const activeRun = candidates.some((candidate) => candidate.heldBy.some((reason) => reason.startsWith("lease active") || reason.startsWith("lease creating")));
   let sweptBlobs = 0;
   const blobRoot = fixtureBlobRoot(repoRoot);
   if (existsSync(blobRoot)) {
@@ -5719,8 +5722,8 @@ export function collectGarbage(repoRoot: string, registry: OracleRegistry, opts:
         } catch {
           continue;
         }
-        candidates.push({ path: relative(repoRoot, abs).split(sep).join("/"), bytes, files: 1, retention: "ephemeral-success", runId: null, agentId: null, lastAccessMs: 0, eligible: true, reason: "blob is referenced by no fixture manifest, retained run manifest or pinned evidence", heldBy: [] });
-        if (!dry) {
+        candidates.push({ path: relative(repoRoot, abs).split(sep).join("/"), bytes, files: 1, retention: "ephemeral-success", runId: null, agentId: null, lastAccessMs: 0, eligible: !activeRun, reason: activeRun ? "active run may still be publishing blob references" : "blob is referenced by no fixture manifest, retained run manifest or pinned evidence", heldBy: activeRun ? ["active publication"] : [] });
+        if (!dry && !activeRun) {
           rmSync(abs, { force: true });
           sweptBlobs += 1;
           reclaimedBytes += bytes;

@@ -576,10 +576,6 @@ impl FixedReplaySeed {
         }
         true
     }
-
-    fn terminal_is_empty(&self) -> bool {
-        self.kind_pages == 0 && self.input_pages == 0 && self.checkpoint_pages == 0 && self.kind.iter().all(Option::is_none) && self.input.iter().all(Option::is_none) && self.checkpoint.iter().all(Option::is_none)
-    }
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -664,10 +660,6 @@ impl ReplaySpawnRefusal {
     fn new(actor: u64, job: u64, reason: &'static [u8], kind: String, input: Vec<u8>) -> Self {
         Self { actor, job, reason, input: Some(input), kind: Some(kind), phase: ReplaySpawnRefusalPhase::RetireInput, publish: true }
     }
-
-    fn terminal_is_empty(&self) -> bool {
-        self.input.is_none() && self.kind.is_none() && self.phase == ReplaySpawnRefusalPhase::RetireShell
-    }
 }
 
 impl MountedReplaySeed {
@@ -699,18 +691,6 @@ impl MountedReplaySeed {
             materialize_page: 0,
             abi_reserved: 0,
         })
-    }
-
-    fn terminal_is_empty(&self) -> bool {
-        self.seed.is_none()
-            && self.kind_owner.is_none()
-            && self.input_owner.is_none()
-            && self.checkpoint_owner.is_none()
-            && self.materialized_kind.is_none()
-            && self.materialized_input.is_none()
-            && self.materialized_checkpoint.is_none()
-            && self.replay_kind_owner.is_none()
-            && self.abi_reserved == 0
     }
 
     fn release_abi(&mut self, bytes: usize) -> Result<(), PluginHostError> {
@@ -893,7 +873,7 @@ fn split_frame_credit(raw_bytes: usize, items: usize, index: usize) -> usize {
 }
 
 enum FrameAdmissionError {
-    Full { limit: AdmissionLimit, bytes: Vec<u8> },
+    Full { bytes: Vec<u8> },
     TerminalCapacity { bytes: Vec<u8>, error: PluginHostError },
     Fault(PluginHostError),
 }
@@ -995,6 +975,7 @@ impl ShardLoop {
         self.actor_lanes.get(&actor).copied().unwrap_or(semio_framework_actor::Lane::Maintenance)
     }
 
+    #[cfg(test)]
     fn pop_next_authority(ring: &mut FixedOwnerRing<DeferredAuthority, SHARD_DEFERRED_ITEMS>, placements: &HashMap<(u64, u64), JobPlacement>) -> Option<(OwnerKey, DeferredAuthority)> {
         let actor = match ring.get(0) {
             Some(DeferredAuthority::JobStep { actor, .. }) => *actor,
@@ -1605,7 +1586,7 @@ impl ShardLoop {
         if let Some((epoch, bytes)) = frame {
             if let Err(rejected) = self.consume_frame(bytes).await {
                 match rejected {
-                    FrameAdmissionError::Full { bytes, .. } => self.rejected_frame = Some((epoch, bytes)),
+                    FrameAdmissionError::Full { bytes } => self.rejected_frame = Some((epoch, bytes)),
                     FrameAdmissionError::TerminalCapacity { bytes, error } => {
                         let byte_len = bytes.len();
                         let _ = self.terminal_frame_overflow.try_push(TerminalFrameOverflow { epoch, bytes }, byte_len).expect("ShardLoop: one terminal overflow owner while drive is parked");
@@ -1987,7 +1968,7 @@ impl ShardLoop {
                 let byte_len = bytes.len();
                 return Err(self.retain_terminal_frame(bytes, PluginHostError::Plugin(format!("ShardLoop: one frame permanently exceeds deferred {limit:?} capacity ({byte_len} bytes); exact frame retained for terminal close"))));
             }
-            return Err(FrameAdmissionError::Full { limit, bytes });
+            return Err(FrameAdmissionError::Full { bytes });
         }
         match frame {
             ShardFrame::Register { actor } => self.enqueue_authority(semio_framework_actor::Lane::Maintenance, DeferredAuthority::Register { actor }, bytes.len()).map_err(FrameAdmissionError::Fault)?,

@@ -3,7 +3,10 @@
   "$schema": "../../../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust",
   "namedInputs": {
-    "default": ["{workspaceRoot}/🧰️framework/🔨️modules/🕸️graph/**/*.rs", "{projectRoot}/**/*"]
+    "default": [
+      "{workspaceRoot}/🧰️framework/🔨️modules/🕸️graph/**/*.rs",
+      "{projectRoot}/**/*"
+    ]
   },
   "targets": {
     "generate": {
@@ -11,7 +14,8 @@
       "options": {
         "cwd": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts generate"
-      }
+      },
+      "cache": true
     },
     "preview-generated": {
       "executor": "nx:run-commands",
@@ -29,7 +33,9 @@
     },
     "test": {
       "executor": "nx:run-commands",
-      "dependsOn": ["generate"],
+      "dependsOn": [
+        "generate"
+      ],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test",
@@ -38,7 +44,9 @@
     },
     "test-quick": {
       "executor": "nx:run-commands",
-      "dependsOn": ["generate"],
+      "dependsOn": [
+        "generate"
+      ],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test quick",
@@ -47,7 +55,9 @@
     },
     "test-long": {
       "executor": "nx:run-commands",
-      "dependsOn": ["generate"],
+      "dependsOn": [
+        "generate"
+      ],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test long",
@@ -56,7 +66,9 @@
     },
     "test-exhaustive": {
       "executor": "nx:run-commands",
-      "dependsOn": ["generate"],
+      "dependsOn": [
+        "generate"
+      ],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test exhaustive",
@@ -65,7 +77,9 @@
     },
     "lint": {
       "executor": "nx:run-commands",
-      "dependsOn": ["generate"],
+      "dependsOn": [
+        "generate"
+      ],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts lint"

@@ -1,0 +1,9 @@
+# Flow Browser Package Export Regression
+
+The registered renderer typecheck exposed four missing Flow browser declaration sites and two dependent NodeGraph implicit-any sites. Running the existing Flow declarations command66513 passed its old105-method/parser/prototype oracle, but added only the browser subpath export to a package without an exports map. That made the package root inaccessible, confirmed by renderer63527. No source-tree path migration was needed: the actual paths were checked and resolve correctly.
+
+Extended the existing language-neutral browser-types fixture/schema with the exact package name, files and three public exports. The registered declaration gate now checks the emitted package against that fixture, verifies all files exist, and uses the installed TypeScript resolver independently for the root and browser type entries. Red96785 failed on missing packaged browser/host files before the publisher repair. The publisher now emits the complete owned root/browser/host export map and ships both runtime modules plus declarations.
+
+Green78353 passed:105 schema methods, runtime prototype/TypeScript parser parity, three public exports, two exact TypeScript resolutions and five hostile fixture rejections. The DEBUG result was read. Existing generated declarations and the package manifest were refreshed by the registered generator, not manually patched. Renderer42299 remains RED elsewhere, but all Flow/WasmSessionLoader and derived NodeGraph diagnostics are absent without touching either consumer.
+
+Separate real-Wasm test-browser15654 failed with an unreachable trap during flow_bridge_send before its final runtime proof. This artifact/runtime failure remains open; declaration correctness is not Flow browser runtime acceptance. No Cargo rebuild was started because root's trusted GIS producer owns the native lane.

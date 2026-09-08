@@ -2,6 +2,7 @@
 //! incremental Shannon-entropy heuristic needs at O(1) per update), plus an optional exact-integer
 //! parallel table for [`WeightMode::StrictInteger`] determinism.
 
+#[cfg(test)]
 use crate::wfc_engine::error::ModelError;
 use crate::wfc_engine::ids::PatternId;
 
@@ -10,6 +11,7 @@ use crate::wfc_engine::ids::PatternId;
 /// refactor-proof) or exact `u64` weights (slower, bit-for-bit reproducible everywhere — used by
 /// every differential/golden-replay test in this crate).
 #[derive(Clone, Copy, PartialEq, Eq, Debug, Default)]
+#[cfg(test)]
 pub enum WeightMode {
     #[default]
     Real,
@@ -18,6 +20,7 @@ pub enum WeightMode {
 
 /// ⚖️ What a weight of exactly zero means for sampling and pruning.
 #[derive(Clone, Copy, PartialEq, Eq, Debug, Default)]
+#[cfg(test)]
 pub enum ZeroWeightPolicy {
     /// ⚖️ Zero weight is a validation error at compile time.
     Reject,
@@ -35,23 +38,39 @@ pub enum ZeroWeightPolicy {
 #[derive(Clone, Debug)]
 pub struct WeightTable {
     w: Vec<f64>,
+    #[cfg(test)]
     ln_w: Vec<f64>,
     w_ln_w: Vec<f64>,
+    #[cfg(test)]
     w_int: Option<Vec<u64>>,
 }
 
 impl WeightTable {
     /// 🧵 Completes a table whose validated columns were materialized by a resumable model compiler.
-    pub(crate) fn from_resumable_parts(w: Vec<f64>, ln_w: Vec<f64>, w_ln_w: Vec<f64>, w_int: Option<Vec<u64>>) -> Self {
-        debug_assert_eq!(w.len(), ln_w.len());
+    pub(crate) fn from_resumable_parts(w: Vec<f64>, w_ln_w: Vec<f64>) -> Self {
         debug_assert_eq!(w.len(), w_ln_w.len());
-        debug_assert!(w_int.as_ref().is_none_or(|values| values.len() == w.len()));
-        Self { w, ln_w, w_ln_w, w_int }
+        Self {
+            w, w_ln_w,
+            #[cfg(test)]
+            ln_w: Vec::new(),
+            #[cfg(test)]
+            w_int: None,
+        }
+    }
+
+    #[cfg(test)]
+    pub(crate) fn with_reference_columns(mut self, ln_w: Vec<f64>, w_int: Option<Vec<u64>>) -> Self {
+        assert_eq!(self.w.len(), ln_w.len());
+        assert!(w_int.as_ref().is_none_or(|values| values.len() == self.w.len()));
+        self.ln_w = ln_w;
+        self.w_int = w_int;
+        self
     }
 
     /// ⚖️ Builds a table from raw positive-finite weights. `w_int` is populated only when every
     /// weight is already an exact non-negative integer value (the common case for hand-authored
     /// tilesets and frequency-counted extraction).
+    #[cfg(test)]
     pub fn new(weights: &[f64]) -> Result<Self, ModelError> {
         let mut w = Vec::with_capacity(weights.len());
         let mut ln_w = Vec::with_capacity(weights.len());
@@ -81,6 +100,7 @@ impl WeightTable {
     }
 
     #[inline]
+    #[cfg(test)]
     pub fn is_empty(&self) -> bool {
         self.w.is_empty()
     }
@@ -91,6 +111,7 @@ impl WeightTable {
     }
 
     #[inline]
+    #[cfg(test)]
     pub fn ln_w(&self, p: PatternId) -> f64 {
         self.ln_w[p.index()]
     }
@@ -102,10 +123,12 @@ impl WeightTable {
 
     /// ⚖️ Exact integer weight, when [`WeightTable::has_integer_weights`] is `true`.
     #[inline]
+    #[cfg(test)]
     pub fn w_int(&self, p: PatternId) -> Option<u64> {
         self.w_int.as_ref().map(|v| v[p.index()])
     }
 
+    #[cfg(test)]
     pub fn has_integer_weights(&self) -> bool {
         self.w_int.is_some()
     }
@@ -113,6 +136,7 @@ impl WeightTable {
     /// ⚖️ `(sum_w, sum_w_ln_w)` restricted to the patterns present in `set`. O(domain size); used
     /// only to rebuild caches from scratch (initialization, periodic drift correction, debug
     /// verification) — never on the hot incremental path.
+    #[cfg(test)]
     pub fn sum_over(&self, set: &crate::wfc_engine::bitset::PatternSet) -> (f64, f64) {
         let mut sum_w = 0.0;
         let mut sum_w_ln_w = 0.0;
@@ -125,6 +149,7 @@ impl WeightTable {
 
     /// ⚖️ Exact-integer analogue of [`WeightTable::sum_over`], `None` if this table lacks integer
     /// weights.
+    #[cfg(test)]
     pub fn sum_int_over(&self, set: &crate::wfc_engine::bitset::PatternSet) -> Option<u64> {
         self.w_int.as_ref().map(|w_int| set.iter_ones().map(|p| w_int[p.index()]).sum())
     }

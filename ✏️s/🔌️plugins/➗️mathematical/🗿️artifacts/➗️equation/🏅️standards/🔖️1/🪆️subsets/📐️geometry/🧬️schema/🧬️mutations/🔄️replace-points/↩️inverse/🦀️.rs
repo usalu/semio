@@ -1,6 +1,6 @@
 //! ↩️ `replace-points` — undo reconstructed from BASE state (the whole prior point cloud).
 
-use crate::artifacts::equation::{equation_geometry, EquationMutation, EquationSnapshot};
+use crate::artifacts::equation::{EquationMutation, EquationSnapshot};
 
 //#region 🔖️Inverse
 pub fn inverse(_payload: &super::ReplacePoints, base: &EquationSnapshot) -> Vec<EquationMutation> {

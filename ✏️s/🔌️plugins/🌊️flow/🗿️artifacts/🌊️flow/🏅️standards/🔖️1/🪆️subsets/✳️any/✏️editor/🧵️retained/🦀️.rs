@@ -1,7 +1,7 @@
 //! 🧵️ Flow-owned byte frontiers for retained preparation and retirement.
 
 use super::{FlowConfig, FlowConfigMutation, FlowMutation};
-use flow::{neural, FlowGui, FlowLayoutEntry, FlowNodeGui, FlowPreviewGui, NodeChrome, Widget};
+use flow::{neural, FlowGui, FlowLayoutEntry, FlowNodeGui, FlowPreviewGui, Widget};
 use std::collections::LinkedList;
 use std::mem::ManuallyDrop;
 use flow::retained::{FlowOwner, FlowRetirement};
@@ -26,7 +26,6 @@ pub(super) enum Owner {
     Set(flow::OrderedSet),
     Domain(FlowRetirement),
     Dictionary(neural::Dictionary),
-    Value(neural::Value),
     Widget(Widget),
     Tree(neural::Tree),
     Neurons(Vec<neural::Neuron>),
@@ -40,10 +39,6 @@ pub(super) enum Owner {
     Config(FlowConfig),
     ConfigMutation(FlowConfigMutation),
     Scene(super::FlowWorkingScene),
-    Widgets(Vec<Widget>),
-    Specs(Vec<flow::SynapseSpec>),
-    Layouts(flow::OrderedMap<flow::WidgetLayout>),
-    Chrome(NodeChrome),
 }
 
 #[derive(Default)]
@@ -101,31 +96,8 @@ impl Retirement {
                 }
                 if !owner.is_empty() { self.push(Owner::Domain(owner)); }
             }
-            Owner::Value(neural::Value::Dictionary(value)) => self.push(Owner::Dictionary(value)),
-            Owner::Value(neural::Value::Atom(neural::Atom::String(value))) => self.text(value),
-            Owner::Value(neural::Value::Atom(_)) => {}
             Owner::Widget(widget) => self.widget(widget),
             Owner::Scene(value) => self.push(Owner::Domain(crate::artifacts::flow::retirement::retire_scene(value))),
-            Owner::Widgets(mut values) => {
-                let next = values.pop();
-                if !values.is_empty() { self.push(Owner::Widgets(values)); }
-                if let Some(value) = next { self.push(Owner::Widget(value)); }
-            }
-            Owner::Specs(mut values) => {
-                let next = values.pop();
-                if !values.is_empty() { self.push(Owner::Specs(values)); }
-                if let Some(value) = next {
-                    self.text(value.id); self.text(value.from); self.text(value.to); self.text(value.from_port); self.text(value.to_port);
-                }
-            }
-            Owner::Layouts(value) => self.domain(FlowOwner::Layouts(value)),
-            Owner::Chrome(value) => match value {
-                NodeChrome::Note { text } => self.text(text),
-                NodeChrome::Image { src } => self.text(src),
-                NodeChrome::Variable { name, schema } => { self.text(name); self.text(schema); }
-                NodeChrome::Plain { .. } => {}
-                NodeChrome::Slider { label, .. } => self.text(label),
-            },
             Owner::Tree(tree) => {
                 self.push(Owner::Neurons(tree.neurons));
                 self.push(Owner::Synapses(tree.synapses));

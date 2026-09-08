@@ -13,5 +13,5 @@ pub struct SetReportTable {
 }
 
 pub fn handle(payload: &SetReportTable, _doc: &ArtifactView<'_, RemodelingSnapshot>, _cfg: &ConfigView<'_, RemodelingConfig>) -> Result<Emit<RemodelingMutation, RemodelingConfigMutation>, Fault> {
-    Ok(Emit::config(vec![RemodelingConfigMutation::SetReportTable { table: payload.table.clone() }]))
+    Ok(Emit::config(vec![RemodelingConfigMutation::SetReportTable(crate::editor::remodeling::config::SetReportTable { table: payload.table.clone() })]))
 }

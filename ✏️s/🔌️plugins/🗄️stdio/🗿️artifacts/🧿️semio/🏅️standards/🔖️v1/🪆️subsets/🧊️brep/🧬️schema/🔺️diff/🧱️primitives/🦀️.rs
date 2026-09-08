@@ -23,7 +23,7 @@ use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::err
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::surface::Surface;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::tolerance::Tol;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::history::OpRecorder;
-use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::{Body, Edge};
+use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::topology::Body;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::matrix::Frame3;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::{Pnt2, Pnt3, Vec2, Vec3};
 

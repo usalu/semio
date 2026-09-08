@@ -9,8 +9,7 @@ use std::collections::BTreeMap;
 
 //#region 🔖️Artifact
 /// 🧬️ Full note artifact state across the artifact, presence and config lanes.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, ArtifactSchema)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.note.note")]
 pub struct NoteArtifact {
@@ -246,7 +245,7 @@ pub fn semio_example_snapshot() -> crate::artifacts::note::NoteSnapshot {
 /// contractually require JSON text (`PluginApp::render`'s `projection_override_json`, `App::example`'s
 /// manifest `document_json`).
 pub fn semio_example_json() -> String {
-    serde_json::to_string(&semio_example_snapshot()).expect("serialize semio example document")
+    dsl::os_pack::to_json_string(&semio_example_snapshot())
 }
 
 pub fn empty_note_snapshot() -> crate::artifacts::note::NoteSnapshot {
@@ -455,7 +454,7 @@ pub fn reid_block_tree(owner: &mut NoteIdOwner, block: &mut NoteBlockNode, renam
 }
 
 pub fn clone_block(owner: &mut NoteIdOwner, block: &NoteBlockNode) -> NoteBlockNode {
-    let mut cloned: NoteBlockNode = serde_json::from_value(serde_json::to_value(block).unwrap()).unwrap();
+    let mut cloned = block.clone();
     reid_block_tree(owner, &mut cloned, true);
     cloned
 }

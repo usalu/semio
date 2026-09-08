@@ -51,7 +51,7 @@ pub fn render(document: &ProcedureSnapshot, labels: &ImperativeLabels) -> semio_
     let path = crate::artifacts::procedure::procedure_working_scene(document).path;
     let step_items = ui_node_list(path.steps.iter().enumerate().map(|(index, step)| tree_item_desc(step_row_id(&step.id), format!("{}. {}", index + 1, step.kind), Some(step.id.clone()))))?;
     PanelTreeBuilder::new(IMPERATIVE_PLAY_DOCUMENT_NAMESPACE)?
-        .section_or_placeholder("imperative-play-document.steps", Some(FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL.into()), true, step_items, labels.document_empty.as_str())?
+        .section_or_placeholder("imperative-play-document.steps", Some(crate::editor::procedure::ui_label(labels.document_title.as_str())?), true, step_items, labels.document_empty.as_str())?
         .interaction_domain(IMPERATIVE_INTERACTION_STEPS)?
         .build()
 }

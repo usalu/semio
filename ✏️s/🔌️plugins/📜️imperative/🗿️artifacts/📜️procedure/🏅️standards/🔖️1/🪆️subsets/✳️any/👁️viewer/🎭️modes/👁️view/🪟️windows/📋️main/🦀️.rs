@@ -26,7 +26,7 @@ pub fn definition() -> WindowKindDefinition {
 /// 👁️ Pure `ProcedureSnapshot -> UiNode` read: one row per top-level step (`index`, `id`, `kind`),
 /// English-only headers (a viewer has no persisted locale — `Config = NoConfig`), no run-output row
 /// (the editor's own `run` view-action is a `Command`, and the viewer declares none).
-pub fn render(document: &ProcedureSnapshot) -> BuiltNode {
+pub fn render(document: &ProcedureSnapshot) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let path = crate::artifacts::procedure::procedure_working_scene(document).path;
     let rows = path.steps.iter().enumerate().map(|(index, step)| vec![(index + 1).to_string(), step.id.clone(), step.kind.clone()]).collect();
     TableWindowKit::render(&TableView { columns: vec!["#".into(), "Id".into(), "Kind".into()], rows })
@@ -49,8 +49,13 @@ mod tests {
     async fn render_lists_one_row_per_top_level_step() {
         let document = crate::artifacts::procedure::schema::default_snapshot();
         let expected = crate::artifacts::procedure::procedure_working_scene(&document).path.steps.len();
-        let json = serde_json::to_string(&semio_framework_plugin::built_to_component_tree(render(&document))).expect("component tree json");
-        assert_eq!(json.matches("\"cells\"").count(), expected);
+        let node = render(&document).expect("viewer table");
+        let semio_framework_plugin::Component::Surface(props) = &node.component else { panic!("table surface") };
+        let scene: semio_framework_plugin::TableScene = semio_framework_ui_scene::decode(props).expect("packed table");
+        let rows: serde_json::Value = serde_json::from_str(&scene.rows_json).expect("independent row oracle");
+        assert_eq!(rows.as_array().expect("rows").len(), expected);
+        semio_framework_plugin::testkit::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).expect("retire table");
+        crate::artifacts::procedure::retire_procedure_fixture(document);
     }
 }
 //#endregion 🧪️Tests

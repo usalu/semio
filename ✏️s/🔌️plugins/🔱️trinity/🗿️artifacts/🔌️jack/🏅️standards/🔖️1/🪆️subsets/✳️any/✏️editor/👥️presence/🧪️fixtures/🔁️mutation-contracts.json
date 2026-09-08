@@ -1,0 +1,47 @@
+{
+  "base": {
+    "activeFixtureId": "base",
+    "jackQuery": "MATCH base",
+    "camera": {
+      "x": 1.0,
+      "y": 2.0,
+      "zoom": 2.0
+    },
+    "lodModeByWindow": {
+      "main": "compact"
+    }
+  },
+  "cases": [
+    {
+      "kind": "replace-presence",
+      "mutation": {
+        "replacePresence": {
+          "presence": {
+            "activeFixtureId": "base",
+            "jackQuery": "MATCH base",
+            "camera": {
+              "x": 8.5,
+              "y": 2.0,
+              "zoom": 2.0
+            },
+            "lodModeByWindow": {
+              "main": "compact"
+            }
+          }
+        }
+      },
+      "expected": {
+        "activeFixtureId": "base",
+        "jackQuery": "MATCH base",
+        "camera": {
+          "x": 8.5,
+          "y": 2.0,
+          "zoom": 2.0
+        },
+        "lodModeByWindow": {
+          "main": "compact"
+        }
+      }
+    }
+  ]
+}

@@ -9,8 +9,9 @@
     <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
     <IsPackable>false</IsPackable>
+    <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="🔷️host.cs" />
+    <Compile Include="🔷️.cs" />
   </ItemGroup>
 </Project>

@@ -137,8 +137,6 @@ mod renderer {
     /// rebuild a real `kurbo::Stroke` losslessly rather than hardcoding a join.
     #[derive(Clone, Copy, Debug, PartialEq, Eq)]
     pub enum Join {
-        Bevel,
-        Miter,
         Round,
     }
 
@@ -146,8 +144,6 @@ mod renderer {
     impl From<Join> for kurbo::Join {
         fn from(value: Join) -> Self {
             match value {
-                Join::Bevel => Self::Bevel,
-                Join::Miter => Self::Miter,
                 Join::Round => Self::Round,
             }
         }
@@ -342,6 +338,13 @@ mod renderer {
         }
         pub fn height(&self) -> u32 {
             self.height
+        }
+        pub fn retirement_exclusive_backing_bytes(&self) -> usize {
+            if SharedArc::strong_count(&self.data) == 1 {
+                self.data.capacity()
+            } else {
+                0
+            }
         }
     }
 
@@ -620,43 +623,90 @@ mod renderer {
         generation: u64,
     }
 
+    /// 🎬️ One exact scene-retirement turn with current credit and physical release split.
+    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+    pub enum OpaqueSceneRetirementStep {
+        Blocked,
+        Pending { released_items: usize, credited_bytes: usize, released_bytes: usize },
+        Complete { released_items: usize, credited_bytes: usize, released_bytes: usize },
+        Fault,
+    }
+
     struct OpaqueSceneRetirementSlot {
         generation: u64,
+        occupied: bool,
+        credited_bytes: usize,
         scene: Option<ManuallyDrop<Scene>>,
     }
 
     struct OpaqueSceneRetirementRegistry {
         slots: Box<[OpaqueSceneRetirementSlot; OPAQUE_SCENE_RETIREMENT_CAPACITY]>,
-        next: usize,
         faulted: bool,
     }
 
     impl Default for OpaqueSceneRetirementRegistry {
         fn default() -> Self {
-            Self { slots: Box::new(std::array::from_fn(|_| OpaqueSceneRetirementSlot { generation: 0, scene: None })), next: 0, faulted: false }
+            Self { slots: Box::new(std::array::from_fn(|_| OpaqueSceneRetirementSlot { generation: 0, occupied: false, credited_bytes: 0, scene: None })), faulted: false }
         }
     }
 
     impl OpaqueSceneRetirementRegistry {
         fn reserve(&mut self) -> Option<OpaqueSceneRetirementToken> {
-            if self.next == OPAQUE_SCENE_RETIREMENT_CAPACITY {
+            let Some(index) = self.slots.iter().position(|slot| !slot.occupied) else {
                 self.faulted = true;
                 return None;
-            }
-            let index = self.next;
-            self.next += 1;
+            };
             let slot = &mut self.slots[index];
+            assert!(slot.scene.is_none(), "released opaque scene slot owns no scene");
+            assert_eq!(slot.credited_bytes, 0, "released opaque scene slot owns no byte credit");
             slot.generation = slot.generation.wrapping_add(1).max(1);
+            slot.occupied = true;
             Some(OpaqueSceneRetirementToken { slot: index as u16, generation: slot.generation })
         }
 
         fn token_is_current(&self, token: OpaqueSceneRetirementToken) -> bool {
-            self.slots.get(usize::from(token.slot)).is_some_and(|slot| slot.generation == token.generation && slot.scene.is_none())
+            self.slots.get(usize::from(token.slot)).is_some_and(|slot| slot.occupied && slot.generation == token.generation)
         }
 
         fn publish(&mut self, token: OpaqueSceneRetirementToken, scene: Scene) {
             assert!(self.token_is_current(token), "opaque scene retirement token remains current before ownership transfer");
-            self.slots[usize::from(token.slot)].scene = Some(ManuallyDrop::new(scene));
+            let slot = &mut self.slots[usize::from(token.slot)];
+            assert!(slot.scene.is_none(), "opaque scene retirement token remains unpublished");
+            slot.scene = Some(ManuallyDrop::new(scene));
+        }
+
+        fn advance(&mut self, token: OpaqueSceneRetirementToken, maximum_items: usize, maximum_bytes: usize) -> OpaqueSceneRetirementStep {
+            if maximum_items == 0 || maximum_bytes == 0 {
+                return OpaqueSceneRetirementStep::Blocked;
+            }
+            if !self.token_is_current(token) {
+                self.faulted = true;
+                return OpaqueSceneRetirementStep::Fault;
+            }
+            let slot = &mut self.slots[usize::from(token.slot)];
+            let Some(scene) = slot.scene.as_mut() else {
+                return OpaqueSceneRetirementStep::Blocked;
+            };
+            if !scene.retirement_is_empty() {
+                assert!(!scene.retirement_step(), "nonempty opaque scene retires one exact command");
+                return OpaqueSceneRetirementStep::Pending { released_items: 1, credited_bytes: 0, released_bytes: 0 };
+            }
+            let released_bytes = scene.retirement_backing_bytes();
+            let remaining_bytes = released_bytes.saturating_sub(slot.credited_bytes);
+            let credited_bytes = maximum_bytes.min(remaining_bytes);
+            slot.credited_bytes = slot.credited_bytes.saturating_add(credited_bytes);
+            if slot.credited_bytes != released_bytes {
+                return OpaqueSceneRetirementStep::Pending { released_items: 0, credited_bytes, released_bytes: 0 };
+            }
+            let scene = slot.scene.take().expect("terminal opaque scene owner remains retained");
+            drop(ManuallyDrop::into_inner(scene));
+            slot.occupied = false;
+            slot.credited_bytes = 0;
+            OpaqueSceneRetirementStep::Complete { released_items: 1, credited_bytes, released_bytes }
+        }
+
+        fn active(&self) -> usize {
+            self.slots.iter().filter(|slot| slot.occupied).count()
         }
     }
 
@@ -675,9 +725,14 @@ mod renderer {
         registry.publish(token, scene);
     }
 
+    pub fn advance_opaque_scene_retirement(token: OpaqueSceneRetirementToken, maximum_items: usize, maximum_bytes: usize) -> OpaqueSceneRetirementStep {
+        let mut registry = opaque_scene_retirements().lock().expect("worker opaque scene retirement registry");
+        registry.advance(token, maximum_items, maximum_bytes)
+    }
+
     pub fn opaque_scene_retirement_status() -> (usize, bool) {
         let registry = opaque_scene_retirements().lock().expect("worker opaque scene retirement registry");
-        (registry.next, registry.faulted)
+        (registry.active(), registry.faulted)
     }
 
     impl Scene {
@@ -696,6 +751,9 @@ mod renderer {
 
         pub fn retirement_is_empty(&self) -> bool {
             self.0.is_empty()
+        }
+        pub fn retirement_backing_bytes(&self) -> usize {
+            self.0.capacity().saturating_mul(size_of::<SceneCommand>())
         }
         pub fn fill<'a>(&mut self, rule: FillRule, transform: Affine, paint: impl Into<Paint>, brush_transform: Option<Affine>, shape: impl Into<ShapeRef<'a>>) {
             self.0.push(SceneCommand::Fill { rule, transform, paint: paint.into(), brush_transform, shape: shape.into().into() });
@@ -789,7 +847,7 @@ mod renderer {
             }
             assert!(registry.reserve().is_none());
             assert!(registry.faulted);
-            assert_eq!(registry.next, OPAQUE_SCENE_RETIREMENT_CAPACITY);
+            assert_eq!(registry.active(), OPAQUE_SCENE_RETIREMENT_CAPACITY);
         }
 
         #[test]
@@ -797,8 +855,25 @@ mod renderer {
             let mut registry = OpaqueSceneRetirementRegistry::default();
             let token = registry.reserve().expect("fixed quarantine credit");
             registry.publish(token, Scene::new());
+            assert!(registry.token_is_current(token));
+            assert_eq!(registry.advance(token, 1, 1), OpaqueSceneRetirementStep::Complete { released_items: 1, credited_bytes: 0, released_bytes: 0 });
             assert!(!registry.token_is_current(token));
-            assert_eq!(registry.next, 1);
+            assert_eq!(registry.advance(token, 1, 1), OpaqueSceneRetirementStep::Fault);
+        }
+
+        #[test]
+        fn terminal_opaque_scene_slots_are_reused_after_exact_cursor_drain() {
+            let mut registry = OpaqueSceneRetirementRegistry::default();
+            for _ in 0..=OPAQUE_SCENE_RETIREMENT_CAPACITY {
+                let token = registry.reserve().expect("terminal opaque scene slot is reusable");
+                let mut scene = Scene::new();
+                scene.pop_layer();
+                registry.publish(token, scene);
+                assert_eq!(registry.advance(token, 1, usize::MAX), OpaqueSceneRetirementStep::Pending { released_items: 1, credited_bytes: 0, released_bytes: 0 });
+                assert!(matches!(registry.advance(token, 1, usize::MAX), OpaqueSceneRetirementStep::Complete { released_items: 1, .. }));
+                assert_eq!(registry.active(), 0);
+            }
+            assert!(!registry.faulted);
         }
     }
 }
@@ -806,9 +881,12 @@ mod renderer {
 pub use geometry::{append_shape_to_path, geom_sel, Affine, Arc, BezPath, Circle, CubicBez, Line, PathEl, Point, Rect, RoundedRect, RoundedRectRadii, ShapeRef, Vec2};
 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
 pub(crate) use renderer::vello_backend::usvg;
+pub use renderer::{
+    advance_opaque_scene_retirement, opaque_scene_retirement_status, publish_opaque_scene_retirement, reserve_opaque_scene_retirement, BlendMode, Cap, Color, FillRule, OpaqueSceneRetirementStep, OpaqueSceneRetirementToken, Paint, RasterImage, Rgba8,
+    Scene, Stroke,
+};
 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
 pub use renderer::{append_svg_document, SvgDocument};
-pub use renderer::{opaque_scene_retirement_status, publish_opaque_scene_retirement, reserve_opaque_scene_retirement, BlendMode, Cap, Color, FillRule, OpaqueSceneRetirementToken, Paint, RasterImage, Rgba8, Scene, Stroke};
 // #endregion 🔖️Renderer
 
 /// 📐️ First-party intrinsic-dimension reader (`🧰️framework/🔨️modules/📏️intrinsic-size`) — the

@@ -39,6 +39,7 @@ extern crate semio_framework_value_derive as value_derive;
 // ⚖️ Shared compliance quantities, clause identities, results, and national annexes.
 // The public `document` module remains the domain API used by the standard-specific engines.
 #[path = "../../⚖️compliance/🦀️.rs"]
+#[macro_use]
 pub mod document;
 #[path = "."]
 pub mod config {

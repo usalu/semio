@@ -460,7 +460,7 @@ impl store::ArtifactStoreOneItemPreparationFactory<Block3dSnapshot, Block3dMutat
 
 impl store::ArtifactStoreOneItemPreparation<Block3dSnapshot, Block3dMutation> for Block3dArtifactStorePreparation {
     fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {
-        use protocol::{Mutation as _, MutationDiff as _};
+        use protocol::Mutation as _;
         if !grant.permits_one() || self.cancelled {
             return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked);
         }
@@ -586,7 +586,7 @@ impl store::ArtifactStoreOneItemPreparationFactory<Block3dConfig, Block3dConfigM
 
 impl store::ArtifactStoreOneItemPreparation<Block3dConfig, Block3dConfigMutation> for Block3dConfigStorePreparation {
     fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {
-        use protocol::{Mutation as _, MutationDiff as _};
+        use protocol::Mutation as _;
         if !grant.permits_one() || self.cancelled {
             return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked);
         }

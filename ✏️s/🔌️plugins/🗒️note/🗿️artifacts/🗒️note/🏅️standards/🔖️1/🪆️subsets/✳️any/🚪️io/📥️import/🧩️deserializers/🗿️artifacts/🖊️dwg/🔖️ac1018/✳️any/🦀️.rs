@@ -23,7 +23,7 @@ impl Deserializer<NoteSnapshot> for DwgIntoNote {
         };
         let drawing = dwg_from_bytes(bytes).map_err(|error| IoError { message: format!("DwgIntoNote: {error}"), diagnostics: Vec::new() })?;
         let value = crate::artifacts::note::io::note_document_json_from_dwg(&drawing).map_err(|error| IoError { message: format!("DwgIntoNote: {error}"), diagnostics: Vec::new() })?;
-        let snapshot: NoteSnapshot = serde_json::from_value(value).map_err(|error| IoError { message: format!("DwgIntoNote: {error}"), diagnostics: Vec::new() })?;
+        let snapshot: NoteSnapshot = dsl::os_pack::from_json_str(&value.to_string()).map_err(|error| IoError { message: format!("DwgIntoNote: {error}"), diagnostics: Vec::new() })?;
         Ok(IoOutcome::clean(snapshot))
     }
 }

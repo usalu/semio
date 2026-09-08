@@ -13,7 +13,7 @@ pub fn measure(snapshot: &ShootingSnapshot, labels: &ShootingLabels) -> WindowMe
         label: Some(labels.shot.into()),
         value: shot.map(|entry| entry.id.clone()).unwrap_or_default(),
         items: snapshot.shots.iter().map(|entry| MeasureSelectItem { id: format!("shooting.measure.shot.{}", entry.id), value: entry.id.clone(), label: entry.label.clone() }).collect(),
-        on_change: crate::editor::shooting::shooting_action("setActiveShot", None),
+        on_change: crate::editor::shooting::shooting_window_action("setActiveShot", None),
     }
 }
 //#endregion 🔖️Measure

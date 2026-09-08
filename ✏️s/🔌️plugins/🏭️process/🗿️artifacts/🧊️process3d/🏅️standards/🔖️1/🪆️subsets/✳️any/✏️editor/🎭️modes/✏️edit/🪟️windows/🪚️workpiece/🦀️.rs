@@ -15,7 +15,6 @@ use semio_framework_os_kernel::json;
 //#region 🔖️Constants
 pub const PROCESS_3D_PLAY_WINDOW_MAIN: &str = "process-workpiece";
 pub const PROCESS_3D_PLAY_BODY_MAIN: &str = "process.play.main";
-const PROCESS_3D_PLAY_SURFACE_MAIN: &str = "process.play";
 const PROCESS3D_FALLBACK_MESH_KIND: &str = "box";
 //#endregion 🔖️Constants
 

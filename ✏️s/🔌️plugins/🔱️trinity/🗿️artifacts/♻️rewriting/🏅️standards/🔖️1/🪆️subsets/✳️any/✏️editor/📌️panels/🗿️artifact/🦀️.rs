@@ -17,5 +17,5 @@ pub(crate) fn render(state: &RewritingSnapshot, _cfg: &RewritingConfig, labels: 
         let label = crate::editor::rewriting::ui_label(if node.name.is_empty() { node.id.as_str() } else { node.name.as_str() })?;
         tree_item_desc(node.id.clone(), label, Some(node.kind.clone()))
     }))?;
-    builder.section("trinity-document.nodes", Some(labels.pieces.as_str().into()), true, node_items)?.interaction_domain("graph")?.build()
+    builder.section("trinity-document.nodes", Some(crate::editor::rewriting::ui_label(labels.pieces.as_str())?), true, node_items)?.interaction_domain("graph")?.build()
 }

@@ -1,0 +1,78 @@
+{
+  "cases": [
+    {
+      "question": {
+        "id": "name",
+        "label": "Name",
+        "kind": "text",
+        "placeholder": "Name"
+      },
+      "value": "ä",
+      "surface": "try",
+      "interactive": true,
+      "component": "input",
+      "expectedValue": "ä"
+    },
+    {
+      "question": {
+        "id": "description",
+        "label": "Beschreibung",
+        "kind": "longText"
+      },
+      "value": "Line\nö",
+      "surface": "blueprint",
+      "interactive": true,
+      "component": "input",
+      "expectedValue": "Line\nö"
+    },
+    {
+      "question": {
+        "id": "amount",
+        "label": "Amount",
+        "kind": "number"
+      },
+      "value": 7.5,
+      "surface": "try",
+      "interactive": true,
+      "component": "input",
+      "expectedValue": "7.5"
+    },
+    {
+      "question": {
+        "id": "height",
+        "label": "Höhe",
+        "kind": "slider",
+        "min": 0,
+        "max": 10,
+        "step": 0.5
+      },
+      "value": 2.5,
+      "surface": "blueprint",
+      "interactive": true,
+      "component": "slider",
+      "expectedValue": 2.5
+    },
+    {
+      "question": {
+        "id": "enabled",
+        "label": "Enabled",
+        "kind": "boolean"
+      },
+      "value": true,
+      "surface": "try",
+      "interactive": true,
+      "component": "toggle"
+    },
+    {
+      "question": {
+        "id": "locked",
+        "label": "Gesperrt",
+        "kind": "boolean"
+      },
+      "value": false,
+      "surface": "try",
+      "interactive": false,
+      "component": "toggle"
+    }
+  ]
+}

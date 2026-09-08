@@ -73,7 +73,7 @@ pub fn inverse_sequence_mutation(snapshot: &SequenceSnapshot, mutation: &Sequenc
 /// behind this interface per CLAUDE.md's "external libraries behind an interface" rule, never a new
 /// one), so the case reads the committed feature row instead of re-declaring it as a Rust literal.
 pub fn decode_sequence_mutation_json(text: &str) -> Result<SequenceMutation, String> {
-    serde_json::from_str(text).map_err(|error| error.to_string())
+    dsl::os_pack::from_json_str(text).map_err(|error| error.to_string())
 }
 
 /// 📥️ Decodes a committed `{"steps": [...], "edges": [...]}` document into the real step/edge values
@@ -81,14 +81,14 @@ pub fn decode_sequence_mutation_json(text: &str) -> Result<SequenceMutation, Str
 /// distinction only its own `serde` round trip preserves, so a caller outside this crate cannot
 /// rebuild a step by hand without losing exactly the fidelity `edit-step-params` exists to move.
 pub fn decode_sequence_scene_json(text: &str) -> Result<(Vec<SequenceStep>, Vec<SequenceEdge>), String> {
-    #[derive(serde::Deserialize)]
+    #[derive(dsl::FromValue)]
     struct CommittedScene {
-        #[serde(default)]
+        #[value(default)]
         steps: Vec<SequenceStep>,
-        #[serde(default)]
+        #[value(default)]
         edges: Vec<SequenceEdge>,
     }
-    let scene: CommittedScene = serde_json::from_str(text).map_err(|error| error.to_string())?;
+    let scene: CommittedScene = dsl::os_pack::from_json_str(text).map_err(|error| error.to_string())?;
     Ok((scene.steps, scene.edges))
 }
 
@@ -101,7 +101,7 @@ pub fn decode_sequence_scene_json(text: &str) -> Result<(Vec<SequenceStep>, Vec<
 /// promise.
 pub fn encode_sequence_projection_json(snapshot: &SequenceSnapshot) -> String {
     let scene = crate::artifacts::sequence::sequence_working_scene(snapshot);
-    serde_json::json!({ "schema": snapshot.schema, "steps": scene.steps, "edges": scene.edges }).to_string()
+    dsl::os_pack::to_json_string(&SequenceFixture { schema: snapshot.schema.clone(), steps: scene.steps, edges: scene.edges })
 }
 //#endregion 🔖️CaseBridges
 
@@ -110,7 +110,7 @@ pub fn encode_sequence_projection_json(snapshot: &SequenceSnapshot) -> String {
 mod tests {
     use super::*;
     use crate::artifacts::sequence::{default_snapshot, SequenceStep, StepParams, SEQUENCE_DOCUMENT_SCHEMA};
-    use protocol::testkit::assert_mutation_inverse_law;
+    use protocol::os_spr::testkit::assert_mutation_inverse_law;
     use protocol::SemanticMutation;
     use store::{create_document_envelope, ArtifactCommand};
 
@@ -118,9 +118,9 @@ mod tests {
     async fn leaf_detection_preserves_language_neutral_plan_vectors() {
         let suite: serde_json::Value = serde_json::from_str(include_str!("🧪️tests/🔣️.json")).expect("detection fixture JSON");
         for case in suite["cases"].as_array().expect("detection cases") {
-            let before: SequenceFixture = serde_json::from_value(case["before"].clone()).expect("before fixture");
-            let after: SequenceFixture = serde_json::from_value(case["after"].clone()).expect("after fixture");
-            let expected: Vec<SequenceMutation> = serde_json::from_value(case["expected"].clone()).expect("expected mutations");
+            let before: SequenceFixture = dsl::os_pack::from_json_str(&case["before"].to_string()).expect("before fixture");
+            let after: SequenceFixture = dsl::os_pack::from_json_str(&case["after"].to_string()).expect("after fixture");
+            let expected: Vec<SequenceMutation> = dsl::os_pack::from_json_str(&case["expected"].to_string()).expect("expected mutations");
             assert_eq!(sequence_snapshot_mutations(&before, &after), expected, "{}", case["id"]);
         }
     }
@@ -172,9 +172,9 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn store_applies_and_undoes_step_create() {
-        let mut store = SequenceStore::new(create_document_envelope(SEQUENCE_DOCUMENT_SCHEMA, "sequence", default_snapshot(), None)).expect("valid artifact store fixture");
+        let mut store = SequenceStore::new(create_document_envelope(SEQUENCE_DOCUMENT_SCHEMA, "sequence", default_snapshot(), None)).await.expect("valid artifact store fixture");
         store
-            .dispatch(ArtifactCommand::Apply { mutations: vec![create_step(SequenceStep { id: "step-7".into(), kind: "log.print".into(), params: StepParams::new(), x: 0.0, y: 0.0, slot: None, collapsed: false })], description: None })
+            .dispatch(ArtifactCommand::Apply { mutations: vec![create_step(SequenceStep { id: "step-7".into(), kind: "log.print".into(), params: StepParams::new(), x: 0.0, y: 0.0, slot: None, collapsed: false })], description: None }).await
             .expect("apply");
         assert_eq!(store.snapshot().expect("snapshot").to_fixture().steps.len(), 3);
     }
@@ -184,8 +184,8 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn connect_disconnect_steps_inverse_law() {
         let base = default_snapshot();
-        assert_mutation_inverse_law(&base, &connect_steps("edge-99".into(), "step-1".into(), "step-2".into()));
-        assert_mutation_inverse_law(&base, &disconnect_steps("edge-1".into()));
+        assert_mutation_inverse_law(&base, &connect_steps("edge-99".into(), "step-1".into(), "step-2".into())).await;
+        assert_mutation_inverse_law(&base, &disconnect_steps("edge-1".into())).await;
     }
 
     #[semio_framework_async_macros::async_test]

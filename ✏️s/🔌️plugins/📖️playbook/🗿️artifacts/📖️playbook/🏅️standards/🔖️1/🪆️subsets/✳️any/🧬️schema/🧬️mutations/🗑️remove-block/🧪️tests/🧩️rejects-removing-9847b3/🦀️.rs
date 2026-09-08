@@ -22,17 +22,17 @@ const DIFF_ABSENT: &str = include_str!("🔺️diff/🚫️.absent");
 const OUTCOME: &str = include_str!("🎯️outcome/🔣️.json");
 
 fn mutation() -> PlaybookMutation {
-    serde_json::from_str(MUTATION).expect("mutation decodes")
+    dsl::os_pack::from_json_str(MUTATION).expect("mutation decodes")
 }
 fn expected_after() -> PlaybookSnapshot {
-    serde_json::from_str(AFTER).expect("after snapshot decodes")
+    dsl::os_pack::from_json_str(AFTER).expect("after snapshot decodes")
 }
 
 /// 🌱 The committed `⬅️before`, with its composed `flow` child resolved to a scene holding the step
 /// the payload names — and no blocks at all, so the block the payload names is the only thing
 /// missing.
 fn before() -> PlaybookSnapshot {
-    let mut snapshot: PlaybookSnapshot = serde_json::from_str(BEFORE).expect("before snapshot decodes");
+    let mut snapshot: PlaybookSnapshot = dsl::os_pack::from_json_str(BEFORE).expect("before snapshot decodes");
     let PlaybookMutation::RemoveBlock(payload) = mutation() else {
         panic!("rejects-removing-a-block-missing-from-its-step's committed mutation must be a remove-block");
     };
@@ -74,12 +74,12 @@ async fn the_committed_diff_is_declared_absent() {
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {
-        let decoded: PlaybookSnapshot = serde_json::from_str(text).expect("snapshot decodes");
-        let reencoded = serde_json::to_value(&decoded).expect("snapshot encodes");
+        let decoded: PlaybookSnapshot = dsl::os_pack::from_json_str(text).expect("snapshot decodes");
+        let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::os_pack::to_json_string(&decoded)).expect("snapshot encodes");
         let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
         assert_eq!(reencoded, original, "remove-block/rejects-removing-a-block-missing-from-its-step: committed {label} JSON is not canonical");
     }
-    let reencoded = serde_json::to_value(mutation()).expect("mutation encodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::os_pack::to_json_string(&mutation())).expect("mutation encodes");
     let original: serde_json::Value = serde_json::from_str(MUTATION).expect("mutation reparses");
     assert_eq!(reencoded, original, "remove-block/rejects-removing-a-block-missing-from-its-step: committed mutation JSON is not canonical");
 }

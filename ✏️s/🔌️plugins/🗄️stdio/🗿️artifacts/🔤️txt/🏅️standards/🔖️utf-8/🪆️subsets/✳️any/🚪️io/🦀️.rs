@@ -45,7 +45,9 @@ pub use derived_composition::*;
 //#endregion 🎹️DerivedComposition
 
 //#region 🔖️Register
-use crate::artifacts::txt::{TxtDiff, TxtMutation, TxtSnapshot, STDIO_TXT_DOCUMENT_SCHEMA};
+use crate::artifacts::txt::{TxtMutation, TxtSnapshot, STDIO_TXT_DOCUMENT_SCHEMA};
+#[cfg(not(target_arch = "wasm32"))]
+use crate::artifacts::txt::TxtDiff;
 
 /// 🗂️ Registers codecs and the artifact schema descriptor. One of stdio's 10 protected
 /// imperative plugin-root calls (`crate::artifacts::txt::engine::register()` in

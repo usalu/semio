@@ -16,7 +16,7 @@
 //!
 //! The three semantic payloads are mounted from their direct mutation leaves in `🦀️.rs`.
 
-use crate::artifacts::curation::schema::mutations::{ChangeCuratedItemCount, CreateCuratedItem, DeleteCuratedItem, SourcingMutation};
+use crate::artifacts::curation::schema::mutations::SourcingMutation;
 use crate::artifacts::curation::CurationSnapshot;
 
 //#region 📖️SemioGrammar

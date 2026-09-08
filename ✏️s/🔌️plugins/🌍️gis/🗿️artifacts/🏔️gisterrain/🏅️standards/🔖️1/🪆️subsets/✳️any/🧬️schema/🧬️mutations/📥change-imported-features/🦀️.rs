@@ -4,6 +4,7 @@ use crate::artifacts::gisterrain::diff::GisTerrainDiff;
 use crate::artifacts::gisterrain::mutations::GisTerrainMutation;
 use crate::artifacts::gisterrain::GisTerrainSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
+#[cfg(test)]
 use serde::{Deserialize, Serialize};
 use semio_framework_value_derive::{FromValue, ToValue};
 

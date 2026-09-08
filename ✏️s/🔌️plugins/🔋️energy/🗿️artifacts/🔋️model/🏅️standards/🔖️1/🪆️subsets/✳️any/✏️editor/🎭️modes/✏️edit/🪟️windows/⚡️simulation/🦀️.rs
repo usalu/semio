@@ -290,7 +290,7 @@ mod tests {
         assert!(definition.actions.iter().all(|action| action.semantics.execution.interactive_job == InteractiveJobClassification::Migrated));
         assert_eq!(definition.label, LocalizedLabel::native("Energy simulation", "Energiesimulation"));
         for action in &definition.actions {
-            assert_ne!(action.label.native(), action.label.secondary(), "action {} is not really translated", action.id);
+            assert!(semio_framework::Terminology::ALL.iter().all(|&terminology| action.label.resolve(terminology, semio_framework::Locale::En) != action.label.resolve(terminology, semio_framework::Locale::De)), "action {} is not really translated", action.id);
         }
     }
 

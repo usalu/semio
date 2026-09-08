@@ -1,6 +1,6 @@
 //! 🎞️ Protocol semio_hub wire frames: the lane-tagged `ClientFrame`/`ServerFrame` envelopes a
 //! browser/native sync client exchanges with the collaboration semio_hub, plus their binary codec. Frozen
-//! contract: `.🦑️repo/🎫️tickets/26/07/27/PROTOCOL-BINARY-OP-LOG-LAYER/contract.md` `## Amendment`
+//! contract: `.🧬semio/🦑️repo/🎫️tickets/26/07/27/PROTOCOL-BINARY-OP-LOG-LAYER/contract.md` `## Amendment`
 //! §`protocol_wire`.
 //!
 //! 🎯️ W5: the byte encoding is now a fully hand-rolled binary layout — `lane: u8` followed by
@@ -412,7 +412,7 @@ pub enum ApplyOutcome {
     /// opaque here (this crate stays decoupled from `os_spr::command`'s concrete type, matching
     /// `ArtifactDiff`/`InverseMutation`'s opaque-bytes convention above), packed by the caller with
     /// `pack::encode_record_body` before construction. See contract-freeze.md §C8 of
-    /// `.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS/`.
+    /// `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS/`.
     Rejected {
         reason: String,
         messages: Vec<u8>,

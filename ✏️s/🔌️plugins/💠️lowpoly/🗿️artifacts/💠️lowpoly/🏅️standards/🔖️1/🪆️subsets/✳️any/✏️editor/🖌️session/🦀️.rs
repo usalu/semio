@@ -552,7 +552,7 @@ impl LowpolyScratch {
     /// `draw_gesture_preview_payload`: `framework/sync::SyncSession::publish_preview` is host-only
     /// ("WASI-P2 plugins never link this crate") and this crate compiles as a WASI-P2 component; the
     /// one cross-sandbox channel this crate can reach, `store::BackboneMessage`, has no preview-shaped
-    /// variant. See `.🦑️repo/🎫️tickets/26/07/27/INTRODUCE-DB-PROTOCOL-COMMAND-LAYER-AND-VCS-SLIMMING/cw7-preview-law.txt`.
+    /// variant. See `.🧬semio/🦑️repo/🎫️tickets/26/07/27/INTRODUCE-DB-PROTOCOL-COMMAND-LAYER-AND-VCS-SLIMMING/cw7-preview-law.txt`.
     /// `#[allow(dead_code)]`: exercised by `🧪️Tests` only until a host bridge exists.
     #[allow(dead_code)]
     pub fn gesture_preview(&self) -> Option<(&'static str, u64, Vec<u8>)> {
@@ -784,17 +784,6 @@ impl LowpolyTransient {
             }
         }
         Some(extent.max(1))
-    }
-
-    pub(crate) fn retained_shape_admitted(&self, maximum_meshes: usize, maximum_mesh_bytes: usize, maximum_paint_bytes: usize) -> bool {
-        self.state.mesh_workspace.len() <= maximum_meshes
-            && self.state.mesh_workspace.iter().all(|(key, value)| key.len() <= maximum_mesh_bytes && value.len() <= maximum_mesh_bytes)
-            && self.state.stroke.as_deref().is_none_or(|stroke| stroke.object_id.len() <= maximum_mesh_bytes && stroke.base.len() <= maximum_paint_bytes && stroke.scratch.len() <= maximum_paint_bytes)
-            && self.state.transform.as_deref().is_none_or(|transform| {
-                transform.before_mesh_workspace.len() <= maximum_mesh_bytes
-                    && transform.mesh_workspace.len() <= maximum_meshes
-                    && transform.mesh_workspace.iter().all(|(key, value)| key.len() <= maximum_mesh_bytes && value.len() <= maximum_mesh_bytes)
-            })
     }
 
     pub fn segment_at(&self, mut cursor: usize, segment_bytes: usize) -> Option<&[u8]> {

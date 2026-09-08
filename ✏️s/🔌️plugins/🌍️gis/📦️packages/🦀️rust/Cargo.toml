@@ -63,6 +63,10 @@ path = "🦀️.rs"
 name = "native_codecs"
 path = "../../📇️native-codecs/🧪️tests/🦀️.rs"
 
+[[test]]
+name = "component_cold_map_patch"
+path = "../../🧪️fixtures/🌉️component-cold-map-patch/🦀️.rs"
+
 [features]
 # 🔌️ The WASM component entry point (`plugin_exports!` → `#[no_mangle]`
 # `semio_plugin_install_bundle`). Default-on so this plugin builds as its own component, and
@@ -91,3 +95,7 @@ serde_json.workspace = true
 [dev-dependencies]
 geo = { version = "0.31.0", default-features = false }
 semio-framework-async-macros = { path = "../../../../../🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
+semio-framework-actor = { workspace = true }
+semio-framework-plugin-host = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust" }
+semio-framework-ui-contract = { path = "../../../../../🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust" }
+semio-framework-ui-scene = { path = "../../../../../🧰️framework/🔨️modules/🖱️ui/🎬️scene/📦️packages/🦀️rust" }

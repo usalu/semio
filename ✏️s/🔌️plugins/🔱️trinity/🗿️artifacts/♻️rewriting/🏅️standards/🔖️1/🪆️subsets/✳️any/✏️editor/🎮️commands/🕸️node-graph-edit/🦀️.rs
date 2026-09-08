@@ -7,6 +7,7 @@ use crate::artifacts::rewriting::schema::Rhs;
 use crate::artifacts::rewriting::RewritingSnapshot;
 use crate::editor::rewriting::config::RewritingConfigMutation;
 use semio_framework_plugin::{Emit, Fault};
+use pack::JsonValue as Value;
 
 /// 🧭️ One addressable rule-clause node in the LHS/RHS semantic graphs (`lhs-where`, `rhs-create-N`,
 /// `rhs-merge-N`, `rhs-set-N`, `rhs-delete-N`, `rhs-parameter-N`) — parsed back from its synthetic

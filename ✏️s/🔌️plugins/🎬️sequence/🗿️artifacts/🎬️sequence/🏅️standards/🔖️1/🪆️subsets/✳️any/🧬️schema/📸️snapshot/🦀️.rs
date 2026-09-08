@@ -10,9 +10,7 @@ use schema::ArtifactSchema;
 /// longer defines its own step-DAG content model, it composes stdio's `flow` subset instead.
 /// `#[child(...)]` drives `#[derive(ArtifactSchema)]`'s slot-table emission; never hand-written.
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, ArtifactSchema)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[artifact_schema(id = "s.sequence.sequence")]
 pub struct SequenceSnapshot {
     #[state(artifact)]
@@ -63,13 +61,21 @@ pub fn default_snapshot() -> SequenceSnapshot {
 /// bridge operate on, and the JSON wire contract `SequenceHost::to_json`/`load_json` still speak.
 /// Bridges to/from the composed-child `SequenceSnapshot` via `to_fixture`/`from_fixture` below.
 #[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
 pub struct SequenceFixture {
     pub schema: String,
     pub steps: Vec<SequenceStep>,
     pub edges: Vec<SequenceEdge>,
+}
+
+impl neural_engine::ColdRetire for SequenceFixture { fn retire_cold(self) { self.steps.retire_cold(); } }
+
+impl neural_engine::ColdRetire for SequenceSnapshot {
+    fn retire_cold(mut self) {
+        if let Some(owner) = self.content.take_local_owner::<crate::artifacts::sequence::SequenceWorkingScene>().expect("exact sequence scene owner") {
+            if let Ok(scene) = std::sync::Arc::try_unwrap(owner) { scene.retire_cold(); }
+        }
+    }
 }
 
 impl SequenceSnapshot {

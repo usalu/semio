@@ -6,7 +6,7 @@
   "emoji": "🎥️",
   "aggregateVariant": "SetCamera",
   "payloadSchema": "🧬️.schema.json",
-  "textOpcode": "camera",
+  "textOpcode": "set-camera",
   "binaryTag": 0,
   "invertibility": "explicit-mutation",
   "diffParticipation": "apply-only",

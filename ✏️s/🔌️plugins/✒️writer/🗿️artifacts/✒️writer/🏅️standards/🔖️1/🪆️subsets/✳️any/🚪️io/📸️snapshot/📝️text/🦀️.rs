@@ -163,7 +163,7 @@ pub fn jack_example_document() -> WriterSnapshot {
 /// 📄️ JSON re-serialization of {@link jack_example_document}, for the framework-generic call sites
 /// (`.example(...)`, `render(...)`) that still take a document as a JSON string.
 pub fn jack_example_json() -> String {
-    serde_json::to_string(&jack_example_document()).expect("serialize jack example document")
+    dsl::os_pack::json::to_json_string(&jack_example_document())
 }
 
 /// 📄️ The `dag.jack` example, parsed once from {@link DAG_JACK_EXAMPLE_TEXT} — see {@link jack_example_document}.
@@ -175,7 +175,7 @@ pub fn dag_jack_example_document() -> WriterSnapshot {
 
 /// 📄️ JSON re-serialization of {@link dag_jack_example_document} — see {@link jack_example_json}.
 pub fn dag_jack_example_json() -> String {
-    serde_json::to_string(&dag_jack_example_document()).expect("serialize dag.jack example document")
+    dsl::os_pack::json::to_json_string(&dag_jack_example_document())
 }
 //#endregion 🔖️Examples
 

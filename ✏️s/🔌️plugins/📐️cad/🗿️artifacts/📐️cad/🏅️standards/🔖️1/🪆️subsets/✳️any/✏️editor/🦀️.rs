@@ -39,7 +39,7 @@ use semio_framework_plugin::{
 };
 use semio_framework_plugin::retained_command::{ArtifactCommandWork, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
 use semio_framework::{InteractiveJobClassification, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError};
-use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::{Brep, BrepKernel, GeometryHandle};
+use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::brep::schema::engine::{Brep, GeometryHandle};
 // 🚧️ SDK GAP: `ArtifactEditor`/`Editor`/`Dialect` (ticket 26/08/16 contract §2.1/§2.4)? are not yet
 // in `semio_framework_plugin`'s curated crate-root re-export list (`🔌️plugin/🦀️.rs:17858`)
 // — only reachable through the `app` submodule they're actually declared in. Not fixable here
@@ -1969,7 +1969,7 @@ impl ArtifactEditor for CadPlayApp {
     /// the section; a bare right-click with nothing selected is a documented reduced-fidelity gap
     /// (each action already no-ops on an empty selection at dispatch time)?.
     fn context_menu(_request: &ContextMenuRequest, _doc: &ArtifactView<'_, CadSnapshot>, _cfg: &ConfigView<'_, CadConfig>, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
-        { Menu::of(registry).action("translateSelection").action("rotateSelection").action("scaleSelection").action("duplicateObject").destructive("deleteObject").build() }
+        Menu::of(registry).action("translateSelection").action("rotateSelection").action("scaleSelection").action("duplicateObject").destructive("deleteObject").build()
     }
 }
 //#endregion 🔖️PlayApp

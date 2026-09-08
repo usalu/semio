@@ -120,6 +120,7 @@ class DevScript extends BundleScript {
 
 class BuildScript extends BundleScript {
   run(segments: string[]): void {
+    if (segments.some((arg) => /^(?:--outDir|--config|--root)(?:=|$)/.test(arg))) throw new Error("Build output and configuration are owned by this Nx target");
     verifyAdminEntryGraph(this.root);
     verifyAdminStylesheetGraph(this.root);
     runViteBuild(this.root, segments, "⚙️vite.config.ts");

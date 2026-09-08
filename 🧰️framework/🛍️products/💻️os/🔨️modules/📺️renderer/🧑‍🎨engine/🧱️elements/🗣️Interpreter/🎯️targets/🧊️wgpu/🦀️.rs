@@ -17,7 +17,7 @@ use ui_contract::UiDocumentLease;
 use ui_wgpu::wgpu::UiPresence;
 #[cfg(any(target_arch = "wasm32", test))]
 use ui_wgpu::wgpu::UiState;
-use ui_wgpu::wgpu::{draw_text, render_widget, Rect, Theme, WidgetContext, WidgetInteractionMaps, WidgetNode};
+use ui_wgpu::wgpu::{Rect, Theme, WidgetContext, WidgetInteractionMaps};
 use ui_wgpu::wgpu::{ActionDescriptor, DragPayload, NodeId, UiComponentSceneNode, UiNode};
 
 pub type FrameworkWidgetContext<'a> = WidgetContext<'a, ActionDescriptor>;
@@ -265,7 +265,7 @@ fn render_plan_error_widget(message: &str, bounds: Rect, ctx: &mut FrameworkWidg
  * the shell already `GpuContext::upload_font_atlas`/`upload_icon_atlas`s every frame for chrome/dock/
  * panel text — so retained-mode content now shares the one real, GPU-uploaded glyph/icon texture
  * instead of reading from (or clobbering) a second, independent one. See
- * `.🦑️repo/🎫️tickets/26/07/11/WGPU-RENDERER-FULL-PARITY/report-w3-interpreter-cutover.md`'s "CRITICAL FINDING"
+ * `.🧬semio/🦑️repo/🎫️tickets/26/07/11/WGPU-RENDERER-FULL-PARITY/report-w3-interpreter-cutover.md`'s "CRITICAL FINDING"
  * for the original gap and the follow-up ticket work that closed it. */
 static UI_ENGINE: WorkerCell<ui_wgpu::wgpu::Ui> = WorkerCell::new();
 
@@ -2333,7 +2333,7 @@ mod render_plan_validator_tests {
 
 //#region 🔬️Introspection
 /** 🔬️ Structural + frame-stats dump for the wgpu↔React UI-parity headless test harness (see
- * `.🦑️repo/🎫️tickets/26/07/11/WGPU-RENDERER-FULL-PARITY`): walks the SAME `UI_ENGINE` retained façade
+ * `.🧬semio/🦑️repo/🎫️tickets/26/07/11/WGPU-RENDERER-FULL-PARITY`): walks the SAME `UI_ENGINE` retained façade
  * `render_ui_node` (above) already drives, so every dump reflects exactly what was last laid
  * out/painted — never a second, independent measurement pass. Deliberately scoped to ONE window's
  * content tree: shell chrome/navbar/footer/dock are rendered by this crate's own immediate-mode

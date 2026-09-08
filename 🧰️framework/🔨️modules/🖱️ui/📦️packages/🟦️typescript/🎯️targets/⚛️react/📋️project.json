@@ -2,7 +2,10 @@
   "name": "@semio-tech/ui-react",
   "$schema": "../../../../../../../node_modules/nx/schemas/project-schema.json",
   "namedInputs": {
-    "default": ["{projectRoot}/**/*", "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧱️elements/**/*"]
+    "default": [
+      "{projectRoot}/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧱️elements/**/*"
+    ]
   },
   "targets": {
     "dev": {
@@ -21,8 +24,15 @@
       "options": {
         "cwd": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react",
         "command": "bun ./📜️script.ts build",
-        "forwardAllArgs": true
-      }
+        "forwardAllArgs": true,
+        "env": {
+          "STORYBOOK_OUTPUT_DIR": "🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/storybook-static"
+        }
+      },
+      "outputs": [
+        "{projectRoot}/storybook-static"
+      ],
+      "cache": true
     },
     "lint": {
       "executor": "nx:run-commands",

@@ -8,9 +8,7 @@ use schema::ArtifactSchema;
 /// `content` is a single always-present-slot `Option` (never absent, only ever replaced — see
 /// `📓️migration-recipe.md` §8), matching `dag`'s/`flow`'s/writer's `document`/`content` diff shape.
 #[derive(Clone, Debug, Default, PartialEq, dsl::ToValue, dsl::FromValue, ArtifactSchema)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default)]
-#[cfg_attr(test, serde(rename_all = "camelCase", default))]
 #[artifact_schema(id = "s.reasoning.wires")]
 pub struct WiresDiff {
     #[state(artifact)]

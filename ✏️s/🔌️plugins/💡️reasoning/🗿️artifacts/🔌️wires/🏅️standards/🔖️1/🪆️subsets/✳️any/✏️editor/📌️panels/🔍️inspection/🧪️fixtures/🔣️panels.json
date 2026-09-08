@@ -1,0 +1,36 @@
+{
+  "cases": [
+    {
+      "locale": "en-US",
+      "identities": "Identities",
+      "relationships": "Relationships",
+      "identityKinds": "Identity kinds",
+      "relationshipKinds": "Relationship kinds",
+      "summary": [
+        "Schema: reasoning.wires.fixture",
+        "Identities: 0",
+        "Relationships: 0",
+        "Board nodes: 0"
+      ]
+    },
+    {
+      "locale": "de-DE",
+      "identities": "Identitäten",
+      "relationships": "Beziehungen",
+      "identityKinds": "Identitätsarten",
+      "relationshipKinds": "Beziehungsarten",
+      "summary": [
+        "Schema: reasoning.wires.fixture",
+        "Identitäten: 0",
+        "Beziehungen: 0",
+        "Knoten auf der Leinwand: 0"
+      ]
+    }
+  ],
+  "canvas": {
+    "cameraX": 0,
+    "cameraY": 0,
+    "zoom": 1,
+    "layers": []
+  }
+}

@@ -15,7 +15,6 @@ use crate::editor::procedure::engine::imperative_io;
 use crate::editor::procedure::modes::edit;
 use crate::editor::procedure::modes::edit::windows::{main, script};
 use crate::editor::procedure::panels::{catalogue as catalogue_panel, document as document_panel, inspection as inspection_panel};
-use crate::editor::procedure::presence::{ImperativePresence, ImperativePresenceMutation};
 use crate::editor::procedure::terminology::imperative_labels;
 use semio_framework::{InteractiveJobClassification, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError};
 use semio_framework_plugin::app::InteractionView;
@@ -31,8 +30,13 @@ use semio_framework_plugin::{
 // definition for the qualified form this file only reads back through that constant.
 use store::{ArtifactPack, EngineHandles};
 
+/// 🏷️ Admits semantic labels for the imperative editor.
+pub fn ui_label(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_ui_contract::Label> {
+    semio_framework_ui_contract::Label::try_from(value.as_ref()).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("imperative.ui.capacity", "label admission failed"))
+}
+
 //#region 🔖️Constants
-pub const IMPERATIVE_PLAY_APP_ID: &str = "imperative-play";
+pub const IMPERATIVE_PLAY_APP_ID: &str = "s.imperative.procedure@1/*#editor";
 pub use catalogue_panel::IMPERATIVE_PLAY_BODY_CATALOGUE;
 pub use document_panel::IMPERATIVE_PLAY_BODY_DOCUMENT;
 pub use inspection_panel::IMPERATIVE_PLAY_BODY_INSPECTOR;
@@ -135,7 +139,7 @@ fn imperative_retained_reduce(
     _operation: &AppOperationContext,
 ) -> Result<Emit<ProcedureMutation, ImperativeConfigMutation, NoDraftMutation>, Fault> {
     match command {
-        ImperativeCommand::SetLocale(payload) if payload.value.len() <= IMPERATIVE_RETAINED_RAW_BYTES => Ok(Emit::config(vec![ImperativeConfigMutation::SetLocale { value: payload.value.clone() }])),
+        ImperativeCommand::SetLocale(payload) if payload.value.len() <= IMPERATIVE_RETAINED_RAW_BYTES => Ok(Emit::config(vec![ImperativeConfigMutation::SetLocale(crate::editor::procedure::config::SetLocale { value: payload.value.clone() })])),
         _ => Err(Fault::from("imperative-retained-route-mismatch")),
     }
 }
@@ -226,13 +230,13 @@ fn imperative_config_edit(forward: ImperativeConfigMutation, inverse: Imperative
 
 impl store::ArtifactStoreOneItemPreparationFactory<ImperativeConfig, ImperativeConfigMutation> for ImperativeConfigPreparationFactory {
     fn preflight(&self, mutation: &ImperativeConfigMutation, description: Option<&str>, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
-        let admitted = matches!(mutation, ImperativeConfigMutation::SetLocale { value } if value.len() <= IMPERATIVE_RETAINED_RAW_BYTES);
+        let admitted = matches!(mutation, ImperativeConfigMutation::SetLocale(crate::editor::procedure::config::SetLocale { value }) if value.len() <= IMPERATIVE_RETAINED_RAW_BYTES);
         if lane != store::HistoryLane::Document || !admitted || description.is_some_and(|value| value.len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES) { return Err("Imperative config preparation rejected its lane or route-specific envelope".into()); }
         Ok(store::ArtifactStoreOneItemFootprint { work_items: 2, retained_bytes: store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES })
     }
 
     fn begin(&self, request: store::ArtifactStoreOneItemPreparationRequest<ImperativeConfig, ImperativeConfigMutation>) -> Result<Box<dyn store::ArtifactStoreOneItemPreparation<ImperativeConfig, ImperativeConfigMutation>>, store::ArtifactStoreOneItemPreparationRequest<ImperativeConfig, ImperativeConfigMutation>> {
-        let admitted = matches!(&request.mutation, ImperativeConfigMutation::SetLocale { value } if value.len() <= IMPERATIVE_RETAINED_RAW_BYTES);
+        let admitted = matches!(&request.mutation, ImperativeConfigMutation::SetLocale(crate::editor::procedure::config::SetLocale { value }) if value.len() <= IMPERATIVE_RETAINED_RAW_BYTES);
         if request.lane != store::HistoryLane::Document || !admitted || request.operation != request.authority.operation() || request.generation != request.authority.generation() || request.base_revision != request.authority.base_revision() || request.authority.actor().len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES { return Err(request); }
         Ok(Box::new(ImperativeConfigPreparation {
             base: Some(request.base), mutation: Some(request.mutation), description: request.description, authority: Some(request.authority), candidate: None, prepared: None,
@@ -250,10 +254,10 @@ impl store::ArtifactStoreOneItemPreparation<ImperativeConfig, ImperativeConfigMu
             let retained = base.run_output_json.len().saturating_add(base.locale.len()).saturating_add(base.contributions_json.len());
             if retained > store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES { return Err("Imperative config base exceeds retained byte capacity".into()); }
             let mutation = self.mutation.take().ok_or_else(|| "Imperative config preparation lost its mutation owner".to_string())?;
-            let ImperativeConfigMutation::SetLocale { value } = &mutation else { return Err("Imperative config preparation received a non-locale mutation".into()); };
+            let ImperativeConfigMutation::SetLocale(crate::editor::procedure::config::SetLocale { value }) = &mutation else { return Err("Imperative config preparation received a non-locale mutation".into()); };
             let mut post = base.clone();
             post.locale = value.clone();
-            self.candidate = Some((post, ImperativeConfigMutation::SetLocale { value: base.locale.clone() }, mutation));
+            self.candidate = Some((post, ImperativeConfigMutation::SetLocale(crate::editor::procedure::config::SetLocale { value: base.locale.clone() }), mutation));
             self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: 0, digest: [0; 32] };
             return Ok(store::ArtifactStoreOneItemPreparationStep::Progress(self.checkpoint));
         }
@@ -296,8 +300,8 @@ impl ArtifactEditor for ImperativePlayApp {
     type ConfigMutation = ImperativeConfigMutation;
     type Draft = NoDraft;
     type DraftMutation = NoDraftMutation;
-    type Presence = ImperativePresence;
-    type PresenceMutation = ImperativePresenceMutation;
+    type Presence = semio_framework_plugin::NoPresence;
+    type PresenceMutation = semio_framework_plugin::NoPresenceMutation;
     type Transient = semio_framework_plugin::NoTransient;
     type TransientMutation = semio_framework_plugin::NoTransientMutation;
 
@@ -362,25 +366,25 @@ impl ArtifactEditor for ImperativePlayApp {
         Ok(Some(semio_framework::ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
     }
 
-    async fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
+    fn app_schema() -> Option<::schema::AppSchemaDescriptor> {
         Some(crate::editor::procedure::config::schema::app_schema_descriptor())
     }
 
-    async fn initial_snapshot() -> ProcedureSnapshot {
+    fn initial_snapshot() -> ProcedureSnapshot {
         default_snapshot()
     }
 
-    async fn io() -> Option<semio_framework_plugin::AppIo> {
+    fn io() -> Option<semio_framework_plugin::AppIo> {
         Some(imperative_io())
     }
 
     /// 🏷️ The manifest action id each command was declared under — supplied wholesale by
     /// `app_commands!`'s generated `command_id()`.
-    async fn command_id(command: &ImperativeCommand) -> &'static str {
+    fn command_id(command: &ImperativeCommand) -> &'static str {
         command.command_id()
     }
 
-    async fn handle(
+    fn handle(
         command: &ImperativeCommand,
         doc: &ArtifactView<'_, ProcedureSnapshot>,
         cfg: &ConfigView<'_, ImperativeConfig>,
@@ -393,7 +397,7 @@ impl ArtifactEditor for ImperativePlayApp {
 
     /// 🕹️ `steps` domain: `HierarchyProvider::Topology` from the document's own `Step::bodies` nesting —
     /// see `imperative_steps_topology`'s doc comment.
-    async fn interaction_topology(doc: &ArtifactView<'_, ProcedureSnapshot>, _cfg: &ConfigView<'_, ImperativeConfig>) -> InteractionTopology {
+    fn interaction_topology(doc: &ArtifactView<'_, ProcedureSnapshot>, _cfg: &ConfigView<'_, ImperativeConfig>) -> InteractionTopology {
         let mut domains = std::collections::BTreeMap::new();
         domains.insert(IMPERATIVE_INTERACTION_STEPS.to_string(), imperative_steps_topology(doc.snapshot));
         InteractionTopology { domains }
@@ -402,7 +406,7 @@ impl ArtifactEditor for ImperativePlayApp {
     /// 🎞️ `"result:out"` exports the last `run` scope (a generic data value, the port recipe's
     /// `computation.procedure`-kinded output); `"document:out"` replicates `ArtifactEditor::export_media`'s
     /// default whole-document-pack behavior (unreachable once this override exists).
-    async fn export_media(port: &str, doc: &ArtifactView<'_, ProcedureSnapshot>) -> Result<Media, MediaError> {
+    fn export_media(port: &str, doc: &ArtifactView<'_, ProcedureSnapshot>) -> Result<Media, MediaError> {
         match port {
             "result:out" => {
                 let host = crate::editor::procedure::engine::ImperativeHost::from_snapshot(doc.snapshot.clone());
@@ -419,19 +423,19 @@ impl ArtifactEditor for ImperativePlayApp {
         }
     }
 
-    async fn render(body_key: &str, doc: &ArtifactView<'_, ProcedureSnapshot>, cfg: &ConfigView<'_, ImperativeConfig>) -> ComponentTree {
+    fn render(body_key: &str, doc: &ArtifactView<'_, ProcedureSnapshot>, cfg: &ConfigView<'_, ImperativeConfig>) -> semio_framework_plugin::UiAssemblyResult<ComponentTree> {
         imperative_engine::sync_imperative_module_contributions(&cfg.snapshot.contributions_json);
         let document = doc.snapshot;
         let config = cfg.snapshot;
         let labels = imperative_labels(config);
-        semio_framework_plugin::built_to_component_tree(match body_key {
+        (match body_key {
             IMPERATIVE_PLAY_BODY_MAIN => main::render(document, &config.run_output_json, labels),
             IMPERATIVE_PLAY_BODY_SCRIPT => script::render(document),
             IMPERATIVE_PLAY_BODY_DOCUMENT => document_panel::render(document, labels),
             IMPERATIVE_PLAY_BODY_CATALOGUE => catalogue_panel::render(labels),
             IMPERATIVE_PLAY_BODY_INSPECTOR => inspection_panel::render(document, labels),
-            _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))),
-        })
+            _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("imperative.ui.capacity", "diagnostic admission failed")),
+        }).map(semio_framework_plugin::built_to_component_tree)
     }
 }
 //#endregion 🔖️ImperativePlayApp
@@ -569,7 +573,7 @@ pub(crate) mod testkit {
     }
 
     pub async fn render(app: &mut ImperativeApp, body_key: &str) -> String {
-        serde_json::to_string(&app.render(body_key, None, &ViewModel::default()).await.expect("render")).expect("render json")
+        semio_framework_plugin::testkit::project_and_retire_fixture_tree(app.render(body_key, None, &ViewModel::default()).await.expect("render")).expect("render json")
     }
 }
 //#endregion 🧪️Testkit
@@ -609,9 +613,9 @@ mod tests {
     fn config_preparation_admits_locale_and_rejects_process_global_contributions() {
         use store::ArtifactStoreOneItemPreparationFactory;
         let factory = ImperativeConfigPreparationFactory;
-        assert!(factory.preflight(&ImperativeConfigMutation::SetLocale { value: "de-DE".into() }, None, store::HistoryLane::Document).is_ok());
-        assert!(factory.preflight(&ImperativeConfigMutation::SetContributions { json: "[]".into() }, None, store::HistoryLane::Document).is_err());
-        assert!(factory.preflight(&ImperativeConfigMutation::SetLocale { value: "de-DE".into() }, None, store::HistoryLane::Interaction).is_err());
+        assert!(factory.preflight(&ImperativeConfigMutation::SetLocale(crate::editor::procedure::config::SetLocale { value: "de-DE".into() }), None, store::HistoryLane::Document).is_ok());
+        assert!(factory.preflight(&ImperativeConfigMutation::SetContributions(crate::editor::procedure::config::SetContributions { json: "[]".into() }), None, store::HistoryLane::Document).is_err());
+        assert!(factory.preflight(&ImperativeConfigMutation::SetLocale(crate::editor::procedure::config::SetLocale { value: "de-DE".into() }), None, store::HistoryLane::Interaction).is_err());
     }
 
     #[semio_framework_async_macros::async_test]
@@ -742,14 +746,14 @@ mod tests {
     async fn interaction_topology_walks_nested_control_bodies_into_parent_links() {
         let mut app = imperative_app().await;
         dispatch(&mut app, ImperativeCommand::AddStep(add_step::AddStep { kind: "control.if".into(), index: None })).await;
-        let owner_id = crate::artifacts::procedure::procedure_working_scene(&app.snapshot().await.expect("projection")).path.steps.last().expect("owner").id.clone();
+        let owner_id = crate::artifacts::procedure::procedure_working_scene(&app.snapshot().expect("projection")).path.steps.last().expect("owner").id.clone();
         dispatch(&mut app, ImperativeCommand::AddStepAt(add_step_at::AddStepAt { kind: "log.print".into(), index: None, owner: Some(owner_id.clone()), slot: Some("then".into()) })).await;
-        let document = app.snapshot().await.expect("projection");
+        let document = app.snapshot().expect("projection");
         let config = ImperativeConfig::default();
-        let history = semio_framework_plugin::HistoryView::empty().await;
-        let doc = ArtifactView::new(&document, &history).await;
+        let history = semio_framework_plugin::HistoryView::empty();
+        let doc = ArtifactView::new(&document, &history);
         let cfg = ConfigView { snapshot: &config };
-        let topology = ImperativePlayApp::interaction_topology(&doc, &cfg).await;
+        let topology = ImperativePlayApp::interaction_topology(&doc, &cfg);
         let steps = topology.domains.get(IMPERATIVE_INTERACTION_STEPS).expect("steps domain present in topology");
         let owner_row_id = document_panel::step_row_id(&owner_id);
         let owner_node = steps.ordered.iter().find(|node| node.id == owner_row_id).expect("owner node present");
@@ -764,10 +768,10 @@ mod tests {
     async fn interaction_topology_is_empty_for_a_document_with_no_steps() {
         let document = ProcedureSnapshot::default();
         let config = ImperativeConfig::default();
-        let history = semio_framework_plugin::HistoryView::empty().await;
-        let doc = ArtifactView::new(&document, &history).await;
+        let history = semio_framework_plugin::HistoryView::empty();
+        let doc = ArtifactView::new(&document, &history);
         let cfg = ConfigView { snapshot: &config };
-        let topology = ImperativePlayApp::interaction_topology(&doc, &cfg).await;
+        let topology = ImperativePlayApp::interaction_topology(&doc, &cfg);
         assert!(topology.domains.get(IMPERATIVE_INTERACTION_STEPS).expect("steps domain present in topology").ordered.is_empty());
     }
     //#endregion 🔖️Interaction
@@ -779,7 +783,7 @@ mod tests {
         // AddStep fired with no explicit kind: the declared `kind` default ("log.print") must be
         // materialized by the registry's action-arg default resolution.
         app.dispatch_typed(ImperativeCommand::AddStep(add_step::AddStep { kind: "log.print".into(), index: None }), &meta("local")).await.expect("add step");
-        let document = app.snapshot().await.expect("materialize projection");
+        let document = app.snapshot().expect("materialize projection");
         let path = crate::artifacts::procedure::procedure_working_scene(&document).path;
         assert_eq!(path.steps.last().unwrap().kind, "log.print");
         // `run` is a View-kind command: under registry enforcement it must not emit document operations.
@@ -790,7 +794,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn default_snapshot_has_steps() {
         let app = imperative_app().await;
-        let path = crate::artifacts::procedure::procedure_working_scene(&app.snapshot().await.expect("projection")).path;
+        let path = crate::artifacts::procedure::procedure_working_scene(&app.snapshot().expect("projection")).path;
         assert_eq!(path.steps.len(), 2);
     }
 
@@ -798,7 +802,7 @@ mod tests {
     async fn add_step_command_appends_step() {
         let mut app = imperative_app().await;
         dispatch(&mut app, ImperativeCommand::AddStep(add_step::AddStep { kind: "log.print".into(), index: None })).await;
-        let path = crate::artifacts::procedure::procedure_working_scene(&app.snapshot().await.expect("projection")).path;
+        let path = crate::artifacts::procedure::procedure_working_scene(&app.snapshot().expect("projection")).path;
         assert!(path.steps.len() > 2);
     }
 
@@ -806,10 +810,10 @@ mod tests {
     async fn add_step_at_owner_slot_nests_into_control_body() {
         let mut app = imperative_app().await;
         dispatch(&mut app, ImperativeCommand::AddStep(add_step::AddStep { kind: "control.if".into(), index: None })).await;
-        let owner_id = crate::artifacts::procedure::procedure_working_scene(&app.snapshot().await.expect("projection")).path.steps.last().expect("owner").id.clone();
-        let root_len = crate::artifacts::procedure::procedure_working_scene(&app.snapshot().await.expect("projection")).path.steps.len();
+        let owner_id = crate::artifacts::procedure::procedure_working_scene(&app.snapshot().expect("projection")).path.steps.last().expect("owner").id.clone();
+        let root_len = crate::artifacts::procedure::procedure_working_scene(&app.snapshot().expect("projection")).path.steps.len();
         dispatch(&mut app, ImperativeCommand::AddStepAt(add_step_at::AddStepAt { kind: "log.print".into(), index: None, owner: Some(owner_id.clone()), slot: Some("then".into()) })).await;
-        let document = app.snapshot().await.expect("projection");
+        let document = app.snapshot().expect("projection");
         let path = crate::artifacts::procedure::procedure_working_scene(&document).path;
         let owner_step = path.steps.iter().find(|step| step.id == owner_id).expect("owner step");
         assert_eq!(owner_step.bodies.get("then").map(|body| body.steps.len()), Some(1));
@@ -820,7 +824,7 @@ mod tests {
     async fn add_step_at_falls_back_to_root_for_unknown_owner() {
         let mut app = imperative_app().await;
         dispatch(&mut app, ImperativeCommand::AddStepAt(add_step_at::AddStepAt { kind: "log.print".into(), index: None, owner: Some("missing-step".into()), slot: Some("then".into()) })).await;
-        let document = app.snapshot().await.expect("projection");
+        let document = app.snapshot().expect("projection");
         let path = crate::artifacts::procedure::procedure_working_scene(&document).path;
         let added_id = path.steps.last().expect("added").id.clone();
         assert!(path.steps.iter().any(|step| step.id == added_id));
@@ -834,21 +838,21 @@ mod tests {
         path.steps.push(Step { id: "step-3".into(), kind: "log.print".into(), params: crate::artifacts::procedure::Dictionary::new(), bodies: BTreeMap::new() });
         let expected_after = crate::artifacts::procedure::procedure_snapshot_with_content(&base.schema, &path, &crate::artifacts::procedure::procedure_working_scene(&base).seed);
         app.dispatch_typed(ImperativeCommand::AddStep(add_step::AddStep { kind: "log.print".into(), index: None }), &meta("local")).await.expect("apply command");
-        assert_eq!(app.snapshot().await.expect("projection"), expected_after);
+        assert_eq!(app.snapshot().expect("projection"), expected_after);
         app.handle_action("undo", None, &meta("local")).await.expect("undo");
-        assert_eq!(app.snapshot().await.expect("projection"), default_snapshot());
+        assert_eq!(app.snapshot().expect("projection"), default_snapshot());
         app.handle_action("redo", None, &meta("local")).await.expect("redo");
-        assert_eq!(app.snapshot().await.expect("projection"), expected_after);
+        assert_eq!(app.snapshot().expect("projection"), expected_after);
     }
 
     #[semio_framework_async_macros::async_test]
     async fn remove_step_command_is_exact_inverse_of_add() {
         let mut app = imperative_app().await;
-        let original = app.snapshot().await.expect("projection");
+        let original = app.snapshot().expect("projection");
         dispatch(&mut app, ImperativeCommand::AddStep(add_step::AddStep { kind: "math.add".into(), index: None })).await;
-        let added_id = crate::artifacts::procedure::procedure_working_scene(&app.snapshot().await.expect("projection")).path.steps.last().expect("added").id.clone();
+        let added_id = crate::artifacts::procedure::procedure_working_scene(&app.snapshot().expect("projection")).path.steps.last().expect("added").id.clone();
         dispatch(&mut app, ImperativeCommand::RemoveStep(remove_step::RemoveStep { id: added_id })).await;
-        assert_eq!(app.snapshot().await.expect("projection"), original);
+        assert_eq!(app.snapshot().expect("projection"), original);
     }
 
     /// 🧪️ The definitional regression proof: two independent instances start from the same document,
@@ -859,12 +863,12 @@ mod tests {
     async fn two_instances_converge_disjoint_edits_via_backbone() {
         let mut params = BTreeMap::new();
         params.insert("key".to_string(), crate::artifacts::procedure::dsl::value_to_value_dsl(&neural_engine::Value::Atom(neural_engine::Atom::String("renamed".into()))));
-        let (mut instance_a, mut instance_b) = semio_framework_plugin::testkit::paired_apps::<semio_framework_plugin::EditorApp<ImperativePlayApp>>("mem://imperative-convergence").await;
+        let (mut instance_a, mut instance_b) = semio_framework_plugin::testkit::paired_apps::<EditorApp<ImperativePlayApp>>("mem://imperative-convergence").await;
         instance_a.dispatch_typed(ImperativeCommand::AddStep(add_step::AddStep { kind: "math.add".into(), index: None }), &meta("actor-a")).await.expect("a applies its edit");
         instance_b.dispatch_typed(ImperativeCommand::SetStepParams(set_step_params::SetStepParams { id: "step-1".into(), params }), &meta("actor-b")).await.expect("b applies its edit");
         instance_a.handle_action("commitCheckpoint", None, &meta("actor-a")).await.expect("pump a");
         instance_b.handle_action("commitCheckpoint", None, &meta("actor-b")).await.expect("pump b");
-        assert_eq!(instance_a.snapshot().await.expect("a projection"), instance_b.snapshot().await.expect("b projection"));
+        assert_eq!(instance_a.snapshot().expect("a projection"), instance_b.snapshot().expect("b projection"));
     }
 
     #[semio_framework_async_macros::async_test]
@@ -882,9 +886,9 @@ mod tests {
         let operations = protocol::encode_envelopes(&envelopes);
         let mut receiver = imperative_app().await;
         receiver.ingest_operations(&operations).await.expect("ingest once");
-        let once = receiver.snapshot().await.expect("projection");
+        let once = receiver.snapshot().expect("projection");
         receiver.ingest_operations(&operations).await.expect("ingest twice");
-        assert_eq!(receiver.snapshot().await.expect("projection"), once);
+        assert_eq!(receiver.snapshot().expect("projection"), once);
     }
 
     #[semio_framework_async_macros::async_test]

@@ -3,7 +3,10 @@
   "$schema": "../../../node_modules/nx/schemas/project-schema.json",
   "projectType": "application",
   "namedInputs": {
-    "default": ["{workspaceRoot}/🌎️hub/**/*.rs", "{projectRoot}/**/*"]
+    "default": [
+      "{workspaceRoot}/🌎️hub/**/*.rs",
+      "{projectRoot}/**/*"
+    ]
   },
   "targets": {
     "setup": {
@@ -18,7 +21,9 @@
       "dependsOn": [
         {
           "target": "build",
-          "projects": ["os-hub-admin"]
+          "projects": [
+            "os-hub-admin"
+          ]
         }
       ],
       "options": {
@@ -95,6 +100,70 @@
       "options": {
         "cwd": "🌎️hub/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts scoped-directory-socket-check process"
+      }
+    },
+    "directory-message-authority-source-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts directory-message-authority-check source"
+      }
+    },
+    "directory-message-authority-native-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts directory-message-authority-check native"
+      }
+    },
+    "admin-directory-authority-source-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts admin-directory-authority-check source"
+      }
+    },
+    "admin-directory-authority-native-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts admin-directory-authority-check native"
+      }
+    },
+    "share-issuance-atomicity-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts share-issuance-atomicity-check"
+      }
+    },
+    "share-issuance-atomicity-native-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts share-issuance-atomicity-check --native"
+      }
+    },
+    "retained-short-admin-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts retained-short-admin-check"
+      }
+    },
+    "retained-short-admin-native-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts retained-short-admin-check --native"
       }
     },
     "presence-normalization-source-check": {
@@ -554,6 +623,14 @@
         "forwardAllArgs": true
       }
     },
+    "trusted-stdio-gis-bundle-browser-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts trusted-stdio-gis-bundle-check --browser"
+      }
+    },
     "trusted-stdio-gis-bundle-process-check": {
       "executor": "nx:run-commands",
       "cache": false,
@@ -631,7 +708,9 @@
       "dependsOn": [
         {
           "target": "build",
-          "projects": ["os-hub-admin"]
+          "projects": [
+            "os-hub-admin"
+          ]
         }
       ],
       "options": {
@@ -644,7 +723,9 @@
       "dependsOn": [
         {
           "target": "build",
-          "projects": ["os-hub-admin"]
+          "projects": [
+            "os-hub-admin"
+          ]
         }
       ],
       "options": {
@@ -657,7 +738,9 @@
       "dependsOn": [
         {
           "target": "build",
-          "projects": ["os-hub-admin"]
+          "projects": [
+            "os-hub-admin"
+          ]
         }
       ],
       "options": {
@@ -670,7 +753,9 @@
       "dependsOn": [
         {
           "target": "build",
-          "projects": ["os-hub-admin"]
+          "projects": [
+            "os-hub-admin"
+          ]
         }
       ],
       "options": {
@@ -683,7 +768,9 @@
       "dependsOn": [
         {
           "target": "build",
-          "projects": ["os-hub-admin"]
+          "projects": [
+            "os-hub-admin"
+          ]
         }
       ],
       "options": {
@@ -696,7 +783,9 @@
       "dependsOn": [
         {
           "target": "build",
-          "projects": ["os-hub-admin"]
+          "projects": [
+            "os-hub-admin"
+          ]
         }
       ],
       "cache": false,

@@ -65,14 +65,11 @@ impl<D, C> LocalInteractionLiveQuery<D, C> {
         query_generation: u64,
         identity: LocalInteractionIdentity,
         document: Option<SnapshotRead<D>>,
-        document_generation: u64,
         config: Option<SnapshotRead<C>>,
-        config_generation: u64,
-        config_revision: [u8; 32],
         interaction: Option<SnapshotRead<protocol::InteractionState>>,
     ) -> Self {
         let failed = document.is_none() || config.is_none() || interaction.is_none();
-        let inputs = LocalInteractionInputReads::from_optional(document, document_generation, identity.document_revision, config, config_generation, config_revision);
+        let inputs = LocalInteractionInputReads::from_optional(document, config);
         let query = interaction.map(|read| LocalInteractionQuery::new(LocalInteractionCaptureCursor::new(read, identity), request_id, query_generation));
         let mut owner = Self { owned: ManuallyDrop::new(LiveState { query, inputs, error_bytes: None }), request_id, started: false, page_sent: false, closing: false, cancelled: false, failed, terminal_sent: false };
         if failed {

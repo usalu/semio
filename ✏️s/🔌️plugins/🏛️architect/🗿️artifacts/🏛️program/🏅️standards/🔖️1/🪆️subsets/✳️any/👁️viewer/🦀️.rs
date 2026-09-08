@@ -8,7 +8,7 @@ use crate::artifacts::program::op::ProgramMutation;
 use crate::artifacts::program::{sample_plugin, ProgramSnapshot, ARCHITECT_DIALECT, ARCHITECT_PROGRAM_SCHEMA};
 use crate::viewer::architect::modes::view;
 use crate::viewer::architect::modes::view::windows::register;
-use semio_framework_plugin::{ArtifactView, ArtifactViewer, ConfigView, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, UiNode, ViewEmit, Viewer};
+use semio_framework_plugin::{ArtifactView, ArtifactViewer, ConfigView, Fault, Label, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, ViewEmit, Viewer};
 // 🚧️ `Dialect`/`InteractionView` are only reachable through `app`, not yet in the crate-root
 // re-export list (see the identical note in the sibling editor surface's root `🦀️.rs`).
 use semio_framework_plugin::app::{Dialect, InteractionView};
@@ -65,11 +65,11 @@ impl ArtifactViewer for ArchitectViewer {
         Ok(ViewEmit::default())
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> UiNode {
+    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         match body_key {
             register::ARCHITECT_VIEW_BODY_REGISTER => register::render(doc.snapshot),
-            _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
-        }
+            _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("architect.viewer.ui.capacity", "viewer label admission failed")),
+        }.map(semio_framework_plugin::built_to_component_tree)
     }
 }
 //#endregion 🔖️Viewer

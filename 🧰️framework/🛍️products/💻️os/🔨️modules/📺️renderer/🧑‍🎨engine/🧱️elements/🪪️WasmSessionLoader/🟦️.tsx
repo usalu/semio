@@ -105,9 +105,9 @@ export async function createGraphSession(): Promise<GraphWasmSession> {
 //#region FlowSession
 export type { FlowTask, FlowTaskEvent } from "@semio-tech/flow-core/🌐️flow-browser.js";
 export type FlowWasmSession = import("@semio-tech/flow-core/🌐️flow-browser.js").FlowSession;
-type FlowSessionModule = typeof import("@semio-tech/flow-core/🌐️flow-browser.js");
+type FlowBrowserRuntime = import("@semio-tech/flow-core/🌐️flow-browser.js").FlowBrowserRuntime;
 
-let flowSessionPromise: Promise<FlowSessionModule> | null = null;
+let flowSessionPromise: Promise<FlowBrowserRuntime> | null = null;
 
 export async function createFlowSession(): Promise<FlowWasmSession> {
   if (!flowSessionPromise) {
@@ -116,12 +116,11 @@ export async function createFlowSession(): Promise<FlowWasmSession> {
       import("@semio-tech/flow-core/🌐️flow-browser.js"),
     ]).then(async ([core, browser]) => {
       const exports = await core.default();
-      await browser.default(exports);
-      return browser;
+      return browser.createFlowBrowserRuntime({ source: exports });
     });
   }
-  const mod = await flowSessionPromise;
-  return new mod.FlowSession();
+  const runtime = await flowSessionPromise;
+  return runtime.openSession();
 }
 //#endregion FlowSession
 

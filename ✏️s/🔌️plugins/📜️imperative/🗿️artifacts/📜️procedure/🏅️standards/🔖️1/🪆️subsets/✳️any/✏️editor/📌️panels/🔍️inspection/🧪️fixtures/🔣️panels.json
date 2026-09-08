@@ -1,0 +1,48 @@
+{
+  "cases": [
+    {
+      "locale": "en-US",
+      "document": "Document",
+      "catalogue": "Catalogue",
+      "inspection": "Inspection",
+      "steps": "Steps",
+      "columns": [
+        "#",
+        "Id",
+        "Kind"
+      ]
+    },
+    {
+      "locale": "de-DE",
+      "document": "Dokument",
+      "catalogue": "Katalog",
+      "inspection": "Inspektion",
+      "steps": "Schritte",
+      "columns": [
+        "#",
+        "ID",
+        "Art"
+      ]
+    }
+  ],
+  "actionKinds": [
+    "state.set",
+    "log.print",
+    "control.if",
+    "control.while",
+    "math.add"
+  ],
+  "runOutput": {
+    "counter": 2
+  },
+  "rows": [
+    [
+      "1",
+      "run-output.counter",
+      "counter = 2"
+    ]
+  ],
+  "settings": {
+    "readOnly": true
+  }
+}

@@ -2,7 +2,7 @@
 //! informed by the deleted `os-semio_hub-storage-postgres` crate's connection/schema-bootstrap shape but
 //! implementing the generic, semio_hub-agnostic `db_storage` trait family rather than semio_hub-specific
 //! tables. Frozen contract:
-//! `.🦑️repo/🎫️tickets/26/07/27/INTRODUCE-DB-PROTOCOL-COMMAND-LAYER-AND-VCS-SLIMMING/contract.md`
+//! `.🧬semio/🦑️repo/🎫️tickets/26/07/27/INTRODUCE-DB-PROTOCOL-COMMAND-LAYER-AND-VCS-SLIMMING/contract.md`
 //! (`## db crate family`).
 //!
 //! ⏳️ **Async-first (design ticket `26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME`, packet W6)**:

@@ -6,9 +6,12 @@ use semio_framework_plugin::plugin_app_close_prelude::*;
 use semio_framework_plugin::{ExecutionMode, Plugin, PluginApp};
 
 //#region 🗃️Apps
-/// 🗃️ Closed runtime app fleet for the declaration-owned sequence surfaces.
 semio_framework_dispatch_macros::dyn_enum_close! {
-    pub enum SequenceApps: PluginApp {}
+    /// 🗃️ Closed runtime app fleet for the declaration-owned sequence surfaces.
+    pub enum SequenceApps: PluginApp {
+        Editor(VcsArtifactApp<EditorApp<crate::editor::sequence::SequencePlayApp>>),
+        Viewer(VcsArtifactApp<ViewerApp<crate::viewer::sequence::SequenceViewer>>),
+    }
 }
 //#endregion 🗃️Apps
 
@@ -44,7 +47,7 @@ pub fn plugin() -> Result<Plugin<SequenceApps>, PluginAssemblyError> {
 mod surface_tests {
     #[semio_framework_async_macros::async_test]
     async fn sequence_viewer_never_mutates() {
-        semio_framework_plugin::testkit::assert_viewer_never_mutates::<crate::viewer::sequence::SequenceViewer>();
+        semio_framework_plugin::testkit::assert_viewer_never_mutates::<crate::viewer::sequence::SequenceViewer>().await;
     }
 
     #[semio_framework_async_macros::async_test]

@@ -4,100 +4,50 @@
     "packageManager": "bun"
   },
   "useDaemonProcess": false,
-  "defaultBase": "⛳️wip",
+  "defaultBase": "⛳wip",
   "namedInputs": {
-    "default": ["{projectRoot}/**/*", "sharedGlobals"],
-    "sharedGlobals": [
-      "{workspaceRoot}/package.json",
-      "{workspaceRoot}/bun.lock",
-      "{workspaceRoot}/bunfig.toml",
-      "{workspaceRoot}/nx.json",
-      "{workspaceRoot}/tsconfig.json",
-      "{workspaceRoot}/Cargo.toml",
-      "{workspaceRoot}/.cargo/config.toml",
-      "{workspaceRoot}/Cargo.lock",
-      "{workspaceRoot}/rustfmt.toml",
-      "{workspaceRoot}/go.work",
-      "{workspaceRoot}/go.work.sum",
-      "{workspaceRoot}/pyproject.toml",
-      "{workspaceRoot}/uv.lock",
-      "{workspaceRoot}/CMakeLists.txt",
-      "{workspaceRoot}/CMakePresets.json",
-      "{workspaceRoot}/Monorepo.sln",
-      "{workspaceRoot}/eslint.config.mjs",
-      "{workspaceRoot}/.dependency-cruiser.cjs"
+    "default": [
+      "{projectRoot}/**/*",
+      "sharedGlobals"
     ],
-    "production": ["default", "!{projectRoot}/**/?(*.)+(spec|test|e2e|integration|stories|story|mdx).[cmjtshx]?([sx])?(.snap)?", "!{projectRoot}/.storybook/**"],
-    "cargo": ["{projectRoot}/**/*.rs", "{projectRoot}/Cargo.toml", "{workspaceRoot}/Cargo.lock"],
-    "go": ["{projectRoot}/**/*.go", "{projectRoot}/go.mod", "{projectRoot}/go.sum", "{workspaceRoot}/go.work", "{workspaceRoot}/go.work.sum"],
-    "uv": ["{projectRoot}/**/*.py", "{projectRoot}/pyproject.toml", "{workspaceRoot}/uv.lock"],
-    "dotnet": ["{projectRoot}/**/*.cs", "{projectRoot}/**/*.csproj", "{workspaceRoot}/Monorepo.sln"]
-  },
-  "targetDefaults": {
-    "setup": {
-      "inputs": ["sharedGlobals"],
-      "cache": true
-    },
-    "lint": {
-      "inputs": ["default", "^default"],
-      "cache": true
-    },
-    "build": {
-      "dependsOn": ["^build"],
-      "inputs": ["production", "^production"],
-      "cache": true
-    },
-    "dev": {
-      "cache": false
-    },
-    "test": {
-      "dependsOn": [],
-      "inputs": ["default", "^default", { "env": "SEMIO_TEST_LEVEL" }, { "env": "SEMIO_TEST_BUDGET_MS" }, { "env": "SEMIO_BUILD_BUDGET_MS" }],
-      "cache": true
-    },
-    "test-quick": {
-      "dependsOn": [],
-      "inputs": ["default", "^default", { "env": "SEMIO_TEST_LEVEL" }, { "env": "SEMIO_TEST_BUDGET_MS" }, { "env": "SEMIO_BUILD_BUDGET_MS" }],
-      "cache": true
-    },
-    "test-long": {
-      "dependsOn": [],
-      "inputs": ["default", "^default", { "env": "SEMIO_TEST_LEVEL" }, { "env": "SEMIO_TEST_BUDGET_MS" }, { "env": "SEMIO_BUILD_BUDGET_MS" }],
-      "cache": true
-    },
-    "test-exhaustive": {
-      "dependsOn": [],
-      "inputs": ["default", "^default", { "env": "SEMIO_TEST_LEVEL" }, { "env": "SEMIO_TEST_BUDGET_MS" }, { "env": "SEMIO_BUILD_BUDGET_MS" }],
-      "cache": false
-    },
-    "publish": {
-      "dependsOn": ["^publish"],
-      "inputs": ["default", "^default"],
-      "cache": true
-    },
-    "update": {
-      "dependsOn": ["^update"],
-      "inputs": ["default", "^default"],
-      "cache": true
-    },
-    "wasm": {
-      "inputs": ["cargo", "^cargo"],
-      "cache": true
-    },
-    "native-build": {
-      "inputs": ["cargo", "^cargo"],
-      "cache": true
-    },
-    "package": {
-      "dependsOn": [],
-      "inputs": ["cargo", "^cargo"],
-      "cache": true
-    },
-    "extension-package": {
-      "dependsOn": [],
-      "inputs": ["cargo", "^cargo"],
-      "cache": true
-    }
+    "sharedGlobals": [
+      "{workspaceRoot}/📜️script.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟨️.mjs",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/**/*",
+      {
+        "runtime": "node -p \"process.platform.concat(process.arch)\""
+      },
+      {
+        "runtime": "bun --version"
+      }
+    ],
+    "production": [
+      "default",
+      "!{projectRoot}/**/?(*.)+(spec|test|e2e|integration|stories|story|mdx).[cmjtshx]?([sx])?(.snap)?",
+      "!{projectRoot}/.storybook/**"
+    ],
+    "cargo": [
+      "{projectRoot}/**/*.rs",
+      "{projectRoot}/Cargo.toml",
+      "{workspaceRoot}/Cargo.lock"
+    ],
+    "go": [
+      "{projectRoot}/**/*.go",
+      "{projectRoot}/go.mod",
+      "{projectRoot}/go.sum",
+      "{workspaceRoot}/go.work",
+      "{workspaceRoot}/go.work.sum"
+    ],
+    "uv": [
+      "{projectRoot}/**/*.py",
+      "{projectRoot}/pyproject.toml",
+      "{workspaceRoot}/uv.lock"
+    ],
+    "dotnet": [
+      "{projectRoot}/**/*.cs",
+      "{projectRoot}/**/*.csproj",
+      "{workspaceRoot}/Monorepo.sln"
+    ]
   },
   "pluginsConfig": {
     "@nx/js": {
@@ -126,5 +76,8 @@
       "plugin": "./🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🟨️.mjs",
       "options": {}
     }
-  ]
+  ],
+  "parallel": 3,
+  "cacheDirectory": ".nx/cache",
+  "maxCacheSize": "8GB"
 }

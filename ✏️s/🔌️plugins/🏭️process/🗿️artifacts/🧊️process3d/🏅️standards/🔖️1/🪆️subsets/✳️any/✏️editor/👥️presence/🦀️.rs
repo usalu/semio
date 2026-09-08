@@ -28,7 +28,7 @@ impl Default for Process3dPresence {
 
 impl protocol::MutationDiff<Process3dPresence> for Process3dPresence {
     fn apply(&self, _base: &Process3dPresence) -> protocol::MutationApplyResult<Process3dPresence> {
-        Ok({ self.clone() })
+        Ok(self.clone())
     }
     fn absorb(&mut self, other: Self) {
         *self = other;

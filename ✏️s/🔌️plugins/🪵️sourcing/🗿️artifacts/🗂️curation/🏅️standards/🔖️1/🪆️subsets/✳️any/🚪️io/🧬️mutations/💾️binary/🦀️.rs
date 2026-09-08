@@ -12,7 +12,6 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.pro
 //#endregion 📡️SemioProtocol
 
 use crate::artifacts::curation::schema::mutations::SourcingMutation;
-use crate::artifacts::curation::CurationSnapshot;
 use protocol::OpBinary;
 
 /// 📦️ Encodes a `SourcingMutation` to its binary state-patch form.

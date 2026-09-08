@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Set Contributions",
+  "type": "object",
+  "properties": {
+    "json": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "json"
+  ],
+  "additionalProperties": false
+}

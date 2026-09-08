@@ -2,7 +2,6 @@
 //! `s.stdio.semio.model`) to a new owned handle. If the slot was already occupied, this OVERWRITES
 //! it (the inverse restores whichever handle was there before, not merely "delete" — see `↩️inverse`).
 
-use crate::artifacts::cad::diff::CadDiff;
 use crate::artifacts::cad::mutations::CadMutation;
 use crate::artifacts::cad::CadSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};

@@ -140,16 +140,11 @@ crate::component_persistent_local! {
     static COLD_PAIR_INGRESS: RefCell<cold_pair::ColdDocumentPairIngressRegistry<PLUGIN_REACTOR_INSTANCE_SLOTS>> = RefCell::new(cold_pair::ColdDocumentPairIngressRegistry::new());
 }
 
-/// 🧵️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (design-abi.md §4): one `AsyncTask` this actor's
-/// `LocalExecutor` currently owns, keyed by its `executor::TaskId` slot. `label` is diagnostic-only
-/// today (no telemetry/checkpoint surface reads it back yet — an honest, named gap, not a silent
-/// unused field: kept because a task with no human-readable name is a debugging dead end the
-/// moment more than one is ever live on an instance).
+/// 🧵️ A task retains its instance and optional checkpoint restart command.
 struct TaskRecord {
     instance: u32,
+    #[cfg(test)]
     key: Option<String>,
-    #[allow(dead_code)]
-    label: String,
     restart: Option<Vec<u8>>,
 }
 
@@ -350,35 +345,34 @@ impl TaskRecordRegistry {
         Self { slots: ReactorFixedSlots::new() }
     }
 
+    #[cfg(test)]
     fn index(id: executor::TaskId) -> usize {
         id as usize % REACTOR_TASK_SLOTS
     }
 
+    #[cfg(test)]
     fn can_insert(&self, id: executor::TaskId) -> bool {
         self.slots.allocation_admitted && self.slots.get(Self::index(id)).is_none()
     }
 
-    fn insert(&mut self, id: executor::TaskId, record: TaskRecord) -> Result<(), TaskRecord> {
-        if !self.can_insert(id) {
-            return Err(record);
-        }
-        self.slots.insert(Self::index(id), (id, record)).map_err(|(_, record)| record)
-    }
-
+    #[cfg(test)]
     fn insert_admitted(&mut self, id: executor::TaskId, record: TaskRecord) {
         debug_assert!(self.can_insert(id));
         self.slots.insert_admitted(Self::index(id), (id, record));
     }
 
+    #[cfg(test)]
     fn remove(&mut self, id: executor::TaskId) -> Option<TaskRecord> {
         let index = Self::index(id);
         if self.slots.get(index).is_none_or(|(candidate, _)| *candidate != id) { None } else { self.slots.take(index).map(|(_, record)| record) }
     }
 
+    #[cfg(test)]
     fn find_key(&self, instance: u32, key: &str) -> Option<executor::TaskId> {
         self.slots.iter().find_map(|(id, record)| (record.instance == instance && record.key.as_deref() == Some(key)).then_some(*id))
     }
 
+    #[cfg(test)]
     fn count_instance(&self, instance: u32) -> usize {
         self.slots.iter().filter(|(_, record)| record.instance == instance).count()
     }
@@ -387,6 +381,7 @@ impl TaskRecordRegistry {
         self.slots.iter().map(|(id, record)| (*id, record))
     }
 
+    #[cfg(test)]
     fn entry_at(&self, index: usize) -> Option<(executor::TaskId, &TaskRecord)> {
         self.slots.get(index).map(|(id, record)| (*id, record))
     }
@@ -430,9 +425,6 @@ impl ReactorCloseRegistry {
         self.slots.take(index)
     }
 
-    fn put_at(&mut self, index: usize, state: ReactorCloseState) -> Result<(), ReactorCloseState> {
-        self.slots.insert(index, state)
-    }
 }
 
 const PLUGIN_REACTOR_INSTANCE_SLOTS: usize = 1_024;
@@ -519,6 +511,7 @@ impl FixedTimerRegistry {
         self.head.and_then(|index| self.slots.get(index)).map(|entry| entry.id)
     }
 
+    #[cfg(all(any(feature = "component-guest", feature = "component-extension-guest"), target_arch = "wasm32", target_env = "p2"))]
     fn contains(&self, id: u64) -> bool {
         self.slots.get(Self::index(id)).is_some_and(|entry| entry.id == id)
     }
@@ -604,7 +597,9 @@ impl InstanceMetadataRegistry {
 /// `Err(fault)` gets its own variant (never silently dropped).
 enum TaskResumeOutcome {
     Command(Vec<u8>),
+    #[cfg(test)]
     Emit { artifact_ops: Vec<u8>, config_ops: Vec<u8>, draft_ops: Vec<u8> },
+    #[cfg(test)]
     Fault(semio_framework::Fault),
 }
 
@@ -631,9 +626,11 @@ impl PendingResume {
         }
         match &self.outcome {
             TaskResumeOutcome::Command(command) => bytes = bytes.checked_add(command.len())?,
+            #[cfg(test)]
             TaskResumeOutcome::Emit { artifact_ops, config_ops, draft_ops } => {
                 bytes = bytes.checked_add(artifact_ops.len())?.checked_add(config_ops.len())?.checked_add(draft_ops.len())?;
             }
+            #[cfg(test)]
             TaskResumeOutcome::Fault(fault) => {
                 if fault.causes.len() > 16 {
                     return None;
@@ -791,7 +788,7 @@ where
     if !TASK_RECORDS.with(|records| records.borrow().can_insert(task_id)) {
         return Err(semio_framework::Fault::new(semio_framework::FaultOrigin::Framework, semio_framework::FaultCode::new("plugin.task.record-capacity"), "fixed task record authority rejected an executor-reserved direct slot"));
     }
-    TASK_RECORDS.with(|records| records.borrow_mut().insert_admitted(task_id, TaskRecord { instance, key, label, restart }));
+    TASK_RECORDS.with(|records| records.borrow_mut().insert_admitted(task_id, TaskRecord { instance, key, restart }));
 
     let ctx = crate::app::TaskCtx { host: host_for_instance(instance).await, meta: meta.clone() };
     let future = run(ctx);
@@ -1136,11 +1133,6 @@ pub use turn::poll_kernel;
 #[cfg(all(any(feature = "component-guest", feature = "component-extension-guest"), target_arch = "wasm32", target_env = "p2"))]
 mod wit_bridge {
     use super::*;
-    /// 🧵️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME: the raw WIT event, aliased for `poll`'s
-    /// `Event::InstanceClose` handling below — the KERNEL `Event::InstanceClose` (SSOT, `🎠️kernel`,
-    /// not this packet's file) carries no instance id, so the raw payload must be read BEFORE
-    /// `wit_event_to_kernel` erases it.
-    use crate::component::component::exports::semio::framework::reactor::Event as WitReactorEvent;
     /// 🧭️ `reactor`/`jobs`/`checkpoint`/`describe` are the only interfaces `world actor` directly
     /// `export`s, so wit-bindgen only aliases THEIR top-level types under `exports::…`. `effects`/
     /// `events`/`ui`/`types` are merely `use`d by `reactor.wit` (design-abi.md §1/§4) — their own
@@ -1773,7 +1765,9 @@ pub(crate) mod test_support {
         TASK_RESUMES.with(|resumes| resumes.borrow_mut().pop()).map(|resume| {
             let input = match resume.outcome {
                 TaskResumeOutcome::Command(bytes) => Ok(crate::plugin_runtime::TaskResumeInput::Command(bytes)),
+                #[cfg(test)]
                 TaskResumeOutcome::Emit { artifact_ops, config_ops, draft_ops } => Ok(crate::plugin_runtime::TaskResumeInput::Emit { artifact_ops, config_ops, draft_ops }),
+                #[cfg(test)]
                 TaskResumeOutcome::Fault(fault) => Err(fault),
             };
             (resume.instance, resume.meta, input)

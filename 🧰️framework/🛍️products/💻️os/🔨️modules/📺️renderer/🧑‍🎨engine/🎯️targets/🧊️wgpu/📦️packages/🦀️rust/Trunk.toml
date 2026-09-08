@@ -1,6 +1,6 @@
 [build]
 target = "🌐️.html"
-dist = "../../../../../../../../../../.🦑️repo/⚡️cache/📺️renderer-modules/🧊️wgpu"
+dist = "../../../../../../../../../../.🧬semio/🦑️repo/⚡️cache/📺️renderer-modules/🧊️wgpu"
 public_url = "/"
 filehash = false
 

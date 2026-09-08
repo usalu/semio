@@ -23,7 +23,7 @@ pub fn handle(payload: &SetFixtureJson, _doc: &ArtifactView<'_, NoteSnapshot>, _
         if parsed.get("schema").and_then(|value| value.as_str()) != Some(NOTE_DOCUMENT_SCHEMA) {
             return Ok(Emit::default());
         }
-        let Ok(document) = serde_json::from_value::<NoteSnapshot>(parsed) else {
+        let Ok(document) = dsl::os_pack::from_json_str::<NoteSnapshot>(&payload.json) else {
             return Ok(Emit::default());
         };
         document

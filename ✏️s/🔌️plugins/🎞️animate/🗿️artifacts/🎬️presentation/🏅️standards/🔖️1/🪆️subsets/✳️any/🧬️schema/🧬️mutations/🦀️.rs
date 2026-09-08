@@ -68,12 +68,12 @@ mod tests {
     }
 
     async fn round_trip(base: &PresentationSnapshot, mutation: &PresentationMutation) -> PresentationSnapshot {
-        let (forward, _messages) = vcs::apply_mutation(base, mutation).await.expect("valid mutation");
+        let (forward, _messages) = vcs::apply_mutation(base, mutation).expect("valid mutation");
         let mut backward = mutation.inverse(base);
         backward.reverse();
         let mut restored = forward.clone();
         for undo in &backward {
-            let (next, _messages) = vcs::apply_mutation(&restored, undo).await.expect("valid inverse mutation");
+            let (next, _messages) = vcs::apply_mutation(&restored, undo).expect("valid inverse mutation");
             restored = next;
         }
         // 🔒️ Structural equality, not just working-scene equality: `presentation_child_handle_and_cache`

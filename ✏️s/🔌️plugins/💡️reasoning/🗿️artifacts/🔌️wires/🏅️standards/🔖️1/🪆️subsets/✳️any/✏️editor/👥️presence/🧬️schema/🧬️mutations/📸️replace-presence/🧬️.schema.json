@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Replace Presence",
+  "type": "object",
+  "properties": {
+    "presence": {
+      "type": "object",
+      "properties": {
+        "dragNodeId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "dragLastX": {
+          "type": "number"
+        },
+        "dragLastY": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "dragNodeId",
+        "dragLastX",
+        "dragLastY"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "presence"
+  ],
+  "additionalProperties": false
+}

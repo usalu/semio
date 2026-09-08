@@ -1,0 +1,14 @@
+{
+  "base": {},
+  "cases": [
+    {
+      "kind": "replace-presence",
+      "mutation": {
+        "ReplacePresence": {
+          "presence": {}
+        }
+      },
+      "expected": {}
+    }
+  ]
+}

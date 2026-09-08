@@ -722,10 +722,11 @@ CREATE TABLE IF NOT EXISTS db_io_stage (
             let pool_use = pool.acquire_use().map_err(|error| DbError::Unavailable(format!("SQLite DB I/O backend WorkerPool use rejected: {error:?}")))?;
             let executor = Box::new(SqliteDbIoExecutor::new(path.clone(), in_memory));
             let control = register_db_io_backend_prepared_with_use(DbIoBackendKind::Sqlite, executor, pool.clone(), pool_use, rollback)?;
+            let storage = Self { control, pool, closed: std::sync::atomic::AtomicBool::new(false) };
             if let Err(error) = execute(DbIoTask::BackendOpen { backend: control, path }).await {
                 return Err(DbStorageOpenRejected::registered(error, control));
             }
-            Ok(Self { control, pool, closed: std::sync::atomic::AtomicBool::new(false) })
+            Ok(storage)
         }
 
         pub async fn open(pool: Arc<WorkerPool>, path: &std::path::Path) -> Result<Self, DbStorageOpenRejected> {

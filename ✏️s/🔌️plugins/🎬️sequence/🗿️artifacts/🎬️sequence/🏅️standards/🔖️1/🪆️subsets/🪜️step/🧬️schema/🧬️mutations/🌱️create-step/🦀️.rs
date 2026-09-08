@@ -9,10 +9,8 @@ use crate::artifacts::sequence::{SequenceSnapshot, SequenceStep};
 /// creation; `slot`/`kind` never change again — `edit-step-params`/`move-step`/
 /// `change-step-collapsed` only ever touch `params`/`x`/`y`/`collapsed`).
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord, dsl::MutationLeaf)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[dsl(keyword = "create-step")]
 pub struct CreateStep {
     #[dsl(block)]
@@ -62,7 +60,7 @@ mod mutation_law_tests {
     use super::*;
     use crate::artifacts::sequence::{default_snapshot, StepParams};
     use protocol::{
-        testkit::{assert_fatal_never_applies, assert_mutation_inverse_law},
+        os_spr::testkit::{assert_fatal_never_applies, assert_mutation_inverse_law},
         Mutation,
     };
 
@@ -70,7 +68,7 @@ mod mutation_law_tests {
     async fn create_step_inverse_law() {
         let base = default_snapshot();
         let step = SequenceStep { id: "step-99".into(), kind: "log.print".into(), params: StepParams::new(), x: 5.0, y: 6.0, slot: None, collapsed: false };
-        assert_mutation_inverse_law(&base, &create_step(step));
+        assert_mutation_inverse_law(&base, &create_step(step)).await;
     }
 
     #[semio_framework_async_macros::async_test]
@@ -78,7 +76,7 @@ mod mutation_law_tests {
         let base = default_snapshot();
         let outcome = create_step(SequenceStep { id: "step-1".into(), kind: "log.print".into(), params: StepParams::new(), x: 0.0, y: 0.0, slot: None, collapsed: false }).diff(&base);
         assert_eq!(outcome.worst_level(), Some(protocol::Severity::Fatal));
-        assert_fatal_never_applies(&outcome);
+        assert_fatal_never_applies(&outcome).await;
     }
 }
 //#endregion 🧪️MutationLaws

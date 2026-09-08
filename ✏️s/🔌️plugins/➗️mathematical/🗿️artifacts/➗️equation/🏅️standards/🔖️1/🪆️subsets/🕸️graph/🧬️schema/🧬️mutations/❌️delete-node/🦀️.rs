@@ -1,6 +1,5 @@
 //! ❌️ `delete-node` — removes an id-keyed graph node, cascading to every edge incident on it.
 
-use crate::artifacts::equation::standards::v1::subsets::graph::schema::mutations::{connect_nodes, create_node};
 use crate::artifacts::equation::{EquationMutation, EquationSnapshot};
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 

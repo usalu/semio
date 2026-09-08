@@ -1,0 +1,34 @@
+{
+  "schema": "architect.program",
+  "summaryFields": [
+    "Schema",
+    "Active Register",
+    "Elements",
+    "Stakeholders",
+    "Adjacencies",
+    "Requirements",
+    "Risks"
+  ],
+  "activeRegister": "elements",
+  "controller": "s.architect.program@1/*#editor",
+  "adjacencyArgs": [
+    "cycle",
+    "elementAId",
+    "elementBId"
+  ],
+  "viewerTotals": [
+    "Total: 2"
+  ],
+  "catalogueActions": [
+    "architect-catalogue.validate",
+    "architect-catalogue.analysis",
+    "architect-catalogue.report",
+    "architect-catalogue.search"
+  ],
+  "registerCount": 66,
+  "registerPages": [
+    32,
+    32,
+    2
+  ]
+}

@@ -2,22 +2,22 @@
 /**
  * 📜️ `@semio-tech/plugin-registry` — single-source plugin/playground/framework catalog codegen from
  * workspace packages. Discovery is the shared repo-wide contract (`🔣️taxonomy.json` +
- * `discoverPackages()` in `🦑️repo/📚️library`), not path regexes local to this script; every plugin area
+ * `discoverPackages()` in `.🧬semio/🦑️repo/📚️library`), not path regexes local to this script; every plugin area
  * root comes from `taxonomy.pluginAreas`, and each declared `AreaState` decides whether the taxonomy
  * tree audit warns or hard-fails.
  *
  * `generate` writes `🤖️generated/*` plus `.vscode/launch.json` (both derived from the same playground
  * catalog); `check` byte-compares every one of those artifacts and never writes.
  *
- * @see .🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️06/REGISTRY-SCRIPT-REFACTOR-TO-VOCABULARY-DISCOVERY-LIBRARY
+ * @see .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️06/REGISTRY-SCRIPT-REFACTOR-TO-VOCABULARY-DISCOVERY-LIBRARY
  */
 import { createHash } from "node:crypto";
-import { closeSync, existsSync, fstatSync, lstatSync, mkdirSync, openSync, readdirSync, readFileSync, readSync, realpathSync, rmSync, statSync, writeFileSync } from "node:fs";
+import { closeSync, existsSync, fstatSync, lstatSync, mkdirSync, mkdtempSync, openSync, readdirSync, readFileSync, readSync, realpathSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { isAbsolute, basename, dirname, join, relative, resolve } from "node:path";
 import { isDeepStrictEqual } from "node:util";
 import type { AreaState, ArtifactScaffoldLeaf, ArtifactScaffoldOptions, ArtifactScaffoldResult, DiscoveredPackage, PackageRole, RegistryCatalogInputView } from "../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
-import { authorArtifactScaffold, BundleScript, canonicalPrimaryFilenameForKind, discoverCatalogPackages, discoverPackageProblems, discoverPackages, getWorkspaceRoot, loadCatalogTaxonomy, parseRegistryCatalogProjection, registryCatalogInputView, registryCatalogProjectedInputView, registryExampleCatalog, runBundleScriptMain, runVitest, ScriptRouter, validateGeneratorContractsAgainstWorkspace } from "../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
-import { clonePackValue, decodePackValue, encodePackValue, packValueToExactJson } from "../../../🟦️.ts";
+import { authorArtifactScaffold, BundleScript, canonicalPrimaryFilenameForKind, discoverCatalogPackages, discoverPackageProblems, discoverPackages, getWorkspaceRoot, inspectRustModuleGraph, inspectRustModuleGraphFacts, loadCatalogTaxonomy, parseRegistryCatalogProjection, registryCatalogInputView, registryCatalogProjectedInputView, registryExampleCatalog, runBundleScriptMain, runVitest, ScriptRouter, validateGeneratorContractsAgainstWorkspace } from "../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { APP_CHANNEL_VERSION, clonePackValue, decodePackValue, encodePackValue, packValueToExactJson } from "../../../🟦️.ts";
 import type { PackValue } from "../../../🟦️.ts";
 import { generateLaunchJson, LAUNCH_OUTPUT_REL_PATH } from "./🖥️launch.ts";
 import { MODULE_BRIDGE_FILE, MODULE_PLUGIN_ROUTE, MODULE_EXTENSION_ROUTE, moduleDirectoryName } from "./📦️deployment/🟦️.ts";
@@ -1192,9 +1192,49 @@ function surfaceDirsForPlugin(pluginRoot: string): { abs: string; label: string 
   return out;
 }
 
-/** @emoji 🧱️ True when an inline Rust module's scope continues beyond its declaration line. */
-function moduleScopeContinues(line: string): boolean {
-  return (line.match(/\{/g) ?? []).length > (line.match(/\}/g) ?? []).length;
+/** 🕸️ Verifies taxonomy components through the exact Cargo-owned recursive module graph. */
+function validateRustTaxonomyMounts(pluginRoot: string, pluginId: string, componentFiles: readonly string[], sourceFiles: readonly string[]): string[] {
+  const manifest = [...RUST_ENTRY_DIR_FROM_OWNER, "Cargo.toml"].join("/");
+  if (!existsSync(join(pluginRoot, manifest))) return [pluginId + ": missing Cargo manifest " + manifest];
+  const sources = sourceFiles.map((path) => relative(pluginRoot, path).replaceAll("\\", "/"));
+  const graph = inspectRustModuleGraph([...sources, manifest], (path) => readFileSync(join(pluginRoot, path), "utf8"), { strictManifests: true });
+  if (graph.invalidManifests.has(manifest)) return [pluginId + ": invalid Cargo manifest " + manifest];
+  const findings = new Set<string>();
+  if (![...graph.contexts.values()].some((rows) => rows.some((context) => context.manifestPath === manifest))) findings.add(pluginId + ": missing module target for Cargo library " + manifest);
+  for (const file of componentFiles) {
+    const path = relative(pluginRoot, file).replaceAll("\\", "/");
+    if (!graph.contexts.get(path)?.some((context) => context.manifestPath === manifest)) findings.add(pluginId + ": " + path + " is not reachable from Cargo manifest " + manifest);
+  }
+  for (const [path, contexts] of graph.contexts) {
+    const facts = inspectRustModuleGraphFacts(readFileSync(join(pluginRoot, path), "utf8"));
+    for (const context of contexts.filter((row) => row.manifestPath === manifest)) {
+      for (const module of facts.modules) {
+        if (module.inline || module.conditional || module.modulePath.length !== context.sourceScope.length + 1 || module.modulePath.slice(0, -1).join("::") !== context.sourceScope.join("::")) continue;
+        const key = context.crateRoot + "\0" + [...context.modulePath, module.name].join("::");
+        if (!graph.targets.has(key)) findings.add(pluginId + ": missing module target " + JSON.stringify(module.pathTarget ?? module.name) + " from " + path);
+      }
+    }
+  }
+  return [...findings].sort();
+}
+
+/** 🌳️ Validates the direct plugin contract owner against the taxonomy. */
+function validatePluginContractRoot(pluginRoot: string, pluginId: string): string[] {
+  const findings: string[] = [];
+  const nestedPluginContract = join(pluginRoot, "🔌️plugin");
+  if (existsSync(nestedPluginContract)) {
+    findings.push(`${pluginId}: move the redundant 🔌️plugin contract and facets directly into the plugin root, then remove 🔌️plugin/`);
+  }
+  if (!existsSync(join(pluginRoot, TAXONOMY_LEAF_FILENAME))) {
+    findings.push(`${pluginId}: plugin root is missing ${TAXONOMY_LEAF_FILENAME}`);
+  }
+  for (const child of TAXONOMY.pluginRequiredChildDirs) {
+    if (!existsSync(join(pluginRoot, child, TAXONOMY_LEAF_FILENAME))) {
+      findings.push(`${pluginId}: plugin root is missing ${child}/${TAXONOMY_LEAF_FILENAME}`);
+    }
+  }
+
+  return findings;
 }
 
 /** @emoji 🚦️ Structural audit of one migrated plugin's taxonomy tree, entirely against
@@ -1430,6 +1470,7 @@ function validateTaxonomyTree(pluginRoot: string, pluginId: string): string[] {
   // 🦀️ collect every actual component.rs on disk (for the lib.rs cross-check below) and flag any
   // taxonomy leaf file that isn't literally named `component.rs`.
   const componentFiles: string[] = [];
+  const sourceFiles: string[] = [];
   const taxonomyIoChildDirs = Object.values(TAXONOMY_IO_DIRECTION_CHILD_DIRS).flatMap((v) =>
     Array.isArray(v) ? v : [String(v)],
   );
@@ -1450,6 +1491,7 @@ function validateTaxonomyTree(pluginRoot: string, pluginId: string): string[] {
         continue;
       }
       if (!name.endsWith(".rs")) continue;
+      sourceFiles.push(path);
       if (name === TAXONOMY_LEAF_FILENAME || name === EXAMPLE_RUST_LEAF) {
         componentFiles.push(path);
       } else {
@@ -1467,82 +1509,7 @@ function validateTaxonomyTree(pluginRoot: string, pluginId: string): string[] {
   }
   walkPluginTree(pluginRoot);
 
-  // 📦️ glue.rs mod/#[path] cross-check: every component.rs on disk must be declared, and no declared
-  // #[path] target may dangle (point at a file that doesn't exist) — reported as separate findings.
-  // 🌳️ The configurable Rust library entry lives beneath the taxonomy-declared package entry directory.
-  //
-  // 🧮️ #[path] resolution is CUMULATIVE, not always-relative-to-the-raw-file: each nested `pub mod X`
-  // (or leaf `mod X;`) resolves its own `#[path]` string relative to its immediately enclosing mod's
-  // *already-resolved* directory (defaulting to `<enclosing dir>/X` when no `#[path]` is given at all,
-  // and to "no change" when the string is exactly `"."`) — confirmed empirically against a real,
-  // compiling plugin (🖨️raster) that resets the base ONCE via `#[path = "../../."]` on an outer
-  // grouping module and lets every nested `#[path = "."]` inherit it, as well as plugins (🏛️architect,
-  // 📸️remodel, 🖍️draw) that instead prefix every LEAF path with `../../` and leave every nested `"."`
-  // unprefixed — both are valid, and a flat "resolve every #[path] against the raw file directory"
-  // approach mis-resolves the first style. So: walk the file's brace structure with a resolved-base
-  // stack, seeded with the file's own directory.
-  const v1LibRsPath = join(pluginRoot, RUST_ENTRY_FILENAME);
-  const v2LibRsPath = join(pluginRoot, ...RUST_ENTRY_DIR_FROM_OWNER, RUST_ENTRY_FILENAME);
-  const libRsPath = existsSync(v2LibRsPath) ? v2LibRsPath : v1LibRsPath;
-  if (existsSync(libRsPath)) {
-    const libDir = dirname(libRsPath);
-    const libText = readFileSync(libRsPath, "utf8");
-    const declaredAbs = new Set<string>();
-    const danglingLeafPaths: string[] = [];
-
-    // 🥞️ One stack frame per open `{` that followed a `mod`/`pub mod` declaration, holding that
-    // scope's resolved base dir. A pending `#[path = "…"]` applies to the NEXT `mod` line only.
-    const baseStack: string[] = [libDir];
-    let pendingPath: string | null = null;
-    const lines = libText.split("\n");
-    for (const rawLine of lines) {
-      const line = rawLine.trim();
-      const pathMatch = line.match(/#\[path\s*=\s*"([^"]+)"\]/);
-      if (pathMatch) {
-        pendingPath = pathMatch[1];
-        continue;
-      }
-      const modMatch = line.match(/^(?:pub\s+)?mod\s+(\w+)\s*(\{|;)/);
-      if (modMatch) {
-        const parentBase = baseStack[baseStack.length - 1];
-        const rawTarget = pendingPath ?? modMatch[1]; // no #[path] ⇒ default splice of the mod's own name
-        const resolved = join(parentBase, rawTarget); // node:path's join already normalizes "." / ".." segments
-        pendingPath = null;
-        if (modMatch[2] === ";") {
-          // Leaf: either a real component file (ends .rs) or a `mod tests;`-style non-path leaf — only
-          // cross-check paths that look like a file (the taxonomy only ever points #[path] at .rs files).
-          if (pendingPathLooksLikeFile(rawTarget)) {
-            declaredAbs.add(resolved);
-            if (!existsSync(resolved)) danglingLeafPaths.push(rawTarget);
-          }
-        } else if (moduleScopeContinues(line)) {
-          baseStack.push(resolved);
-        }
-        continue;
-      }
-      // Count bare closing braces against open mod scopes (lib.rs is wiring-only, so every `{`/`}` in
-      // the file belongs to a mod block or the trailing semio_plugin! macro call — once the stack is
-      // back to just the file base, further closes belong to the macro call and are ignored).
-      const closes = (line.match(/\}/g) ?? []).length;
-      const opens = (line.match(/\{/g) ?? []).length;
-      for (let i = 0; i < closes - opens; i++) {
-        if (baseStack.length > 1) baseStack.pop();
-      }
-    }
-
-    function pendingPathLooksLikeFile(p: string): boolean {
-      return p.endsWith(".rs");
-    }
-
-    for (const file of componentFiles) {
-      if (!declaredAbs.has(file)) findings.push(`${pluginId}: ${relative(pluginRoot, file)} is not declared by any #[path] in ${RUST_ENTRY_FILENAME}`);
-    }
-    for (const p of danglingLeafPaths) {
-      findings.push(`${pluginId}: ${RUST_ENTRY_FILENAME} declares #[path = "${p}"] but the file does not exist on disk`);
-    }
-  } else {
-    findings.push(`${pluginId}: missing ${RUST_ENTRY_FILENAME} (checked plugin root and ${TAXONOMY.rustEntryPathRules.entryDirFromOwner}/)`);
-  }
+  findings.push(...validateRustTaxonomyMounts(pluginRoot, pluginId, componentFiles, sourceFiles));
 
   // 🚫️ no `📡️protocol` path segment may remain under a migrated plugin (renamed to `📡️spr`).
   function containsProtocolSegment(dir: string): boolean {
@@ -1556,19 +1523,7 @@ function validateTaxonomyTree(pluginRoot: string, pluginId: string): string[] {
   }
   if (containsProtocolSegment(pluginRoot)) findings.push(`${pluginId}: found a "📡️protocol" path segment under the plugin dir (renamed to 📡️spr)`);
 
-  const pluginChildDirs = TAXONOMY.pluginChildDirs;
-  const nestedPluginContract = join(pluginRoot, "🔌️plugin");
-  if (existsSync(nestedPluginContract)) {
-    findings.push(`${pluginId}: move the redundant 🔌️plugin contract and facets directly into the plugin root, then remove 🔌️plugin/`);
-  }
-  if (!existsSync(join(pluginRoot, TAXONOMY_LEAF_FILENAME))) {
-    findings.push(`${pluginId}: plugin root is missing ${TAXONOMY_LEAF_FILENAME}`);
-  }
-  for (const child of pluginChildDirs) {
-    if (!existsSync(join(pluginRoot, child, TAXONOMY_LEAF_FILENAME))) {
-      findings.push(`${pluginId}: plugin root is missing ${child}/${TAXONOMY_LEAF_FILENAME}`);
-    }
-  }
+  findings.push(...validatePluginContractRoot(pluginRoot, pluginId));
 
   //#region SurfaceFacetWalk
   // 🎛 Walk every 🎚️config owner (surface-level and plugin-level) and its sibling 👥️presence, requiring all five schemaFormats leaves.
@@ -1639,7 +1594,7 @@ function validateTaxonomyTree(pluginRoot: string, pluginId: string): string[] {
  * `policySubsetSurfaceCompletenessBreaches` (root `📜️script.ts`) can flag scaffold residue distinctly
  * from a genuinely missing surface.
  */
-const SURFACE_SCAFFOLD_TICKET_PATH = ".🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET";
+const SURFACE_SCAFFOLD_TICKET_PATH = ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET";
 /** @emoji 🚧️ Marker every scaffolded component leaf carries; scanned for by the completeness policy. */
 const SCAFFOLD_MARKER = "SCAFFOLD";
 /** @emoji 🎭️ Default mode dir a freshly scaffolded surface gets — mirrors the pre-existing `🎛️apps`
@@ -2153,7 +2108,7 @@ const CATALOG_ID = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const CATALOG_PACKAGE_ID = COMPONENT_PACKAGE_ID;
 const CATALOG_SHA256 = /^[0-9a-f]{64}$/;
 const CATALOG_DESCRIPTOR_PACK_FILENAME = "🛂️.descriptor.semio";
-const CATALOG_DESCRIPTOR_TOP_LEVEL = new Set(["descriptorVersion", "packageId", "role", "manifest", "activationEvents", "capabilityRequests", "extensionPoints", "execution", "quotas", "contributions", "assets", "hashes"]);
+const CATALOG_DESCRIPTOR_TOP_LEVEL = new Set(["descriptorVersion", "packageId", "role", "manifest", "activationEvents", "capabilityRequests", "extensionPoints", "execution", "executionProtocol", "quotas", "contributions", "assets", "hashes"]);
 const CATALOG_MANIFEST_FIELDS = new Set(["pluginId", "label", "version", "apps", "examples", "capabilities", "topicContributions", "commands", "artifactKinds", "dependencies", "contributions"]);
 
 export type CatalogVerificationNode = {
@@ -2469,6 +2424,13 @@ export type CatalogDescriptorIdentity = Readonly<{
   dependsOn: readonly string[];
 }>;
 
+function validateCatalogExecutionProtocol(pluginId: string, candidate: unknown): void {
+  if (candidate === null || typeof candidate !== "object" || Array.isArray(candidate)) throw new Error(`${pluginId}: descriptor executionProtocol must be an object`);
+  const protocol = candidate as Record<string, unknown>;
+  if (Object.keys(protocol).length !== 1 || !("appChannelVersion" in protocol)) throw new Error(`${pluginId}: descriptor executionProtocol must contain exactly appChannelVersion`);
+  if (protocol.appChannelVersion !== APP_CHANNEL_VERSION) throw new Error(`${pluginId}: descriptor executionProtocol.appChannelVersion is unsupported`);
+}
+
 function validateCatalogDescriptorValue(entry: CatalogDescriptorIdentity, descriptor: unknown): PluginDescriptorHashes {
   if (descriptor === null || typeof descriptor !== "object" || Array.isArray(descriptor) || !isStrictJsonValue(descriptor)) throw new Error(`${entry.pluginId}: descriptor is not a lossless JSON object`);
   const record = descriptor as Record<string, unknown>;
@@ -2486,6 +2448,7 @@ function validateCatalogDescriptorValue(entry: CatalogDescriptorIdentity, descri
   for (const field of ["capabilities", "topicContributions", "commands", "artifactKinds", "dependencies", "contributions"] as const) if (manifestRecord[field] !== undefined && !Array.isArray(manifestRecord[field])) throw new Error(`${entry.pluginId}: manifest.${field} must be an array`);
   for (const field of ["activationEvents", "capabilityRequests", "extensionPoints", "assets"] as const) if (record[field] !== undefined && !Array.isArray(record[field])) throw new Error(`${entry.pluginId}: descriptor.${field} must be an array`);
   if (!["declarative", "linked", "isolated", "exclusive", "cold"].includes(String(record.execution))) throw new Error(`${entry.pluginId}: descriptor execution mode does not decode`);
+  validateCatalogExecutionProtocol(entry.pluginId, record.executionProtocol);
   if (record.quotas === null || typeof record.quotas !== "object" || Array.isArray(record.quotas) || record.contributions === null || typeof record.contributions !== "object" || Array.isArray(record.contributions)) throw new Error(`${entry.pluginId}: descriptor quotas/contributions must be objects`);
   const hashes = record.hashes;
   if (hashes === null || typeof hashes !== "object" || Array.isArray(hashes)) throw new Error(`${entry.pluginId}: descriptor hashes must be an object`);
@@ -2607,6 +2570,7 @@ export function validateCatalogDescriptorPair(entry: PluginRegistryEntry, repoRo
   for (const field of ["capabilities", "topicContributions", "commands", "artifactKinds", "dependencies", "contributions"] as const) if (manifestRecord[field] !== undefined && !Array.isArray(manifestRecord[field])) throw new Error(`${entry.pluginId}: manifest.${field} must be an array`);
   for (const field of ["activationEvents", "capabilityRequests", "extensionPoints", "assets"] as const) if (record[field] !== undefined && !Array.isArray(record[field])) throw new Error(`${entry.pluginId}: descriptor.${field} must be an array`);
   if (!["declarative", "linked", "isolated", "exclusive", "cold"].includes(String(record.execution))) throw new Error(`${entry.pluginId}: descriptor execution mode does not decode`);
+  validateCatalogExecutionProtocol(entry.pluginId, record.executionProtocol);
   if (record.quotas === null || typeof record.quotas !== "object" || Array.isArray(record.quotas) || record.contributions === null || typeof record.contributions !== "object" || Array.isArray(record.contributions)) throw new Error(`${entry.pluginId}: descriptor quotas/contributions must be objects`);
   const hashes = record.hashes;
   if (hashes === null || typeof hashes !== "object" || Array.isArray(hashes)) throw new Error(`${entry.pluginId}: descriptor hashes must be an object`);
@@ -3042,6 +3006,118 @@ async function nativeCatalogSelectionOracleV1(): Promise<void> {
   console.log(`native-catalog-selection-oracle cases=${fixture.cases.length} positive=${positive} denied=${fixture.cases.length - positive} authority=planning-only published=0`);
 }
 
+
+/** 🧪️ Compares exact registry mounts with Rust compiler dependency membership over neutral trees. */
+class RustTaxonomyMountsCheckScript extends BundleScript {
+  async run(): Promise<void> {
+    const fixtureRoot = join(import.meta.dir, "🧫️fixtures/🕸️rust-taxonomy-mounts");
+    const fixture = JSON.parse(readFileSync(join(fixtureRoot, "🔣️.json"), "utf8")) as { cases: { id: string; files: Record<string, string>; expectedCodes: string[]; expectedUnmounted: string[]; rustcSuccess: boolean }[] };
+    const Ajv2020 = (await import("ajv/dist/2020.js")).default;
+    const validate = new Ajv2020({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(fixtureRoot, "🧬️.schema.json"), "utf8")));
+    if (!validate(fixture)) throw new Error(JSON.stringify(validate.errors));
+    const outputRoot = process.env.SEMIO_TEST_ARTIFACT_DIR;
+    if (!outputRoot || !isAbsolute(outputRoot)) throw new Error("SEMIO_TEST_ARTIFACT_DIR must be the ticket generated directory");
+    mkdirSync(outputRoot, { recursive: true });
+    const capture = mkdtempSync(join(outputRoot, "rust-taxonomy-mounts-"));
+    console.log("[DEBUG] registry-rust-mounts capture=" + capture);
+    const failures: string[] = [];
+    for (const row of fixture.cases) {
+      const pluginRoot = join(capture, row.id);
+      for (const [path, content] of Object.entries(row.files)) {
+        const destination = join(pluginRoot, path);
+        mkdirSync(dirname(destination), { recursive: true });
+        writeFileSync(destination, content);
+      }
+      const sourceFiles = Object.keys(row.files).filter((path) => path.endsWith(".rs"));
+      const entry = [...RUST_ENTRY_DIR_FROM_OWNER, RUST_ENTRY_FILENAME].join("/");
+      const child = Bun.spawn(["rustc", "--crate-name", "taxonomy_mount_fixture", "--crate-type", "lib", "--edition", "2021", "--emit=metadata=fixture.rmeta,dep-info=fixture.d", entry], { cwd: pluginRoot, stdout: "pipe", stderr: "pipe", env: { ...process.env, RUST_BACKTRACE: "0" } });
+      let cancelled = false;
+      let timedOut = false;
+      const cancel = (): void => { cancelled = true; child.kill(); };
+      process.once("SIGINT", cancel);
+      process.once("SIGTERM", cancel);
+      const timeout = setTimeout(() => { timedOut = true; child.kill(); }, 30_000);
+      const [status, stdout, stderr] = await Promise.all([child.exited, new Response(child.stdout).text(), new Response(child.stderr).text()]).finally(() => {
+        clearTimeout(timeout);
+        process.off("SIGINT", cancel);
+        process.off("SIGTERM", cancel);
+      });
+      if (cancelled || timedOut) throw new Error(row.id + (cancelled ? ": compiler cancelled" : ": compiler exceeded 30s budget"));
+      writeFileSync(join(pluginRoot, "compiler.log"), stdout + stderr);
+      if ((status === 0) !== row.rustcSuccess) failures.push(row.id + ": compiler status differs: " + status);
+      const referenceCodes: string[] = [];
+      let referenceUnmounted: string[] = [];
+      if (status !== 0) {
+        if (!stderr.includes("couldn't read") && !stderr.includes("file not found for module")) throw new Error(row.id + ": non-membership compiler failure: " + stderr);
+        referenceCodes.push("missing-target");
+      } else {
+        const dependencies = readFileSync(join(pluginRoot, "fixture.d"), "utf8").replaceAll("\\\n", "");
+        const mounted = dependencies.split(/\r?\n/u).filter((line) => line.endsWith(":")).map((line) => {
+          const path = line.slice(0, -1).replace(/\\([ #\\])/gu, "$1").replaceAll("$", "$").replaceAll("\\", "/");
+          return relative(pluginRoot, resolve(pluginRoot, path)).replaceAll("\\", "/");
+        });
+        referenceUnmounted = sourceFiles.filter((path) => !mounted.includes(path)).sort();
+        if (referenceUnmounted.length) referenceCodes.push("unmounted");
+      }
+      const findings = validateRustTaxonomyMounts(pluginRoot, row.id, sourceFiles.map((path) => join(pluginRoot, path)), sourceFiles.map((path) => join(pluginRoot, path)));
+      const actualCodes = [...new Set(findings.map((finding) => finding.includes("is not declared") || finding.includes("is not reachable") ? "unmounted" : finding.includes("does not exist") || finding.includes("missing module target") ? "missing-target" : finding.includes("invalid Cargo") ? "invalid-manifest" : "missing-manifest"))].sort();
+      const actualUnmounted = sourceFiles.filter((path) => findings.includes(row.id + ": " + path + " is not reachable from Cargo manifest " + [...RUST_ENTRY_DIR_FROM_OWNER, "Cargo.toml"].join("/"))).sort();
+      if (!isDeepStrictEqual(referenceUnmounted, row.expectedUnmounted)) failures.push(row.id + ": compiler membership differs: " + JSON.stringify(referenceUnmounted));
+      if (!isDeepStrictEqual(actualUnmounted, row.expectedUnmounted)) failures.push(row.id + ": registry membership differs: " + JSON.stringify(actualUnmounted));
+      if (!isDeepStrictEqual(referenceCodes.sort(), row.expectedCodes)) failures.push(row.id + ": Rust reference differs: " + JSON.stringify(referenceCodes));
+      if (!isDeepStrictEqual(actualCodes, row.expectedCodes)) failures.push(row.id + ": registry differs: " + JSON.stringify({ actualCodes, findings }));
+      console.log("[DEBUG] registry-rust-mounts case=" + row.id + " rustc=" + status + " reference=" + JSON.stringify(referenceCodes) + " registry=" + JSON.stringify(actualCodes));
+    }
+    if (failures.length) throw new Error(failures.join("\n"));
+    console.log("registry-rust-mounts-oracle cases=" + fixture.cases.length + " ajv=1 compiler=" + fixture.cases.length);
+  }
+}
+
+/** 🪴️ Checks required root ownership with neutral trees and an independent SQLite relation. */
+class PluginRootOwnershipCheckScript extends BundleScript {
+  async run(): Promise<void> {
+    const fixtureRoot = join(import.meta.dir, "🧫️fixtures/🌳️plugin-root-ownership");
+    const fixture = JSON.parse(readFileSync(join(fixtureRoot, "🔣️.json"), "utf8")) as { cases: { id: string; files: string[]; expected: string[] }[] };
+    const Ajv2020 = (await import("ajv/dist/2020.js")).default;
+    const validate = new Ajv2020({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(fixtureRoot, "🧬️.schema.json"), "utf8")));
+    if (!validate(fixture)) throw new Error(JSON.stringify(validate.errors));
+    const outputRoot = process.env.SEMIO_TEST_ARTIFACT_DIR;
+    if (!outputRoot || !isAbsolute(outputRoot)) throw new Error("SEMIO_TEST_ARTIFACT_DIR must be the ticket generated directory");
+    mkdirSync(outputRoot, { recursive: true });
+    const capture = mkdtempSync(join(outputRoot, "plugin-root-ownership-"));
+    const { Database } = await import("bun:sqlite");
+    const oracle = new Database(":memory:");
+    const failures: string[] = [];
+    try {
+      oracle.run("CREATE TABLE required (path TEXT PRIMARY KEY)");
+      oracle.run("CREATE TABLE actual (path TEXT PRIMARY KEY)");
+      for (const path of [TAXONOMY_LEAF_FILENAME, ...TAXONOMY.pluginRequiredChildDirs.map((child) => child + "/" + TAXONOMY_LEAF_FILENAME)]) {
+        oracle.run("INSERT INTO required VALUES (?1)", [path]);
+      }
+      for (const row of fixture.cases) {
+        oracle.run("DELETE FROM actual");
+        const root = join(capture, row.id);
+        for (const path of row.files) {
+          oracle.run("INSERT INTO actual VALUES (?1)", [path]);
+          const destination = join(root, path);
+          mkdirSync(dirname(destination), { recursive: true });
+          writeFileSync(destination, "");
+        }
+        const reference = (oracle.query("SELECT 'missing:' || path AS code FROM required WHERE path NOT IN (SELECT path FROM actual) UNION SELECT 'nested-contract' AS code WHERE EXISTS (SELECT 1 FROM actual WHERE path LIKE '🔌️plugin/%') ORDER BY code").all() as { code: string }[]).map(({ code }) => code);
+        const findings = validatePluginContractRoot(root, row.id);
+        const actual = findings.map((finding) => finding.includes("redundant 🔌️plugin") ? "nested-contract" : "missing:" + finding.slice(finding.indexOf("plugin root is missing ") + "plugin root is missing ".length)).sort();
+        if (!isDeepStrictEqual(reference, row.expected)) failures.push(row.id + ": SQLite=" + JSON.stringify(reference));
+        if (!isDeepStrictEqual(actual, row.expected)) failures.push(row.id + ": registry=" + JSON.stringify(actual));
+        console.log("[DEBUG] registry-plugin-root case=" + row.id + " reference=" + JSON.stringify(reference) + " actual=" + JSON.stringify(actual));
+      }
+    } finally {
+      oracle.close();
+    }
+    if (failures.length) throw new Error(failures.join("\n"));
+    console.log("registry-plugin-root-ownership cases=" + fixture.cases.length + " ajv=1 sqlite=" + fixture.cases.length + " capture=" + capture);
+  }
+}
+
 class NativeCatalogSelectionCheckScript extends BundleScript {
   async run(): Promise<void> {
     await nativeCatalogSelectionOracleV1();
@@ -3184,7 +3260,7 @@ class TestScript extends BundleScript {
   }
 }
 
-const router = new ScriptRouter(import.meta.dir).register("generate", GenerateScript).register("preview-generated", PreviewGeneratedScript).register("check-generated", CheckGeneratedScript).register("native-catalog-selection-check", NativeCatalogSelectionCheckScript).register("catalog-complete", CatalogCompleteScript).register("check", CheckScript).register("test", TestScript).register("new", NewScript);
+const router = new ScriptRouter(import.meta.dir).register("generate", GenerateScript).register("preview-generated", PreviewGeneratedScript).register("check-generated", CheckGeneratedScript).register("rust-taxonomy-mounts-check", RustTaxonomyMountsCheckScript).register("plugin-root-ownership-check", PluginRootOwnershipCheckScript).register("native-catalog-selection-check", NativeCatalogSelectionCheckScript).register("catalog-complete", CatalogCompleteScript).register("check", CheckScript).register("test", TestScript).register("new", NewScript);
 
 if (import.meta.main) {
   await runBundleScriptMain(router, import.meta.url, { defaultCommand: "generate" });

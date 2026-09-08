@@ -546,9 +546,9 @@ impl SourcingModule for ContributedSourcingModule {
     }
 }
 
-/// 🔀️ The closed set of `SourcingModule` implementors, enum-dispatched (O1 — no `Box<dyn SourcingModule>`).
-/// `dyn_enum_close!` generates the enum, `From<Variant>` impls, and the delegating `impl SourcingModule`.
 dyn_enum_close! {
+    /// 🔀️ The closed set of `SourcingModule` implementors, enum-dispatched (O1 — no `Box<dyn SourcingModule>`).
+    /// `dyn_enum_close!` generates the enum, `From<Variant>` impls, and the delegating `impl SourcingModule`.
     pub enum SourcingModules: SourcingModule {
         Beams(beams::BeamsModule),
         Windows(windows::WindowsModule),

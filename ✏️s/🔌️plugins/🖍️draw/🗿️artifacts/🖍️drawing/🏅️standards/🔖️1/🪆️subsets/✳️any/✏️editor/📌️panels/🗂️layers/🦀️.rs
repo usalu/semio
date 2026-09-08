@@ -4,7 +4,7 @@ use crate::artifacts::drawing::schema::{drawing_play_boolean_child_row_id, drawi
 use crate::artifacts::drawing::{DrawingLayerNode, DrawingSnapshot};
 use crate::editor::drawing::terminology::DrawingPlayLabels;
 use crate::editor::drawing::{drawing_play_action, DRAWING_INTERACTION_DOMAIN};
-use semio_framework_plugin::{tree_item, tree_item_with_action, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL};
+use semio_framework_plugin::{tree_item, tree_item_with_action, Buildable, HasBase, HasChildren, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL};
 
 pub const DRAWING_PLAY_BODY_LAYERS: &str = "drawing.play.layers";
 pub const DRAWING_LAYER_KIND_DRAG_MIME: &str = "application/x-semio-drawing-layer-kind";

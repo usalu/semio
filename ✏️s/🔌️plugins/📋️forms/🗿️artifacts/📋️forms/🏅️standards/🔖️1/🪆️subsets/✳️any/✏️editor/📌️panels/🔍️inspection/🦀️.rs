@@ -1,7 +1,8 @@
 //! 🔍️ Forms play app panel — the document-wide summary (schema, step count, question count).
 
 use crate::artifacts::forms::{forms_steps, FormsSnapshot};
-use semio_framework_plugin::{ui_declarative_sections_to_tree, ui_text, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, UiNode, UiPresence, UiSectionNode, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL};
+use crate::editor::forms::{ui_label, ui_node_list};
+use semio_framework_plugin::{tree_item_desc, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL};
 
 //#region 🔖️Constants
 pub const FORMS_PLAY_BODY_INSPECTION: &str = "forms.play.inspection";
@@ -26,19 +27,13 @@ pub fn definition() -> PanelTabDefinition {
 /// summary now; the per-selected-question kind editor (label/kind/required/options/vector fields/…,
 /// driven by `patchQuestions`/`patchQuestionOptions`/`patchVectorField`) that used to read
 /// `cfg.selected_ids` is gone with it.
-pub fn render(spec: &FormsSnapshot) -> UiNode {
-    ui_declarative_sections_to_tree(&[UiSectionNode {
-        id: "forms-play-inspector.summary".into(),
-        label: Some(Label::data(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL)),
-        default_open: Some(true),
-        children: vec![
-            ui_text(Label::data(format!("Schema: {}", crate::artifacts::forms::FORMS_DOCUMENT_SCHEMA))),
-            ui_text(Label::data(format!("Steps: {}", forms_steps(spec).len()))),
-            ui_text(Label::data(format!("Questions: {}", crate::artifacts::forms::schema::flatten_questions(spec).len()))),
-        ],
-        presence: UiPresence::default(),
-        menu: None,
-    }])
+pub fn render(spec: &FormsSnapshot) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+    let children = ui_node_list([
+        tree_item_desc("forms-play-inspector.schema", format!("Schema: {}", crate::artifacts::forms::FORMS_DOCUMENT_SCHEMA), None),
+        tree_item_desc("forms-play-inspector.steps", format!("Steps: {}", forms_steps(spec).len()), None),
+        tree_item_desc("forms-play-inspector.questions", format!("Questions: {}", crate::artifacts::forms::schema::flatten_questions(spec).len()), None),
+    ])?;
+    PanelTreeBuilder::new("forms-play-inspector")?.section("forms-play-inspector.summary", Some(ui_label(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL)?), true, children)?.build()
 }
 //#endregion 🔖️Render
 
@@ -51,8 +46,8 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn the_inspector_always_shows_the_document_summary() {
-        let mut app = forms_app();
-        let json = render_body(&mut app, BODY_INSPECTION);
+        let mut app = forms_app().await;
+        let json = render_body(&mut app, BODY_INSPECTION).await;
         assert!(json.contains("forms-play-inspector.summary"));
     }
 

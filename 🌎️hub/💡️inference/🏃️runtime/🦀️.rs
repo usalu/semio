@@ -1,10 +1,15 @@
 //! 🏃️ Owner-private GIS Map proposal runtime: frozen binding, ledger, per-document gate, typed approval.
 
 use std::collections::HashMap;
+use std::future::Future;
 use std::sync::{
     Arc, Mutex,
-    atomic::{AtomicU64, Ordering},
+    atomic::{AtomicBool, AtomicU64, Ordering},
 };
+use std::time::{SystemTime, UNIX_EPOCH};
+
+use tokio::sync::{OwnedSemaphorePermit, Semaphore, oneshot};
+use tokio::task::JoinHandle;
 
 use directory::os_directory::{ArtifactFrontier, DocumentScope};
 
@@ -173,9 +178,12 @@ pub trait GisMapApprovalCheckpointPublisherV1: Send + Sync {
         &'a self,
         request: GisMapApprovalCheckpointRequestV1,
         document_write: Arc<GisMapDocumentWriteAuthorityV1>,
-        deadline_ms: u64,
-        now_ms: u64,
+        attempt_lifetime_ms: u64,
+        decision_now_ms: u64,
     ) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<directory::os_directory::PublishedArtifactCheckpoint, GisMapApprovalCommitErrorV1>> + Send + 'a>>;
+
+    /// 📡️ Announces an already-published and ledger-applied checkpoint without yielding or releasing DocumentWrite.
+    fn checkpoint_applied(&self, checkpoint: &directory::os_directory::PublishedArtifactCheckpoint) -> Result<(), GisMapApprovalCommitErrorV1>;
 }
 
 /// 🔌️ The private port an atomic parent+existing-child composition transaction implements.
@@ -224,14 +232,7 @@ type GisMapDrawingStoreV1 = directory::os_store::ArtifactStore<GisMapDrawingSnap
 type GisMapValueStoreV1 = directory::os_store::ArtifactStore<GisMapValueSnapshotV1, GisMapValueMutationV1>;
 type GisMapAssemblyV1 = directory::os_store::durable_group::DurableOwnedThreeStoreMapAssemblyV1<GisMapParentSnapshotV1, GisMapParentMutationV1, GisMapDrawingSnapshotV1, GisMapDrawingMutationV1, GisMapValueSnapshotV1, GisMapValueMutationV1>;
 type GisMapCommitHostV1 = directory::os_store::durable_group::DurableOwnedMapCommitHostV1<GisMapParentSnapshotV1, GisMapParentMutationV1, GisMapDrawingSnapshotV1, GisMapDrawingMutationV1, GisMapValueSnapshotV1, GisMapValueMutationV1>;
-type GisMapRecoveryOwnerV1 = db::document::ArtifactDurableGroupRecoveryOwnerV1<
-    GisMapParentSnapshotV1,
-    GisMapParentMutationV1,
-    GisMapDrawingSnapshotV1,
-    GisMapDrawingMutationV1,
-    GisMapValueSnapshotV1,
-    GisMapValueMutationV1,
->;
+type GisMapRecoveryOwnerV1 = db::document::ArtifactDurableGroupRecoveryOwnerV1<GisMapParentSnapshotV1, GisMapParentMutationV1, GisMapDrawingSnapshotV1, GisMapDrawingMutationV1, GisMapValueSnapshotV1, GisMapValueMutationV1>;
 type GisMapJournalReceiptV1 = directory::os_store::durable_group::DurableOwnedGroupJournalReceiptV1;
 
 struct GisMapDocumentStoresV1 {
@@ -306,7 +307,12 @@ pub enum RetainedGisMapDocumentStateV1 {
         document_write: GisMapDocumentWriteLeaseV1,
         fence: Arc<InferenceDocumentFenceV1>,
     },
-    Verification { owners: GisMapDocumentStoresV1, identity: GisMapCommitIdentityV1, receipt: GisMapJournalReceiptV1, document_write: GisMapDocumentWriteLeaseV1 },
+    Verification {
+        owners: GisMapDocumentStoresV1,
+        identity: GisMapCommitIdentityV1,
+        receipt: GisMapJournalReceiptV1,
+        document_write: GisMapDocumentWriteLeaseV1,
+    },
     Publishing {
         owners: GisMapDocumentStoresV1,
         identity: GisMapCommitIdentityV1,
@@ -332,6 +338,7 @@ enum GisMapCommitTurnV1 {
 
 enum GisMapAbandonedTurnV1 {
     Complete,
+    Aborted,
     Continue,
     Committed,
     Recover,
@@ -340,41 +347,56 @@ enum GisMapAbandonedTurnV1 {
     Retry,
 }
 
+#[derive(Clone)]
+struct GisMapPreparedApprovalV1 {
+    scope: DocumentScope,
+    job_id: String,
+    mutation_id: String,
+    command_hash: String,
+    proposal_hash: String,
+    ingress: Arc<dyn GisMapApprovalIngressAuthorityV1>,
+}
+
+#[derive(Clone)]
+struct GisMapAbandonedRequestV1 {
+    key: String,
+    identity: GisMapCommitIdentityV1,
+    request: Arc<GisMapApprovalRequestTokenV1>,
+}
+
 struct GisMapApprovalRequestOwnerV1 {
     committer: RetainedGisMapApprovalCommitterV1,
     key: String,
     identity: Option<GisMapCommitIdentityV1>,
+    prepared: Option<GisMapPreparedApprovalV1>,
     request: Arc<GisMapApprovalRequestTokenV1>,
 }
 
 impl GisMapApprovalRequestOwnerV1 {
+    fn admit(&mut self, identity: GisMapCommitIdentityV1) {
+        self.prepared = None;
+        self.identity = Some(identity);
+    }
+
     fn complete(&mut self) {
+        let job_id = self.identity.as_ref().map(|identity| identity.job_id.as_str()).or_else(|| self.prepared.as_ref().map(|prepared| prepared.job_id.as_str())).map(str::to_owned);
+        self.prepared = None;
         self.identity = None;
+        if let Some(job_id) = job_id {
+            self.committer.release_cleanup_job(&job_id);
+        }
     }
 }
 
 impl Drop for GisMapApprovalRequestOwnerV1 {
     fn drop(&mut self) {
-        let Some(identity) = self.identity.take() else { return };
-        let mut maintenance = self.committer.maintenance.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
-        if !maintenance.insert(self.key.clone()) {
+        let Some(identity) = self.identity.take() else {
+            if let Some(prepared) = self.prepared.take() {
+                self.committer.spawn_abandoned_prepared(prepared);
+            }
             return;
-        }
-        drop(maintenance);
-        let committer = self.committer.clone();
-        let key = self.key.clone();
-        let request = self.request.clone();
-        match tokio::runtime::Handle::try_current() {
-            Ok(runtime) => {
-                runtime.spawn(async move {
-                    committer.drive_abandoned_request(&key, identity, request).await;
-                    committer.maintenance.lock().unwrap_or_else(std::sync::PoisonError::into_inner).remove(&key);
-                });
-            }
-            Err(_) => {
-                self.committer.maintenance.lock().unwrap_or_else(std::sync::PoisonError::into_inner).remove(&self.key);
-            }
-        }
+        };
+        self.committer.spawn_abandoned_request(GisMapAbandonedRequestV1 { key: self.key.clone(), identity, request: self.request.clone() });
     }
 }
 
@@ -388,15 +410,67 @@ pub struct RetainedGisMapApprovalCommitterV1 {
     documents: Arc<tokio::sync::Mutex<HashMap<String, RetainedGisMapDocumentStateV1>>>,
     next_operation: Arc<AtomicU64>,
     maintenance: Arc<std::sync::Mutex<std::collections::HashSet<String>>>,
+    cleanup_jobs: Arc<std::sync::Mutex<HashMap<String, u16>>>,
+    closing: Arc<AtomicBool>,
+    parked_prepared: Arc<std::sync::Mutex<HashMap<String, GisMapPreparedApprovalV1>>>,
+    parked_requests: Arc<std::sync::Mutex<HashMap<String, GisMapAbandonedRequestV1>>>,
+    state_epoch: Arc<tokio::sync::watch::Sender<u64>>,
+}
+
+struct GisMapAbandonedRequestTaskV1 {
+    committer: RetainedGisMapApprovalCommitterV1,
+    maintenance_key: String,
+    owner: Option<GisMapAbandonedRequestV1>,
+}
+
+impl GisMapAbandonedRequestTaskV1 {
+    fn complete(mut self) {
+        let job_id = self.owner.as_ref().map(|owner| owner.identity.job_id.clone());
+        self.owner = None;
+        self.committer.maintenance.lock().unwrap_or_else(std::sync::PoisonError::into_inner).remove(&self.maintenance_key);
+        if let Some(job_id) = job_id {
+            self.committer.release_cleanup_job(&job_id);
+        }
+        self.committer.announce_state_change();
+    }
+}
+
+impl Drop for GisMapAbandonedRequestTaskV1 {
+    fn drop(&mut self) {
+        let Some(owner) = self.owner.take() else { return };
+        self.committer.park_abandoned_request(owner);
+        self.committer.announce_state_change();
+    }
+}
+
+struct GisMapPreparedApprovalTaskV1 {
+    committer: RetainedGisMapApprovalCommitterV1,
+    maintenance_key: String,
+    owner: Option<GisMapPreparedApprovalV1>,
+}
+
+impl GisMapPreparedApprovalTaskV1 {
+    fn complete(mut self) {
+        let job_id = self.owner.as_ref().map(|owner| owner.job_id.clone());
+        self.owner = None;
+        self.committer.maintenance.lock().unwrap_or_else(std::sync::PoisonError::into_inner).remove(&self.maintenance_key);
+        if let Some(job_id) = job_id {
+            self.committer.release_cleanup_job(&job_id);
+        }
+        self.committer.announce_state_change();
+    }
+}
+
+impl Drop for GisMapPreparedApprovalTaskV1 {
+    fn drop(&mut self) {
+        let Some(owner) = self.owner.take() else { return };
+        self.committer.park_prepared_approval(owner);
+        self.committer.announce_state_change();
+    }
 }
 
 impl RetainedGisMapApprovalCommitterV1 {
-    pub fn new(
-        database: Arc<db::Database>,
-        storage: Arc<db::storage::DbBackend>,
-        ledger: Arc<InferenceJobLedgerV1>,
-        publisher: Arc<dyn GisMapApprovalCheckpointPublisherV1>,
-    ) -> Self {
+    pub fn new(database: Arc<db::Database>, storage: Arc<db::storage::DbBackend>, ledger: Arc<InferenceJobLedgerV1>, publisher: Arc<dyn GisMapApprovalCheckpointPublisherV1>) -> Self {
         Self {
             database,
             verifier: Arc::new(InferenceWalVerifierV1::new(storage)),
@@ -405,30 +479,236 @@ impl RetainedGisMapApprovalCommitterV1 {
             documents: Arc::new(tokio::sync::Mutex::new(HashMap::with_capacity(GIS_MAP_COMMITTER_CAPACITY))),
             next_operation: Arc::new(AtomicU64::new(1)),
             maintenance: Arc::new(std::sync::Mutex::new(std::collections::HashSet::with_capacity(GIS_MAP_COMMITTER_CAPACITY))),
+            cleanup_jobs: Arc::new(std::sync::Mutex::new(HashMap::with_capacity(super::schema::JOB_CAPACITY))),
+            closing: Arc::new(AtomicBool::new(false)),
+            parked_prepared: Arc::new(std::sync::Mutex::new(HashMap::with_capacity(GIS_MAP_COMMITTER_CAPACITY))),
+            parked_requests: Arc::new(std::sync::Mutex::new(HashMap::with_capacity(GIS_MAP_COMMITTER_CAPACITY))),
+            state_epoch: Arc::new(tokio::sync::watch::channel(0).0),
+        }
+    }
+
+    fn announce_state_change(&self) {
+        self.state_epoch.send_modify(|epoch| *epoch = epoch.wrapping_add(1));
+    }
+
+    fn reserve_cleanup_job(&self, job_id: &str) -> Result<(), GisMapApprovalCommitErrorV1> {
+        let mut jobs = self.cleanup_jobs.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        if self.closing.load(Ordering::Acquire) {
+            return Err(GisMapApprovalCommitErrorV1::Unavailable);
+        }
+        if let Some(owners) = jobs.get_mut(job_id) {
+            let Some(next) = owners.checked_add(1) else { return Err(GisMapApprovalCommitErrorV1::Capacity) };
+            *owners = next;
+            return Ok(());
+        }
+        if jobs.len() >= super::schema::JOB_CAPACITY {
+            return Err(GisMapApprovalCommitErrorV1::Capacity);
+        }
+        jobs.insert(job_id.to_owned(), 1);
+        Ok(())
+    }
+
+    fn validate_prepared_request(&self, request: &GisMapApprovalCommitRequestV1<'_>) -> Result<(), GisMapApprovalCommitErrorV1> {
+        let (outbox, identity, _) = self.ledger.approval_recovery_by_mutation(request.mutation_id).map_err(|_| GisMapApprovalCommitErrorV1::Storage)?.ok_or(GisMapApprovalCommitErrorV1::Conflict)?;
+        let chain_hash = parse_frontier_chain_hash(&identity.chain_hash).ok_or(GisMapApprovalCommitErrorV1::Conflict)?;
+        if outbox.job_id != request.job_id
+            || outbox.mutation_id != request.mutation_id
+            || outbox.command_hash != request.command_hash
+            || outbox.proposal_hash != request.proposal_hash
+            || identity.space_id != request.scope.space_id
+            || identity.document_id != request.scope.document_id
+            || request.ingress.scope() != request.scope
+            || identity.user_id != request.ingress.user_id()
+            || identity.session_id != request.ingress.session_id()
+            || identity.authorization_generation != request.ingress.authorization_generation()
+            || identity.descriptor_digest != request.base.descriptor_digest
+            || identity.document_id != request.base.frontier.document_id
+            || identity.head_ordinal != request.base.frontier.head_edit_ordinal
+            || identity.head_edit_id != request.base.frontier.head_edit_id
+            || identity.last_commit_seq != request.base.frontier.last_commit_seq
+            || chain_hash != request.base.frontier.chain_hash
+            || identity.input_hash != request.base.digest()
+            || request.base_frontier != &request.base.frontier
+        {
+            return Err(GisMapApprovalCommitErrorV1::Conflict);
+        }
+        Ok(())
+    }
+
+    fn release_cleanup_job(&self, job_id: &str) {
+        let mut jobs = self.cleanup_jobs.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        let Some(owners) = jobs.get_mut(job_id) else { return };
+        if *owners == 1 {
+            jobs.remove(job_id);
+        } else {
+            *owners -= 1;
+        }
+        drop(jobs);
+        self.announce_state_change();
+    }
+
+    fn park_abandoned_request(&self, owner: GisMapAbandonedRequestV1) {
+        let job_id = owner.identity.job_id.clone();
+        let replaced = self.parked_requests.lock().unwrap_or_else(std::sync::PoisonError::into_inner).insert(job_id.clone(), owner);
+        if replaced.is_some() {
+            self.release_cleanup_job(&job_id);
+        }
+    }
+
+    fn park_prepared_approval(&self, owner: GisMapPreparedApprovalV1) {
+        let job_id = owner.job_id.clone();
+        let replaced = self.parked_prepared.lock().unwrap_or_else(std::sync::PoisonError::into_inner).insert(job_id.clone(), owner);
+        if replaced.is_some() {
+            self.release_cleanup_job(&job_id);
+        }
+    }
+
+    fn abandoned_request_maintenance_key(owner: &GisMapAbandonedRequestV1) -> String {
+        format!("request:{}:{}:{}", owner.key.len(), owner.key, owner.identity.job_id)
+    }
+
+    fn maintenance_owns_document(&self, key: &str) -> bool {
+        let prefix = format!("request:{}:{key}:", key.len());
+        self.maintenance.lock().unwrap_or_else(std::sync::PoisonError::into_inner).iter().any(|candidate| candidate.starts_with(&prefix))
+    }
+
+    fn spawn_abandoned_request(&self, owner: GisMapAbandonedRequestV1) {
+        let maintenance_key = Self::abandoned_request_maintenance_key(&owner);
+        let mut maintenance = self.maintenance.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        if !maintenance.insert(maintenance_key.clone()) {
+            self.release_cleanup_job(&owner.identity.job_id);
+            return;
+        }
+        drop(maintenance);
+        let committer = self.clone();
+        match tokio::runtime::Handle::try_current() {
+            Ok(runtime) => {
+                let task = GisMapAbandonedRequestTaskV1 { committer, maintenance_key, owner: Some(owner) };
+                runtime.spawn(async move {
+                    let owner = task.owner.as_ref().expect("abandoned request task retains its exact owner").clone();
+                    task.committer.drive_abandoned_request(&owner.key, owner.identity, owner.request).await;
+                    task.complete();
+                });
+            }
+            Err(_) => {
+                self.park_abandoned_request(owner);
+            }
+        }
+    }
+
+    fn resume_parked_requests(&self) {
+        let Ok(runtime) = tokio::runtime::Handle::try_current() else { return };
+        let parked = {
+            let mut owners = self.parked_requests.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+            owners.drain().map(|(_, owner)| (Self::abandoned_request_maintenance_key(&owner), owner)).collect::<Vec<_>>()
+        };
+        for (maintenance_key, owner) in parked {
+            let task = GisMapAbandonedRequestTaskV1 { committer: self.clone(), maintenance_key, owner: Some(owner) };
+            runtime.spawn(async move {
+                let owner = task.owner.as_ref().expect("resumed abandoned request task retains its exact owner").clone();
+                task.committer.drive_abandoned_request(&owner.key, owner.identity, owner.request).await;
+                task.complete();
+            });
+        }
+    }
+
+    fn spawn_abandoned_prepared(&self, prepared: GisMapPreparedApprovalV1) {
+        let maintenance_key = format!("prepared:{}", prepared.job_id);
+        let mut maintenance = self.maintenance.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        if !maintenance.insert(maintenance_key.clone()) {
+            self.release_cleanup_job(&prepared.job_id);
+            return;
+        }
+        drop(maintenance);
+        let committer = self.clone();
+        match tokio::runtime::Handle::try_current() {
+            Ok(runtime) => {
+                let task = GisMapPreparedApprovalTaskV1 { committer, maintenance_key, owner: Some(prepared) };
+                runtime.spawn(async move {
+                    let prepared = task.owner.as_ref().expect("prepared approval task retains its exact owner").clone();
+                    task.committer.drive_abandoned_prepared(prepared).await;
+                    task.complete();
+                });
+            }
+            Err(_) => {
+                let reader = InferenceReaderV1 {
+                    user_id: prepared.ingress.user_id(),
+                    session_id: prepared.ingress.session_id(),
+                    authorization_generation: prepared.ingress.authorization_generation(),
+                    space_id: &prepared.scope.space_id,
+                    document_id: &prepared.scope.document_id,
+                };
+                if self.ledger.abandon_prepared_approval(&reader, &prepared.job_id, &prepared.mutation_id, &prepared.command_hash, &prepared.proposal_hash).is_ok() {
+                    self.maintenance.lock().unwrap_or_else(std::sync::PoisonError::into_inner).remove(&maintenance_key);
+                    self.release_cleanup_job(&prepared.job_id);
+                    self.announce_state_change();
+                } else {
+                    self.park_prepared_approval(prepared);
+                }
+            }
+        }
+    }
+
+    fn resume_parked_prepared(&self) {
+        let Ok(runtime) = tokio::runtime::Handle::try_current() else { return };
+        let parked = {
+            let mut owners = self.parked_prepared.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+            owners.drain().map(|(job_id, owner)| (format!("prepared:{job_id}"), owner)).collect::<Vec<_>>()
+        };
+        for (maintenance_key, prepared) in parked {
+            let task = GisMapPreparedApprovalTaskV1 { committer: self.clone(), maintenance_key, owner: Some(prepared) };
+            runtime.spawn(async move {
+                let prepared = task.owner.as_ref().expect("resumed prepared approval task retains its exact owner").clone();
+                task.committer.drive_abandoned_prepared(prepared).await;
+                task.complete();
+            });
+        }
+    }
+
+    async fn drive_abandoned_prepared(&self, prepared: GisMapPreparedApprovalV1) {
+        let mut retry_delay = std::time::Duration::from_millis(1);
+        loop {
+            let reader = InferenceReaderV1 {
+                user_id: prepared.ingress.user_id(),
+                session_id: prepared.ingress.session_id(),
+                authorization_generation: prepared.ingress.authorization_generation(),
+                space_id: &prepared.scope.space_id,
+                document_id: &prepared.scope.document_id,
+            };
+            if self.ledger.abandon_prepared_approval(&reader, &prepared.job_id, &prepared.mutation_id, &prepared.command_hash, &prepared.proposal_hash).is_ok() {
+                return;
+            }
+            tokio::time::sleep(retry_delay).await;
+            retry_delay = retry_delay.saturating_mul(2).min(std::time::Duration::from_secs(1));
         }
     }
 
     fn parent_store(id: &str, snapshot: GisMapParentSnapshotV1) -> GisMapParentStoreV1 {
         use directory::ArtifactPack;
-        let envelope = directory::os_store::create_document_envelope::<GisMapParentSnapshotV1, GisMapParentMutationV1>(GIS_DOCUMENT_SCHEMA, id, snapshot.clone(), None);
+        let mut envelope = directory::os_store::create_document_envelope::<GisMapParentSnapshotV1, GisMapParentMutationV1>(GIS_DOCUMENT_SCHEMA, id, snapshot.clone(), None);
+        envelope.dialect = Some(directory::os_io::ArtifactDialect { artifact_kind: "s.gis.gismap".into(), standard: "1".into(), subset: "*".into() });
         let digest = *semio_framework_hash::hash(&snapshot.encode_pack()).as_bytes();
         let runtime = directory::os_store::ArtifactStoreInitializationRuntime::new(id, GIS_DOCUMENT_SCHEMA, snapshot, digest);
         directory::os_store::ArtifactStore::from_initialized_runtime_with_owners(envelope, runtime, 0, semio_s_plugin_gis::artifacts::gismap::spr::gis_map_document_store_owners())
     }
 
-    fn drawing_store(id: &str, snapshot: GisMapDrawingSnapshotV1) -> GisMapDrawingStoreV1 {
+    fn drawing_store(id: &str, parent: directory::os_io::ArtifactRef, snapshot: GisMapDrawingSnapshotV1) -> GisMapDrawingStoreV1 {
         use directory::{ArtifactPack, os_store::MemberStoreOwner};
         let schema = semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::STDIO_SEMIODRAWING_DOCUMENT_SCHEMA;
-        let envelope = directory::os_store::create_document_envelope::<GisMapDrawingSnapshotV1, GisMapDrawingMutationV1>(schema, id, snapshot.clone(), None);
+        let mut envelope = directory::os_store::create_document_envelope::<GisMapDrawingSnapshotV1, GisMapDrawingMutationV1>(schema, id, snapshot.clone(), None);
+        envelope.dialect = Some(directory::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "drawing".into() });
+        envelope.owner = Some(directory::os_store::OwnerRef { parent, slot: "drawing".into(), child_id: id.into() });
         let digest = *semio_framework_hash::hash(&snapshot.encode_pack()).as_bytes();
         let runtime = directory::os_store::ArtifactStoreInitializationRuntime::new(id, schema, snapshot, digest);
         directory::os_store::ArtifactStore::from_initialized_runtime_with_owners(envelope, runtime, 0, <GisMapDrawingSnapshotV1 as MemberStoreOwner<GisMapDrawingMutationV1>>::member_store_owners())
     }
 
-    fn value_store(id: &str, snapshot: GisMapValueSnapshotV1) -> GisMapValueStoreV1 {
+    fn value_store(id: &str, parent: directory::os_io::ArtifactRef, snapshot: GisMapValueSnapshotV1) -> GisMapValueStoreV1 {
         use directory::{ArtifactPack, os_store::MemberStoreOwner};
         let schema = semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::value::schema::snapshot::STDIO_SEMIOVALUE_DOCUMENT_SCHEMA;
-        let envelope = directory::os_store::create_document_envelope::<GisMapValueSnapshotV1, GisMapValueMutationV1>(schema, id, snapshot.clone(), None);
+        let mut envelope = directory::os_store::create_document_envelope::<GisMapValueSnapshotV1, GisMapValueMutationV1>(schema, id, snapshot.clone(), None);
+        envelope.dialect = Some(directory::os_io::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "value".into() });
+        envelope.owner = Some(directory::os_store::OwnerRef { parent, slot: "value".into(), child_id: id.into() });
         let digest = *semio_framework_hash::hash(&snapshot.encode_pack()).as_bytes();
         let runtime = directory::os_store::ArtifactStoreInitializationRuntime::new(id, schema, snapshot, digest);
         directory::os_store::ArtifactStore::from_initialized_runtime_with_owners(envelope, runtime, 0, <GisMapValueSnapshotV1 as MemberStoreOwner<GisMapValueMutationV1>>::member_store_owners())
@@ -467,12 +747,7 @@ impl RetainedGisMapApprovalCommitterV1 {
         let inverse = directory::os_pack::json::to_json_string(&work.parent_inverse).into_bytes();
         let command = CanonicalInferenceCommandV1::decode(request.command).map_err(|_| GisMapApprovalCommitErrorV1::Rejected)?;
         let actor = request.actor.strip_prefix("user:").and_then(|value| value.split_once("#session:"));
-        let admitted_actor = actor.is_some_and(|(user, session)| {
-            request.ingress.scope() == request.scope
-                && request.ingress.user_id() == user
-                && request.ingress.session_id() == session
-                && request.ingress.authorization_generation() != 0
-        });
+        let admitted_actor = actor.is_some_and(|(user, session)| request.ingress.scope() == request.scope && request.ingress.user_id() == user && request.ingress.session_id() == session && request.ingress.authorization_generation() != 0);
         if request.proposal_hash != sha256(&proposal)
             || request.mutation_id != approval_mutation_id(request.job_id, request.proposal_hash)
             || request.command_hash != sha256(request.command)
@@ -531,13 +806,7 @@ impl RetainedGisMapApprovalCommitterV1 {
 
     /// 📍 Installs one exact document actor and an actor-owned committed-Event recovery before any
     /// approval can enter.
-    async fn mount_document(
-        &self,
-        scope: DocumentScope,
-        handle: db::ArtifactHandle,
-        base: &InferenceMapBaseV1,
-        document_write: GisMapDocumentWriteLeaseV1,
-    ) -> Result<bool, GisMapApprovalCommitErrorV1> {
+    async fn mount_document(&self, scope: DocumentScope, handle: db::ArtifactHandle, base: &InferenceMapBaseV1, document_write: GisMapDocumentWriteLeaseV1) -> Result<bool, GisMapApprovalCommitErrorV1> {
         let snapshot = <GisMapParentSnapshotV1 as directory::ArtifactPack>::decode_pack(base.pack.as_slice()).map_err(|_| GisMapApprovalCommitErrorV1::Rejected)?;
         let observed = handle.checkpoint_publication_snapshot().await.map_err(|_| GisMapApprovalCommitErrorV1::Storage)?;
         if !Self::checkpoint_matches(&observed, observed.authority_generation, base, &scope) {
@@ -548,14 +817,9 @@ impl RetainedGisMapApprovalCommitterV1 {
         if let Some(state) = documents.get(&key) {
             let matches = match state {
                 RetainedGisMapDocumentStateV1::Ready { owners, .. } | RetainedGisMapDocumentStateV1::Published { owners, .. } => {
-                    owners.scope == scope
-                        && owners.generation == observed.authority_generation
-                        && Arc::ptr_eq(&owners.document_write, &document_write.gate)
-                        && Self::stores_match(owners, &snapshot)
+                    owners.scope == scope && owners.generation == observed.authority_generation && Arc::ptr_eq(&owners.document_write, &document_write.gate) && Self::stores_match(owners, &snapshot)
                 }
-                RetainedGisMapDocumentStateV1::Recovered { owners, document_write: retained, .. } => {
-                    owners.scope == scope && owners.generation == observed.authority_generation && Arc::ptr_eq(&retained.gate, &document_write.gate)
-                }
+                RetainedGisMapDocumentStateV1::Recovered { owners, document_write: retained, .. } => owners.scope == scope && owners.generation == observed.authority_generation && Arc::ptr_eq(&retained.gate, &document_write.gate),
                 _ => false,
             };
             return if matches { Ok(false) } else { Err(GisMapApprovalCommitErrorV1::Conflict) };
@@ -566,25 +830,13 @@ impl RetainedGisMapApprovalCommitterV1 {
         let fence = Arc::new(InferenceDocumentFenceV1::new(scope.clone(), observed.authority_generation).map_err(|_| GisMapApprovalCommitErrorV1::Rejected)?);
         let (drawing, value) = Self::derived_children(&snapshot);
         let parent_id = key.clone();
-        let drawing_id = format!("{key}#{}", snapshot.drawing.child_id);
-        let value_id = format!("{key}#{}", snapshot.value.child_id);
-        let admission = directory::os_store::durable_group::DurableOwnedMapRecoveryAdmissionV1::new(
-            Self::parent_store(&parent_id, snapshot),
-            Self::drawing_store(&drawing_id, drawing),
-            Self::value_store(&value_id, value),
-        );
+        let drawing_id = snapshot.drawing.child_id.clone();
+        let value_id = snapshot.value.child_id.clone();
+        let parent = Self::parent_store(&parent_id, snapshot);
+        let parent_reference = directory::os_io::ArtifactRef { artifact_id: parent_id, dialect: directory::os_io::ArtifactDialect { artifact_kind: "s.gis.gismap".into(), standard: "1".into(), subset: "*".into() } };
+        let admission = directory::os_store::durable_group::DurableOwnedMapRecoveryAdmissionV1::new(parent, Self::drawing_store(&drawing_id, parent_reference.clone(), drawing), Self::value_store(&value_id, parent_reference, value));
         let recovery = handle.durable_group_recovery_retained(admission);
-        documents.insert(
-            key,
-            RetainedGisMapDocumentStateV1::Recovery {
-                owner: recovery,
-                handle,
-                scope,
-                generation: observed.authority_generation,
-                document_write,
-                fence,
-            },
-        );
+        documents.insert(key, RetainedGisMapDocumentStateV1::Recovery { owner: recovery, handle, scope, generation: observed.authority_generation, document_write, fence });
         Ok(true)
     }
 
@@ -624,10 +876,7 @@ impl RetainedGisMapApprovalCommitterV1 {
         }
     }
 
-    async fn resume_recovered_checkpoint(
-        &self,
-        key: &str,
-    ) -> Result<(GisMapCommitIdentityV1, u64, GisMapJournalReceiptV1), GisMapApprovalCommitErrorV1> {
+    async fn resume_recovered_checkpoint(&self, key: &str) -> Result<(GisMapCommitIdentityV1, u64, GisMapJournalReceiptV1), GisMapApprovalCommitErrorV1> {
         let mut documents = self.documents.lock().await;
         let Some(state) = documents.remove(key) else { return Err(GisMapApprovalCommitErrorV1::Unavailable) };
         let RetainedGisMapDocumentStateV1::Recovered { owners, checkpoint, document_write } = state else {
@@ -636,26 +885,18 @@ impl RetainedGisMapApprovalCommitterV1 {
         };
         let recovered = (|| {
             let mutation_id = checkpoint.head_edit_id().0.as_str();
-            let (outbox, accepted, ledger_applied) = self
-                .ledger
-                .approval_recovery_by_mutation(mutation_id)
-                .map_err(|_| GisMapApprovalCommitErrorV1::Storage)?
-                .ok_or(GisMapApprovalCommitErrorV1::Conflict)?;
+            let (outbox, accepted, ledger_applied) = self.ledger.approval_recovery_by_mutation(mutation_id).map_err(|_| GisMapApprovalCommitErrorV1::Storage)?.ok_or(GisMapApprovalCommitErrorV1::Conflict)?;
             accepted.validate().map_err(|_| GisMapApprovalCommitErrorV1::Conflict)?;
             let scope = DocumentScope::new(accepted.space_id.clone(), accepted.document_id.clone());
             let actor = approval_actor(&accepted);
-            let chain_hash = directory::os_directory::ArtifactHash::parse_hex(&accepted.chain_hash).ok_or(GisMapApprovalCommitErrorV1::Conflict)?;
+            let chain_hash = parse_frontier_chain_hash(&accepted.chain_hash).ok_or(GisMapApprovalCommitErrorV1::Conflict)?;
             let command_matches = if outbox.command.as_slice().is_empty() {
                 true
             } else {
                 let command = CanonicalInferenceCommandV1::decode(outbox.command.as_slice()).map_err(|_| GisMapApprovalCommitErrorV1::Conflict)?;
                 outbox.command_hash == sha256(outbox.command.as_slice()) && command.matches_identity(&outbox.mutation_id, key, &actor)
             };
-            if scope != owners.scope
-                || outbox.mutation_id != mutation_id
-                || outbox.mutation_id != approval_mutation_id(&outbox.job_id, &outbox.proposal_hash)
-                || !command_matches
-            {
+            if scope != owners.scope || outbox.mutation_id != mutation_id || outbox.mutation_id != approval_mutation_id(&outbox.job_id, &outbox.proposal_hash) || !command_matches {
                 return Err(GisMapApprovalCommitErrorV1::Conflict);
             }
             let identity = GisMapCommitIdentityV1 {
@@ -665,13 +906,7 @@ impl RetainedGisMapApprovalCommitterV1 {
                 command_hash: outbox.command_hash,
                 job_id: outbox.job_id,
                 proposal_hash: outbox.proposal_hash,
-                base_frontier: ArtifactFrontier {
-                    document_id: accepted.document_id,
-                    head_edit_ordinal: accepted.head_ordinal,
-                    head_edit_id: accepted.head_edit_id,
-                    last_commit_seq: accepted.last_commit_seq,
-                    chain_hash,
-                },
+                base_frontier: ArtifactFrontier { document_id: accepted.document_id, head_edit_ordinal: accepted.head_ordinal, head_edit_id: accepted.head_edit_id, last_commit_seq: accepted.last_commit_seq, chain_hash },
                 descriptor_digest: accepted.descriptor_digest,
                 base_digest: accepted.input_hash,
                 timestamp: protocol::HybridLogicalTimestamp { actor: 0, physical_ms: 0, logical: 0 },
@@ -698,51 +933,46 @@ impl RetainedGisMapApprovalCommitterV1 {
         }
     }
 
-    async fn prepare_retained_document(
-        &self,
-        scope: &DocumentScope,
-        base: &InferenceMapBaseV1,
-        gate: Arc<tokio::sync::Mutex<()>>,
-        request: Arc<GisMapApprovalRequestTokenV1>,
-    ) -> Result<(), GisMapApprovalCommitErrorV1> {
+    async fn prepare_retained_document(&self, scope: &DocumentScope, base: &InferenceMapBaseV1, gate: Arc<tokio::sync::Mutex<()>>, request: Arc<GisMapApprovalRequestTokenV1>) -> Result<(), GisMapApprovalCommitErrorV1> {
         let key = document_key(scope);
+        let mut state_changes = self.state_epoch.subscribe();
         loop {
             enum PrepareTurn {
                 Recover,
                 PublishRecovered,
                 Acquire,
                 Ready,
+                Wait,
             }
             let turn = {
                 let documents = self.documents.lock().await;
                 match documents.get(&key) {
                     Some(RetainedGisMapDocumentStateV1::Recovery { scope: stored, document_write, .. }) => {
-                        if stored != scope || !Arc::ptr_eq(&document_write.gate, &gate) || !Self::request_matches(document_write, &request) {
+                        if stored != scope || !Arc::ptr_eq(&document_write.gate, &gate) {
                             return Err(GisMapApprovalCommitErrorV1::Conflict);
                         }
-                        PrepareTurn::Recover
+                        if Self::request_matches(document_write, &request) { PrepareTurn::Recover } else { PrepareTurn::Wait }
                     }
                     Some(RetainedGisMapDocumentStateV1::Ready { owners, document_write, .. }) => {
-                        if owners.scope != *scope || !Arc::ptr_eq(&owners.document_write, &gate) || !Self::stores_match(owners, &<GisMapParentSnapshotV1 as directory::ArtifactPack>::decode_pack(base.pack.as_slice()).map_err(|_| GisMapApprovalCommitErrorV1::Rejected)?) {
-                            return Err(GisMapApprovalCommitErrorV1::Conflict);
-                        }
-                        match document_write {
-                            Some(document_write) if Self::request_matches(document_write, &request) => PrepareTurn::Ready,
-                            Some(_) => return Err(GisMapApprovalCommitErrorV1::Conflict),
-                            None => PrepareTurn::Acquire,
-                        }
-                    }
-                    Some(RetainedGisMapDocumentStateV1::Published { owners, identity, document_write, .. }) => {
                         if owners.scope != *scope
                             || !Arc::ptr_eq(&owners.document_write, &gate)
-                            || identity.base_frontier != base.frontier
-                            || identity.base_digest != base.digest()
+                            || !Self::stores_match(owners, &<GisMapParentSnapshotV1 as directory::ArtifactPack>::decode_pack(base.pack.as_slice()).map_err(|_| GisMapApprovalCommitErrorV1::Rejected)?)
                         {
                             return Err(GisMapApprovalCommitErrorV1::Conflict);
                         }
                         match document_write {
                             Some(document_write) if Self::request_matches(document_write, &request) => PrepareTurn::Ready,
-                            Some(_) => return Err(GisMapApprovalCommitErrorV1::Conflict),
+                            Some(_) => PrepareTurn::Wait,
+                            None => PrepareTurn::Acquire,
+                        }
+                    }
+                    Some(RetainedGisMapDocumentStateV1::Published { owners, identity, document_write, .. }) => {
+                        if owners.scope != *scope || !Arc::ptr_eq(&owners.document_write, &gate) || identity.base_frontier != base.frontier || identity.base_digest != base.digest() {
+                            return Err(GisMapApprovalCommitErrorV1::Conflict);
+                        }
+                        match document_write {
+                            Some(document_write) if Self::request_matches(document_write, &request) => PrepareTurn::Ready,
+                            Some(_) => PrepareTurn::Wait,
                             None => PrepareTurn::Acquire,
                         }
                     }
@@ -750,32 +980,38 @@ impl RetainedGisMapApprovalCommitterV1 {
                         if owners.scope != *scope || !Arc::ptr_eq(&owners.document_write, &gate) || !Arc::ptr_eq(&document_write.gate, &gate) {
                             return Err(GisMapApprovalCommitErrorV1::Conflict);
                         }
-                        PrepareTurn::PublishRecovered
+                        if Self::request_matches(document_write, &request) { PrepareTurn::PublishRecovered } else { PrepareTurn::Wait }
                     }
-                    Some(RetainedGisMapDocumentStateV1::Verification { owners, identity, document_write, .. })
-                    | Some(RetainedGisMapDocumentStateV1::Publishing { owners, identity, document_write, .. }) => {
-                        if owners.scope != *scope
-                            || !Arc::ptr_eq(&owners.document_write, &gate)
-                            || !Arc::ptr_eq(&document_write.gate, &gate)
-                            || identity.base_frontier != base.frontier
-                            || identity.base_digest != base.digest()
-                        {
+                    Some(RetainedGisMapDocumentStateV1::Verification { owners, identity, document_write, .. }) | Some(RetainedGisMapDocumentStateV1::Publishing { owners, identity, document_write, .. }) => {
+                        if owners.scope != *scope || !Arc::ptr_eq(&owners.document_write, &gate) || !Arc::ptr_eq(&document_write.gate, &gate) || identity.base_frontier != base.frontier || identity.base_digest != base.digest() {
                             return Err(GisMapApprovalCommitErrorV1::Conflict);
                         }
-                        PrepareTurn::Ready
+                        if Self::request_matches(document_write, &request) { PrepareTurn::Ready } else { PrepareTurn::Wait }
                     }
-                    Some(_) => return Err(GisMapApprovalCommitErrorV1::Conflict),
+                    Some(RetainedGisMapDocumentStateV1::Assembly { scope: stored, identity, document_write, .. }) | Some(RetainedGisMapDocumentStateV1::Journal { scope: stored, identity, document_write, .. }) => {
+                        if stored != scope || !Arc::ptr_eq(&identity.document_write, &gate) || identity.base_frontier != base.frontier || identity.base_digest != base.digest() {
+                            return Err(GisMapApprovalCommitErrorV1::Conflict);
+                        }
+                        if Self::request_matches(document_write, &request) { PrepareTurn::Ready } else { PrepareTurn::Wait }
+                    }
+                    Some(RetainedGisMapDocumentStateV1::Closing(_)) => PrepareTurn::Wait,
                     None => PrepareTurn::Acquire,
                 }
             };
             match turn {
                 PrepareTurn::Ready => return Ok(()),
+                PrepareTurn::Wait => {
+                    state_changes.changed().await.map_err(|_| GisMapApprovalCommitErrorV1::Unavailable)?;
+                    continue;
+                }
                 PrepareTurn::Recover => {
                     self.finish_document_recovery(&key).await?;
+                    self.announce_state_change();
                     continue;
                 }
                 PrepareTurn::PublishRecovered => {
                     self.resume_recovered_checkpoint(&key).await?;
+                    self.announce_state_change();
                     return Ok(());
                 }
                 PrepareTurn::Acquire => {}
@@ -799,11 +1035,7 @@ impl RetainedGisMapApprovalCommitterV1 {
                     }
                     None => {
                         drop(documents);
-                        let handle = self
-                            .database
-                            .document(&protocol::ArtifactId(key.clone()))
-                            .await
-                            .map_err(|_| GisMapApprovalCommitErrorV1::Storage)?;
+                        let handle = self.database.document(&protocol::ArtifactId(key.clone())).await.map_err(|_| GisMapApprovalCommitErrorV1::Storage)?;
                         self.mount_document(scope.clone(), handle, base, document_write).await?;
                         self.finish_document_recovery(&key).await?;
                         return Ok(());
@@ -823,6 +1055,7 @@ impl RetainedGisMapApprovalCommitterV1 {
         snapshot: &GisMapParentSnapshotV1,
         document_write: GisMapDocumentWriteLeaseV1,
     ) -> Result<RetainedGisMapDocumentStateV1, (GisMapApprovalCommitErrorV1, GisMapDocumentStoresV1)> {
+        use directory::Inference as _;
         use directory::os_store::durable_group::{DurableOwnedMapMemberAdmissionV1, DurableOwnedThreeStoreMapAssemblyV1};
         use semio_s_plugin_gis::artifacts::gismap::standards::v1::subsets::any::schema::inferences::GisMapInference;
         use semio_s_plugin_gis::editor::gis2d::{GisMapOneItemStampV1, gis_map_drawing_stamped_one_item_preparation_factory, gis_map_parent_stamped_one_item_preparation_factory, gis_map_value_stamped_one_item_preparation_factory};
@@ -895,10 +1128,7 @@ impl RetainedGisMapApprovalCommitterV1 {
                 let receipt = checkpoint.receipt().clone();
                 let mut identity = candidate.clone();
                 identity.ingress = None;
-                documents.insert(
-                    key.to_owned(),
-                    RetainedGisMapDocumentStateV1::Verification { owners, identity, receipt: receipt.clone(), document_write },
-                );
+                documents.insert(key.to_owned(), RetainedGisMapDocumentStateV1::Verification { owners, identity, receipt: receipt.clone(), document_write });
                 GisMapCommitTurnV1::Verify { generation, receipt }
             }
             RetainedGisMapDocumentStateV1::Ready { owners, pending, document_write } => {
@@ -926,6 +1156,8 @@ impl RetainedGisMapApprovalCommitterV1 {
                     }
                     Ok(DurableOwnedThreeStoreMapAssemblyAdvanceV1::Terminal) => {
                         let terminal = owner.take_terminal_owners().expect("terminal assembly returns every owner");
+                        #[cfg(test)]
+                        eprintln!("[DEBUG] GIS fixed-three assembly terminal failure={:?}", terminal.failure);
                         drop(owner);
                         let owners = Self::restored_stores(terminal.parent, terminal.drawing, terminal.value, handle, scope, generation, identity.document_write.clone(), fence);
                         documents.insert(key.to_owned(), RetainedGisMapDocumentStateV1::Ready { owners, pending: None, document_write: None });
@@ -1021,12 +1253,21 @@ impl RetainedGisMapApprovalCommitterV1 {
         Arc::ptr_eq(&document_write.request, request)
     }
 
-    async fn drive_abandoned_turn(
-        &self,
-        key: &str,
-        candidate: &GisMapCommitIdentityV1,
-        request: &Arc<GisMapApprovalRequestTokenV1>,
-    ) -> GisMapAbandonedTurnV1 {
+    fn state_has_active_request(state: &RetainedGisMapDocumentStateV1) -> bool {
+        let document_write = match state {
+            RetainedGisMapDocumentStateV1::Recovery { document_write, .. }
+            | RetainedGisMapDocumentStateV1::Recovered { document_write, .. }
+            | RetainedGisMapDocumentStateV1::Assembly { document_write, .. }
+            | RetainedGisMapDocumentStateV1::Journal { document_write, .. }
+            | RetainedGisMapDocumentStateV1::Verification { document_write, .. }
+            | RetainedGisMapDocumentStateV1::Publishing { document_write, .. } => Some(document_write),
+            RetainedGisMapDocumentStateV1::Ready { document_write, .. } | RetainedGisMapDocumentStateV1::Published { document_write, .. } => document_write.as_ref(),
+            RetainedGisMapDocumentStateV1::Closing(closing) => closing.document_write.as_ref(),
+        };
+        document_write.is_some_and(|document_write| Arc::strong_count(&document_write.request) > 1)
+    }
+
+    async fn drive_abandoned_turn(&self, key: &str, candidate: &GisMapCommitIdentityV1, request: &Arc<GisMapApprovalRequestTokenV1>) -> GisMapAbandonedTurnV1 {
         use directory::os_store::durable_group::{DurableOwnedThreeStoreCommitAdvanceV1, DurableOwnedThreeStoreMapAssemblyAdvanceV1};
         let mut documents = self.documents.lock().await;
         let Some(state) = documents.remove(key) else { return GisMapAbandonedTurnV1::Complete };
@@ -1042,15 +1283,14 @@ impl RetainedGisMapApprovalCommitterV1 {
                 if matches { GisMapAbandonedTurnV1::Recovered } else { GisMapAbandonedTurnV1::Complete }
             }
             RetainedGisMapDocumentStateV1::Ready { owners, pending, document_write } => {
-                let matches = document_write.as_ref().is_some_and(|lease| Self::request_matches(lease, request))
-                    && pending.as_ref().is_none_or(|identity| Self::identity_matches(identity, candidate));
+                let matches = document_write.as_ref().is_some_and(|lease| Self::request_matches(lease, request)) && pending.as_ref().is_none_or(|identity| Self::identity_matches(identity, candidate));
                 if matches {
                     documents.insert(key.to_owned(), RetainedGisMapDocumentStateV1::Ready { owners, pending: None, document_write: None });
                     drop(document_write);
                 } else {
                     documents.insert(key.to_owned(), RetainedGisMapDocumentStateV1::Ready { owners, pending, document_write });
                 }
-                GisMapAbandonedTurnV1::Complete
+                if matches { GisMapAbandonedTurnV1::Aborted } else { GisMapAbandonedTurnV1::Complete }
             }
             RetainedGisMapDocumentStateV1::Assembly { mut owner, handle, scope, generation, identity, document_write, fence } => {
                 if !Self::request_matches(&document_write, request) || !Self::identity_matches(&identity, candidate) {
@@ -1058,10 +1298,7 @@ impl RetainedGisMapApprovalCommitterV1 {
                     return GisMapAbandonedTurnV1::Complete;
                 }
                 owner.cancel();
-                match owner.advance(directory::os_store::ArtifactStoreOneItemGrant {
-                    maximum_items: 1,
-                    maximum_bytes: directory::os_store::durable_group::DURABLE_OWNED_GROUP_EVENT_MAX_BYTES,
-                }) {
+                match owner.advance(directory::os_store::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: directory::os_store::durable_group::DURABLE_OWNED_GROUP_EVENT_MAX_BYTES }) {
                     Ok(DurableOwnedThreeStoreMapAssemblyAdvanceV1::Mounted) => {
                         let host = owner.take_mounted_host().expect("mounted abandoned assembly returns its exact host");
                         drop(owner);
@@ -1072,19 +1309,10 @@ impl RetainedGisMapApprovalCommitterV1 {
                         let terminal = owner.take_terminal_owners().expect("abandoned assembly returns every owner");
                         drop(owner);
                         drop(terminal.sink);
-                        let owners = Self::restored_stores(
-                            terminal.parent,
-                            terminal.drawing,
-                            terminal.value,
-                            handle,
-                            scope,
-                            generation,
-                            identity.document_write.clone(),
-                            fence,
-                        );
+                        let owners = Self::restored_stores(terminal.parent, terminal.drawing, terminal.value, handle, scope, generation, identity.document_write.clone(), fence);
                         documents.insert(key.to_owned(), RetainedGisMapDocumentStateV1::Ready { owners, pending: None, document_write: None });
                         drop(document_write);
-                        GisMapAbandonedTurnV1::Complete
+                        GisMapAbandonedTurnV1::Aborted
                     }
                     Ok(_) => {
                         documents.insert(key.to_owned(), RetainedGisMapDocumentStateV1::Assembly { owner, handle, scope, generation, identity, document_write, fence });
@@ -1104,10 +1332,7 @@ impl RetainedGisMapApprovalCommitterV1 {
                 if receipt.is_none() {
                     owner.cancel();
                 }
-                match owner.advance(directory::os_store::ArtifactStoreOneItemGrant {
-                    maximum_items: 1,
-                    maximum_bytes: directory::os_store::durable_group::DURABLE_OWNED_GROUP_EVENT_MAX_BYTES,
-                }) {
+                match owner.advance(directory::os_store::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: directory::os_store::durable_group::DURABLE_OWNED_GROUP_EVENT_MAX_BYTES }) {
                     Ok(DurableOwnedThreeStoreCommitAdvanceV1::AwaitingAck(exact_receipt)) => {
                         if receipt.as_ref().is_some_and(|stored| stored != &exact_receipt) {
                             documents.insert(key.to_owned(), RetainedGisMapDocumentStateV1::Journal { owner, handle, scope, generation, identity, receipt, document_write, fence });
@@ -1126,16 +1351,7 @@ impl RetainedGisMapApprovalCommitterV1 {
                         let terminal = owner.take_terminal_owners().expect("abandoned journal returns every owner");
                         drop(owner);
                         drop(terminal.sink);
-                        let owners = Self::restored_stores(
-                            terminal.parent,
-                            terminal.drawing,
-                            terminal.value,
-                            handle,
-                            scope,
-                            generation,
-                            identity.document_write.clone(),
-                            fence,
-                        );
+                        let owners = Self::restored_stores(terminal.parent, terminal.drawing, terminal.value, handle, scope, generation, identity.document_write.clone(), fence);
                         if let Some(receipt) = receipt {
                             let verify_identity = identity.clone();
                             documents.insert(key.to_owned(), RetainedGisMapDocumentStateV1::Verification { owners, identity, receipt: receipt.clone(), document_write });
@@ -1143,7 +1359,7 @@ impl RetainedGisMapApprovalCommitterV1 {
                         } else {
                             documents.insert(key.to_owned(), RetainedGisMapDocumentStateV1::Ready { owners, pending: None, document_write: None });
                             drop(document_write);
-                            GisMapAbandonedTurnV1::Complete
+                            GisMapAbandonedTurnV1::Aborted
                         }
                     }
                     Ok(_) => {
@@ -1162,11 +1378,7 @@ impl RetainedGisMapApprovalCommitterV1 {
                 let verify_identity = identity.clone();
                 let verify_receipt = receipt.clone();
                 documents.insert(key.to_owned(), RetainedGisMapDocumentStateV1::Verification { owners, identity, receipt, document_write });
-                if matches {
-                    GisMapAbandonedTurnV1::Verify { identity: verify_identity, generation, receipt: verify_receipt }
-                } else {
-                    GisMapAbandonedTurnV1::Complete
-                }
+                if matches { GisMapAbandonedTurnV1::Verify { identity: verify_identity, generation, receipt: verify_receipt } } else { GisMapAbandonedTurnV1::Complete }
             }
             RetainedGisMapDocumentStateV1::Publishing { owners, identity, receipt, document_write } => {
                 let matches = Self::request_matches(&document_write, request) && Self::identity_matches(&identity, candidate);
@@ -1174,11 +1386,7 @@ impl RetainedGisMapApprovalCommitterV1 {
                 let verify_identity = identity.clone();
                 let verify_receipt = receipt.clone();
                 documents.insert(key.to_owned(), RetainedGisMapDocumentStateV1::Publishing { owners, identity, receipt, document_write });
-                if matches {
-                    GisMapAbandonedTurnV1::Verify { identity: verify_identity, generation, receipt: verify_receipt }
-                } else {
-                    GisMapAbandonedTurnV1::Complete
-                }
+                if matches { GisMapAbandonedTurnV1::Verify { identity: verify_identity, generation, receipt: verify_receipt } } else { GisMapAbandonedTurnV1::Complete }
             }
             RetainedGisMapDocumentStateV1::Published { owners, identity, receipt, document_write } => {
                 let matches = document_write.as_ref().is_some_and(|lease| Self::request_matches(lease, request)) && Self::identity_matches(&identity, candidate);
@@ -1201,8 +1409,17 @@ impl RetainedGisMapApprovalCommitterV1 {
         let mut retry_delay = std::time::Duration::from_millis(1);
         loop {
             let turn = self.drive_abandoned_turn(key, &identity, &request).await;
+            self.announce_state_change();
             let retry = match turn {
-                GisMapAbandonedTurnV1::Complete => return,
+                GisMapAbandonedTurnV1::Complete | GisMapAbandonedTurnV1::Aborted => {
+                    let Some(ingress) = identity.ingress.as_ref() else { return };
+                    let reader =
+                        InferenceReaderV1 { user_id: ingress.user_id(), session_id: ingress.session_id(), authorization_generation: ingress.authorization_generation(), space_id: &identity.scope.space_id, document_id: &identity.scope.document_id };
+                    match self.ledger.abandon_prepared_approval(&reader, &identity.job_id, &identity.mutation_id, &identity.command_hash, &identity.proposal_hash) {
+                        Ok(_) => return,
+                        Err(_) => true,
+                    }
+                }
                 GisMapAbandonedTurnV1::Continue => false,
                 GisMapAbandonedTurnV1::Committed => {
                     identity.ingress = None;
@@ -1210,30 +1427,10 @@ impl RetainedGisMapApprovalCommitterV1 {
                 }
                 GisMapAbandonedTurnV1::Recover => self.finish_document_recovery(key).await.is_err(),
                 GisMapAbandonedTurnV1::Recovered => match self.resume_recovered_checkpoint(key).await {
-                    Ok((identity, generation, receipt)) => self
-                        .verify(
-                            key,
-                            &identity,
-                            generation,
-                            receipt,
-                            identity.journal_now_ms.saturating_add(super::schema::JOB_MAX_LIFETIME_MS),
-                            identity.journal_now_ms,
-                        )
-                        .await
-                        .is_err(),
+                    Ok((identity, generation, receipt)) => self.verify(key, &identity, generation, receipt, super::schema::JOB_MAX_LIFETIME_MS, identity.journal_now_ms).await.is_err(),
                     Err(_) => true,
                 },
-                GisMapAbandonedTurnV1::Verify { identity, generation, receipt } => self
-                    .verify(
-                        key,
-                        &identity,
-                        generation,
-                        receipt,
-                        identity.journal_now_ms.saturating_add(super::schema::JOB_MAX_LIFETIME_MS),
-                        identity.journal_now_ms,
-                    )
-                    .await
-                    .is_err(),
+                GisMapAbandonedTurnV1::Verify { identity, generation, receipt } => self.verify(key, &identity, generation, receipt, super::schema::JOB_MAX_LIFETIME_MS, identity.journal_now_ms).await.is_err(),
                 GisMapAbandonedTurnV1::Retry => true,
             };
             if retry {
@@ -1246,13 +1443,7 @@ impl RetainedGisMapApprovalCommitterV1 {
         }
     }
 
-    async fn finish_preflight(
-        &self,
-        key: &str,
-        candidate: &GisMapCommitIdentityV1,
-        snapshot: &GisMapParentSnapshotV1,
-        observed: &db::CheckpointPublicationSnapshot,
-    ) -> Result<(), GisMapApprovalCommitErrorV1> {
+    async fn finish_preflight(&self, key: &str, candidate: &GisMapCommitIdentityV1, snapshot: &GisMapParentSnapshotV1, observed: &db::CheckpointPublicationSnapshot) -> Result<(), GisMapApprovalCommitErrorV1> {
         if !Self::checkpoint_matches_frontier(observed, observed.authority_generation, &candidate.base_frontier, &candidate.scope) {
             return Err(GisMapApprovalCommitErrorV1::Conflict);
         }
@@ -1298,10 +1489,10 @@ impl RetainedGisMapApprovalCommitterV1 {
         identity: &GisMapCommitIdentityV1,
         generation: u64,
         receipt: &GisMapJournalReceiptV1,
-        deadline_ms: u64,
-        now_ms: u64,
+        attempt_lifetime_ms: u64,
+        decision_now_ms: u64,
     ) -> Result<directory::os_directory::PublishedArtifactCheckpoint, GisMapApprovalCommitErrorV1> {
-        let (request, document_write) = {
+        let (handle, scope) = {
             let documents = self.documents.lock().await;
             let Some(RetainedGisMapDocumentStateV1::Publishing { owners, identity: stored, receipt: stored_receipt, document_write }) = documents.get(key) else {
                 return Err(GisMapApprovalCommitErrorV1::Conflict);
@@ -1309,17 +1500,26 @@ impl RetainedGisMapApprovalCommitterV1 {
             if !Self::identity_matches(stored, identity) || stored_receipt != receipt || owners.generation != generation {
                 return Err(GisMapApprovalCommitErrorV1::Conflict);
             }
-            let actor_snapshot = owners.handle.checkpoint_publication_snapshot().await.map_err(|_| GisMapApprovalCommitErrorV1::Storage)?;
+            (owners.handle.clone(), owners.scope.clone())
+        };
+        let actor_snapshot = handle.checkpoint_publication_snapshot().await.map_err(|_| GisMapApprovalCommitErrorV1::Storage)?;
+        let (request, document_write) = {
+            let documents = self.documents.lock().await;
+            let Some(RetainedGisMapDocumentStateV1::Publishing { owners, identity: stored, receipt: stored_receipt, document_write }) = documents.get(key) else {
+                return Err(GisMapApprovalCommitErrorV1::Conflict);
+            };
+            if !Self::identity_matches(stored, identity) || stored_receipt != receipt || owners.generation != generation || owners.scope != scope {
+                return Err(GisMapApprovalCommitErrorV1::Conflict);
+            }
             let projected = Self::publication_frontier(&owners.scope, &actor_snapshot).ok_or(GisMapApprovalCommitErrorV1::Storage)?;
             if actor_snapshot.authority_generation != generation
                 || projected.head_edit_ordinal != identity.base_frontier.head_edit_ordinal.checked_add(1).ok_or(GisMapApprovalCommitErrorV1::Capacity)?
                 || projected.last_commit_seq != identity.base_frontier.last_commit_seq.checked_add(1).ok_or(GisMapApprovalCommitErrorV1::Capacity)?
                 || projected.head_edit_id != identity.mutation_id
-                || projected.chain_hash.0 != owners.parent.as_ref().ok_or(GisMapApprovalCommitErrorV1::Storage)?.content_revision_now()
             {
                 return Err(GisMapApprovalCommitErrorV1::Conflict);
             }
-            let files = owners.parent.as_ref().ok_or(GisMapApprovalCommitErrorV1::Storage)?.snapshot_pack().await.map_err(|_| GisMapApprovalCommitErrorV1::Storage)?;
+            let files = semio_framework::io::resolve_ready(owners.parent.as_ref().ok_or(GisMapApprovalCommitErrorV1::Storage)?.snapshot_pack()).map_err(|_| GisMapApprovalCommitErrorV1::Storage)?;
             if files.pack.is_empty() || files.spr.is_empty() {
                 return Err(GisMapApprovalCommitErrorV1::Storage);
             }
@@ -1341,7 +1541,7 @@ impl RetainedGisMapApprovalCommitterV1 {
         let expected_frontier = Self::publication_frontier(&expected_scope, &request.actor_snapshot).ok_or(GisMapApprovalCommitErrorV1::Storage)?;
         let expected_pack_hash = sha256(&request.pair.pack);
         let expected_spr_hash = sha256(&request.pair.spr);
-        let published = self.publisher.publish(request, document_write, deadline_ms, now_ms).await?;
+        let published = self.publisher.publish(request, document_write, attempt_lifetime_ms, decision_now_ms).await?;
         if published.scope != expected_scope
             || published.descriptor_digest_v1.hex() != expected_descriptor
             || published.baseline_frontier != expected_frontier
@@ -1353,9 +1553,8 @@ impl RetainedGisMapApprovalCommitterV1 {
         Ok(published)
     }
 
-    async fn verify(&self, key: &str, identity: &GisMapCommitIdentityV1, generation: u64, receipt: GisMapJournalReceiptV1, deadline_ms: u64, now_ms: u64) -> Result<GisMapApprovalReceiptV1, GisMapApprovalCommitErrorV1> {
-        let lifetime = deadline_ms.checked_sub(now_ms).filter(|value| *value != 0).ok_or(GisMapApprovalCommitErrorV1::Rejected)?;
-        let control = Arc::new(InferenceOperationControlV1::new(lifetime, 65_536).map_err(|_| GisMapApprovalCommitErrorV1::Rejected)?);
+    async fn verify(&self, key: &str, identity: &GisMapCommitIdentityV1, generation: u64, receipt: GisMapJournalReceiptV1, attempt_lifetime_ms: u64, decision_now_ms: u64) -> Result<GisMapApprovalReceiptV1, GisMapApprovalCommitErrorV1> {
+        let control = Arc::new(InferenceOperationControlV1::new(attempt_lifetime_ms, 65_536).map_err(|_| GisMapApprovalCommitErrorV1::Rejected)?);
         let fence = {
             let documents = self.documents.lock().await;
             match documents.get(key) {
@@ -1393,21 +1592,15 @@ impl RetainedGisMapApprovalCommitterV1 {
             let mut documents = self.documents.lock().await;
             let Some(state) = documents.remove(key) else { return Err(GisMapApprovalCommitErrorV1::Unavailable) };
             match state {
-                RetainedGisMapDocumentStateV1::Verification { owners, identity: stored, receipt: stored_receipt, document_write }
-                    if Self::identity_matches(&stored, identity) && stored_receipt == receipt =>
-                {
+                RetainedGisMapDocumentStateV1::Verification { owners, identity: stored, receipt: stored_receipt, document_write } if Self::identity_matches(&stored, identity) && stored_receipt == receipt => {
                     documents.insert(key.to_owned(), RetainedGisMapDocumentStateV1::Publishing { owners, identity: stored, receipt: stored_receipt, document_write });
                     false
                 }
-                RetainedGisMapDocumentStateV1::Publishing { owners, identity: stored, receipt: stored_receipt, document_write }
-                    if Self::identity_matches(&stored, identity) && stored_receipt == receipt =>
-                {
+                RetainedGisMapDocumentStateV1::Publishing { owners, identity: stored, receipt: stored_receipt, document_write } if Self::identity_matches(&stored, identity) && stored_receipt == receipt => {
                     documents.insert(key.to_owned(), RetainedGisMapDocumentStateV1::Publishing { owners, identity: stored, receipt: stored_receipt, document_write });
                     false
                 }
-                RetainedGisMapDocumentStateV1::Published { owners, identity: stored, receipt: stored_receipt, document_write }
-                    if Self::identity_matches(&stored, identity) && stored_receipt == receipt =>
-                {
+                RetainedGisMapDocumentStateV1::Published { owners, identity: stored, receipt: stored_receipt, document_write } if Self::identity_matches(&stored, identity) && stored_receipt == receipt => {
                     documents.insert(key.to_owned(), RetainedGisMapDocumentStateV1::Published { owners, identity: stored, receipt: stored_receipt, document_write });
                     true
                 }
@@ -1417,28 +1610,27 @@ impl RetainedGisMapApprovalCommitterV1 {
                 }
             }
         };
-        if !already_published {
-            self.publish_checkpoint(key, identity, generation, &receipt, deadline_ms, now_ms).await?;
-        }
-        let applied = self
-            .ledger
-            .reconcile_committed_approval(&identity.job_id, &witness, generation, identity.journal_now_ms)
-            .map_err(|error| match error {
-                InferenceErrorV1::Conflict | InferenceErrorV1::Invalid | InferenceErrorV1::Denied => GisMapApprovalCommitErrorV1::Conflict,
-                _ => GisMapApprovalCommitErrorV1::Storage,
-            })?;
+        let published = if already_published { None } else { Some(self.publish_checkpoint(key, identity, generation, &receipt, attempt_lifetime_ms, decision_now_ms).await?) };
+        let applied = self.ledger.reconcile_committed_approval(&identity.job_id, &witness, generation, identity.journal_now_ms).map_err(|error| match error {
+            InferenceErrorV1::Conflict | InferenceErrorV1::Invalid | InferenceErrorV1::Denied => GisMapApprovalCommitErrorV1::Conflict,
+            _ => GisMapApprovalCommitErrorV1::Storage,
+        })?;
         let mut documents = self.documents.lock().await;
         let Some(state) = documents.remove(key) else { return Err(GisMapApprovalCommitErrorV1::Unavailable) };
         match state {
-            RetainedGisMapDocumentStateV1::Publishing { owners, identity: stored, receipt: stored_receipt, document_write }
-                if Self::identity_matches(&stored, identity) && stored_receipt == receipt =>
-            {
+            RetainedGisMapDocumentStateV1::Publishing { owners, identity: stored, receipt: stored_receipt, document_write } if Self::identity_matches(&stored, identity) && stored_receipt == receipt => {
+                let notification = published.as_ref().map_or(Err(GisMapApprovalCommitErrorV1::Conflict), |checkpoint| match std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| self.publisher.checkpoint_applied(checkpoint))) {
+                    Ok(result) => result,
+                    Err(_) => Err(GisMapApprovalCommitErrorV1::Storage),
+                });
+                if let Err(error) = notification {
+                    documents.insert(key.to_owned(), RetainedGisMapDocumentStateV1::Publishing { owners, identity: stored, receipt: stored_receipt, document_write });
+                    return Err(error);
+                }
                 documents.insert(key.to_owned(), RetainedGisMapDocumentStateV1::Published { owners, identity: stored, receipt: stored_receipt, document_write: None });
                 drop(document_write);
             }
-            RetainedGisMapDocumentStateV1::Published { owners, identity: stored, receipt: stored_receipt, document_write }
-                if Self::identity_matches(&stored, identity) && stored_receipt == receipt =>
-            {
+            RetainedGisMapDocumentStateV1::Published { owners, identity: stored, receipt: stored_receipt, document_write } if Self::identity_matches(&stored, identity) && stored_receipt == receipt => {
                 documents.insert(key.to_owned(), RetainedGisMapDocumentStateV1::Published { owners, identity: stored, receipt: stored_receipt, document_write: None });
                 drop(document_write);
             }
@@ -1450,24 +1642,23 @@ impl RetainedGisMapApprovalCommitterV1 {
         Ok(GisMapApprovalReceiptV1 { witness, document_generation: generation, applied })
     }
 
-    async fn commit_retained(&self, request: GisMapApprovalCommitRequestV1<'_>) -> Result<GisMapApprovalReceiptV1, GisMapApprovalCommitErrorV1> {
-        let (mut identity, snapshot) = Self::preflight(&request)?;
+    async fn commit_retained(&self, request: GisMapApprovalCommitRequestV1<'_>, mut owner: GisMapApprovalRequestOwnerV1, preflight: (GisMapCommitIdentityV1, GisMapParentSnapshotV1)) -> Result<GisMapApprovalReceiptV1, GisMapApprovalCommitErrorV1> {
+        self.resume_parked_requests();
+        self.resume_parked_prepared();
+        let (mut identity, snapshot) = preflight;
+        owner.admit(identity.clone());
         let base = request.base;
         let deadline_ms = request.deadline_ms;
         let now_ms = request.now_ms;
         let document_write = request.document_write;
         let mut live_ingress = Some(request.ingress);
         let key = document_key(&identity.scope);
-        let request_token = Arc::new(GisMapApprovalRequestTokenV1);
-        let mut owner = GisMapApprovalRequestOwnerV1 {
-            committer: self.clone(),
-            key: key.clone(),
-            identity: Some(identity.clone()),
-            request: request_token.clone(),
-        };
+        let request_token = owner.request.clone();
         self.prepare_retained_document(&identity.scope, base, document_write, request_token).await?;
         let result = loop {
-            match self.drive_turn(&key, &identity, &snapshot).await {
+            let turn = self.drive_turn(&key, &identity, &snapshot).await;
+            self.announce_state_change();
+            match turn {
                 GisMapCommitTurnV1::Continue => tokio::task::yield_now().await,
                 GisMapCommitTurnV1::Committed => {
                     identity.ingress = None;
@@ -1482,7 +1673,12 @@ impl RetainedGisMapApprovalCommitterV1 {
                     }
                     self.finish_preflight(&key, &identity, &snapshot, &observed).await?;
                 }
-                GisMapCommitTurnV1::Verify { generation, receipt } => break self.verify(&key, &identity, generation, receipt, deadline_ms, now_ms).await,
+                GisMapCommitTurnV1::Verify { generation, receipt } => {
+                    let attempt_lifetime_ms = deadline_ms.checked_sub(now_ms).filter(|value| *value != 0).ok_or(GisMapApprovalCommitErrorV1::Rejected)?;
+                    let verified = self.verify(&key, &identity, generation, receipt, attempt_lifetime_ms, now_ms).await;
+                    self.announce_state_change();
+                    break verified;
+                }
                 GisMapCommitTurnV1::Rejected(error) => break Err(error),
             }
         };
@@ -1525,12 +1721,8 @@ impl RetainedGisMapApprovalCommitterV1 {
                 documents.insert(key.to_owned(), RetainedGisMapDocumentStateV1::Recovery { owner, handle, scope, generation, document_write, fence });
                 return Err(GisMapApprovalCommitErrorV1::Storage);
             }
-            RetainedGisMapDocumentStateV1::Ready { owners, document_write, .. } => {
-                Self::closing(owners, document_write)
-            }
-            RetainedGisMapDocumentStateV1::Published { owners, document_write, .. } => {
-                Self::closing(owners, document_write)
-            }
+            RetainedGisMapDocumentStateV1::Ready { owners, document_write, .. } => Self::closing(owners, document_write),
+            RetainedGisMapDocumentStateV1::Published { owners, document_write, .. } => Self::closing(owners, document_write),
             RetainedGisMapDocumentStateV1::Recovered { owners, checkpoint, document_write } => {
                 documents.insert(key.to_owned(), RetainedGisMapDocumentStateV1::Recovered { owners, checkpoint, document_write });
                 return Err(GisMapApprovalCommitErrorV1::Storage);
@@ -1641,40 +1833,71 @@ impl RetainedGisMapApprovalCommitterV1 {
 
     /// 🧹 Drives every retained Store, assembly and journal owner to one explicit terminal handoff.
     pub async fn close(&self) -> Result<(), GisMapApprovalCommitErrorV1> {
+        {
+            let _jobs = self.cleanup_jobs.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+            self.closing.store(true, Ordering::Release);
+        }
+        self.announce_state_change();
+        let mut state_changes = self.state_epoch.subscribe();
         loop {
+            self.resume_parked_requests();
+            self.resume_parked_prepared();
+            let active_request = {
+                let documents = self.documents.lock().await;
+                documents.values().any(Self::state_has_active_request)
+            };
+            if active_request {
+                state_changes.changed().await.map_err(|_| GisMapApprovalCommitErrorV1::Unavailable)?;
+                continue;
+            }
             let next = {
                 let documents = self.documents.lock().await;
-                documents.iter().next().map(|(key, state)| {
-                    let gate = match state {
-                        RetainedGisMapDocumentStateV1::Ready { owners, document_write, .. } => {
-                            if document_write.is_some() {
+                documents
+                    .iter()
+                    .next()
+                    .map(|(key, state)| {
+                        let gate = match state {
+                            RetainedGisMapDocumentStateV1::Ready { owners, document_write, .. } => {
+                                if document_write.is_some() {
+                                    return Some((key.clone(), None));
+                                }
+                                owners.document_write.clone()
+                            }
+                            RetainedGisMapDocumentStateV1::Published { owners, document_write, .. } => {
+                                if document_write.is_some() {
+                                    return Some((key.clone(), None));
+                                }
+                                owners.document_write.clone()
+                            }
+                            RetainedGisMapDocumentStateV1::Recovery { .. } | RetainedGisMapDocumentStateV1::Recovered { .. } => return Some((key.clone(), None)),
+                            RetainedGisMapDocumentStateV1::Assembly { .. } | RetainedGisMapDocumentStateV1::Journal { .. } | RetainedGisMapDocumentStateV1::Verification { .. } | RetainedGisMapDocumentStateV1::Publishing { .. } => {
                                 return Some((key.clone(), None));
                             }
-                            owners.document_write.clone()
-                        }
-                        RetainedGisMapDocumentStateV1::Published { owners, document_write, .. } => {
-                            if document_write.is_some() {
-                                return Some((key.clone(), None));
+                            RetainedGisMapDocumentStateV1::Closing(closing) => {
+                                if closing.document_write.is_some() {
+                                    return Some((key.clone(), None));
+                                }
+                                closing.owners.document_write.clone()
                             }
-                            owners.document_write.clone()
-                        }
-                        RetainedGisMapDocumentStateV1::Recovery { .. } | RetainedGisMapDocumentStateV1::Recovered { .. } => return Some((key.clone(), None)),
-                        RetainedGisMapDocumentStateV1::Assembly { .. }
-                        | RetainedGisMapDocumentStateV1::Journal { .. }
-                        | RetainedGisMapDocumentStateV1::Verification { .. }
-                        | RetainedGisMapDocumentStateV1::Publishing { .. } => return Some((key.clone(), None)),
-                        RetainedGisMapDocumentStateV1::Closing(closing) => {
-                            if closing.document_write.is_some() {
-                                return Some((key.clone(), None));
-                            }
-                            closing.owners.document_write.clone()
-                        }
-                    };
-                    Some((key.clone(), Some(gate)))
-                })
-                .flatten()
+                        };
+                        Some((key.clone(), Some(gate)))
+                    })
+                    .flatten()
             };
-            let Some((key, gate)) = next else { return Ok(()) };
+            let Some((key, gate)) = next else {
+                let maintenance_is_empty = self.maintenance.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_empty();
+                let cleanup_is_empty = self.cleanup_jobs.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_empty();
+                if maintenance_is_empty && cleanup_is_empty {
+                    return Ok(());
+                }
+                state_changes.changed().await.map_err(|_| GisMapApprovalCommitErrorV1::Unavailable)?;
+                continue;
+            };
+            let maintenance_owns_document = self.maintenance_owns_document(&key);
+            if maintenance_owns_document {
+                state_changes.changed().await.map_err(|_| GisMapApprovalCommitErrorV1::Unavailable)?;
+                continue;
+            }
             let _document_write = match gate {
                 Some(gate) => Some(Arc::new(GisMapDocumentWriteAuthorityV1::acquire(gate, Arc::new(GisMapApprovalRequestTokenV1)).await)),
                 None => None,
@@ -1685,28 +1908,35 @@ impl RetainedGisMapApprovalCommitterV1 {
             };
             if recovering {
                 self.finish_document_recovery(&key).await?;
+                self.announce_state_change();
+                continue;
+            }
+            let recovered = {
+                let documents = self.documents.lock().await;
+                matches!(documents.get(&key), Some(RetainedGisMapDocumentStateV1::Recovered { .. }))
+            };
+            if recovered {
+                self.resume_recovered_checkpoint(&key).await?;
+                self.announce_state_change();
                 continue;
             }
             let verification = {
                 let documents = self.documents.lock().await;
                 match documents.get(&key) {
-                    Some(RetainedGisMapDocumentStateV1::Verification { owners, identity, receipt, .. }) => Some((identity.clone(), owners.generation, receipt.clone())),
+                    Some(RetainedGisMapDocumentStateV1::Verification { owners, identity, receipt, .. }) | Some(RetainedGisMapDocumentStateV1::Publishing { owners, identity, receipt, .. }) => {
+                        Some((identity.clone(), owners.generation, receipt.clone()))
+                    }
                     _ => None,
                 }
             };
             if let Some((identity, generation, receipt)) = verification {
-                self.verify(
-                    &key,
-                    &identity,
-                    generation,
-                    receipt,
-                    identity.journal_now_ms.saturating_add(super::schema::JOB_MAX_LIFETIME_MS),
-                    identity.journal_now_ms,
-                )
-                .await?;
+                self.verify(&key, &identity, generation, receipt, super::schema::JOB_MAX_LIFETIME_MS, identity.journal_now_ms).await?;
+                self.announce_state_change();
                 continue;
             }
-            if self.close_turn(&key).await? {
+            let closed = self.close_turn(&key).await?;
+            self.announce_state_change();
+            if closed {
                 continue;
             }
             tokio::task::yield_now().await;
@@ -1716,7 +1946,33 @@ impl RetainedGisMapApprovalCommitterV1 {
 
 impl GisMapApprovalCommitterV1 for RetainedGisMapApprovalCommitterV1 {
     fn commit<'a>(&'a self, request: GisMapApprovalCommitRequestV1<'a>) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<GisMapApprovalReceiptV1, GisMapApprovalCommitErrorV1>> + Send + 'a>> {
-        Box::pin(self.commit_retained(request))
+        if let Err(error) = self.validate_prepared_request(&request) {
+            return Box::pin(async move { Err(error) });
+        }
+        let preflight = match Self::preflight(&request) {
+            Ok(preflight) => preflight,
+            Err(error) => return Box::pin(async move { Err(error) }),
+        };
+        if let Err(error) = self.reserve_cleanup_job(request.job_id) {
+            return Box::pin(async move { Err(error) });
+        }
+        let key = document_key(request.scope);
+        let request_token = Arc::new(GisMapApprovalRequestTokenV1);
+        let owner = GisMapApprovalRequestOwnerV1 {
+            committer: self.clone(),
+            key,
+            identity: None,
+            prepared: Some(GisMapPreparedApprovalV1 {
+                scope: request.scope.clone(),
+                job_id: request.job_id.to_owned(),
+                mutation_id: request.mutation_id.to_owned(),
+                command_hash: request.command_hash.to_owned(),
+                proposal_hash: request.proposal_hash.to_owned(),
+                ingress: request.ingress.clone(),
+            }),
+            request: request_token,
+        };
+        Box::pin(self.commit_retained(request, owner, preflight))
     }
 
     fn close<'a>(&'a self) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<(), GisMapApprovalCommitErrorV1>> + Send + 'a>> {
@@ -1761,19 +2017,170 @@ pub struct InferenceProposalV1 {
     pub proposal_hash: String,
 }
 
+/// 🪪️ The exact durable execution claim one retained worker owns.
+#[derive(Clone, Debug, PartialEq, Eq)]
+struct InferenceRunKeyV1 {
+    job_id: String,
+    identity_digest: String,
+    run_epoch: u64,
+}
+
+impl InferenceRunKeyV1 {
+    fn same_run(&self, job_id: &str, identity_digest: &str) -> bool {
+        self.job_id == job_id && self.identity_digest == identity_digest && self.run_epoch != 0
+    }
+}
+
+/// 🧵️ One installed worker whose blocking child is joined by its outer task.
+struct RetainedInferenceRunV1 {
+    key: InferenceRunKeyV1,
+    control: Arc<InferenceOperationControlV1>,
+    task: JoinHandle<()>,
+}
+
+/// 🛡️ The process-owned admission, cancellation and join authority for GIS inference.
+struct RetainedInferenceRunSupervisorV1 {
+    closing: AtomicBool,
+    capacity: Arc<Semaphore>,
+    operations: Mutex<HashMap<String, RetainedInferenceRunV1>>,
+}
+
+impl RetainedInferenceRunSupervisorV1 {
+    fn new() -> Self {
+        Self { closing: AtomicBool::new(false), capacity: Arc::new(Semaphore::new(OPERATION_CAPACITY)), operations: Mutex::new(HashMap::new()) }
+    }
+
+    async fn reap_finished_operations(&self) -> Result<(), InferenceRouteErrorV1> {
+        let finished = {
+            let mut operations = self.operations.lock().map_err(|_| InferenceRouteErrorV1::Storage)?;
+            let job_ids = operations.iter().filter_map(|(job_id, operation)| operation.task.is_finished().then(|| job_id.clone())).collect::<Vec<_>>();
+            job_ids.into_iter().filter_map(|job_id| operations.remove(&job_id)).collect::<Vec<_>>()
+        };
+        for operation in finished {
+            operation.task.await.map_err(|_| InferenceRouteErrorV1::Storage)?;
+        }
+        Ok(())
+    }
+
+    fn interrupt_operation(&self, job_id: &str, identity_digest: &str) -> Result<(), InferenceRouteErrorV1> {
+        let operations = self.operations.lock().map_err(|_| InferenceRouteErrorV1::Storage)?;
+        if let Some(operation) = operations.get(job_id) {
+            if !operation.key.same_run(job_id, identity_digest) {
+                return Err(InferenceRouteErrorV1::Denied);
+            }
+            operation.control.cancel();
+        }
+        Ok(())
+    }
+
+    async fn signal_and_join_operations(&self) -> Result<(), InferenceRouteErrorV1> {
+        self.closing.store(true, Ordering::Release);
+        let operations = {
+            let mut operations = self.operations.lock().map_err(|_| InferenceRouteErrorV1::Storage)?;
+            std::mem::take(&mut *operations).into_values().collect::<Vec<_>>()
+        };
+        for operation in &operations {
+            operation.control.cancel();
+        }
+        for operation in operations {
+            operation.task.await.map_err(|_| InferenceRouteErrorV1::Storage)?;
+        }
+        Ok(())
+    }
+}
+
+enum InferenceOperationAdmissionV1 {
+    Existing,
+    Installed(oneshot::Sender<()>),
+    Unclaimed,
+}
+
+/// 🔒️ The private input and authorities retained until the blocking worker is joined.
+struct RetainedInferenceRunOwnerV1 {
+    runtime: Arc<HubInferenceRuntimeV1>,
+    directory: Arc<crate::directory::HubDirectories>,
+    rebootstrap: Arc<crate::lag_rebootstrap::VerifiedRebootstrapSource>,
+    gate: Arc<tokio::sync::Mutex<()>>,
+    scope: DocumentScope,
+    identity: InferenceIdentityV1,
+    job_id: String,
+    expires_at_ms: u64,
+    claim: super::sqlite::InferenceRunClaimV1,
+    base: InferenceMapBaseV1,
+    control: Arc<InferenceOperationControlV1>,
+    _permit: OwnedSemaphorePermit,
+}
+
+/// 🧪️ A bounded test-only pause placed inside the real GIS codec checkpoint callback.
+#[cfg(feature = "test-support")]
+pub struct InferenceCheckpointTestGateV1 {
+    entered: AtomicBool,
+    entered_notify: tokio::sync::Notify,
+    released: Mutex<bool>,
+    release_notify: std::sync::Condvar,
+}
+
+#[cfg(feature = "test-support")]
+impl InferenceCheckpointTestGateV1 {
+    pub fn new() -> Self {
+        Self { entered: AtomicBool::new(false), entered_notify: tokio::sync::Notify::new(), released: Mutex::new(false), release_notify: std::sync::Condvar::new() }
+    }
+
+    pub async fn entered(&self) {
+        loop {
+            let entered = self.entered_notify.notified();
+            tokio::pin!(entered);
+            entered.as_mut().enable();
+            if self.entered.load(Ordering::Acquire) {
+                return;
+            }
+            entered.await;
+        }
+    }
+
+    pub fn release(&self) {
+        if let Ok(mut released) = self.released.lock() {
+            *released = true;
+            self.release_notify.notify_all();
+        }
+    }
+
+    fn checkpoint(&self, control: &InferenceOperationControlV1) -> Result<(), InferenceRouteErrorV1> {
+        self.entered.store(true, Ordering::Release);
+        self.entered_notify.notify_waiters();
+        let mut released = self.released.lock().map_err(|_| InferenceRouteErrorV1::Storage)?;
+        while !*released {
+            control.checkpoint(control.progress().0)?;
+            let waited = self.release_notify.wait_timeout(released, std::time::Duration::from_millis(10)).map_err(|_| InferenceRouteErrorV1::Storage)?;
+            released = waited.0;
+        }
+        Ok(())
+    }
+}
+
 /// 🏃️ The hub's only inference authority: frozen binding, ledger, gates, retained cancellation.
 pub struct HubInferenceRuntimeV1 {
     binding: Arc<VerifiedGisMapArtifactBindingV1>,
     ledger: Arc<InferenceJobLedgerV1>,
-    operations: Mutex<HashMap<String, Arc<InferenceOperationControlV1>>>,
+    supervisor: RetainedInferenceRunSupervisorV1,
     document_gates: Mutex<HashMap<String, Arc<tokio::sync::Mutex<()>>>>,
     committer: Arc<dyn GisMapApprovalCommitterV1>,
+    #[cfg(feature = "test-support")]
+    checkpoint_test_gate: Mutex<Option<Arc<InferenceCheckpointTestGateV1>>>,
 }
 
 impl HubInferenceRuntimeV1 {
     /// 🧊️ Binds one process-lifetime runtime to an already-verified GIS Map selection.
     pub fn new(binding: Arc<VerifiedGisMapArtifactBindingV1>, ledger: Arc<InferenceJobLedgerV1>, committer: Arc<dyn GisMapApprovalCommitterV1>) -> Self {
-        Self { binding, ledger, operations: Mutex::new(HashMap::new()), document_gates: Mutex::new(HashMap::new()), committer }
+        Self {
+            binding,
+            ledger,
+            supervisor: RetainedInferenceRunSupervisorV1::new(),
+            document_gates: Mutex::new(HashMap::new()),
+            committer,
+            #[cfg(feature = "test-support")]
+            checkpoint_test_gate: Mutex::new(None),
+        }
     }
 
     pub fn binding(&self) -> &Arc<VerifiedGisMapArtifactBindingV1> {
@@ -1788,8 +2195,27 @@ impl HubInferenceRuntimeV1 {
         &self.committer
     }
 
-    /// 🧹️ Drives every retained GIS approval owner to terminal process handoff.
+    /// 🧪️ Installs one exact pause at the real native codec checkpoint for physical race laws.
+    #[cfg(feature = "test-support")]
+    pub fn install_checkpoint_test_gate(&self, gate: Arc<InferenceCheckpointTestGateV1>) -> Result<(), InferenceRouteErrorV1> {
+        let mut selected = self.checkpoint_test_gate.lock().map_err(|_| InferenceRouteErrorV1::Storage)?;
+        if selected.is_some() {
+            return Err(InferenceRouteErrorV1::Conflict);
+        }
+        *selected = Some(gate);
+        Ok(())
+    }
+
+    /// 🧪️ Reaps finished workers and returns the exact retained task count.
+    #[cfg(feature = "test-support")]
+    pub async fn retained_operation_count_for_test(&self) -> Result<usize, InferenceRouteErrorV1> {
+        self.reap_finished_operations().await?;
+        self.supervisor.operations.lock().map(|operations| operations.len()).map_err(|_| InferenceRouteErrorV1::Storage)
+    }
+
+    /// 🧹️ Stops admission, signals and joins every retained worker, then closes approval owners.
     pub async fn close(&self) -> Result<(), GisMapApprovalCommitErrorV1> {
+        self.supervisor.signal_and_join_operations().await.map_err(|_| GisMapApprovalCommitErrorV1::Storage)?;
         self.committer.close().await
     }
 
@@ -1811,30 +2237,40 @@ impl HubInferenceRuntimeV1 {
         Ok(gate)
     }
 
-    /// 🎛️ Retains one bounded cancellation controller for the lifetime of a running job.
-    pub fn retain_operation(&self, job_id: &str, control: Arc<InferenceOperationControlV1>) -> Result<(), InferenceRouteErrorV1> {
-        let mut operations = self.operations.lock().map_err(|_| InferenceRouteErrorV1::Storage)?;
-        if operations.len() >= OPERATION_CAPACITY && !operations.contains_key(job_id) {
-            return Err(InferenceRouteErrorV1::Capacity);
-        }
-        operations.insert(job_id.to_owned(), control);
-        Ok(())
+    async fn reap_finished_operations(&self) -> Result<(), InferenceRouteErrorV1> {
+        self.supervisor.reap_finished_operations().await
     }
 
-    /// 🧹️ Releases a retained controller once its bounded work has terminated.
-    pub fn release_operation(&self, job_id: &str) {
-        if let Ok(mut operations) = self.operations.lock() {
-            operations.remove(job_id);
+    fn install_operation<F, Fut>(&self, receipt: &super::sqlite::InferenceJobReceiptV1, identity: &InferenceIdentityV1, now_ms: u64, control: Arc<InferenceOperationControlV1>, task: F) -> Result<InferenceOperationAdmissionV1, InferenceRouteErrorV1>
+    where
+        F: FnOnce(super::sqlite::InferenceRunClaimV1, oneshot::Receiver<()>, OwnedSemaphorePermit) -> Fut,
+        Fut: Future<Output = ()> + Send + 'static,
+    {
+        let mut operations = self.supervisor.operations.lock().map_err(|_| InferenceRouteErrorV1::Storage)?;
+        if let Some(operation) = operations.get(&receipt.job_id) {
+            return if operation.key.same_run(&receipt.job_id, &receipt.identity_digest) { Ok(InferenceOperationAdmissionV1::Existing) } else { Err(InferenceRouteErrorV1::Conflict) };
         }
+        if self.supervisor.closing.load(Ordering::Acquire) {
+            return Err(InferenceRouteErrorV1::Unavailable);
+        }
+        let permit = self.supervisor.capacity.clone().try_acquire_owned().map_err(|_| InferenceRouteErrorV1::Capacity)?;
+        let Some(claim) = self.ledger.start(&receipt.job_id, identity, now_ms)? else {
+            return Ok(InferenceOperationAdmissionV1::Unclaimed);
+        };
+        let key = InferenceRunKeyV1 { job_id: receipt.job_id.clone(), identity_digest: receipt.identity_digest.clone(), run_epoch: claim.run_epoch };
+        let (start, ready) = oneshot::channel();
+        let handle = tokio::spawn(task(claim, ready, permit));
+        operations.insert(receipt.job_id.clone(), RetainedInferenceRunV1 { key, control, task: handle });
+        Ok(InferenceOperationAdmissionV1::Installed(start))
     }
 
-    /// 🛑️ Interrupts the retained controller so running work stops at its next bounded checkpoint.
-    pub fn interrupt_operation(&self, job_id: &str) {
-        if let Ok(operations) = self.operations.lock() {
-            if let Some(control) = operations.get(job_id) {
-                control.cancel();
-            }
-        }
+    /// 🛑️ Interrupts only the exact retained claim already authenticated by its private identity.
+    fn interrupt_operation(&self, job_id: &str, identity_digest: &str) -> Result<(), InferenceRouteErrorV1> {
+        self.supervisor.interrupt_operation(job_id, identity_digest)
+    }
+
+    fn fresh_now_ms(&self) -> Result<u64, InferenceRouteErrorV1> {
+        fresh_now_ms()
     }
 
     /// 🔍️ Rejects any drift between the frozen job identity and the current server-materialized base.
@@ -1843,7 +2279,14 @@ impl HubInferenceRuntimeV1 {
     }
 
     /// 🧮️ Runs the frozen native GIS service under the claim's control and derives its sole proposal.
-    pub fn infer(&self, identity: &InferenceIdentityV1, job_id: &str, base: &InferenceMapBaseV1, control: &InferenceOperationControlV1, checkpoint: &mut dyn FnMut(u64, u64)) -> Result<InferenceProposalV1, InferenceRouteErrorV1> {
+    pub fn infer(
+        &self,
+        identity: &InferenceIdentityV1,
+        job_id: &str,
+        base: &InferenceMapBaseV1,
+        control: &InferenceOperationControlV1,
+        checkpoint: &mut dyn FnMut(u64, u64) -> Result<(), InferenceRouteErrorV1>,
+    ) -> Result<InferenceProposalV1, InferenceRouteErrorV1> {
         use directory::FromValue;
         use semio_s_plugin_gis::artifacts::gismap::standards::v1::subsets::any::schema::inferences::GisMapInference;
         let _ = identity;
@@ -1857,18 +2300,28 @@ impl HubInferenceRuntimeV1 {
             canonical_payload: base.pack.as_slice(),
             dependencies: &[],
         };
-        let mut failure = None;
+        let mut failure: Option<InferenceRouteErrorV1> = None;
         let execution = semio_s_plugin_gis::artifacts::gismap::infer_gis_map_controlled(&request, &mut |completed| {
             if let Err(error) = control.checkpoint(completed) {
+                failure = Some(error.into());
+                return Err(semio_framework_plugin::ArtifactInferenceExecutionError::new("hub.inference.interrupted", "bounded inference interrupted"));
+            }
+            #[cfg(feature = "test-support")]
+            if let Some(gate) = self.checkpoint_test_gate.lock().ok().and_then(|selected| selected.clone()) {
+                if let Err(error) = gate.checkpoint(control) {
+                    failure = Some(error);
+                    return Err(semio_framework_plugin::ArtifactInferenceExecutionError::new("hub.inference.interrupted", "bounded inference interrupted"));
+                }
+            }
+            if let Err(error) = checkpoint(completed, WORK_UNIT_LIMIT) {
                 failure = Some(error);
                 return Err(semio_framework_plugin::ArtifactInferenceExecutionError::new("hub.inference.interrupted", "bounded inference interrupted"));
             }
-            checkpoint(completed, WORK_UNIT_LIMIT);
             Ok(())
         });
         let execution = match execution {
             Ok(execution) => execution,
-            Err(_) => return Err(failure.map_or(InferenceRouteErrorV1::Invalid, InferenceRouteErrorV1::from)),
+            Err(_) => return Err(failure.unwrap_or(InferenceRouteErrorV1::Invalid)),
         };
         let snapshot = <semio_s_plugin_gis::artifacts::gismap::GisMapSnapshot as directory::ArtifactPack>::decode_pack(base.pack.as_slice()).map_err(|_| InferenceRouteErrorV1::Invalid)?;
         let inference = GisMapInference::from_value(directory::pack_rt::decode_wire_value(&execution.canonical_payload).map_err(|_| InferenceRouteErrorV1::Invalid)?).map_err(|_| InferenceRouteErrorV1::Invalid)?;
@@ -1982,11 +2435,7 @@ pub async fn commit_prepared_approval(
     ingress: Arc<dyn GisMapApprovalIngressAuthorityV1>,
 ) -> Result<bool, InferenceRouteErrorV1> {
     let scope = DocumentScope::new(identity.space_id.clone(), identity.document_id.clone());
-    if ingress.scope() != &scope
-        || ingress.user_id() != identity.user_id
-        || ingress.session_id() != identity.session_id
-        || ingress.authorization_generation() != identity.authorization_generation
-    {
+    if ingress.scope() != &scope || ingress.user_id() != identity.user_id || ingress.session_id() != identity.session_id || ingress.authorization_generation() != identity.authorization_generation {
         return Err(InferenceRouteErrorV1::Denied);
     }
     let composed_children = base.composed_children()?;
@@ -2199,15 +2648,89 @@ impl crate::lag_rebootstrap::RebootstrapTransferControl for InferenceMapBaseCont
     fn report(&self, _progress: crate::lag_rebootstrap::RebootstrapProgress) {}
 }
 
+async fn finish_retained_gis_map_job(owner: RetainedInferenceRunOwnerV1, outcome: Result<InferenceProposalV1, InferenceRouteErrorV1>) {
+    let Ok(now_ms) = owner.runtime.fresh_now_ms() else {
+        return;
+    };
+    let _guard = owner.gate.lock().await;
+    match outcome {
+        Ok(proposal) => {
+            let checked = super::authorization::check_live_inference_author(&owner.directory, &owner.identity, &owner.scope, || i64::try_from(now_ms).unwrap_or(i64::MAX), &owner.control).await.map_err(InferenceRouteErrorV1::from);
+            let checked = match checked {
+                Ok(()) => {
+                    let base_control = InferenceMapBaseControlV1 { deadline_ms: owner.expires_at_ms, now_ms, control: owner.control.clone() };
+                    map_base(&owner.rebootstrap, &owner.scope, base_control.deadline_ms, &base_control).await.and_then(|current| owner.runtime.compare_frozen(&owner.identity, &owner.scope, &current))
+                }
+                Err(error) => Err(error),
+            };
+            if checked.is_ok() {
+                let _ = owner.runtime.ledger().succeed(&owner.job_id, &owner.identity, owner.claim.run_epoch, &proposal.result, &proposal.proposal, now_ms);
+            } else {
+                let _ = owner.runtime.ledger().cancel_run(&owner.job_id, &reader(&owner.identity), owner.claim.run_epoch, now_ms);
+            }
+        }
+        Err(InferenceRouteErrorV1::Cancelled | InferenceRouteErrorV1::Expired) => {
+            let _ = owner.runtime.ledger().cancel_run(&owner.job_id, &reader(&owner.identity), owner.claim.run_epoch, now_ms);
+        }
+        Err(_) => {
+            let _ = owner.runtime.ledger().fail_run(&owner.job_id, &reader(&owner.identity), owner.claim.run_epoch, now_ms);
+        }
+    }
+}
+
+async fn drive_retained_gis_map_job(owner: RetainedInferenceRunOwnerV1, ready: oneshot::Receiver<()>) {
+    if ready.await.is_err() {
+        return;
+    }
+    let terminal_runtime = owner.runtime.clone();
+    let terminal_identity = owner.identity.clone();
+    let terminal_job_id = owner.job_id.clone();
+    let terminal_claim = owner.claim;
+    let terminal_control = owner.control.clone();
+    let terminal_gate = owner.gate.clone();
+    let computed = tokio::task::spawn_blocking(move || {
+        let mut appended = 0_u64;
+        let mut last = 0_u64;
+        let outcome = owner.runtime.infer(&owner.identity, &owner.job_id, &owner.base, &owner.control, &mut |completed, total| {
+            let now_ms = owner.runtime.fresh_now_ms()?;
+            if completed > last && appended < super::schema::PROGRESS_MAX_CURSOR {
+                owner.runtime.ledger().heartbeat(&owner.job_id, &reader(&owner.identity), owner.claim.run_epoch, completed, total, now_ms)?;
+                appended += 1;
+                last = completed;
+            } else {
+                owner.runtime.ledger().renew_claim(&owner.job_id, &reader(&owner.identity), owner.claim.run_epoch, now_ms)?;
+            }
+            Ok(())
+        });
+        (owner, outcome)
+    })
+    .await;
+    match computed {
+        Ok((owner, outcome)) => finish_retained_gis_map_job(owner, outcome).await,
+        Err(_) => {
+            let Ok(now_ms) = terminal_runtime.fresh_now_ms() else {
+                return;
+            };
+            let _guard = terminal_gate.lock().await;
+            if terminal_control.checkpoint(terminal_control.progress().0).is_err() {
+                let _ = terminal_runtime.ledger().cancel_run(&terminal_job_id, &reader(&terminal_identity), terminal_claim.run_epoch, now_ms);
+            } else {
+                let _ = terminal_runtime.ledger().fail_run(&terminal_job_id, &reader(&terminal_identity), terminal_claim.run_epoch, now_ms);
+            }
+        }
+    }
+}
+
 /// 📥️ Accepts one closed client intent, claims it, runs the frozen service, and offers one proposal.
 pub async fn submit_gis_map_job(context: InferenceRouteContextV1<'_>, body: &[u8]) -> Result<InferenceJobReceiptDtoV1, InferenceRouteErrorV1> {
     let request = super::schema::InferenceRequestV1::decode(body)?;
     let session = authenticated_session(context.directory, context.token).await?;
     let runtime = context.runtime;
+    runtime.reap_finished_operations().await?;
     let gate = runtime.document_gate(&context.scope)?;
     let control = Arc::new(InferenceOperationControlV1::new(request.lifetime_ms, WORK_UNIT_LIMIT)?);
     let base_control = InferenceMapBaseControlV1 { deadline_ms: context.now_ms.saturating_add(super::schema::JOB_MAX_LIFETIME_MS), now_ms: context.now_ms, control: control.clone() };
-    let (receipt, identity, claim, base) = {
+    let (receipt, identity, admission) = {
         let _guard = gate.lock().await;
         let descriptor = context.directory.get_document_descriptor(&context.scope).await.map_err(|_| InferenceRouteErrorV1::Storage)?.ok_or(InferenceRouteErrorV1::NotFound)?;
         let base = map_base(context.rebootstrap, &context.scope, base_control.deadline_ms, &base_control).await?;
@@ -2228,48 +2751,46 @@ pub async fn submit_gis_map_job(context: InferenceRouteContextV1<'_>, body: &[u8
         runtime.compare_frozen(&identity, &context.scope, &base)?;
         super::authorization::check_live_inference_author(context.directory, &identity, &context.scope, || i64::try_from(context.now_ms).unwrap_or(i64::MAX), &control).await?;
         let receipt = runtime.ledger().accept(&identity, &base.pack, context.now_ms)?;
-        runtime.retain_operation(&receipt.job_id, control.clone())?;
-        let claim = runtime.ledger().start(&receipt.job_id, &identity, context.now_ms)?;
-        (receipt, identity, claim, base)
+        let runtime_owner = runtime.clone();
+        let directory = context.directory.clone();
+        let rebootstrap = context.rebootstrap.clone();
+        let owner_gate = gate.clone();
+        let scope = context.scope.clone();
+        let job_id = receipt.job_id.clone();
+        let expires_at_ms = receipt.expires_at_ms;
+        let owner_identity = identity.clone();
+        let owner_control = control.clone();
+        let admission = runtime.install_operation(&receipt, &identity, context.now_ms, control.clone(), move |claim, ready, permit| {
+            let owner = RetainedInferenceRunOwnerV1 { runtime: runtime_owner, directory, rebootstrap, gate: owner_gate, scope, identity: owner_identity, job_id, expires_at_ms, claim, base, control: owner_control, _permit: permit };
+            async move { drive_retained_gis_map_job(owner, ready).await }
+        });
+        let admission = match admission {
+            Ok(admission) => admission,
+            Err(error) => {
+                let now_ms = runtime.fresh_now_ms().unwrap_or(context.now_ms);
+                let _ = runtime.ledger().fail(&receipt.job_id, &reader(&identity), now_ms);
+                return Err(error);
+            }
+        };
+        (receipt, identity, admission)
     };
-    let Some(claim) = claim else {
-        runtime.release_operation(&receipt.job_id);
-        return owner_page_receipt(runtime, &receipt.job_id, &identity, receipt.expires_at_ms, context.now_ms);
-    };
-    let ledger = runtime.ledger().clone();
-    let job_id = receipt.job_id.clone();
-    let owner = reader(&identity);
-    let mut appended = 0_u64;
-    let mut last = 0_u64;
-    let outcome = runtime.infer(&identity, &receipt.job_id, &base, &control, &mut |completed, total| {
-        if completed > last && appended < super::schema::PROGRESS_MAX_CURSOR && ledger.progress(&job_id, &owner, claim.run_epoch, completed, total, context.now_ms).is_ok() {
-            appended += 1;
-            last = completed;
+    let now_ms = runtime.fresh_now_ms()?;
+    let response = owner_page_receipt(runtime, &receipt.job_id, &identity, receipt.expires_at_ms, now_ms);
+    match admission {
+        InferenceOperationAdmissionV1::Installed(start) => {
+            if response.is_err() {
+                control.cancel();
+            }
+            let _ = start.send(());
         }
-    });
-    let published: Result<bool, InferenceRouteErrorV1> = match outcome {
-        Ok(proposal) => {
-            let _guard = gate.lock().await;
-            let author = super::authorization::check_live_inference_author(context.directory, &identity, &context.scope, || i64::try_from(context.now_ms).unwrap_or(i64::MAX), &control).await.map_err(InferenceRouteErrorV1::from);
-            let checked = match author {
-                Ok(()) => map_base(context.rebootstrap, &context.scope, base_control.deadline_ms, &base_control).await.and_then(|current| runtime.compare_frozen(&identity, &context.scope, &current)),
-                Err(error) => Err(error),
-            };
-            match checked {
-                Ok(()) => runtime.ledger().succeed(&receipt.job_id, &identity, claim.run_epoch, &proposal.result, &proposal.proposal, context.now_ms).map_err(InferenceRouteErrorV1::from),
-                Err(error) => Err(error),
+        InferenceOperationAdmissionV1::Existing => {}
+        InferenceOperationAdmissionV1::Unclaimed => {
+            if response.as_ref().is_ok_and(|receipt| receipt.state == super::schema::InferenceJobStateV1::Running) {
+                return Err(InferenceRouteErrorV1::Unavailable);
             }
         }
-        Err(error) => {
-            let _guard = gate.lock().await;
-            let retired = if error == InferenceRouteErrorV1::Cancelled { runtime.ledger().cancel(&receipt.job_id, &reader(&identity), context.now_ms) } else { runtime.ledger().fail(&receipt.job_id, &reader(&identity), context.now_ms) };
-            let _ = retired;
-            Err(error)
-        }
-    };
-    runtime.release_operation(&receipt.job_id);
-    published?;
-    owner_page_receipt(runtime, &receipt.job_id, &identity, receipt.expires_at_ms, context.now_ms)
+    }
+    response
 }
 
 fn owner_page_receipt(runtime: &Arc<HubInferenceRuntimeV1>, job_id: &str, identity: &InferenceIdentityV1, expires_at_ms: u64, now_ms: u64) -> Result<InferenceJobReceiptDtoV1, InferenceRouteErrorV1> {
@@ -2281,6 +2802,7 @@ fn owner_page_receipt(runtime: &Arc<HubInferenceRuntimeV1>, job_id: &str, identi
 pub async fn read_gis_map_job_events(context: InferenceRouteContextV1<'_>, job_id: &str, after: u64) -> Result<InferenceEventPageDtoV1, InferenceRouteErrorV1> {
     let session = authenticated_session(context.directory, context.token).await?;
     let runtime = context.runtime;
+    runtime.reap_finished_operations().await?;
     let gate = runtime.document_gate(&context.scope)?;
     let _guard = gate.lock().await;
     let control = Arc::new(InferenceOperationControlV1::new(super::schema::JOB_MAX_LIFETIME_MS, WORK_UNIT_LIMIT)?);
@@ -2316,12 +2838,13 @@ pub async fn read_gis_map_job_events(context: InferenceRouteContextV1<'_>, job_i
 pub async fn cancel_gis_map_job(context: InferenceRouteContextV1<'_>, job_id: &str) -> Result<InferenceEventPageDtoV1, InferenceRouteErrorV1> {
     let session = authenticated_session(context.directory, context.token).await?;
     let runtime = context.runtime;
+    runtime.reap_finished_operations().await?;
     let gate = runtime.document_gate(&context.scope)?;
     let _guard = gate.lock().await;
     let control = Arc::new(InferenceOperationControlV1::new(super::schema::JOB_MAX_LIFETIME_MS, WORK_UNIT_LIMIT)?);
     let identity = runtime.ledger().identity_of(job_id, &session_reader(&session, &context.scope))?;
     super::authorization::check_live_inference_author(context.directory, &identity, &context.scope, || i64::try_from(context.now_ms).unwrap_or(i64::MAX), &control).await?;
-    runtime.interrupt_operation(job_id);
+    runtime.interrupt_operation(job_id, &identity.digest()?)?;
     runtime.ledger().request_cancel(job_id, &reader(&identity), context.now_ms)?;
     let page = runtime.ledger().events(job_id, &reader(&identity), 0, context.now_ms)?;
     Ok(InferenceEventPageDtoV1 {
@@ -2348,6 +2871,7 @@ pub async fn approve_gis_map_job(context: InferenceApprovalRouteContextV1<'_>, j
     }
     let session = authenticated_session(context.directory, context.token).await?;
     let runtime = context.runtime;
+    runtime.reap_finished_operations().await?;
     let gate = runtime.document_gate(&context.scope)?;
     let _guard = gate.lock().await;
     let control = Arc::new(InferenceOperationControlV1::new(super::schema::JOB_MAX_LIFETIME_MS, WORK_UNIT_LIMIT)?);
@@ -2362,19 +2886,7 @@ pub async fn approve_gis_map_job(context: InferenceApprovalRouteContextV1<'_>, j
     runtime.compare_frozen(&identity, &context.scope, &base)?;
     let command = runtime.server_stamped_command(&identity, &approval.job_id, &base, &approval.proposal_hash, context.now_ms)?;
     let prepared = runtime.ledger().prepare_approval(&approval.job_id, &identity, &approval.proposal_hash, &command, context.now_ms)?;
-    let applied = runtime
-        .commit_approval(
-            &identity,
-            &approval.job_id,
-            &approval.proposal_hash,
-            &command,
-            &base,
-            base_control.deadline_ms,
-            context.now_ms,
-            context.document_write,
-            ingress,
-        )
-        .await?;
+    let applied = runtime.commit_approval(&identity, &approval.job_id, &approval.proposal_hash, &command, &base, base_control.deadline_ms, context.now_ms, context.document_write, ingress).await?;
     Ok(InferenceApprovalReceiptDtoV1 { schema: "semio.hub.inference-approval-receipt/v1", job_id: approval.job_id, mutation_id: prepared.mutation_id, command_hash: prepared.command_hash, proposal_hash: prepared.proposal_hash, applied })
 }
 
@@ -2386,6 +2898,24 @@ fn session_reader<'a>(session: &'a crate::directory::model::AuthSessionRecord, s
 /// 🔑️ Renders the exact full document key every envelope and witness compares byte for byte.
 pub fn document_key(scope: &DocumentScope) -> String {
     format!("v1:{}:{}:{}{}", scope.space_id.len(), scope.document_id.len(), scope.space_id, scope.document_id)
+}
+
+/// 🕰️ Reads the process clock for retained work after its request has already returned.
+fn fresh_now_ms() -> Result<u64, InferenceRouteErrorV1> {
+    let elapsed = SystemTime::now().duration_since(UNIX_EPOCH).map_err(|_| InferenceRouteErrorV1::Storage)?;
+    u64::try_from(elapsed.as_millis()).ok().filter(|value| *value <= super::schema::SAFE_INTEGER_MAX).ok_or(InferenceRouteErrorV1::Bounds)
+}
+
+/// 🧊️ Decodes one canonical actor-frontier chain, including the genesis zero sentinel.
+fn parse_frontier_chain_hash(value: &str) -> Option<directory::os_directory::ArtifactHash> {
+    if value.len() != 64 || value.bytes().any(|byte| !byte.is_ascii_digit() && !matches!(byte, b'a'..=b'f')) {
+        return None;
+    }
+    let mut bytes = [0_u8; 32];
+    for (index, byte) in bytes.iter_mut().enumerate() {
+        *byte = u8::from_str_radix(&value[index * 2..index * 2 + 2], 16).ok()?;
+    }
+    Some(directory::os_directory::ArtifactHash::new(bytes))
 }
 
 /// 🎭️ Renders the exact server-derived actor; a client never supplies or influences it.
@@ -2407,6 +2937,7 @@ pub fn reader<'a>(identity: &'a InferenceIdentityV1) -> InferenceReaderV1<'a> {
 mod tests {
     use super::*;
     use crate::inference::schema::{INPUT_MAX_BYTES, InferenceIdentityV1 as Identity, PROGRESS_MAX_CURSOR};
+    use std::future::Future;
 
     fn fixture() -> serde_json::Value {
         serde_json::from_str(include_str!("../../🧪️fixtures/🗳️gis-map-proposal-approval-v1/🔣️.json")).expect("proposal fixture")
@@ -2429,6 +2960,59 @@ mod tests {
         let bytes = ledger_fixture()["input"].as_str().expect("literal base").as_bytes().to_vec();
         assert_eq!(sha256(&bytes), identity.input_hash, "the literal base is exactly the frozen input");
         InferencePrivateBytesV1::new(bytes, INPUT_MAX_BYTES).expect("bounded base")
+    }
+
+    fn canonical_map_pack() -> InferencePrivateBytesV1 {
+        use directory::ArtifactPack as _;
+        let descriptor = ledger_fixture()["input"].as_str().expect("literal Map descriptor").to_owned();
+        let snapshot = semio_s_plugin_gis::artifacts::gismap::schema::gis_map_document_from_descriptor_json(&descriptor);
+        InferencePrivateBytesV1::new(snapshot.encode_pack(), INPUT_MAX_BYTES).expect("bounded canonical Map pack")
+    }
+
+    fn canonical_map_base(identity: &Identity) -> InferenceMapBaseV1 {
+        InferenceMapBaseV1 {
+            frontier: directory::os_directory::ArtifactFrontier {
+                document_id: identity.document_id.clone(),
+                head_edit_ordinal: identity.head_ordinal,
+                head_edit_id: identity.head_edit_id.clone(),
+                last_commit_seq: identity.last_commit_seq,
+                chain_hash: directory::os_directory::ArtifactHash([0; 32]),
+            },
+            descriptor_digest: identity.descriptor_digest.clone(),
+            pack: canonical_map_pack(),
+        }
+    }
+
+    fn canonical_identity_and_base() -> (Identity, InferenceMapBaseV1) {
+        let mut identity = identity();
+        let base = canonical_map_base(&identity);
+        identity.input_hash = base.digest();
+        (identity, base)
+    }
+
+    fn canonical_approval(identity: &Identity, job_id: &str, base: &InferenceMapBaseV1, now_ms: u64) -> (InferencePrivateBytesV1, InferencePrivateBytesV1) {
+        let (snapshot, inference) = deterministic_map_inference(base, job_id).expect("real GIS Map inference");
+        let work = inference.create_region_group_work(&snapshot, job_id).expect("server-derived fixed-three CreateRegion work");
+        let proposal_bytes = directory::os_pack::json::to_json_string(&work.parent).into_bytes();
+        let proposal = InferencePrivateBytesV1::new(proposal_bytes, PROPOSAL_MAX_BYTES).expect("bounded canonical proposal");
+        let proposal_hash = sha256(proposal.as_slice());
+        let inverse = directory::os_pack::json::to_json_string(&work.parent_inverse).into_bytes();
+        let scope = DocumentScope::new(identity.space_id.clone(), identity.document_id.clone());
+        let mutation_id = approval_mutation_id(job_id, &proposal_hash);
+        let document_id = document_key(&scope);
+        let actor = approval_actor(identity);
+        let command = encode_server_stamped_command_v1(&CanonicalInferenceCommandPartsV1 {
+            mutation_id: &mutation_id,
+            document_id: &document_id,
+            actor: &actor,
+            diff_schema: GIS_DOCUMENT_SCHEMA,
+            diff_payload: proposal.as_slice(),
+            inverse_schema: GIS_DOCUMENT_SCHEMA,
+            inverse_payload: &inverse,
+            timestamp: protocol::HybridLogicalTimestamp { actor: 1, physical_ms: now_ms, logical: 0 },
+        })
+        .expect("server-stamped approval command");
+        (proposal, InferencePrivateBytesV1::new(command, super::super::command::COMMAND_MAX_BYTES).expect("bounded approval command"))
     }
 
     struct TestApprovalIngressAuthorityV1 {
@@ -2485,6 +3069,7 @@ mod tests {
         job_id: String,
         attempts: std::sync::atomic::AtomicUsize,
         order: Arc<std::sync::Mutex<Vec<&'static str>>>,
+        pause: Option<(Arc<tokio::sync::Notify>, Arc<tokio::sync::Notify>)>,
     }
 
     impl GisMapApprovalCheckpointPublisherV1 for OrderedApprovalCheckpointPublisherV1 {
@@ -2492,17 +3077,31 @@ mod tests {
             &'a self,
             request: GisMapApprovalCheckpointRequestV1,
             document_write: Arc<GisMapDocumentWriteAuthorityV1>,
-            _deadline_ms: u64,
-            now_ms: u64,
+            _attempt_lifetime_ms: u64,
+            decision_now_ms: u64,
         ) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<directory::os_directory::PublishedArtifactCheckpoint, GisMapApprovalCommitErrorV1>> + Send + 'a>> {
             Box::pin(async move {
-                let view = self.ledger.read(&self.job_id, &reader(&self.identity), now_ms).map_err(|_| GisMapApprovalCommitErrorV1::Storage)?;
+                let snapshot = <semio_s_plugin_gis::artifacts::gismap::GisMapSnapshot as directory::ArtifactPack>::decode_pack(&request.pair.pack).map_err(|_| GisMapApprovalCommitErrorV1::Storage)?;
+                let expected_region = format!("inference-{}", self.job_id);
+                if !snapshot
+                    .regions
+                    .iter()
+                    .any(|region| region.id == expected_region && region.data.get("id").and_then(|value| value.as_str()) == Some(expected_region.as_str()) && region.data.get("kind").and_then(|value| value.as_str()) == Some("inference-bounds"))
+                {
+                    return Err(GisMapApprovalCommitErrorV1::Conflict);
+                }
+                let view = self.ledger.read(&self.job_id, &reader(&self.identity), decision_now_ms).map_err(|_| GisMapApprovalCommitErrorV1::Storage)?;
                 if view.proposal_state == super::super::schema::InferenceProposalStateV1::Approved || document_write.gate.try_lock().is_ok() {
                     return Err(GisMapApprovalCommitErrorV1::Conflict);
                 }
                 self.order.lock().unwrap_or_else(std::sync::PoisonError::into_inner).push("public-checkpoint-attempt");
-                if self.attempts.fetch_add(1, Ordering::AcqRel) == 0 {
+                let attempt = self.attempts.fetch_add(1, Ordering::AcqRel);
+                if attempt == 0 {
                     return Err(GisMapApprovalCommitErrorV1::Storage);
+                }
+                if let Some((entered, release)) = &self.pause {
+                    entered.notify_one();
+                    release.notified().await;
                 }
                 let frontier = RetainedGisMapApprovalCommitterV1::publication_frontier(&request.scope, &request.actor_snapshot).ok_or(GisMapApprovalCommitErrorV1::Storage)?;
                 let pack_hash = directory::os_directory::ArtifactHash::parse_hex(&sha256(&request.pair.pack)).ok_or(GisMapApprovalCommitErrorV1::Storage)?;
@@ -2514,18 +3113,21 @@ mod tests {
                     parent_checkpoint_id: None,
                     descriptor_digest_v1: directory::os_directory::ArtifactHash::parse_hex(&request.descriptor_digest).ok_or(GisMapApprovalCommitErrorV1::Storage)?,
                     baseline_frontier: frontier,
-                    pack: directory::os_directory::PublishedArtifactBlob {
-                        sha256: pack_hash,
-                        byte_length: u64::try_from(request.pair.pack.len()).map_err(|_| GisMapApprovalCommitErrorV1::Capacity)?,
-                    },
-                    spr: directory::os_directory::PublishedArtifactBlob {
-                        sha256: spr_hash,
-                        byte_length: u64::try_from(request.pair.spr.len()).map_err(|_| GisMapApprovalCommitErrorV1::Capacity)?,
-                    },
+                    pack: directory::os_directory::PublishedArtifactBlob { sha256: pack_hash, byte_length: u64::try_from(request.pair.pack.len()).map_err(|_| GisMapApprovalCommitErrorV1::Capacity)? },
+                    spr: directory::os_directory::PublishedArtifactBlob { sha256: spr_hash, byte_length: u64::try_from(request.pair.spr.len()).map_err(|_| GisMapApprovalCommitErrorV1::Capacity)? },
                     aggregate_sha256: directory::os_directory::ArtifactHash([0x46; 32]),
-                    published_at_ms: now_ms,
+                    published_at_ms: decision_now_ms,
                 })
             })
+        }
+
+        fn checkpoint_applied(&self, checkpoint: &directory::os_directory::PublishedArtifactCheckpoint) -> Result<(), GisMapApprovalCommitErrorV1> {
+            let view = self.ledger.read(&self.job_id, &reader(&self.identity), checkpoint.published_at_ms).map_err(|_| GisMapApprovalCommitErrorV1::Storage)?;
+            if view.proposal_state != super::super::schema::InferenceProposalStateV1::Approved {
+                return Err(GisMapApprovalCommitErrorV1::Conflict);
+            }
+            self.order.lock().unwrap_or_else(std::sync::PoisonError::into_inner).push("peer-rebootstrap");
+            Ok(())
         }
     }
 
@@ -2589,7 +3191,7 @@ mod tests {
                     let documents = committer.documents.lock().await;
                     matches!(documents.get(key), Some(RetainedGisMapDocumentStateV1::Ready { pending: None, document_write: None, .. }))
                 };
-                let maintenance_idle = !committer.maintenance.lock().unwrap_or_else(std::sync::PoisonError::into_inner).contains(key);
+                let maintenance_idle = !committer.maintenance_owns_document(key);
                 if ready && maintenance_idle && gate.try_lock().is_ok() && ingress_released.load(Ordering::Acquire) {
                     return;
                 }
@@ -2598,6 +3200,48 @@ mod tests {
         })
         .await
         .expect("abandoned approval returns every Store, ingress and document writer");
+    }
+
+    async fn wait_for_abandoned_prepared_handoff(
+        committer: &RetainedGisMapApprovalCommitterV1,
+        ledger: &InferenceJobLedgerV1,
+        identity: &Identity,
+        job_id: &str,
+        key: &str,
+        gate: &Arc<tokio::sync::Mutex<()>>,
+        ingress_released: &std::sync::atomic::AtomicBool,
+    ) {
+        let maintenance_key = format!("prepared:{job_id}");
+        tokio::time::timeout(std::time::Duration::from_secs(5), async {
+            loop {
+                let document_absent = !committer.documents.lock().await.contains_key(key);
+                let maintenance_idle = !committer.maintenance.lock().unwrap_or_else(std::sync::PoisonError::into_inner).contains(&maintenance_key);
+                let outbox_abandoned = ledger.pending_approvals(None, &InferenceOperationControlV1::new(1_000, 5).expect("bounded approval query")).is_ok_and(|page| page.rows.is_empty());
+                if document_absent && maintenance_idle && outbox_abandoned && gate.try_lock().is_ok() && ingress_released.load(Ordering::Acquire) {
+                    return;
+                }
+                tokio::task::yield_now().await;
+            }
+        })
+        .await
+        .expect("unpolled or rejected preflight returns its exact ingress and prepared outbox");
+    }
+
+    async fn resume_parked_cleanup(committer: &RetainedGisMapApprovalCommitterV1) {
+        tokio::time::timeout(std::time::Duration::from_secs(5), async {
+            loop {
+                committer.resume_parked_requests();
+                committer.resume_parked_prepared();
+                let maintenance_is_empty = committer.maintenance.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_empty();
+                let cleanup_is_empty = committer.cleanup_jobs.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_empty();
+                if maintenance_is_empty && cleanup_is_empty {
+                    return;
+                }
+                tokio::task::yield_now().await;
+            }
+        })
+        .await
+        .expect("fresh runtime drains every parked cleanup owner");
     }
 
     #[test]
@@ -2612,18 +3256,20 @@ mod tests {
         assert_eq!(claim.run_epoch, 1);
         assert_eq!(ledger.start(&receipt.job_id, &identity, 1_003).expect("second claim"), None, "a live lease is never stolen");
         for step in 1..=4_u64 {
-            assert_eq!(ledger.progress(&receipt.job_id, &owner, claim.run_epoch, step, WORK_UNIT_LIMIT, 1_003 + step).expect("progress"), step);
+            let now_ms = if step == 4 { 30_000 } else { 1_003 + step };
+            assert_eq!(ledger.progress(&receipt.job_id, &owner, claim.run_epoch, step, WORK_UNIT_LIMIT, now_ms).expect("progress heartbeat"), step);
         }
-        assert_eq!(ledger.progress(&receipt.job_id, &owner, claim.run_epoch + 1, 5, WORK_UNIT_LIMIT, 1_010), Err(InferenceErrorV1::Conflict), "a foreign epoch cannot append progress");
-        assert_eq!(ledger.progress(&receipt.job_id, &owner, claim.run_epoch, 3, WORK_UNIT_LIMIT, 1_011), Err(InferenceErrorV1::Conflict), "progress never regresses");
-        let page = ledger.events(&receipt.job_id, &owner, 0, 1_012).expect("owner page");
+        assert_eq!(ledger.start(&receipt.job_id, &identity, 45_000).expect("heartbeat-protected claim"), None, "a fresh checkpoint lease cannot be stolen after its original lease elapsed");
+        assert_eq!(ledger.progress(&receipt.job_id, &owner, claim.run_epoch + 1, 5, WORK_UNIT_LIMIT, 45_001), Err(InferenceErrorV1::Conflict), "a foreign epoch cannot append progress");
+        assert_eq!(ledger.progress(&receipt.job_id, &owner, claim.run_epoch, 3, WORK_UNIT_LIMIT, 45_002), Err(InferenceErrorV1::Conflict), "progress never regresses");
+        let page = ledger.events(&receipt.job_id, &owner, 0, 45_003).expect("owner page");
         assert_eq!(page.progress.iter().map(|row| row.cursor).collect::<Vec<_>>(), vec![1, 2, 3, 4]);
         assert_eq!(page.next_cursor, 4);
         assert!(page.progress.len() <= super::super::schema::EVENT_PAGE_MAX_ITEMS && page.events.len() <= super::super::schema::EVENT_PAGE_MAX_ITEMS);
-        assert_eq!(ledger.events(&receipt.job_id, &owner, 4, 1_013).expect("tail page").progress.len(), 0);
-        assert_eq!(ledger.events(&receipt.job_id, &owner, PROGRESS_MAX_CURSOR + 1, 1_013).err(), Some(InferenceErrorV1::Bounds));
-        assert!(ledger.request_cancel(&receipt.job_id, &owner, 1_014).expect("durable cancel request"));
-        let cancelled = ledger.events(&receipt.job_id, &owner, 0, 1_015).expect("cancelled page");
+        assert_eq!(ledger.events(&receipt.job_id, &owner, 4, 45_004).expect("tail page").progress.len(), 0);
+        assert_eq!(ledger.events(&receipt.job_id, &owner, PROGRESS_MAX_CURSOR + 1, 45_004).err(), Some(InferenceErrorV1::Bounds));
+        assert!(ledger.request_cancel(&receipt.job_id, &owner, 45_005).expect("durable cancel request"));
+        let cancelled = ledger.events(&receipt.job_id, &owner, 0, 45_006).expect("cancelled page");
         assert!(cancelled.cancel_requested);
         assert_eq!(
             cancelled.events.iter().map(|row| (row.ordinal, row.kind.as_str())).collect::<Vec<_>>(),
@@ -2631,8 +3277,8 @@ mod tests {
         );
         let result = InferencePrivateBytesV1::new(b"bounded-result".to_vec(), RESULT_MAX_BYTES).expect("bounded result");
         let proposal = InferencePrivateBytesV1::new(b"bounded-proposal".to_vec(), PROPOSAL_MAX_BYTES).expect("bounded proposal");
-        assert_eq!(ledger.succeed(&receipt.job_id, &identity, claim.run_epoch, &result, &proposal, 1_016), Ok(false), "a retired job never publishes a late offer");
-        assert!(ledger.request_cancel(&receipt.job_id, &owner, 1_017).is_ok(), "cancellation is idempotent");
+        assert_eq!(ledger.succeed(&receipt.job_id, &identity, claim.run_epoch, &result, &proposal, 45_007), Ok(false), "a retired job never publishes a late offer");
+        assert!(ledger.request_cancel(&receipt.job_id, &owner, 45_008).is_ok(), "cancellation is idempotent");
     }
 
     #[test]
@@ -2681,33 +3327,11 @@ mod tests {
         assert_eq!(prepared.mutation_id, outbox["mutationId"].as_str().expect("literal mutation"));
         let again = ledger.prepare_approval(&receipt.job_id, &identity, &proposal_hash, &command, 1_004).expect("duplicate approval");
         assert_eq!((again.mutation_id, again.command_hash, again.prepared_at_ms), (prepared.mutation_id.clone(), prepared.command_hash.clone(), prepared.prepared_at_ms), "a duplicate approval reconciles to exactly one prepared envelope");
-        let base = InferenceMapBaseV1 {
-            frontier: directory::os_directory::ArtifactFrontier {
-                document_id: identity.document_id.clone(),
-                head_edit_ordinal: identity.head_ordinal,
-                head_edit_id: identity.head_edit_id.clone(),
-                last_commit_seq: identity.last_commit_seq,
-                chain_hash: directory::os_directory::ArtifactHash([0; 32]),
-            },
-            descriptor_digest: identity.descriptor_digest.clone(),
-            pack: input(&identity),
-        };
+        let base = canonical_map_base(&identity);
         let committer: Arc<dyn GisMapApprovalCommitterV1> = Arc::new(UnavailableGisMapApprovalCommitterV1);
         for attempt in 0..2 {
             assert_eq!(
-                commit_prepared_approval(
-                    &committer,
-                    &identity,
-                    &receipt.job_id,
-                    &proposal_hash,
-                    &command,
-                    &base,
-                    60_000,
-                    1_005 + attempt,
-                    Arc::new(tokio::sync::Mutex::new(())),
-                    approval_ingress(&identity),
-                )
-                .await,
+                commit_prepared_approval(&committer, &identity, &receipt.job_id, &proposal_hash, &command, &base, 60_000, 1_005 + attempt, Arc::new(tokio::sync::Mutex::new(())), approval_ingress(&identity),).await,
                 Err(InferenceRouteErrorV1::CommitUnavailable),
                 "no composition transaction is registered, so approval must fail closed"
             );
@@ -2726,29 +3350,18 @@ mod tests {
 
     #[tokio::test]
     async fn gis_map_approval_committed_event_reaches_actor_frontier_and_public_checkpoint_before_ledger_apply() {
-        let identity = identity();
+        let (identity, base) = canonical_identity_and_base();
         let owner = reader(&identity);
         let ledger = ledger();
-        let accepted = ledger.accept(&identity, &input(&identity), 1_000).expect("accepted job");
+        let accepted = ledger.accept(&identity, &base.pack, 1_000).expect("accepted job");
         let claim = ledger.start(&accepted.job_id, &identity, 1_001).expect("claim").expect("owned epoch");
-        let corpus = ledger_fixture();
-        let outbox = &corpus["outbox"];
-        let proposal = InferencePrivateBytesV1::new(outbox["proposal"].as_str().expect("literal proposal").as_bytes().to_vec(), PROPOSAL_MAX_BYTES).expect("bounded proposal");
+        let (proposal, command) = canonical_approval(&identity, &accepted.job_id, &base, 1_004);
         let result = InferencePrivateBytesV1::new(b"bounded-result".to_vec(), RESULT_MAX_BYTES).expect("bounded result");
         assert!(ledger.succeed(&accepted.job_id, &identity, claim.run_epoch, &result, &proposal, 1_002).expect("offer"));
-        let hex = outbox["commandHex"].as_str().expect("literal command");
-        let command = InferencePrivateBytesV1::new(
-            (0..hex.len()).step_by(2).map(|index| u8::from_str_radix(&hex[index..index + 2], 16).expect("hex byte")).collect(),
-            super::super::command::COMMAND_MAX_BYTES,
-        )
-        .expect("bounded command");
         let proposal_hash = sha256(proposal.as_slice());
         ledger.prepare_approval(&accepted.job_id, &identity, &proposal_hash, &command, 1_003).expect("prepared outbox");
 
-        let pool = Arc::new(db::semio_framework_async::WorkerPool::new(db::semio_framework_async::WorkerPoolConfig::new(
-            db::semio_framework_async::ProcessKind::HeadlessBatch,
-            2,
-        )));
+        let pool = Arc::new(db::semio_framework_async::WorkerPool::new(db::semio_framework_async::WorkerPoolConfig::new(db::semio_framework_async::ProcessKind::HeadlessBatch, 2)));
         let memory = db::storage::MemoryStorage::new(pool.clone()).await.expect("memory storage");
         let backend = Arc::new(db::storage::DbBackend::Memory(memory));
         let database = Arc::new(db::Database::open(pool.clone(), db::DbConfig::for_profile(db::Profile::Test), backend.clone()).await.expect("database"));
@@ -2756,36 +3369,46 @@ mod tests {
         let document = protocol::ArtifactId(document_key(&scope));
         let handle = database.ensure_document(&document).await.expect("document actor");
         let initial = handle.checkpoint_publication_snapshot().await.expect("initial actor frontier");
-        assert_eq!((initial.frontier.head_seq, initial.frontier.commit_seq, initial.head_edit_id), (0, 0, None));
-        let base = InferenceMapBaseV1 {
-            frontier: directory::os_directory::ArtifactFrontier {
-                document_id: identity.document_id.clone(),
-                head_edit_ordinal: 0,
-                head_edit_id: String::new(),
-                last_commit_seq: 0,
-                chain_hash: directory::os_directory::ArtifactHash([0; 32]),
-            },
-            descriptor_digest: identity.descriptor_digest.clone(),
-            pack: input(&identity),
-        };
+        assert_eq!((initial.authority_generation, initial.frontier.head_seq, initial.frontier.commit_seq, initial.head_edit_id), (0, 0, 0, None));
         let order = Arc::new(std::sync::Mutex::new(Vec::new()));
+        let publisher_entered = Arc::new(tokio::sync::Notify::new());
+        let publisher_release = Arc::new(tokio::sync::Notify::new());
         let publisher: Arc<dyn GisMapApprovalCheckpointPublisherV1> = Arc::new(OrderedApprovalCheckpointPublisherV1 {
             ledger: ledger.clone(),
             identity: identity.clone(),
             job_id: accepted.job_id.clone(),
             attempts: std::sync::atomic::AtomicUsize::new(0),
             order: order.clone(),
+            pause: Some((publisher_entered.clone(), publisher_release.clone())),
         });
         let committer = Arc::new(RetainedGisMapApprovalCommitterV1::new(database.clone(), backend, ledger.clone(), publisher));
         let committer_port: Arc<dyn GisMapApprovalCommitterV1> = committer.clone();
         let gate = Arc::new(tokio::sync::Mutex::new(()));
-        let wrong_ingress: Arc<dyn GisMapApprovalIngressAuthorityV1> = Arc::new(TestApprovalIngressAuthorityV1 {
-            scope: scope.clone(),
-            user_id: identity.user_id.clone(),
-            session_id: identity.session_id.clone(),
-            authorization_generation: identity.authorization_generation + 1,
-            released: None,
-        });
+        let composed_children = base.composed_children().expect("canonical fixed-three children");
+        let expected_mutation_id = approval_mutation_id(&accepted.job_id, &proposal_hash);
+        let expected_command_hash = sha256(command.as_slice());
+        let approval_actor = approval_actor(&identity);
+        let pure_ingress = approval_ingress(&identity);
+        let pure_request = GisMapApprovalCommitRequestV1 {
+            composed_children: &composed_children,
+            scope: &scope,
+            actor: &approval_actor,
+            mutation_id: &expected_mutation_id,
+            command_hash: &expected_command_hash,
+            job_id: &accepted.job_id,
+            proposal_hash: &proposal_hash,
+            command: command.as_slice(),
+            base: &base,
+            base_frontier: &base.frontier,
+            deadline_ms: 60_000,
+            now_ms: 1_004,
+            document_write: gate.clone(),
+            ingress: pure_ingress,
+        };
+        assert!(committer.validate_prepared_request(&pure_request).is_ok(), "the exact ledger/base tuple passes immutable admission before any owner reservation");
+        assert!(RetainedGisMapApprovalCommitterV1::preflight(&pure_request).is_ok(), "the exact fixed-three command passes pure GIS preflight before Store assembly");
+        let wrong_ingress: Arc<dyn GisMapApprovalIngressAuthorityV1> =
+            Arc::new(TestApprovalIngressAuthorityV1 { scope: scope.clone(), user_id: identity.user_id.clone(), session_id: identity.session_id.clone(), authorization_generation: identity.authorization_generation + 1, released: None });
         assert_eq!(
             commit_prepared_approval(&committer_port, &identity, &accepted.job_id, &proposal_hash, &command, &base, 60_000, 1_004, gate.clone(), wrong_ingress).await,
             Err(InferenceRouteErrorV1::Denied),
@@ -2803,77 +3426,112 @@ mod tests {
         assert_eq!((actor.frontier.head_seq, actor.frontier.commit_seq), (1, 1));
         let expected_mutation_id = approval_mutation_id(&accepted.job_id, &proposal_hash);
         assert_eq!(actor.head_edit_id.as_ref().map(|value| value.0.as_str()), Some(expected_mutation_id.as_str()));
+        let (parent_revision, parent_reference, drawing_reference, drawing_owner, value_reference, value_owner) = {
+            use directory::os_store::SpaceMember;
+            let documents = committer.documents.lock().await;
+            match documents.get(&document_key(&scope)) {
+                Some(RetainedGisMapDocumentStateV1::Publishing { owners, .. }) => {
+                    let parent = owners.parent.as_ref().expect("retained parent Store");
+                    let drawing = owners.drawing.as_ref().expect("retained drawing Store");
+                    let value = owners.value.as_ref().expect("retained value Store");
+                    (
+                        parent.content_revision_now(),
+                        parent.artifact_ref().expect("parent Store identity"),
+                        drawing.artifact_ref().expect("drawing Store identity"),
+                        drawing.owner_ref().expect("drawing Store owner"),
+                        value.artifact_ref().expect("value Store identity"),
+                        value.owner_ref().expect("value Store owner"),
+                    )
+                }
+                _ => panic!("publisher refusal retains the verified publication owner"),
+            }
+        };
+        let expected_parent = directory::os_io::ArtifactRef { artifact_id: document_key(&scope), dialect: directory::os_io::ArtifactDialect { artifact_kind: "s.gis.gismap".into(), standard: "1".into(), subset: "*".into() } };
+        assert_eq!(parent_reference, expected_parent);
+        assert_eq!(drawing_reference.to_uri(), "gismap-drawing!s.stdio.semio@v1/drawing");
+        assert_eq!(drawing_owner, directory::os_store::OwnerRef { parent: expected_parent.clone(), slot: "drawing".into(), child_id: "gismap-drawing".into() });
+        assert_eq!(value_reference.to_uri(), "gismap-value!s.stdio.semio@v1/value");
+        assert_eq!(value_owner, directory::os_store::OwnerRef { parent: expected_parent, slot: "value".into(), child_id: "gismap-value".into() });
+        assert_ne!(actor.frontier.chain_hash, parent_revision, "the actor WAL chain and Store content revision are intentionally distinct hash domains");
 
         let retry_ingress_released = Arc::new(std::sync::atomic::AtomicBool::new(false));
         let retry_ingress = tracked_approval_ingress(&identity, Some(retry_ingress_released.clone()));
-        assert!(commit_prepared_approval(&committer_port, &identity, &accepted.job_id, &proposal_hash, &command, &base, 60_000, 1_006, gate.clone(), retry_ingress).await.expect("fresh-authority publication retry"));
+        let mut retry = committer.commit(GisMapApprovalCommitRequestV1 {
+            composed_children: &composed_children,
+            scope: &scope,
+            actor: &approval_actor,
+            mutation_id: &expected_mutation_id,
+            command_hash: &expected_command_hash,
+            job_id: &accepted.job_id,
+            proposal_hash: &proposal_hash,
+            command: command.as_slice(),
+            base: &base,
+            base_frontier: &base.frontier,
+            deadline_ms: 60_000,
+            now_ms: 1_006,
+            document_write: gate.clone(),
+            ingress: retry_ingress,
+        });
+        tokio::time::timeout(std::time::Duration::from_secs(5), async {
+            tokio::select! {
+                _ = publisher_entered.notified() => {}
+                _ = &mut retry => panic!("fresh retry completed before the retained publisher pause"),
+            }
+        })
+        .await
+        .expect("the sole retained driver reaches the paused publisher");
+        let mut close = Box::pin(committer.close());
+        let close_wake = Arc::new(ApprovalPollWakeV1 { ready: std::sync::atomic::AtomicBool::new(true) });
+        let close_waker = std::task::Waker::from(close_wake);
+        let mut close_context = std::task::Context::from_waker(&close_waker);
+        assert!(matches!(close.as_mut().poll(&mut close_context), std::task::Poll::Pending), "close joins the active post-witness driver instead of starting another verifier or publisher");
+        assert_eq!(order.lock().unwrap_or_else(std::sync::PoisonError::into_inner).as_slice(), ["public-checkpoint-attempt", "public-checkpoint-attempt"]);
+        drop(close);
+        publisher_release.notify_one();
+        let terminal = tokio::time::timeout(std::time::Duration::from_secs(5), &mut retry).await.expect("fresh retry observes retained publication").expect("fresh request joins the one publication");
+        assert!(!terminal.applied, "the joining request observes the already-applied terminal state");
+        assert_eq!(terminal.document_generation, 0, "the committed witness retains the live initial actor generation");
+        drop(retry);
         let approved = ledger.read(&accepted.job_id, &owner, 1_007).expect("approved proposal");
         assert_eq!(approved.proposal_state, super::super::schema::InferenceProposalStateV1::Approved);
-        assert_eq!(
-            order.lock().unwrap_or_else(std::sync::PoisonError::into_inner).as_slice(),
-            ["public-checkpoint-attempt", "public-checkpoint-attempt", "public-checkpoint-ack"],
-        );
+        assert_eq!(order.lock().unwrap_or_else(std::sync::PoisonError::into_inner).as_slice(), ["public-checkpoint-attempt", "public-checkpoint-attempt", "public-checkpoint-ack", "peer-rebootstrap"],);
         assert!(gate.try_lock().is_ok(), "the document write authority releases only after public ACK and ledger apply");
         assert!(retry_ingress_released.load(Ordering::Acquire), "the fresh Hub ingress authority releases after public ACK and ledger apply");
 
         committer.close().await.expect("committer close");
+        assert_eq!(ledger.reconcile_committed_approval(&accepted.job_id, &terminal.witness, terminal.document_generation, 1_008), Err(InferenceErrorV1::Conflict), "an invalidated initial-generation witness cannot reconcile again",);
+        let approved_events = ledger.events(&accepted.job_id, &owner, 0, 1_009).expect("terminal owner events").events.into_iter().filter(|event| event.kind == "approved").count();
+        assert_eq!(approved_events, 1, "initial-generation reconciliation emits one approved event");
         drop(committer_port);
         drop(committer);
         drop(handle);
         let mut database = Arc::try_unwrap(database).ok().expect("sole database owner");
-        database.shutdown().await.expect("database shutdown");
+        database.shutdown(&db::DatabaseShutdownControl::for_timeout(std::time::Duration::from_secs(5))).await.expect("database shutdown");
         drop(database);
         pool.shutdown().expect("worker pool shutdown");
     }
 
     #[tokio::test]
     async fn gis_map_abandoned_pre_witness_request_returns_exact_stores_and_document_writer() {
-        let identity = identity();
+        let (identity, base) = canonical_identity_and_base();
         let ledger = ledger();
-        let accepted = ledger.accept(&identity, &input(&identity), 1_000).expect("accepted job");
+        let accepted = ledger.accept(&identity, &base.pack, 1_000).expect("accepted job");
         let claim = ledger.start(&accepted.job_id, &identity, 1_001).expect("claim").expect("owned epoch");
-        let corpus = ledger_fixture();
-        let outbox = &corpus["outbox"];
-        let proposal = InferencePrivateBytesV1::new(outbox["proposal"].as_str().expect("literal proposal").as_bytes().to_vec(), PROPOSAL_MAX_BYTES).expect("bounded proposal");
+        let (proposal, command) = canonical_approval(&identity, &accepted.job_id, &base, 1_004);
         let result = InferencePrivateBytesV1::new(b"bounded-result".to_vec(), RESULT_MAX_BYTES).expect("bounded result");
         assert!(ledger.succeed(&accepted.job_id, &identity, claim.run_epoch, &result, &proposal, 1_002).expect("offer"));
-        let hex = outbox["commandHex"].as_str().expect("literal command");
-        let command = InferencePrivateBytesV1::new(
-            (0..hex.len()).step_by(2).map(|index| u8::from_str_radix(&hex[index..index + 2], 16).expect("hex byte")).collect(),
-            super::super::command::COMMAND_MAX_BYTES,
-        )
-        .expect("bounded command");
         let proposal_hash = sha256(proposal.as_slice());
         ledger.prepare_approval(&accepted.job_id, &identity, &proposal_hash, &command, 1_003).expect("prepared outbox");
-        let pool = Arc::new(db::semio_framework_async::WorkerPool::new(db::semio_framework_async::WorkerPoolConfig::new(
-            db::semio_framework_async::ProcessKind::HeadlessBatch,
-            2,
-        )));
+        let pool = Arc::new(db::semio_framework_async::WorkerPool::new(db::semio_framework_async::WorkerPoolConfig::new(db::semio_framework_async::ProcessKind::HeadlessBatch, 2)));
         let memory = db::storage::MemoryStorage::new(pool.clone()).await.expect("memory storage");
         let backend = Arc::new(db::storage::DbBackend::Memory(memory));
         let database = Arc::new(db::Database::open(pool.clone(), db::DbConfig::for_profile(db::Profile::Test), backend.clone()).await.expect("database"));
         let scope = DocumentScope::new(identity.space_id.clone(), identity.document_id.clone());
         let document = protocol::ArtifactId(document_key(&scope));
         let handle = database.ensure_document(&document).await.expect("document actor");
-        let base = InferenceMapBaseV1 {
-            frontier: directory::os_directory::ArtifactFrontier {
-                document_id: identity.document_id.clone(),
-                head_edit_ordinal: 0,
-                head_edit_id: String::new(),
-                last_commit_seq: 0,
-                chain_hash: directory::os_directory::ArtifactHash([0; 32]),
-            },
-            descriptor_digest: identity.descriptor_digest.clone(),
-            pack: input(&identity),
-        };
         let order = Arc::new(std::sync::Mutex::new(Vec::new()));
-        let publisher: Arc<dyn GisMapApprovalCheckpointPublisherV1> = Arc::new(OrderedApprovalCheckpointPublisherV1 {
-            ledger: ledger.clone(),
-            identity: identity.clone(),
-            job_id: accepted.job_id.clone(),
-            attempts: std::sync::atomic::AtomicUsize::new(0),
-            order: order.clone(),
-        });
+        let publisher: Arc<dyn GisMapApprovalCheckpointPublisherV1> =
+            Arc::new(OrderedApprovalCheckpointPublisherV1 { ledger: ledger.clone(), identity: identity.clone(), job_id: accepted.job_id.clone(), attempts: std::sync::atomic::AtomicUsize::new(0), order: order.clone(), pause: None });
         let committer = Arc::new(RetainedGisMapApprovalCommitterV1::new(database.clone(), backend, ledger.clone(), publisher));
         let key = document_key(&scope);
         let gate = Arc::new(tokio::sync::Mutex::new(()));
@@ -2881,7 +3539,363 @@ mod tests {
         let actor = approval_actor(&identity);
         let mutation_id = approval_mutation_id(&accepted.job_id, &proposal_hash);
         let command_hash = sha256(command.as_slice());
-        for phase in [AbandonedApprovalPhaseV1::Preflight, AbandonedApprovalPhaseV1::Assembly, AbandonedApprovalPhaseV1::Journal] {
+        let invalid_children = vec!["gismap-drawing".to_owned(), "substituted-value".to_owned()];
+        let foreign_scope_ingress_released = Arc::new(std::sync::atomic::AtomicBool::new(false));
+        let foreign_scope_ingress: Arc<dyn GisMapApprovalIngressAuthorityV1> = Arc::new(TestApprovalIngressAuthorityV1 {
+            scope: DocumentScope::new("eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee", identity.document_id.clone()),
+            user_id: identity.user_id.clone(),
+            session_id: identity.session_id.clone(),
+            authorization_generation: identity.authorization_generation,
+            released: Some(foreign_scope_ingress_released.clone()),
+        });
+        assert!(matches!(
+            committer
+                .commit(GisMapApprovalCommitRequestV1 {
+                    composed_children: &composed_children,
+                    scope: &scope,
+                    actor: &actor,
+                    mutation_id: &mutation_id,
+                    command_hash: &command_hash,
+                    job_id: &accepted.job_id,
+                    proposal_hash: &proposal_hash,
+                    command: command.as_slice(),
+                    base: &base,
+                    base_frontier: &base.frontier,
+                    deadline_ms: 60_000,
+                    now_ms: 1_004,
+                    document_write: gate.clone(),
+                    ingress: foreign_scope_ingress,
+                })
+                .await,
+            Err(GisMapApprovalCommitErrorV1::Conflict)
+        ));
+        assert!(foreign_scope_ingress_released.load(Ordering::Acquire));
+        let mut substituted_bases = Vec::new();
+        let mut descriptor = canonical_map_base(&identity);
+        descriptor.descriptor_digest = "9".repeat(64);
+        substituted_bases.push(("descriptor", descriptor));
+        let mut pack = canonical_map_base(&identity);
+        pack.pack = InferencePrivateBytesV1::new(b"substituted-pack".to_vec(), INPUT_MAX_BYTES).expect("bounded substituted pack");
+        substituted_bases.push(("pack", pack));
+        let mut head_ordinal = canonical_map_base(&identity);
+        head_ordinal.frontier.head_edit_ordinal += 1;
+        substituted_bases.push(("head-ordinal", head_ordinal));
+        let mut head_edit = canonical_map_base(&identity);
+        head_edit.frontier.head_edit_id = "substituted-edit".to_owned();
+        substituted_bases.push(("head-edit", head_edit));
+        let mut commit = canonical_map_base(&identity);
+        commit.frontier.last_commit_seq += 1;
+        substituted_bases.push(("commit", commit));
+        let mut chain = canonical_map_base(&identity);
+        chain.frontier.chain_hash = directory::os_directory::ArtifactHash([1; 32]);
+        substituted_bases.push(("chain", chain));
+        for (name, candidate) in &substituted_bases {
+            let ingress_released = Arc::new(std::sync::atomic::AtomicBool::new(false));
+            assert!(
+                matches!(
+                    committer
+                        .commit(GisMapApprovalCommitRequestV1 {
+                            composed_children: &composed_children,
+                            scope: &scope,
+                            actor: &actor,
+                            mutation_id: &mutation_id,
+                            command_hash: &command_hash,
+                            job_id: &accepted.job_id,
+                            proposal_hash: &proposal_hash,
+                            command: command.as_slice(),
+                            base: candidate,
+                            base_frontier: &candidate.frontier,
+                            deadline_ms: 60_000,
+                            now_ms: 1_004,
+                            document_write: gate.clone(),
+                            ingress: tracked_approval_ingress(&identity, Some(ingress_released.clone())),
+                        })
+                        .await,
+                    Err(GisMapApprovalCommitErrorV1::Conflict)
+                ),
+                "{name} substitution reached cleanup admission",
+            );
+            assert!(ingress_released.load(Ordering::Acquire), "{name} substitution retained ingress");
+        }
+        let mut substituted_frontier = base.frontier.clone();
+        substituted_frontier.head_edit_ordinal += 1;
+        let frontier_ingress_released = Arc::new(std::sync::atomic::AtomicBool::new(false));
+        assert!(matches!(
+            committer
+                .commit(GisMapApprovalCommitRequestV1 {
+                    composed_children: &composed_children,
+                    scope: &scope,
+                    actor: &actor,
+                    mutation_id: &mutation_id,
+                    command_hash: &command_hash,
+                    job_id: &accepted.job_id,
+                    proposal_hash: &proposal_hash,
+                    command: command.as_slice(),
+                    base: &base,
+                    base_frontier: &substituted_frontier,
+                    deadline_ms: 60_000,
+                    now_ms: 1_004,
+                    document_write: gate.clone(),
+                    ingress: tracked_approval_ingress(&identity, Some(frontier_ingress_released.clone())),
+                })
+                .await,
+            Err(GisMapApprovalCommitErrorV1::Conflict)
+        ));
+        assert!(frontier_ingress_released.load(Ordering::Acquire));
+        let substituted_actor = format!("user:{}#session:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee", identity.user_id);
+        let actor_ingress_released = Arc::new(std::sync::atomic::AtomicBool::new(false));
+        assert!(matches!(
+            committer
+                .commit(GisMapApprovalCommitRequestV1 {
+                    composed_children: &composed_children,
+                    scope: &scope,
+                    actor: &substituted_actor,
+                    mutation_id: &mutation_id,
+                    command_hash: &command_hash,
+                    job_id: &accepted.job_id,
+                    proposal_hash: &proposal_hash,
+                    command: command.as_slice(),
+                    base: &base,
+                    base_frontier: &base.frontier,
+                    deadline_ms: 60_000,
+                    now_ms: 1_004,
+                    document_write: gate.clone(),
+                    ingress: tracked_approval_ingress(&identity, Some(actor_ingress_released.clone())),
+                })
+                .await,
+            Err(GisMapApprovalCommitErrorV1::Conflict)
+        ));
+        assert!(actor_ingress_released.load(Ordering::Acquire));
+        assert!(committer.cleanup_jobs.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_empty());
+        assert!(ledger.approval_recovery_by_mutation(&mutation_id).expect("pure admission refusal lookup").is_some(), "pure admission refusals preserve the prepared outbox");
+        let substituted_command_hash = sha256(b"substituted-command");
+        let substituted_proposal_hash = sha256(b"substituted-proposal");
+        let substituted_ingress_released = Arc::new(std::sync::atomic::AtomicBool::new(false));
+        assert!(
+            matches!(
+                committer
+                    .commit(GisMapApprovalCommitRequestV1 {
+                        composed_children: &composed_children,
+                        scope: &scope,
+                        actor: &actor,
+                        mutation_id: &mutation_id,
+                        command_hash: &substituted_command_hash,
+                        job_id: &accepted.job_id,
+                        proposal_hash: &substituted_proposal_hash,
+                        command: command.as_slice(),
+                        base: &base,
+                        base_frontier: &base.frontier,
+                        deadline_ms: 60_000,
+                        now_ms: 1_004,
+                        document_write: gate.clone(),
+                        ingress: tracked_approval_ingress(&identity, Some(substituted_ingress_released.clone())),
+                    })
+                    .await,
+                Err(GisMapApprovalCommitErrorV1::Conflict)
+            ),
+            "the public committer refuses a same-job substituted command/proposal tuple before cleanup admission",
+        );
+        assert!(substituted_ingress_released.load(Ordering::Acquire));
+        assert!(committer.cleanup_jobs.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_empty());
+        let prepared_after_substitution = ledger.approval_recovery_by_mutation(&mutation_id).expect("substitution outbox lookup").expect("exact prepared outbox remains");
+        assert_eq!(
+            (prepared_after_substitution.0.command_hash.as_str(), prepared_after_substitution.0.proposal_hash.as_str(), prepared_after_substitution.1.authorization_generation,),
+            (command_hash.as_str(), proposal_hash.as_str(), identity.authorization_generation),
+        );
+        let cleanup_reservations = (0..super::super::schema::JOB_CAPACITY).map(|index| format!("{index:064x}")).collect::<Vec<_>>();
+        for job_id in &cleanup_reservations {
+            committer.reserve_cleanup_job(job_id).expect("bounded cleanup reservation");
+        }
+        let capacity_ingress_released = Arc::new(std::sync::atomic::AtomicBool::new(false));
+        let capacity_refused = committer
+            .commit(GisMapApprovalCommitRequestV1 {
+                composed_children: &composed_children,
+                scope: &scope,
+                actor: &actor,
+                mutation_id: &mutation_id,
+                command_hash: &command_hash,
+                job_id: &accepted.job_id,
+                proposal_hash: &proposal_hash,
+                command: command.as_slice(),
+                base: &base,
+                base_frontier: &base.frontier,
+                deadline_ms: 60_000,
+                now_ms: 1_004,
+                document_write: gate.clone(),
+                ingress: tracked_approval_ingress(&identity, Some(capacity_ingress_released.clone())),
+            })
+            .await;
+        assert!(matches!(capacity_refused, Err(GisMapApprovalCommitErrorV1::Capacity)));
+        assert!(capacity_ingress_released.load(Ordering::Acquire));
+        assert_eq!(
+            ledger.pending_approvals(None, &InferenceOperationControlV1::new(1_000, 5).expect("bounded approval query")).expect("capacity outbox query").rows.len(),
+            1,
+            "cleanup-capacity refusal preserves the caller's exact durable prepared owner",
+        );
+        for job_id in &cleanup_reservations {
+            committer.release_cleanup_job(job_id);
+        }
+        assert!(committer.cleanup_jobs.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_empty());
+        let prepared_runtime_shutdown_released = Arc::new(std::sync::atomic::AtomicBool::new(false));
+        committer.reserve_cleanup_job(&accepted.job_id).expect("prepared cleanup reservation");
+        let prepared_runtime_shutdown_owner = GisMapPreparedApprovalV1 {
+            scope: scope.clone(),
+            job_id: accepted.job_id.clone(),
+            mutation_id: mutation_id.clone(),
+            command_hash: command_hash.clone(),
+            proposal_hash: proposal_hash.clone(),
+            ingress: tracked_approval_ingress(&identity, Some(prepared_runtime_shutdown_released.clone())),
+        };
+        let prepared_runtime_shutdown_key = format!("prepared:{}", accepted.job_id);
+        assert!(committer.maintenance.lock().unwrap_or_else(std::sync::PoisonError::into_inner).insert(prepared_runtime_shutdown_key.clone()));
+        let prepared_runtime_shutdown_task = GisMapPreparedApprovalTaskV1 { committer: committer.as_ref().clone(), maintenance_key: prepared_runtime_shutdown_key, owner: Some(prepared_runtime_shutdown_owner) };
+        std::thread::spawn(move || {
+            let runtime = tokio::runtime::Builder::new_current_thread().build().expect("temporary prepared-cleanup runtime");
+            runtime.spawn(async move {
+                let _retained = prepared_runtime_shutdown_task;
+                std::future::pending::<()>().await;
+            });
+            runtime.block_on(tokio::task::yield_now());
+        })
+        .join()
+        .expect("temporary prepared-cleanup runtime shutdown");
+        assert!(committer.parked_prepared.lock().unwrap_or_else(std::sync::PoisonError::into_inner).contains_key(&accepted.job_id));
+        assert!(!prepared_runtime_shutdown_released.load(Ordering::Acquire), "runtime shutdown reinserts the exact prepared ingress cursor instead of dropping it");
+        resume_parked_cleanup(&committer).await;
+        assert!(prepared_runtime_shutdown_released.load(Ordering::Acquire));
+        assert!(committer.cleanup_jobs.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_empty());
+        assert!(ledger.pending_approvals(None, &InferenceOperationControlV1::new(1_000, 5).expect("bounded approval query")).expect("prepared runtime-shutdown query").rows.is_empty());
+        ledger.prepare_approval(&accepted.job_id, &identity, &proposal_hash, &command, 1_005).expect("same owner revives after prepared cleanup runtime shutdown");
+        let runtime_shutdown_ingress_released = Arc::new(std::sync::atomic::AtomicBool::new(false));
+        committer.reserve_cleanup_job(&accepted.job_id).expect("request cleanup reservation");
+        let runtime_shutdown_ingress = tracked_approval_ingress(&identity, Some(runtime_shutdown_ingress_released.clone()));
+        let runtime_shutdown_request = Arc::new(GisMapApprovalRequestTokenV1);
+        let (runtime_shutdown_identity, _) = RetainedGisMapApprovalCommitterV1::preflight(&GisMapApprovalCommitRequestV1 {
+            composed_children: &composed_children,
+            scope: &scope,
+            actor: &actor,
+            mutation_id: &mutation_id,
+            command_hash: &command_hash,
+            job_id: &accepted.job_id,
+            proposal_hash: &proposal_hash,
+            command: command.as_slice(),
+            base: &base,
+            base_frontier: &base.frontier,
+            deadline_ms: 60_000,
+            now_ms: 1_004,
+            document_write: gate.clone(),
+            ingress: runtime_shutdown_ingress,
+        })
+        .expect("runtime-shutdown cursor preflight");
+        let runtime_shutdown_owner = GisMapAbandonedRequestV1 { key: key.clone(), identity: runtime_shutdown_identity, request: runtime_shutdown_request };
+        let runtime_shutdown_maintenance_key = RetainedGisMapApprovalCommitterV1::abandoned_request_maintenance_key(&runtime_shutdown_owner);
+        assert!(committer.maintenance.lock().unwrap_or_else(std::sync::PoisonError::into_inner).insert(runtime_shutdown_maintenance_key.clone()));
+        let runtime_shutdown_task = GisMapAbandonedRequestTaskV1 { committer: committer.as_ref().clone(), maintenance_key: runtime_shutdown_maintenance_key, owner: Some(runtime_shutdown_owner) };
+        std::thread::spawn(move || {
+            let runtime = tokio::runtime::Builder::new_current_thread().build().expect("temporary cleanup runtime");
+            runtime.spawn(async move {
+                let _retained = runtime_shutdown_task;
+                std::future::pending::<()>().await;
+            });
+            runtime.block_on(tokio::task::yield_now());
+        })
+        .join()
+        .expect("temporary cleanup runtime shutdown");
+        assert!(committer.parked_requests.lock().unwrap_or_else(std::sync::PoisonError::into_inner).contains_key(&accepted.job_id));
+        assert!(!runtime_shutdown_ingress_released.load(Ordering::Acquire), "runtime shutdown reinserts the exact ingress cursor instead of dropping it");
+        resume_parked_cleanup(&committer).await;
+        assert!(runtime_shutdown_ingress_released.load(Ordering::Acquire));
+        assert!(committer.cleanup_jobs.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_empty());
+        assert!(ledger.pending_approvals(None, &InferenceOperationControlV1::new(1_000, 5).expect("bounded approval query")).expect("runtime-shutdown outbox query").rows.is_empty());
+        ledger.prepare_approval(&accepted.job_id, &identity, &proposal_hash, &command, 1_005).expect("same owner revives after temporary cleanup runtime shutdown");
+        let thread_committer = committer.clone();
+        let thread_identity = identity.clone();
+        let thread_scope = scope.clone();
+        let thread_frontier = base.frontier.clone();
+        let thread_descriptor = base.descriptor_digest.clone();
+        let thread_pack = base.pack.as_slice().to_vec();
+        let thread_command = command.as_slice().to_vec();
+        let thread_children = composed_children.clone();
+        let thread_actor = actor.clone();
+        let thread_mutation_id = mutation_id.clone();
+        let thread_command_hash = command_hash.clone();
+        let thread_job_id = accepted.job_id.clone();
+        let thread_proposal_hash = proposal_hash.clone();
+        let thread_gate = gate.clone();
+        let thread_ingress_released = Arc::new(std::sync::atomic::AtomicBool::new(false));
+        let thread_released = thread_ingress_released.clone();
+        std::thread::spawn(move || {
+            let thread_base = InferenceMapBaseV1 { frontier: thread_frontier, descriptor_digest: thread_descriptor, pack: InferencePrivateBytesV1::new(thread_pack, INPUT_MAX_BYTES).expect("bounded thread base") };
+            let thread_command = InferencePrivateBytesV1::new(thread_command, super::super::command::COMMAND_MAX_BYTES).expect("bounded thread command");
+            let future = thread_committer.commit(GisMapApprovalCommitRequestV1 {
+                composed_children: &thread_children,
+                scope: &thread_scope,
+                actor: &thread_actor,
+                mutation_id: &thread_mutation_id,
+                command_hash: &thread_command_hash,
+                job_id: &thread_job_id,
+                proposal_hash: &thread_proposal_hash,
+                command: thread_command.as_slice(),
+                base: &thread_base,
+                base_frontier: &thread_base.frontier,
+                deadline_ms: 60_000,
+                now_ms: 1_004,
+                document_write: thread_gate,
+                ingress: tracked_approval_ingress(&thread_identity, Some(thread_released)),
+            });
+            drop(future);
+        })
+        .join()
+        .expect("no-runtime unpolled owner thread");
+        assert!(thread_ingress_released.load(Ordering::Acquire), "no-runtime future Drop synchronously returns its ingress after exact outbox abandonment");
+        assert!(ledger.pending_approvals(None, &InferenceOperationControlV1::new(1_000, 5).expect("bounded approval query")).expect("no-runtime outbox query").rows.is_empty());
+        ledger.prepare_approval(&accepted.job_id, &identity, &proposal_hash, &command, 1_005).expect("same owner revives after no-runtime Drop");
+        let unpolled_ingress_released = Arc::new(std::sync::atomic::AtomicBool::new(false));
+        let unpolled = committer.commit(GisMapApprovalCommitRequestV1 {
+            composed_children: &composed_children,
+            scope: &scope,
+            actor: &actor,
+            mutation_id: &mutation_id,
+            command_hash: &command_hash,
+            job_id: &accepted.job_id,
+            proposal_hash: &proposal_hash,
+            command: command.as_slice(),
+            base: &base,
+            base_frontier: &base.frontier,
+            deadline_ms: 60_000,
+            now_ms: 1_004,
+            document_write: gate.clone(),
+            ingress: tracked_approval_ingress(&identity, Some(unpolled_ingress_released.clone())),
+        });
+        drop(unpolled);
+        wait_for_abandoned_prepared_handoff(&committer, &ledger, &identity, &accepted.job_id, &key, &gate, unpolled_ingress_released.as_ref()).await;
+        ledger.prepare_approval(&accepted.job_id, &identity, &proposal_hash, &command, 1_005).expect("same owner revives after an unpolled future");
+        let rejected_ingress_released = Arc::new(std::sync::atomic::AtomicBool::new(false));
+        assert!(matches!(
+            committer
+                .commit(GisMapApprovalCommitRequestV1 {
+                    composed_children: &invalid_children,
+                    scope: &scope,
+                    actor: &actor,
+                    mutation_id: &mutation_id,
+                    command_hash: &command_hash,
+                    job_id: &accepted.job_id,
+                    proposal_hash: &proposal_hash,
+                    command: command.as_slice(),
+                    base: &base,
+                    base_frontier: &base.frontier,
+                    deadline_ms: 60_000,
+                    now_ms: 1_006,
+                    document_write: gate.clone(),
+                    ingress: tracked_approval_ingress(&identity, Some(rejected_ingress_released.clone())),
+                })
+                .await,
+            Err(GisMapApprovalCommitErrorV1::Rejected)
+        ),);
+        assert!(rejected_ingress_released.load(Ordering::Acquire));
+        assert!(committer.cleanup_jobs.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_empty());
+        assert!(ledger.approval_recovery_by_mutation(&mutation_id).expect("rejected preflight lookup").is_some(), "a pure preflight rejection leaves the prepared outbox unchanged");
+        for (phase_index, phase) in [AbandonedApprovalPhaseV1::Preflight, AbandonedApprovalPhaseV1::Assembly, AbandonedApprovalPhaseV1::Journal].into_iter().enumerate() {
             let ingress_released = Arc::new(std::sync::atomic::AtomicBool::new(false));
             let ingress = tracked_approval_ingress(&identity, Some(ingress_released.clone()));
             let mut future = committer.commit(GisMapApprovalCommitRequestV1 {
@@ -2900,14 +3914,20 @@ mod tests {
                 document_write: gate.clone(),
                 ingress,
             });
-            tokio::time::timeout(std::time::Duration::from_secs(5), poll_approval_to_phase(&mut future, &committer, &key, phase))
-                .await
-                .expect("approval reaches its retained cancellation phase");
+            tokio::time::timeout(std::time::Duration::from_secs(5), poll_approval_to_phase(&mut future, &committer, &key, phase)).await.expect("approval reaches its retained cancellation phase");
             drop(future);
+            assert!(committer.cleanup_jobs.lock().unwrap_or_else(std::sync::PoisonError::into_inner).contains_key(&accepted.job_id));
             wait_for_abandoned_approval_handoff(&committer, &key, &gate, ingress_released.as_ref()).await;
             let actor = handle.checkpoint_publication_snapshot().await.expect("unchanged actor frontier");
             assert_eq!((actor.frontier.head_seq, actor.frontier.commit_seq, actor.head_edit_id), (0, 0, None));
+            let pending = ledger.pending_approvals(None, &InferenceOperationControlV1::new(1_000, 5).expect("bounded approval query")).expect("abandoned outbox query");
+            assert!(pending.rows.is_empty(), "the autonomous cancellation owner clears its exact prepared outbox row before releasing Hub ingress");
+            let revived = ledger.prepare_approval(&accepted.job_id, &identity, &proposal_hash, &command, 1_005 + u64::try_from(phase_index).expect("bounded phase")).expect("same owner revives its exact abandoned outbox row");
+            assert_eq!((revived.mutation_id.as_str(), revived.command_hash.as_str(), revived.proposal_hash.as_str()), (mutation_id.as_str(), command_hash.as_str(), proposal_hash.as_str()));
         }
+        let prepared_events = ledger.events(&accepted.job_id, &reader(&identity), 0, 1_008).expect("owner event page").events.into_iter().filter(|event| event.kind == "approval-prepared").count();
+        assert_eq!(prepared_events, 1, "three exact cancellation/revival cycles preserve one immutable preparation event");
+        assert!(order.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_empty(), "pre-witness cancellation emits neither a public checkpoint nor a peer rebootstrap signal");
         assert_eq!(ledger.read(&accepted.job_id, &reader(&identity), 1_005).expect("offered proposal").proposal_state, super::super::schema::InferenceProposalStateV1::Offered);
         let ingress_released = Arc::new(std::sync::atomic::AtomicBool::new(false));
         let ingress = tracked_approval_ingress(&identity, Some(ingress_released.clone()));
@@ -2927,14 +3947,12 @@ mod tests {
             document_write: gate.clone(),
             ingress,
         });
-        tokio::time::timeout(std::time::Duration::from_secs(5), poll_approval_to_phase(&mut future, &committer, &key, AbandonedApprovalPhaseV1::Committed))
-            .await
-            .expect("approval reaches its committed receipt cutover");
+        tokio::time::timeout(std::time::Duration::from_secs(5), poll_approval_to_phase(&mut future, &committer, &key, AbandonedApprovalPhaseV1::Committed)).await.expect("approval reaches its committed receipt cutover");
         drop(future);
         tokio::time::timeout(std::time::Duration::from_secs(10), async {
             loop {
                 let approved = ledger.read(&accepted.job_id, &reader(&identity), 1_007).is_ok_and(|view| view.proposal_state == super::super::schema::InferenceProposalStateV1::Approved);
-                let maintenance_idle = !committer.maintenance.lock().unwrap_or_else(std::sync::PoisonError::into_inner).contains(&key);
+                let maintenance_idle = !committer.maintenance_owns_document(&key);
                 if approved && maintenance_idle && gate.try_lock().is_ok() && ingress_released.load(Ordering::Acquire) {
                     return;
                 }
@@ -2943,14 +3961,108 @@ mod tests {
         })
         .await
         .expect("receipt cutover autonomously reaches public checkpoint and ledger apply");
-        assert_eq!(order.lock().unwrap_or_else(std::sync::PoisonError::into_inner).as_slice(), ["public-checkpoint-attempt", "public-checkpoint-attempt", "public-checkpoint-ack"]);
+        assert_eq!(order.lock().unwrap_or_else(std::sync::PoisonError::into_inner).as_slice(), ["public-checkpoint-attempt", "public-checkpoint-attempt", "public-checkpoint-ack", "peer-rebootstrap"],);
         let actor = handle.checkpoint_publication_snapshot().await.expect("committed actor frontier");
         assert_eq!((actor.frontier.head_seq, actor.frontier.commit_seq, actor.head_edit_id.as_ref().map(|id| id.0.as_str())), (1, 1, Some(mutation_id.as_str())));
         committer.close().await.expect("committer close");
         drop(committer);
         drop(handle);
         let mut database = Arc::try_unwrap(database).ok().expect("sole database owner");
-        database.shutdown().await.expect("database shutdown");
+        database.shutdown(&db::DatabaseShutdownControl::for_timeout(std::time::Duration::from_secs(5))).await.expect("database shutdown");
+        drop(database);
+        pool.shutdown().expect("worker pool shutdown");
+    }
+
+    #[tokio::test]
+    async fn gis_map_terminal_close_waits_for_unpolled_cleanup_and_fences_new_admission() {
+        let (identity, base) = canonical_identity_and_base();
+        let ledger = ledger();
+        let accepted = ledger.accept(&identity, &base.pack, 1_000).expect("accepted job");
+        let claim = ledger.start(&accepted.job_id, &identity, 1_001).expect("claim").expect("owned epoch");
+        let (proposal, command) = canonical_approval(&identity, &accepted.job_id, &base, 1_004);
+        let result = InferencePrivateBytesV1::new(b"bounded-result".to_vec(), RESULT_MAX_BYTES).expect("bounded result");
+        assert!(ledger.succeed(&accepted.job_id, &identity, claim.run_epoch, &result, &proposal, 1_002).expect("offer"));
+        let proposal_hash = sha256(proposal.as_slice());
+        ledger.prepare_approval(&accepted.job_id, &identity, &proposal_hash, &command, 1_003).expect("prepared outbox");
+        let pool = Arc::new(db::semio_framework_async::WorkerPool::new(db::semio_framework_async::WorkerPoolConfig::new(db::semio_framework_async::ProcessKind::HeadlessBatch, 2)));
+        let memory = db::storage::MemoryStorage::new(pool.clone()).await.expect("memory storage");
+        let backend = Arc::new(db::storage::DbBackend::Memory(memory));
+        let database = Arc::new(db::Database::open(pool.clone(), db::DbConfig::for_profile(db::Profile::Test), backend.clone()).await.expect("database"));
+        let scope = DocumentScope::new(identity.space_id.clone(), identity.document_id.clone());
+        let publisher: Arc<dyn GisMapApprovalCheckpointPublisherV1> = Arc::new(OrderedApprovalCheckpointPublisherV1 {
+            ledger: ledger.clone(),
+            identity: identity.clone(),
+            job_id: accepted.job_id.clone(),
+            attempts: std::sync::atomic::AtomicUsize::new(0),
+            order: Arc::new(std::sync::Mutex::new(Vec::new())),
+            pause: None,
+        });
+        let committer = Arc::new(RetainedGisMapApprovalCommitterV1::new(database.clone(), backend, ledger.clone(), publisher));
+        let gate = Arc::new(tokio::sync::Mutex::new(()));
+        let children = base.composed_children().expect("exact composed children");
+        let actor = approval_actor(&identity);
+        let mutation_id = approval_mutation_id(&accepted.job_id, &proposal_hash);
+        let command_hash = sha256(command.as_slice());
+        let ingress_released = Arc::new(std::sync::atomic::AtomicBool::new(false));
+        let unpolled = committer.commit(GisMapApprovalCommitRequestV1 {
+            composed_children: &children,
+            scope: &scope,
+            actor: &actor,
+            mutation_id: &mutation_id,
+            command_hash: &command_hash,
+            job_id: &accepted.job_id,
+            proposal_hash: &proposal_hash,
+            command: command.as_slice(),
+            base: &base,
+            base_frontier: &base.frontier,
+            deadline_ms: 60_000,
+            now_ms: 1_004,
+            document_write: gate.clone(),
+            ingress: tracked_approval_ingress(&identity, Some(ingress_released.clone())),
+        });
+        assert!(committer.cleanup_jobs.lock().unwrap_or_else(std::sync::PoisonError::into_inner).contains_key(&accepted.job_id));
+        let mut close = Box::pin(committer.close());
+        let close_wake = Arc::new(ApprovalPollWakeV1 { ready: std::sync::atomic::AtomicBool::new(true) });
+        let close_waker = std::task::Waker::from(close_wake);
+        let mut close_context = std::task::Context::from_waker(&close_waker);
+        assert!(matches!(close.as_mut().poll(&mut close_context), std::task::Poll::Pending), "terminal close waits for the validated unpolled cleanup owner");
+        let refused_ingress_released = Arc::new(std::sync::atomic::AtomicBool::new(false));
+        assert!(
+            matches!(
+                committer
+                    .commit(GisMapApprovalCommitRequestV1 {
+                        composed_children: &children,
+                        scope: &scope,
+                        actor: &actor,
+                        mutation_id: &mutation_id,
+                        command_hash: &command_hash,
+                        job_id: &accepted.job_id,
+                        proposal_hash: &proposal_hash,
+                        command: command.as_slice(),
+                        base: &base,
+                        base_frontier: &base.frontier,
+                        deadline_ms: 60_000,
+                        now_ms: 1_005,
+                        document_write: gate.clone(),
+                        ingress: tracked_approval_ingress(&identity, Some(refused_ingress_released.clone())),
+                    })
+                    .await,
+                Err(GisMapApprovalCommitErrorV1::Unavailable)
+            ),
+            "terminal close atomically fences later admission",
+        );
+        assert!(refused_ingress_released.load(Ordering::Acquire));
+        drop(unpolled);
+        tokio::time::timeout(std::time::Duration::from_secs(5), &mut close).await.expect("cleanup decrement wakes terminal close").expect("terminal close");
+        drop(close);
+        assert!(ingress_released.load(Ordering::Acquire));
+        assert!(committer.cleanup_jobs.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_empty());
+        assert!(committer.maintenance.lock().unwrap_or_else(std::sync::PoisonError::into_inner).is_empty());
+        assert!(ledger.pending_approvals(None, &InferenceOperationControlV1::new(1_000, 5).expect("bounded approval query")).expect("terminal outbox query").rows.is_empty());
+        assert!(gate.try_lock().is_ok());
+        drop(committer);
+        let mut database = Arc::try_unwrap(database).ok().expect("sole database owner");
+        database.shutdown(&db::DatabaseShutdownControl::for_timeout(std::time::Duration::from_secs(5))).await.expect("database shutdown");
         drop(database);
         pool.shutdown().expect("worker pool shutdown");
     }

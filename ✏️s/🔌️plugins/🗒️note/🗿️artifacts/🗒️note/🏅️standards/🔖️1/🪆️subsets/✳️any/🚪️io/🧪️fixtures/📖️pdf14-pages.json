@@ -1,0 +1,47 @@
+{
+  "cases": [
+    {
+      "pages": [
+        {
+          "width": 320.5,
+          "height": 480.25,
+          "text": "Hello from Note"
+        },
+        {
+          "width": 200.5,
+          "height": 300.25,
+          "text": "Second page"
+        }
+      ],
+      "expectedImport": {
+        "width": 320.5,
+        "height": 480.25,
+        "text": "Hello from Note"
+      },
+      "expectedExport": {
+        "width": 1024,
+        "height": 1024,
+        "text": "Imported PDF Hello from Note"
+      }
+    },
+    {
+      "pages": [
+        {
+          "width": 400.5,
+          "height": 600.25,
+          "text": "Notizen zum Plan"
+        }
+      ],
+      "expectedImport": {
+        "width": 400.5,
+        "height": 600.25,
+        "text": "Notizen zum Plan"
+      },
+      "expectedExport": {
+        "width": 1024,
+        "height": 1024,
+        "text": "Imported PDF Notizen zum Plan"
+      }
+    }
+  ]
+}

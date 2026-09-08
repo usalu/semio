@@ -304,6 +304,7 @@ pub mod app {
     use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
     /// 🧵️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME: `AsyncTask`'s boxed `run` closure/future.
     use std::future::Future;
+    #[cfg(test)]
     use std::pin::Pin;
     #[cfg(test)]
     use std::sync::Arc;
@@ -2985,7 +2986,7 @@ pub mod app {
 
     //#region 🔖️ArtifactDeclaration
     /// 🔖️ Everything an artifact declares as data for `PluginBuilder::try_build()` — see
-    /// `.🦑️repo/🎫️tickets/26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE/📓️w1-mechanism-design.md`. Every
+    /// `.🧬semio/🦑️repo/🎫️tickets/26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE/📓️w1-mechanism-design.md`. Every
     /// field mirrors exactly one global registration function reachable from plugin code (census:
     /// `📓️w0-d-sdk-surface.md` §6); the app-scoped `register_app_schema_descriptor` has no field
     /// here because it belongs to `.document_app`, while flow extensions use plugin-level
@@ -6832,12 +6833,18 @@ pub mod app {
 
         /// 🧹️ Closes one registered fixture through the exact retained app close state machine.
         pub fn close_registered_fixture_app<A: ArtifactApp>(app: &mut VcsArtifactApp<A>) {
-            for _ in 0..64 {
+            let deadline = std::time::Instant::now() + std::time::Duration::from_secs(30);
+            while std::time::Instant::now() < deadline {
                 if app.close_terminal_is_empty() {
                     return;
                 }
                 match app.close_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("registered fixture close") {
-                    super::PluginCloseStep::Pending { released_items, released_bytes } => assert!(released_items <= 1 && released_bytes <= store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES),
+                    super::PluginCloseStep::Pending { released_items, released_bytes } => {
+                        assert!(released_items <= 1 && released_bytes <= store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES);
+                        if released_items == 0 && released_bytes == 0 {
+                            std::thread::yield_now();
+                        }
+                    }
                     super::PluginCloseStep::AwaitingInput { reason } => panic!("registered fixture close awaited input: {reason}"),
                     super::PluginCloseStep::Blocked { reason } => panic!("registered fixture close blocked: {reason}"),
                     super::PluginCloseStep::Complete => break,
@@ -8205,10 +8212,6 @@ pub mod app {
     }
 
     impl AppOperationContext {
-        fn from_operation(app_instance_id: u32, parent_document_id: String, operation: semio_framework_job::Operation, canonical_base_revision: [u8; 32]) -> Self {
-            Self { app_instance_id, parent_document_id, operation_id: operation.operation.0, generation: operation.generation.0, canonical_base_revision }
-        }
-
         /// 🧬️ Fixed-width lowercase encoding for typed persisted continuation fields.
         pub fn canonical_base_revision_hex(&self) -> String {
             const HEX: &[u8; 16] = b"0123456789abcdef";
@@ -8237,10 +8240,6 @@ pub mod app {
         /// 🏗️ A view over a composing document, wired to its live child stores.
         pub async fn with_children(snapshot: &'a P, history: &'a HistoryView, children: ChildContentView) -> Self {
             Self { snapshot, history, children, operation: None, render_operation: None, snapshot_read: std::sync::Mutex::new(None) }
-        }
-
-        async fn with_dispatch_context(snapshot: &'a P, history: &'a HistoryView, children: ChildContentView, operation: AppOperationContext) -> Self {
-            Self { snapshot, history, children, operation: Some(operation), render_operation: None, snapshot_read: std::sync::Mutex::new(None) }
         }
 
         async fn with_render_context(snapshot: &'a P, history: &'a HistoryView, children: ChildContentView, render_operation: AppRenderOperationContext, snapshot_read: Option<store::SnapshotRead<P>>) -> Self {
@@ -9095,6 +9094,7 @@ pub mod app {
             self.get(actor).is_some()
         }
 
+        #[cfg(test)]
         pub(crate) fn len(&self) -> usize {
             self.len
         }
@@ -9283,7 +9283,6 @@ pub mod app {
     }
 
     struct ValidatedPeerRosterCommit {
-        seq: u64,
         generation: u64,
     }
 
@@ -10311,6 +10310,7 @@ pub mod app {
         /// landed, so `TaskCtx.meta` always reflects state that was ACTUALLY committed, never just
         /// requested. This is the ONLY way a command handler can await anything: `handle` itself
         /// stays a pure synchronous reducer (see `AsyncTask`'s own doc for the full contract).
+        #[cfg(test)]
         pub tasks: Vec<AsyncTask<Mutation, ConfigMutation, DraftMutation>>,
     }
 
@@ -10326,6 +10326,7 @@ pub mod app {
                 events: Vec::new(),
                 ui_scope: UiDirtyScope::default(),
                 child_emits: Vec::new(),
+                #[cfg(test)]
                 tasks: Vec::new(),
             }
         }
@@ -10344,6 +10345,7 @@ pub mod app {
     /// `run`'s closure is `Send` because a pure reducer may create it on a worker before handing the
     /// resulting emit back to its actor. The future it creates remains actor-local and need not be
     /// `Send`: `TaskCtx` is supplied only after the closure reaches the actor's `LocalExecutor`.
+    #[cfg(test)]
     pub struct AsyncTask<Mutation, ConfigMutation = NoConfigMutation, DraftMutation = NoDraftMutation> {
         /// 🪪️ Diagnostic name — never parsed, only ever displayed (a quota-exceeded `Fault`'s
         /// message names the task that was refused).
@@ -10363,6 +10365,7 @@ pub mod app {
         run: Box<dyn FnOnce(TaskCtx) -> Pin<Box<dyn Future<Output = Result<TaskResolution<Mutation, ConfigMutation, DraftMutation>, Fault>>>> + Send>,
     }
 
+    #[cfg(test)]
     impl<Mutation, ConfigMutation, DraftMutation> AsyncTask<Mutation, ConfigMutation, DraftMutation> {
         /// 🌱️ Builds a task from an async closure. `run` is called once, at the moment
         /// `dispatch_emit` actually spawns this task (never eagerly at `Emit` construction time),
@@ -10399,6 +10402,7 @@ pub mod app {
     /// `⚛️reactor::host`) plus the CLONED `ActionMeta` the task was spawned under, so its eventual
     /// follow-up dispatch stays attributed to the same actor/instance even if a different one is
     /// active by the time the task resolves.
+    #[cfg(test)]
     pub struct TaskCtx {
         pub host: crate::host::Host,
         pub meta: ActionMeta,
@@ -10419,6 +10423,7 @@ pub mod app {
     ///
     /// `Done` performs no follow-up dispatch at all — for a task whose only job was a
     /// `TaskCtx::host` side effect (e.g. `host.notify(...)`) it already queued during its own run.
+    #[cfg(test)]
     pub enum TaskResolution<Mutation, ConfigMutation = NoConfigMutation, DraftMutation = NoDraftMutation> {
         Command(Vec<u8>),
         Emit(Emit<Mutation, ConfigMutation, DraftMutation>),
@@ -10626,6 +10631,7 @@ pub mod app {
 
         /// @emoji 🧵️ A single spawned `AsyncTask` and no operations — the common case for "this
         /// command's only job is to kick off host work" (e.g. a search-as-you-type debounce).
+        #[cfg(test)]
         pub fn task(task: AsyncTask<Mutation, ConfigMutation, DraftMutation>) -> Self {
             Self { tasks: vec![task], ..Default::default() }
         }
@@ -12644,6 +12650,11 @@ pub mod app {
     }
 
     impl ArtifactBoundedFirstStepProof {
+        /// 🏷️ Identifies the tool described by this immutable proof.
+        pub fn tool_id(&self) -> &'static str {
+            self.tool_id
+        }
+
         pub fn new<A: ArtifactApp>(owner_file: &'static str, controller_id: &'static str, factory: &'static str, tool_id: &'static str, document_schema: &'static str, contract: semio_framework::ToolExecutionContract) -> Self {
             Self { owner_file, owner: ToolOwnerWitness::of::<A>(), controller_id, factory, factory_type_id: None, factory_type_name: None, tool_id, document_schema, contract }
         }
@@ -13154,6 +13165,7 @@ pub mod app {
             Ok(Self { filename, mime_type, encoding, chunks })
         }
 
+        #[cfg(test)]
         fn handle_encoding(&self) -> String {
             format!("{ARTIFACT_SEGMENTED_HANDLE_ENCODING}:{}", self.encoding.as_deref().unwrap_or("identity"))
         }
@@ -14503,7 +14515,6 @@ pub mod app {
     framework_reserved_job!(FrameworkCopyJob, FrameworkCopyJobFactory, "copy", 7, 8_192, 4_096, 256, 1_048_576);
     framework_reserved_job!(FrameworkCutJob, FrameworkCutJobFactory, "cut", 8, 8_192, 4_096, 256, 1_048_576);
     framework_reserved_job!(FrameworkPasteJob, FrameworkPasteJobFactory, "paste", 9, 1_048_576, 4_096, 4_096, 4_194_304);
-    framework_reserved_job!(FrameworkImportMediaJob, FrameworkImportMediaJobFactory, "import-media", 10, 8_388_608, 8_192, 4_096, 8_388_608);
     framework_reserved_job!(FrameworkNoteShellCommandJob, FrameworkNoteShellCommandJobFactory, "noteShellCommand", 11, 65_536, 64, 4_096, 65_536);
     framework_reserved_job!(FrameworkSetHistoryCommandFilterJob, FrameworkSetHistoryCommandFilterJobFactory, "setHistoryCommandFilter", 12, 4_096, 16, 1_024, 4_096);
     framework_reserved_job!(FrameworkRecordTutorialJob, FrameworkRecordTutorialJobFactory, "recordTutorial", 13, 4_096, 16, 1_024, 4_096);
@@ -15750,6 +15761,7 @@ pub mod app {
             })
         }
 
+        #[cfg(test)]
         pub(crate) fn insert(&mut self, id: u64, value: T) -> Result<(), T> {
             if !self.allocation_admitted {
                 return Err(value);
@@ -16415,7 +16427,6 @@ pub mod app {
         draft_generation: u64,
         presence_generation: u64,
         transient_generation: u64,
-        contract: semio_framework::ToolExecutionContract,
         publication_lanes: &'static [ArtifactToolPublicationLane],
         session: Option<semio_framework_job::MountedWorkerJobSession<semio_framework::ErasedToolJob>>,
         session_rejected: Option<semio_framework_job::WorkerJobSessionAdmissionRejected<semio_framework::ErasedToolJob>>,
@@ -16650,8 +16661,11 @@ pub mod app {
                                 || ephemeral.transient.pop().is_some()
                                 || emit.effects.pop().is_some()
                                 || emit.events.pop().is_some()
-                                || emit.tasks.pop().is_some()
                             {
+                                return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
+                            }
+                            #[cfg(test)]
+                            if emit.tasks.pop().is_some() {
                                 return Ok(PluginCloseStep::Pending { released_items: 1, released_bytes: 0 });
                             }
                         }
@@ -16780,19 +16794,12 @@ pub mod app {
     enum TypedCommandFullOperationPhase {
         Prepare,
         Reducer,
-        OutputValidation,
-        Ephemeral,
-        Emit,
-        Expose,
-        Complete,
         Fault,
     }
 
     pub(crate) struct TypedCommandFullOperationJob<A: ArtifactApp> {
         operation: Option<semio_framework_job::Operation>,
-        app_instance_id: u32,
         parent_document_id: Option<String>,
-        canonical_base_revision: [u8; 32],
         command: Option<std::sync::Arc<A::Command>>,
         snapshot: Option<std::sync::Arc<A::Snapshot>>,
         config: Option<std::sync::Arc<A::Config>>,
@@ -16810,36 +16817,16 @@ pub mod app {
         phase: TypedCommandFullOperationPhase,
         prepare_cursor: u8,
         reducer_cursor: u8,
-        output_lane_cursor: u8,
-        output_item_cursor: usize,
-        output_byte_cursor: usize,
-        exact_output_bytes: usize,
-        ephemeral_lane_cursor: u8,
-        ephemeral_item_cursor: usize,
-        emit_lane_cursor: u8,
-        emit_item_cursor: usize,
-        emit: Option<Result<Emit<A::Mutation, A::ConfigMutation, A::DraftMutation>, Fault>>,
-        ephemeral: Option<EphemeralEmit<A>>,
-        exposure_revision: Option<semio_framework_job::RevisionId>,
-        exposure_generation: Option<semio_framework_job::Generation>,
         output: Option<ArtifactToolCompletion<A>>,
         closing: bool,
     }
 
     impl<A: ArtifactApp> TypedCommandFullOperationJob<A> {
         fn checkpoint(&self, cx: &mut semio_framework_job::StepContext<'_>) -> semio_framework_job::Checkpoint {
-            let state = [self.phase as u8, self.prepare_cursor, self.reducer_cursor, self.output_lane_cursor, self.ephemeral_lane_cursor, self.emit_lane_cursor];
+            let state = [self.phase as u8, self.prepare_cursor, self.reducer_cursor];
             semio_framework_job::Checkpoint {
                 state: retained_job_payload(cx, semio_framework_job::JobPayloadStream::CheckpointState, &state),
-                applied_progress: u64::from(self.prepare_cursor)
-                    .saturating_add(u64::from(self.reducer_cursor))
-                    .saturating_add(u64::from(self.output_lane_cursor))
-                    .saturating_add(self.output_item_cursor as u64)
-                    .saturating_add(self.output_byte_cursor as u64)
-                    .saturating_add(u64::from(self.ephemeral_lane_cursor))
-                    .saturating_add(self.ephemeral_item_cursor as u64)
-                    .saturating_add(u64::from(self.emit_lane_cursor))
-                    .saturating_add(self.emit_item_cursor as u64),
+                applied_progress: u64::from(self.prepare_cursor).saturating_add(u64::from(self.reducer_cursor)),
             }
         }
 
@@ -16848,20 +16835,7 @@ pub mod app {
             semio_framework_job::StepOutcome::Fault(semio_framework_job::JobFault { detail: retained_job_payload(cx, semio_framework_job::JobPayloadStream::Fault, message) })
         }
 
-        fn census_byte(&mut self) -> Result<(), ()> {
-            self.exact_output_bytes = self.exact_output_bytes.checked_add(1).filter(|bytes| *bytes <= self.contract.max_output_bytes).ok_or(())?;
-            self.output_byte_cursor = self.output_byte_cursor.saturating_add(1);
-            Ok(())
-        }
 
-        fn admit_exposure_freshness(&mut self, revision: semio_framework_job::RevisionId, generation: semio_framework_job::Generation) -> Result<(), Fault> {
-            if self.phase != TypedCommandFullOperationPhase::Expose || self.exposure_revision.is_some() || self.exposure_generation.is_some() {
-                return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.typed-exposure-state"), "typed command freshness can be admitted exactly once at exposure"));
-            }
-            self.exposure_revision = Some(revision);
-            self.exposure_generation = Some(generation);
-            Ok(())
-        }
     }
 
     impl<A: ArtifactApp> semio_framework_job::InteractiveJob for TypedCommandFullOperationJob<A> {
@@ -16915,108 +16889,6 @@ pub mod app {
                     self.reducer_cursor = self.reducer_cursor.saturating_add(1);
                     self.fault(cx, b"generic bounded proof has no resumable app-owned reducer job")
                 }
-                TypedCommandFullOperationPhase::OutputValidation => {
-                    cx.set_stage("typed-command-output-validation");
-                    if self.emit.as_ref().is_some_and(Result::is_err) {
-                        let fault = match self.emit.take() {
-                            Some(Err(fault)) => fault,
-                            _ => unreachable!("checked typed command reducer fault"),
-                        };
-                        drop(fault);
-                        return self.fault(cx, b"typed command reducer returned a bounded application fault");
-                    }
-                    let Some(emit) = self.emit.as_ref().and_then(|emit| emit.as_ref().ok()) else { return self.fault(cx, b"typed command reducer output is absent") };
-                    let Some(ephemeral) = self.ephemeral.as_ref() else { return self.fault(cx, b"typed command ephemeral output is absent") };
-                    match self.output_lane_cursor {
-                        0 if !emit.tasks.is_empty() => return self.fault(cx, b"typed command task output lacks a retained nested producer"),
-                        1 if !emit.artifact_mutations.is_empty() => return self.fault(cx, b"typed artifact mutation output lacks an owned item codec cursor"),
-                        2 if !emit.config_mutations.is_empty() => return self.fault(cx, b"typed config mutation output lacks an owned item codec cursor"),
-                        3 if !emit.draft_mutations.is_empty() => return self.fault(cx, b"typed draft mutation output lacks an owned item codec cursor"),
-                        4 if !ephemeral.presence.is_empty() => return self.fault(cx, b"typed presence output lacks an owned item codec cursor"),
-                        5 if !ephemeral.transient.is_empty() => return self.fault(cx, b"typed transient output lacks an owned item codec cursor"),
-                        6 => {
-                            let bytes = emit.description.as_ref().map_or(&[][..], |value| value.as_bytes());
-                            if self.output_byte_cursor < bytes.len() {
-                                if self.census_byte().is_err() {
-                                    return self.fault(cx, b"typed command description exceeds its exact output cap");
-                                }
-                                return semio_framework_job::StepOutcome::CheckpointReady(self.checkpoint(cx));
-                            }
-                            self.output_byte_cursor = 0;
-                        }
-                        7 => {
-                            let bytes = emit.coalesce_key.as_ref().map_or(&[][..], |value| value.as_bytes());
-                            if self.output_byte_cursor < bytes.len() {
-                                if self.census_byte().is_err() {
-                                    return self.fault(cx, b"typed command coalesce key exceeds its exact output cap");
-                                }
-                                return semio_framework_job::StepOutcome::CheckpointReady(self.checkpoint(cx));
-                            }
-                            self.output_byte_cursor = 0;
-                        }
-                        8 if !emit.effects.is_empty() => return self.fault(cx, b"typed effect output lacks an owned field cursor"),
-                        9 if !emit.events.is_empty() => return self.fault(cx, b"typed event output lacks an owned field cursor"),
-                        10 if !emit.child_emits.is_empty() => return self.fault(cx, b"typed child output lacks a retained nested producer"),
-                        11 => {
-                            if self.census_byte().is_err() {
-                                return self.fault(cx, b"typed UI scope exceeds its exact output cap");
-                            }
-                        }
-                        12 => {
-                            self.phase = TypedCommandFullOperationPhase::Ephemeral;
-                            return semio_framework_job::StepOutcome::CheckpointReady(self.checkpoint(cx));
-                        }
-                        _ => {}
-                    }
-                    self.output_lane_cursor = self.output_lane_cursor.saturating_add(1);
-                    self.output_item_cursor = 0;
-                    semio_framework_job::StepOutcome::CheckpointReady(self.checkpoint(cx))
-                }
-                TypedCommandFullOperationPhase::Ephemeral => {
-                    cx.set_stage("typed-command-ephemeral");
-                    if self.ephemeral_lane_cursor < 2 {
-                        self.ephemeral_lane_cursor = self.ephemeral_lane_cursor.saturating_add(1);
-                        return semio_framework_job::StepOutcome::CheckpointReady(self.checkpoint(cx));
-                    }
-                    self.phase = TypedCommandFullOperationPhase::Emit;
-                    semio_framework_job::StepOutcome::CheckpointReady(self.checkpoint(cx))
-                }
-                TypedCommandFullOperationPhase::Emit => {
-                    cx.set_stage("typed-command-emit");
-                    if self.emit_lane_cursor < 10 {
-                        self.emit_lane_cursor = self.emit_lane_cursor.saturating_add(1);
-                        return semio_framework_job::StepOutcome::CheckpointReady(self.checkpoint(cx));
-                    }
-                    self.phase = TypedCommandFullOperationPhase::Expose;
-                    semio_framework_job::StepOutcome::CheckpointReady(self.checkpoint(cx))
-                }
-                TypedCommandFullOperationPhase::Expose => {
-                    cx.set_stage("typed-command-expose");
-                    let (Some(base_revision), Some(generation)) = (self.exposure_revision, self.exposure_generation) else {
-                        return semio_framework_job::StepOutcome::CheckpointReady(self.checkpoint(cx));
-                    };
-                    if !matches!(semio_framework_job::validate_commit(&operation, base_revision, generation), semio_framework_job::CommitValidation::Accepted) {
-                        return self.fault(cx, b"typed command exposure rejected a stale revision or generation");
-                    }
-                    let Some(output) = self.output.as_ref() else { return self.fault(cx, b"typed command exposure port was lost") };
-                    let Some(emit) = self.emit.take() else { return self.fault(cx, b"typed command emit owner was lost") };
-                    let Some(ephemeral) = self.ephemeral.take() else { return self.fault(cx, b"typed command ephemeral owner was lost") };
-                    if let Err(rejected) = output.complete(emit, ephemeral) {
-                        self.emit = Some(rejected.emit);
-                        self.ephemeral = Some(rejected.ephemeral);
-                        drop(rejected.fault);
-                        return self.fault(cx, b"typed command completion port rejected its single assignment");
-                    }
-                    self.phase = TypedCommandFullOperationPhase::Complete;
-                    semio_framework_job::StepOutcome::Complete(semio_framework_job::CommitCandidate {
-                        state: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitState),
-                        output: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitOutput),
-                    })
-                }
-                TypedCommandFullOperationPhase::Complete => semio_framework_job::StepOutcome::Complete(semio_framework_job::CommitCandidate {
-                    state: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitState),
-                    output: semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::CommitOutput),
-                }),
                 TypedCommandFullOperationPhase::Fault => self.fault(cx, b"typed command remains faulted"),
             }
         }
@@ -17034,45 +16906,6 @@ pub mod app {
                 let released_bytes = parent.len();
                 drop(self.parent_document_id.take());
                 return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes };
-            }
-            if let Some(emit) = self.emit.as_mut().and_then(|emit| emit.as_mut().ok()) {
-                if let Some(step) = emit.close_child_one(maximum_items, maximum_bytes) {
-                    return match step {
-                        PluginCloseStep::Pending { released_items, released_bytes } => semio_framework_job::InteractiveJobCloseStep::Pending { released_items, released_bytes },
-                        PluginCloseStep::Blocked { .. } | PluginCloseStep::AwaitingInput { .. } => semio_framework_job::InteractiveJobCloseStep::Blocked,
-                        PluginCloseStep::Complete => unreachable!("child close helper consumes completed children"),
-                    };
-                }
-                if let Some(description) = emit.description.as_mut().filter(|value| !value.is_empty()) {
-                    let released_bytes = description.chars().next_back().map(char::len_utf8).expect("nonempty typed command description");
-                    if maximum_bytes < released_bytes {
-                        return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
-                    }
-                    description.pop();
-                    return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes };
-                }
-                if let Some(key) = emit.coalesce_key.as_mut().filter(|value| !value.is_empty()) {
-                    let released_bytes = key.chars().next_back().map(char::len_utf8).expect("nonempty typed command coalesce key");
-                    if maximum_bytes < released_bytes {
-                        return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
-                    }
-                    key.pop();
-                    return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes };
-                }
-            }
-            if self.emit.is_some() {
-                if maximum_items == 0 {
-                    return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
-                }
-                drop(self.emit.take());
-                return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
-            }
-            if self.ephemeral.is_some() {
-                if maximum_items == 0 {
-                    return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
-                }
-                drop(self.ephemeral.take());
-                return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
             }
             if self.command.is_some() {
                 if maximum_items == 0 {
@@ -17184,8 +17017,6 @@ pub mod app {
                 && self.presence_local.is_none()
                 && self.presence_peers.is_none()
                 && self.transient.is_none()
-                && self.emit.is_none()
-                && self.ephemeral.is_none()
                 && self.output.is_none()
                 && self.operation.is_none()
         }
@@ -17681,7 +17512,6 @@ pub mod app {
                     draft_generation: 0,
                     presence_generation: 0,
                     transient_generation: 0,
-                    contract: semio_framework::ToolExecutionContract::resumable(4_096, 4, 1, 4_096, 7_500, 1, 1),
                     publication_lanes: &[ArtifactToolPublicationLane::Presence],
                     session: None,
                     session_rejected: None,
@@ -17877,7 +17707,6 @@ pub mod app {
                         draft_generation: 0,
                         presence_generation: 0,
                         transient_generation: 0,
-                        contract: semio_framework::ToolExecutionContract::resumable(4_096, 4, 1, 4_096, 7_500, 1, 1),
                         publication_lanes: &[ArtifactToolPublicationLane::Artifact],
                         session: None,
                         session_rejected: None,
@@ -18263,7 +18092,6 @@ pub mod app {
                         draft_generation: 0,
                         presence_generation: 0,
                         transient_generation: 0,
-                        contract: semio_framework::ToolExecutionContract::resumable(4_096, 4, 1, 4_096, 7_500, 1, 1),
                         publication_lanes: &[ArtifactToolPublicationLane::Presence],
                         session: None,
                         session_rejected: None,
@@ -18312,7 +18140,6 @@ pub mod app {
                         draft_generation: 0,
                         presence_generation: 0,
                         transient_generation: 0,
-                        contract: semio_framework::ToolExecutionContract::resumable(4_096, 4, 1, 4_096, 7_500, 1, 1),
                         publication_lanes: &[],
                         session: None,
                         session_rejected: None,
@@ -18626,7 +18453,7 @@ pub mod app {
             let start = source.find("impl<A: ArtifactApp> semio_framework_job::InteractiveJob for TypedCommandFullOperationJob<A>").expect("typed full-operation job");
             let end = source[start..].find("struct TypedCommandFullOperationJobFactory").map(|offset| start + offset).expect("typed full-operation factory");
             let job = &source[start..end];
-            for stage in ["typed-command-prepare", "typed-command-reducer", "typed-command-output-validation", "typed-command-ephemeral", "typed-command-emit", "typed-command-expose"] {
+            for stage in ["typed-command-prepare", "typed-command-reducer"] {
                 assert!(job.contains(stage));
             }
             for forbidden in ["A::handle", "A::ephemeral", "bounded_command_output_bytes", "serde_json::to_vec", "fault.message.as_bytes().to_vec()", "for child in emit.child_emits", "ActiveToolCommand", "BoundedFirstStepCommandJob"] {
@@ -20618,12 +20445,12 @@ pub mod app {
             if resolve_ready(cancel.is_cancelled()) {
                 return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.peer-roster-cancelled"), "peer roster publication was cancelled before atomic commit"));
             }
-            Ok(ValidatedPeerRosterCommit { seq, generation })
+            Ok(ValidatedPeerRosterCommit { generation })
         }
 
         fn publish_peer_roster_candidate_admitted(&mut self, admission: ValidatedPeerRosterCommit, candidate: PeerRosterCandidate<A::Presence>) -> Result<(), PeerRosterCandidate<A::Presence>> {
             let PeerRosterCandidate { seq, generation: candidate_generation, cancel, own_color, now_ms, root, typed } = candidate;
-            let ValidatedPeerRosterCommit { seq: _, generation } = admission;
+            let ValidatedPeerRosterCommit { generation } = admission;
             let _ = now_ms;
             let typed_retirement = match self.presence_store.publish_peer_commit(typed) {
                 Ok(retirement) => retirement,
@@ -21370,8 +21197,13 @@ pub mod app {
         }
 
         async fn dispatch_emit(&mut self, verb: &str, emit: Emit<A::Mutation, A::ConfigMutation, A::DraftMutation>, meta: &ActionMeta) -> Result<InvocationResult, Fault> {
-            let Emit { artifact_mutations, config_mutations, draft_mutations, description, coalesce_key, effects, events, ui_scope, child_emits, tasks } = emit;
+            let Emit {
+                artifact_mutations, config_mutations, draft_mutations, description, coalesce_key, effects, events, ui_scope, child_emits,
+                #[cfg(test)]
+                tasks,
+            } = emit;
 
+            #[cfg(test)]
             if !tasks.is_empty() {
                 return Err(Fault::new(
                     FaultOrigin::Framework,
@@ -21459,6 +21291,7 @@ pub mod app {
                 let amended_same_config_edit = before_config_edit_id.is_some() && self.config_store.envelope().vcs.edits.last().map(|edit| &edit.id) == before_config_edit_id.as_ref();
                 config_edit_id = if amended_same_config_edit { before_config_edit_id } else { self.config_store.envelope().vcs.edits.last().map(|edit| edit.id.clone()) };
             }
+            #[cfg(test)]
             debug_assert!(tasks.is_empty());
 
             // 🧩️ UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM (C1): a non-empty `child_emits` means this
@@ -22929,7 +22762,6 @@ pub mod app {
                     draft_generation: 0,
                     presence_generation: 0,
                     transient_generation: 0,
-                    contract: semio_framework::ToolExecutionContract::resumable(4_096, 4, 1, 4_096, 7_500, 1, 1),
                     publication_lanes: &[],
                     session: None,
                     session_rejected: None,
@@ -23436,16 +23268,19 @@ pub mod app {
                             return Err(plugin_sdk_fault("typed-operation event receiver is saturated"));
                         }
                         TypedOperationResultPage::try_serialize(token, TypedOperationResultLane::Event, &("accepted", self.typed_event_outbox.len()))?
-                    } else if !emit.tasks.is_empty() {
-                        TypedOperationResultPage::try_new(token, TypedOperationResultLane::Fault, b"typed-operation task lane has no bounded retained publication factory")?
-                    } else if mounted.ui_pending {
-                        if let Err(_scope) = self.typed_ui_outbox.push(emit.ui_scope.clone()) {
-                            return Err(plugin_sdk_fault("typed-operation UI receiver is saturated"));
-                        }
-                        mounted.ui_pending = false;
-                        TypedOperationResultPage::try_serialize(token, TypedOperationResultLane::Ui, &emit.ui_scope)?
                     } else {
-                        TypedOperationResultPage::try_new(token, TypedOperationResultLane::Terminal, b"typed-operation-complete")?
+                        match () {
+                            #[cfg(test)]
+                            () if !emit.tasks.is_empty() => TypedOperationResultPage::try_new(token, TypedOperationResultLane::Fault, b"typed-operation task lane has no bounded retained publication factory")?,
+                            () if mounted.ui_pending => {
+                                if let Err(_scope) = self.typed_ui_outbox.push(emit.ui_scope.clone()) {
+                                    return Err(plugin_sdk_fault("typed-operation UI receiver is saturated"));
+                                }
+                                mounted.ui_pending = false;
+                                TypedOperationResultPage::try_serialize(token, TypedOperationResultLane::Ui, &emit.ui_scope)?
+                            }
+                            () => TypedOperationResultPage::try_new(token, TypedOperationResultLane::Terminal, b"typed-operation-complete")?,
+                        }
                     }
                 }
             };
@@ -23605,9 +23440,7 @@ pub mod app {
                 QualifiedToolProof::Bounded(_) => {
                     let job = TypedCommandFullOperationJob::<A> {
                         operation: None,
-                        app_instance_id: meta.instance_id,
                         parent_document_id: Some(parent_document_id.clone()),
-                        canonical_base_revision,
                         command: Some(std::sync::Arc::from(command)),
                         snapshot: Some(snapshot),
                         config: Some(config),
@@ -23625,18 +23458,6 @@ pub mod app {
                         phase: TypedCommandFullOperationPhase::Prepare,
                         prepare_cursor: 0,
                         reducer_cursor: 0,
-                        output_lane_cursor: 0,
-                        output_item_cursor: 0,
-                        output_byte_cursor: 0,
-                        exact_output_bytes: 0,
-                        ephemeral_lane_cursor: 0,
-                        ephemeral_item_cursor: 0,
-                        emit_lane_cursor: 0,
-                        emit_item_cursor: 0,
-                        emit: None,
-                        ephemeral: None,
-                        exposure_revision: None,
-                        exposure_generation: None,
                         output: Some(completion.clone()),
                         closing: false,
                     };
@@ -23709,7 +23530,6 @@ pub mod app {
                     draft_generation,
                     presence_generation,
                     transient_generation,
-                    contract: admission.proof.contract(),
                     publication_lanes,
                     session,
                     session_rejected,
@@ -25230,10 +25050,7 @@ pub mod app {
                 query_generation,
                 identity,
                 self.store.snapshot_read().ok(),
-                self.store.generation_now(),
                 self.config_store.snapshot_read().ok(),
-                self.config_store.generation_now(),
-                config_revision,
                 self.interaction_store.snapshot_read().ok(),
             ));
             self.local_interaction_query_stage = 0;
@@ -29334,6 +29151,7 @@ pub mod plugin_runtime {
             }
         }
 
+        #[cfg(test)]
         const fn cause(self) -> Option<RuntimeCleanupFault> {
             match self {
                 Self::Fault(cause) => Some(cause),
@@ -29418,7 +29236,6 @@ pub mod plugin_runtime {
         deadline_resume: AtomicU8,
         deadline_elapsed_us: AtomicU64,
         stalled_steps: AtomicU8,
-        preview_sequence: AtomicU64,
         last_callback_elapsed_us: AtomicU64,
         #[cfg(test)]
         last_fault: std::sync::Mutex<[u8; 256]>,
@@ -29509,16 +29326,8 @@ pub mod plugin_runtime {
             })
         }
 
-        fn entry_mut(&mut self, index: usize) -> Option<&mut (u32, T)> {
-            if !self.occupied(index) {
-                return None;
-            }
-            self.slots.get_mut(index).map(|slot| {
-                // SAFETY: occupancy is set only after `write` and cleared before `assume_init_read`.
-                unsafe { slot.assume_init_mut() }
-            })
-        }
 
+        #[cfg(test)]
         fn insert(&mut self, instance_id: u32, value: T) -> Result<(), T> {
             if !self.allocation_admitted {
                 return Err(value);
@@ -29543,9 +29352,6 @@ pub mod plugin_runtime {
             self.entry(Self::index(instance_id)).and_then(|(candidate, value)| (*candidate == instance_id).then_some(value))
         }
 
-        fn get_mut(&mut self, instance_id: u32) -> Option<&mut T> {
-            self.entry_mut(Self::index(instance_id)).and_then(|(candidate, value)| (*candidate == instance_id).then_some(value))
-        }
 
         fn can_insert(&self, instance_id: u32) -> bool {
             self.allocation_admitted && !self.occupied(Self::index(instance_id))
@@ -29588,6 +29394,7 @@ pub mod plugin_runtime {
             None
         }
 
+        #[cfg(test)]
         fn is_empty(&self) -> bool {
             self.occupied.iter().all(|word| *word == 0)
         }
@@ -29802,34 +29609,8 @@ pub mod plugin_runtime {
         vec![protocol::AppFrame::Conflicts { in_reply_to: Some(seq), conflicts: encode_wire_serialized(&app.open_conflicts().await) }]
     }
 
-    /// 🪪️ Records `actor` as the local actor id for `instance_id` — channel v12 (A4) retired the
-    /// `AppCommand::Hello` handshake that used to call this; the reactor's `wit_bridge::poll` now
-    /// calls it directly off `Event::InstanceOpen.actor` instead (design-abi.md §4: lifecycle moved
-    /// to `instance-open`/`instance-close` at the reactor level). That sole caller lives in
-    /// `wit_bridge`, so this is gated identically (native never reaches it; `instance_actor`'s
-    /// `"local"` fallback below is what native sees).
-    pub(crate) async fn set_instance_actor<PA: PluginApp>(runtime: &PluginRuntime<PA>, instance_id: u32, actor: String) -> Result<(), Fault> {
-        let actor = RuntimeActorAuthority::new(actor)?;
-        let mut actors = runtime.instance_actors.try_borrow_mut().map_err(|_| plugin_internal_fault("runtime actor authority is busy"))?;
-        let index = RuntimeInstanceRegistry::<RuntimeActorAuthority>::index(instance_id);
-        if !actors.allocation_admitted || actors.entry(index).is_some() {
-            return Err(plugin_internal_fault("fixed runtime actor authority is saturated or collided"));
-        }
-        let previous = actors.take(instance_id);
-        actors.insert_admitted(instance_id, actor);
-        drop(previous);
-        Ok(())
-    }
+    /// 🪪️ Reads the actor retained by exact instance-open admission, with a local fallback.
 
-    pub(crate) fn remove_instance_actor<PA: PluginApp>(runtime: &PluginRuntime<PA>, instance: u32) {
-        drop(runtime.instance_actors.borrow_mut().take(instance));
-    }
-
-    /// 🪪️ The actor id last recorded for `instance_id` via `set_instance_actor`, or `"local"` when no
-    /// `Hello` has been processed yet (mirrors `plugin_handle_action`'s own `"local"` fallback).
-    /// `pub(crate)`: also read by `⚛️reactor::restore_now` to best-effort attribute a replayed
-    /// `task_restarts` entry's `ActionMeta` (design-abi.md §4 — a checkpoint restart has no
-    /// "spawn time" meta of its own to snapshot from).
     pub(crate) async fn instance_actor<PA: PluginApp>(runtime: &PluginRuntime<PA>, instance_id: u32) -> String {
         runtime.instance_actors.try_borrow().ok().and_then(|actors| actors.get(instance_id).map(RuntimeActorAuthority::to_string)).unwrap_or_else(|| "local".to_string())
     }
@@ -30497,7 +30278,6 @@ pub mod plugin_runtime {
     }
 
     struct RuntimeCloseCleanupJob<PA: PluginApp> {
-        instance_id: u32,
         state: Option<std::sync::Weak<RuntimeCloseWorkerState<PA>>>,
         progress: Option<crate::app::PluginCloseStep>,
         contended: bool,
@@ -30792,7 +30572,7 @@ pub mod plugin_runtime {
         }
         if pump.session.is_none() {
             runtime_close_phase(state, 1);
-            let job = RuntimeCloseCleanupJob { instance_id: state.instance_id, state: Some(std::sync::Arc::downgrade(state)), progress: None, contended: false, closing: false };
+            let job = RuntimeCloseCleanupJob { state: Some(std::sync::Arc::downgrade(state)), progress: None, contended: false, closing: false };
             let params = semio_framework_job::BatchJobParams {
                 operation: semio_framework_job::OperationId((1u64 << 63) | state.instance_id as u64),
                 generation: state.generation,
@@ -31073,7 +30853,6 @@ pub mod plugin_runtime {
             deadline_resume: AtomicU8::new(u8::MAX),
             deadline_elapsed_us: AtomicU64::new(0),
             stalled_steps: AtomicU8::new(0),
-            preview_sequence: AtomicU64::new(0),
             last_callback_elapsed_us: AtomicU64::new(0),
             #[cfg(test)]
             last_fault: std::sync::Mutex::new([0; 256]),
@@ -32303,6 +32082,8 @@ pub mod plugin_runtime {
                 ui_scope: encode_wire_serialized(&scope),
                 history_patch: Vec::new(),
                 messages: Vec::new(),
+                mutations: Vec::new(),
+                inverse_group: Vec::new(),
             })));
         }
         app.publish_local_interaction_query_reply(&mut output.frames, 4);
@@ -32816,20 +32597,35 @@ pub mod plugin_runtime {
                             .await?;
                             if let Some(proposal) = proposal {
                                 frames.push(transaction_proposal_frame(instance_id, seq, proposal).await);
+                                push_invocation_side_frames(&mut effect_bytes, &mut event_bytes, &result).await;
                             } else {
-                                mutated = true;
                                 let output = encode_wire_serialized(&result.output);
                                 let diagnostics = encode_wire_serialized(&result.diagnostics);
-                                frames.push(protocol::AppFrame::Invocation {
-                                    in_reply_to: seq,
-                                    output,
-                                    diagnostics,
-                                    ui_scope: encode_wire_serialized(&result.ui_scope),
-                                    history_patch: encode_wire_serialized(&result.history_patch),
-                                    messages: encode_wire_serialized(&report),
-                                });
+                                let mutations = encode_wire_serialized(&result.mutations);
+                                let inverse_group = encode_wire_serialized(&result.inverse_group);
+                                if mutations.len() > protocol::INVOCATION_RESULT_PACK_MAXIMUM_BYTES || inverse_group.len() > protocol::INVOCATION_RESULT_PACK_MAXIMUM_BYTES {
+                                    push_dispatch_fault(
+                                        &mut frames,
+                                        seq,
+                                        Fault::new(FaultOrigin::Plugin, FaultCode::new("plugin.invocation-result-capacity"), "packed mutations or inverse group exceed command transport authority"),
+                                        &report,
+                                    )
+                                    .await;
+                                } else {
+                                    mutated = true;
+                                    frames.push(protocol::AppFrame::Invocation {
+                                        in_reply_to: seq,
+                                        output,
+                                        diagnostics,
+                                        ui_scope: encode_wire_serialized(&result.ui_scope),
+                                        history_patch: encode_wire_serialized(&result.history_patch),
+                                        messages: encode_wire_serialized(&report),
+                                        mutations,
+                                        inverse_group,
+                                    });
+                                    push_invocation_side_frames(&mut effect_bytes, &mut event_bytes, &result).await;
+                                }
                             }
-                            push_invocation_side_frames(&mut effect_bytes, &mut event_bytes, &result).await;
                         }
                         Err(fault) => {
                             let report = with_instances_mut(runtime, |list| {
@@ -33334,9 +33130,17 @@ pub mod plugin_runtime {
         };
     }
 
+    /// 🔌️ Exports one typed actor runtime for a plugin bundle.
     #[macro_export]
     macro_rules! plugin_exports {
         ($bundle_fn:expr, $app:ty) => {
+            $crate::__semio_plugin_actor_exports!($bundle_fn, $app, $crate::describe::describe_plugin);
+        };
+    }
+
+    #[macro_export]
+    macro_rules! __semio_plugin_actor_exports {
+        ($bundle_fn:expr, $app:ty, $describe:path) => {
             $crate::component_persistent_local! {
                 static __SEMIO_PLUGIN_RUNTIME: $crate::plugin_runtime::PluginRuntime<$app> = $crate::plugin_runtime::PluginRuntime::new();
             }
@@ -33442,12 +33246,12 @@ pub mod plugin_runtime {
             #[unsafe(no_mangle)]
             pub extern "C" fn semio_owned_describe_v1() -> u64 {
                 __semio_ensure_plugin_runtime();
-                $crate::owned_abi::return_bytes(__SEMIO_PLUGIN_RUNTIME.with(|runtime| $crate::app::resolve_ready($crate::describe::describe_plugin(runtime))))
+                $crate::owned_abi::return_bytes(__SEMIO_PLUGIN_RUNTIME.with(|runtime| $crate::app::resolve_ready($describe(runtime))))
             }
 
             #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
             fn __semio_describe_component() -> Vec<u8> {
-                __SEMIO_PLUGIN_RUNTIME.with(|runtime| $crate::app::resolve_ready($crate::describe::describe_plugin(runtime)))
+                __SEMIO_PLUGIN_RUNTIME.with(|runtime| $crate::app::resolve_ready($describe(runtime)))
             }
 
             $crate::__semio_actor_exports!(__SemioComponentGuest, __SEMIO_PLUGIN_RUNTIME, __semio_ensure_plugin_runtime, __semio_describe_component);
@@ -33501,7 +33305,7 @@ pub mod plugin_runtime {
             async fn descriptor_is_fresh() {
                 __semio_install_plugin_bundle();
                 let plugin_id = __SEMIO_PLUGIN_RUNTIME.with(|runtime| $crate::app::resolve_ready($crate::plugin_runtime::plugin_manifest(runtime))).plugin_id;
-                let assembled = __SEMIO_PLUGIN_RUNTIME.with(|runtime| $crate::app::resolve_ready($crate::describe::describe_plugin(runtime)));
+                let assembled = __SEMIO_PLUGIN_RUNTIME.with(|runtime| $crate::app::resolve_ready($describe(runtime)));
                 let expected_path = concat!(env!("CARGO_MANIFEST_DIR"), "/../../🛂️.descriptor.semio");
                 const DESCRIPTOR_MIGRATED_PLUGINS: &[&str] = &["note", "sequence", "vcs", "forms", "sourcing", "dag", "mathematical", "writer", "reasoning", "animate", "draw", "energy", "layout"];
                 match std::fs::read(expected_path) {
@@ -33842,6 +33646,30 @@ pub mod plugin_runtime {
     /// 🧩️ Installs an extension crate's bundle builder into TLS for WIT guest exports.
     #[macro_export]
     macro_rules! extension_exports {
+        ($bundle_fn:expr, $plugin_fn:expr, $app:ty) => {
+            $crate::__semio_plugin_actor_exports!(
+                || {
+                    $crate::app::resolve_ready($crate::plugin_runtime::install_extension_bundle(($bundle_fn)()));
+                    $crate::app::resolve_ready($crate::plugin_runtime::extension_activate())
+                        .map_err(|fault| $crate::PluginAssemblyError::new("extension.activate", format!("{fault:?}")))?;
+                    ($plugin_fn)()
+                },
+                $app,
+                $crate::describe::describe_extension_with_apps
+            );
+
+            #[doc(hidden)]
+            #[unsafe(no_mangle)]
+            pub extern "C" fn semio_extension_bundle_installer_link_shim() {
+                $crate::app::resolve_ready($crate::plugin_runtime::register_extension_bundle_installer(__semio_install_plugin_bundle));
+            }
+
+            #[doc(hidden)]
+            #[unsafe(no_mangle)]
+            pub extern "C" fn semio_extension_install_bundle() {
+                __semio_install_plugin_bundle();
+            }
+        };
         ($bundle_fn:expr) => {
             $crate::component_persistent_local! {
                 static __SEMIO_EXTENSION_RUNTIME: $crate::plugin_runtime::PluginRuntime<$crate::app::NoPluginApp> = $crate::plugin_runtime::PluginRuntime::new();
@@ -39416,7 +39244,7 @@ pub mod engagement {
     sides, and returns the trimmed remainder (e.g. `strip_engagement_prefix("Fill20", "fill")`
     and `strip_engagement_prefix("fill 20", "fill")` both yield `Some("20")`). Decimal points
     inside numeric remainders are preserved. Returns `None` when `raw` doesn't start with `command`. */
-    pub async fn strip_engagement_prefix<'a>(raw: &'a str, command: &str) -> Option<&'a str> {
+    pub fn strip_engagement_prefix<'a>(raw: &'a str, command: &str) -> Option<&'a str> {
         let raw_bytes = raw.as_bytes();
         let mut raw_index = 0usize;
         let mut command_chars = command.chars().filter(|ch| ch.is_alphanumeric());
@@ -39449,8 +39277,8 @@ pub mod engagement {
 
     /** @emoji 🔤️ True when `raw` matches `command` in full, ignoring case and separators (e.g.
     `engagement_token_matches("LineNumbers", "line numbers")` is `true`). */
-    pub async fn engagement_token_matches(raw: &str, command: &str) -> bool {
-        strip_engagement_prefix(raw, command).await.is_some_and(str::is_empty)
+    pub fn engagement_token_matches(raw: &str, command: &str) -> bool {
+        strip_engagement_prefix(raw, command).is_some_and(str::is_empty)
     }
 
     #[cfg(test)]
@@ -39459,31 +39287,31 @@ pub mod engagement {
 
         #[semio_framework_async_macros::async_test]
         async fn strip_engagement_prefix_accepts_normalized_and_raw_forms() {
-            assert_eq!(strip_engagement_prefix("Fill20", "fill").await, Some("20"));
-            assert_eq!(strip_engagement_prefix("fill 20", "fill").await, Some("20"));
-            assert_eq!(strip_engagement_prefix("fill  20", "fill").await, Some("20"));
-            assert_eq!(strip_engagement_prefix("Fill", "fill").await, Some(""));
-            assert_eq!(strip_engagement_prefix("FILL20", "fill").await, Some("20"));
+            assert_eq!(strip_engagement_prefix("Fill20", "fill"), Some("20"));
+            assert_eq!(strip_engagement_prefix("fill 20", "fill"), Some("20"));
+            assert_eq!(strip_engagement_prefix("fill  20", "fill"), Some("20"));
+            assert_eq!(strip_engagement_prefix("Fill", "fill"), Some(""));
+            assert_eq!(strip_engagement_prefix("FILL20", "fill"), Some("20"));
         }
 
         #[semio_framework_async_macros::async_test]
         async fn strip_engagement_prefix_preserves_decimal_points() {
-            assert_eq!(strip_engagement_prefix("SetHeight3.5", "set height").await, Some("3.5"));
-            assert_eq!(strip_engagement_prefix("set height 3.5", "set height").await, Some("3.5"));
+            assert_eq!(strip_engagement_prefix("SetHeight3.5", "set height"), Some("3.5"));
+            assert_eq!(strip_engagement_prefix("set height 3.5", "set height"), Some("3.5"));
         }
 
         #[semio_framework_async_macros::async_test]
         async fn strip_engagement_prefix_rejects_non_matching_commands() {
-            assert_eq!(strip_engagement_prefix("Brush", "fill").await, None);
-            assert_eq!(strip_engagement_prefix("Filled", "fill").await, Some("ed"));
+            assert_eq!(strip_engagement_prefix("Brush", "fill"), None);
+            assert_eq!(strip_engagement_prefix("Filled", "fill"), Some("ed"));
         }
 
         #[semio_framework_async_macros::async_test]
         async fn engagement_token_matches_full_token_only() {
-            assert!(engagement_token_matches("LineNumbers", "line numbers").await);
-            assert!(engagement_token_matches("linenumbers", "line numbers").await);
-            assert!(!engagement_token_matches("LineNumbers2", "line numbers").await);
-            assert!(!engagement_token_matches("Line", "line numbers").await);
+            assert!(engagement_token_matches("LineNumbers", "line numbers"));
+            assert!(engagement_token_matches("linenumbers", "line numbers"));
+            assert!(!engagement_token_matches("LineNumbers2", "line numbers"));
+            assert!(!engagement_token_matches("Line", "line numbers"));
         }
     }
     // #endregion engagement

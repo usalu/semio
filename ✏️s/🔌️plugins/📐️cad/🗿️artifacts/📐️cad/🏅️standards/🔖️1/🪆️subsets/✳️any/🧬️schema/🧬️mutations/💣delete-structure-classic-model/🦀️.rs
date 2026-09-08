@@ -2,7 +2,6 @@
 //! (a no-op if already empty); the inverse captures the escrowed handle from BASE so undo restores
 //! it exactly.
 
-use crate::artifacts::cad::diff::CadDiff;
 use crate::artifacts::cad::mutations::CadMutation;
 use crate::artifacts::cad::CadSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};

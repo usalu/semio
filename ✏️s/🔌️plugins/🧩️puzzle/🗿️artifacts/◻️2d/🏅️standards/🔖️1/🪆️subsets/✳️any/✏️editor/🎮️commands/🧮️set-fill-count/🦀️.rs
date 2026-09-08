@@ -231,7 +231,6 @@ struct FillPlacementHandleOwner {
 struct FillPlacementNodeOwner {
     id: infinite_canvas::BoardFillText,
     node_kind: infinite_canvas::BoardFillText,
-    target_handle_index: usize,
     shape: infinite_canvas::BoardFillCommitShape,
     x: f64,
     y: f64,
@@ -323,7 +322,6 @@ struct FillPlacementPublishView<'a> {
     node_kind: &'a infinite_canvas::BoardFillText,
     source_handle_id: &'a infinite_canvas::BoardFillText,
     target_handle_id: &'a infinite_canvas::BoardFillText,
-    target_handle_index: usize,
     x: f64,
     y: f64,
     shape: infinite_canvas::BoardFillCommitShape,
@@ -344,7 +342,6 @@ impl<'a> FillPlacementPublishView<'a> {
             node_kind: &placement.node_kind,
             source_handle_id: &placement.source_handle_id,
             target_handle_id: &placement.target_handle_id,
-            target_handle_index: placement.target_handle_index,
             x: placement.x,
             y: placement.y,
             shape: placement.shape,
@@ -365,7 +362,6 @@ impl<'a> FillPlacementPublishView<'a> {
             node_kind: &node.node_kind,
             source_handle_id: &edge.source,
             target_handle_id: &edge.target,
-            target_handle_index: node.target_handle_index,
             x: node.x,
             y: node.y,
             shape: node.shape,
@@ -520,7 +516,6 @@ impl FillPlacementApplyCursor {
                 self.node = Some(FillPlacementNodeOwner {
                     id: infinite_canvas::BoardFillText::empty(),
                     node_kind: infinite_canvas::BoardFillText::empty(),
-                    target_handle_index: 0,
                     shape: infinite_canvas::BoardFillCommitShape::Circle,
                     x: 0.0,
                     y: 0.0,
@@ -544,7 +539,6 @@ impl FillPlacementApplyCursor {
                 }
             }
             FillPlacementApplyStage::NodeTarget => {
-                self.node.as_mut().ok_or("puzzle2d-fill-node-owner")?.target_handle_index = placement.target_handle_index;
                 self.stage = FillPlacementApplyStage::NodeShape;
             }
             FillPlacementApplyStage::NodeShape => {

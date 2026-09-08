@@ -1,7 +1,6 @@
 //! 👥️ Rewriting presence — shareable live ephemeral state + mutations.
 
 use crate::artifacts::jack::Camera;
-use protocol::Mutation;
 use std::collections::BTreeMap;
 use store::ArtifactPack;
 
@@ -27,7 +26,7 @@ impl Default for RewritingPresence {
 
 impl protocol::MutationDiff<RewritingPresence> for RewritingPresence {
     fn apply(&self, _base: &RewritingPresence) -> protocol::MutationApplyResult<RewritingPresence> {
-        Ok({ self.clone() })
+        Ok(self.clone())
     }
     fn absorb(&mut self, other: Self) {
         *self = other;
@@ -80,63 +79,31 @@ impl ArtifactPack for RewritingPresence {
 }
 //#endregion 🔖️Presence
 
-//#region 🔖️PresenceMutation
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslOps)]
-#[value(rename_all = "camelCase")]
-pub enum RewritingPresenceMutation {
-    #[dsl(key = "snapshot")]
-    Snapshot {
-        #[dsl(block)]
-        presence: RewritingPresence,
-    },
-}
 
-impl Mutation<RewritingPresence> for RewritingPresenceMutation {
-    type Diff = RewritingPresence;
+#[path = "🧬️schema/🧬️mutations/🦀️.rs"]
+mod mutations;
+pub use mutations::*;
 
-    fn diff(&self, _base: &RewritingPresence) -> protocol::MutationOutcome<RewritingPresence> {
-        match self {
-            Self::Snapshot { presence } => protocol::MutationOutcome::new(presence.clone()),
-        }
-    }
+#[cfg(test)]
+mod contract_vectors {
+    use super::*;
+    use protocol::{Mutation, MutationDiff, OpBinary, OpText};
 
-    fn inverse(&self, base: &RewritingPresence) -> Vec<Self> {
-        vec![Self::Snapshot { presence: base.clone() }]
-    }
-}
-
-impl protocol::OpText for RewritingPresenceMutation {
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        let variants = <Self as dsl::DslVariants>::variants();
-        for (keyword, spec_fn) in &variants {
-            let probe = format!("{keyword} ");
-            if line == keyword.as_str() || line.starts_with(&probe) {
-                let body = if line.len() > keyword.len() { line[keyword.len()..].trim_start() } else { "" };
-                let record = dsl::parse(body, &spec_fn(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline })?;
-                return <Self as dsl::DslVariants>::from_named_record(keyword, &record);
-            }
-        }
-        Err(dsl::__rt::field_error(format!("unknown operation line '{line}'")))
-    }
-    fn print_op(&self) -> String {
-        let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
-        let variants = <Self as dsl::DslVariants>::variants();
-        let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
-        let body = dsl::print(&record, &spec_fn(), dsl::JoinMode::Inline);
-        if body.is_empty() {
-            keyword
-        } else {
-            format!("{keyword} {body}")
+    #[test]
+    fn configuration_and_presence_contract_vectors_match_the_json_oracle() {
+        let vectors: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🔁️mutation-contracts.json")).unwrap();
+        let base: RewritingPresence = pack::from_json_str(&vectors["base"].to_string()).unwrap();
+        assert_eq!(<RewritingPresenceMutation as Mutation<RewritingPresence>>::DESCRIPTORS.len(), vectors["cases"].as_array().unwrap().len());
+        for vector in vectors["cases"].as_array().unwrap() {
+            let mutation: RewritingPresenceMutation = pack::from_json_str(&vector["mutation"].to_string()).unwrap();
+            assert_eq!(serde_json::from_str::<serde_json::Value>(&pack::to_json_string(&mutation)).unwrap(), vector["mutation"]);
+            assert_eq!(mutation.descriptor().semantic_kind, vector["kind"].as_str().unwrap());
+            let next = mutation.diff(&base).diff().apply(&base).unwrap();
+            assert_eq!(serde_json::from_str::<serde_json::Value>(&pack::to_json_string(&next)).unwrap(), vector["expected"]);
+            assert_eq!(RewritingPresenceMutation::parse_op(&mutation.print_op()).unwrap(), mutation);
+            assert_eq!(RewritingPresenceMutation::decode_op(&mutation.encode_op().unwrap()).unwrap(), mutation);
+            let restored = mutation.inverse(&base).into_iter().fold(next, |state, inverse| inverse.diff(&state).diff().apply(&state).unwrap());
+            assert_eq!(restored, base);
         }
     }
 }
-
-impl protocol::OpBinary for RewritingPresenceMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        dsl::variants_binary::encode_op(self)
-    }
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        dsl::variants_binary::decode_op(bytes)
-    }
-}
-//#endregion 🔖️PresenceMutation

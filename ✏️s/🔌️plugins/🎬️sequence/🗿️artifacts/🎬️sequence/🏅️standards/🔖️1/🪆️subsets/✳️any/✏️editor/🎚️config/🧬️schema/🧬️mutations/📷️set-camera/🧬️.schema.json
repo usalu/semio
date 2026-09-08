@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Set Camera",
+  "type": "object",
+  "properties": {
+    "camera": {
+      "type": "object",
+      "properties": {
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        },
+        "zoom": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "x",
+        "y",
+        "zoom"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "camera"
+  ],
+  "additionalProperties": false
+}

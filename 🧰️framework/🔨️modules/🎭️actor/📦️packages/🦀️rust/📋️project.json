@@ -3,7 +3,10 @@
   "$schema": "../../../../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust",
   "namedInputs": {
-    "default": ["{workspaceRoot}/🧰️framework/🔨️modules/🎭️actor/**/*.rs", "{projectRoot}/**/*"]
+    "default": [
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎭️actor/**/*.rs",
+      "{projectRoot}/**/*"
+    ]
   },
   "targets": {
     "test": {
@@ -40,7 +43,9 @@
         "cwd": "🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts typegen"
       },
-      "outputs": ["{projectRoot}/../../🤖️generated"]
+      "outputs": [
+        "{projectRoot}/../../🤖️generated"
+      ]
     },
     "preview-generated": {
       "executor": "nx:run-commands",
@@ -55,7 +60,10 @@
         "cwd": "🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts wasm"
       },
-      "outputs": ["{projectRoot}/pkg"]
+      "outputs": [
+        "{projectRoot}/pkg"
+      ],
+      "cache": true
     }
   }
 }

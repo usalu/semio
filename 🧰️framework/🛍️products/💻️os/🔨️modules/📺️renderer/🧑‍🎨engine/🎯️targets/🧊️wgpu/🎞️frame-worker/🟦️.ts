@@ -312,7 +312,9 @@ async function boot(message: Extract<BrowserFrameUiMessage, { kind: "boot" }>): 
     let bootstrap = await monitoredSuspension("gpu-platform", () => loaded.semioWgpuWorkerBootstrap!(message.canvas, plugins, bootPlan.variant, message.width, message.height, message.dpr, () => post({ kind: "wake", lifecycle })), BROWSER_OWNED_SUSPENSION_BUDGET_MS);
     while (true) {
       await macrotask();
-      const step = ownedStep("renderer-bootstrap", () => JSON.parse(bootstrap.step()) as BrowserRendererBootStep);
+      const bootstrapStartedAt = performance.now();
+      const step = ownedStep("renderer-bootstrap", () => JSON.parse(bootstrap.step()) as BrowserRendererBootStep, BROWSER_OWNED_SUSPENSION_BUDGET_MS);
+      console.log(`[DEBUG] renderer-bootstrap stage=${step.stage} took ${(performance.now() - bootstrapStartedAt).toFixed(1)}ms`);
       progress(step.stage, 0.65 + step.progress * 0.3);
       if (step.shellBoot) {
         bootstrap = await monitoredSuspension("shell-boot", () => bootstrap.bootShell());

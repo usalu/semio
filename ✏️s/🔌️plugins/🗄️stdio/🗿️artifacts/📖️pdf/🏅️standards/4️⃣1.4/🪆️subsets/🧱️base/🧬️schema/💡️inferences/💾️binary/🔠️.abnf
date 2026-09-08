@@ -1,0 +1,3 @@
+; abnf stdio.pdf.inference
+document = payload
+payload = *OCTET

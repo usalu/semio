@@ -599,7 +599,7 @@ pub fn draw_text_overlay<E>(ctx: &mut WidgetContext<'_, E>, text: &str, x: f32, 
 //#region 🔖️Gizmo
 /** 🧭️ Screen-space XYZ orientation gizmo (wgpu parity with React `WorldOrbitViewGizmo`) — placement,
 hit-testing, and paint. Relocated verbatim from `♾️infinite/🌍️world` (see
-`.🦑️repo/🎫️tickets/26/08/05/FRAMEWORK-BUILDER-PASSTHROUGHS-APP-COMMANDS-MACRO-WIDGET-EXTRACTION`) so any
+`.🧬semio/🦑️repo/🎫️tickets/26/08/05/FRAMEWORK-BUILDER-PASSTHROUGHS-APP-COMMANDS-MACRO-WIDGET-EXTRACTION`) so any
 plugin's world-3d window can reuse it, not only `♾️infinite`'s own. `World3dState`-specific hover-state
 plumbing (`update_world_orbit_view_gizmo_hover`, which owns `&mut World3dState`) stays in `♾️infinite/🌍️world`
 — app-specific config plumbing, not paint logic — and now calls through to `orbit_view_gizmo_placement`/

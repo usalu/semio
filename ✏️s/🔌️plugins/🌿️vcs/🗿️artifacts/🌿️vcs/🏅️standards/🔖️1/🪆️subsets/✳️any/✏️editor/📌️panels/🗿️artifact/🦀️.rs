@@ -3,7 +3,7 @@
 use crate::editor::vcs::terminology::VcsPlayLabels;
 use crate::editor::vcs::{ui_fixed_label, ui_node_list, ui_value_map, ui_value_text, vcs_action, VCS_INTERACTION_HISTORY};
 use semio_framework_plugin::{
-    tree_item_with_action, BuiltNode, HistoryView, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, UiFixedList, UiText, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL,
+    tree_item_with_action, HistoryView, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, UiFixedList, UiText, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL,
 };
 
 //#region 🔖️Constants

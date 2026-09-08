@@ -68,7 +68,7 @@ import {
   SemioFaultError,
   type TurnOutcome,
 } from "@semio-tech/framework";
-import { AppChannelClient, AppChannelRequestSequence, decodeFaultFromWire, decodePackValue, decodePackWire, encodePackValue, faultDisplayMessage, packWireNatural } from "@semio-tech/framework-os";
+import { AppChannelClient, AppChannelRequestSequence, decodeFaultFromWire, decodeInvocationResultPacks, decodePackValue, decodePackWire, encodePackValue, faultDisplayMessage, packWireNatural } from "@semio-tech/framework-os";
 import { createShardCommandIngressPages, ShardClient, type ShardCommandIngressPage, type ShardEventEnvelope } from "../../../../../../../../../../🔨️modules/🎭️actor/📮️shard-client/🟦️.ts";
 import { createPooledActorRuntime, DEFAULT_SHARD_BUDGET, type PooledActorRuntime } from "../../../../../../../../../../🔨️modules/🎭️actor/🧵️shard-runtime/🟦️.ts";
 import { rendererResidentLedger } from "../../../../../💾️resident/🟦️.ts";
@@ -172,10 +172,11 @@ let nextGlobalInstanceId = 1;
  * codec returns lossless integer carriers, so a raw decode would hand the shell `{kind, value}` objects
  * wherever a plugin returned a `u64` — the `render`/`handleAction` output, the diagnostics list, the UI
  * scope and the history patch all cross this one boundary. */
-export function decodeInvocationPayloads(frame: { readonly output: ArrayLike<number>; readonly diagnostics: ArrayLike<number>; readonly ui_scope: ArrayLike<number>; readonly history_patch: ArrayLike<number> }): Pick<InvocationResponse, "output" | "diagnostics" | "uiScope" | "historyPatch"> {
+export function decodeInvocationPayloads(frame: { readonly output: ArrayLike<number>; readonly diagnostics: ArrayLike<number>; readonly ui_scope: ArrayLike<number>; readonly history_patch: ArrayLike<number>; readonly mutations: ArrayLike<number>; readonly inverse_group: ArrayLike<number> }): Pick<InvocationResponse, "output" | "diagnostics" | "uiScope" | "historyPatch" | "mutations" | "inverseGroup"> {
   const diagnostics = decodePackWire(new Uint8Array(frame.diagnostics), "invocation.diagnostics");
   const historyPatch = decodePackWire(new Uint8Array(frame.history_patch), "invocation.historyPatch");
   return {
+    ...decodeInvocationResultPacks(frame),
     output: decodePackWire(new Uint8Array(frame.output), "invocation.output"),
     diagnostics: Array.isArray(diagnostics) ? (diagnostics as InvocationResponse["diagnostics"]) : [],
     uiScope: decodePackWire(new Uint8Array(frame.ui_scope), "invocation.uiScope") as InvocationResponse["uiScope"],
@@ -189,9 +190,11 @@ async function performInvocation(client: AppChannelClient, instanceId: number, i
   let diagnostics: InvocationResponse["diagnostics"] = [];
   let uiScope: InvocationResponse["uiScope"];
   let historyPatch: InvocationResponse["historyPatch"];
+  let mutations: InvocationResponse["mutations"] = [];
+  let inverseGroup: InvocationResponse["inverseGroup"] = { invocationId: "", mutations: [], inverseMutations: [] };
   for (const frame of frames) {
     if ("Invocation" in frame) {
-      ({ output, diagnostics, uiScope, historyPatch } = decodeInvocationPayloads(frame.Invocation));
+      ({ output, diagnostics, uiScope, historyPatch, mutations, inverseGroup } = decodeInvocationPayloads(frame.Invocation));
     } else if ("Error" in frame) {
       const fault = decodeFaultFromWire(frame.Error.fault, decodePackValue);
       if (fault) throw new SemioFaultError(fault);
@@ -201,7 +204,7 @@ async function performInvocation(client: AppChannelClient, instanceId: number, i
   const leftover = pendingTurnEffects.get(instanceId) ?? [];
   pendingTurnEffects.delete(instanceId);
   const requestedEffects = leftover.map((effect) => wireEffectToFriendly(effect, decodePackWire)).filter((effect): effect is Effect => effect !== null);
-  return { output, mutations: [], inverseGroup: { invocationId: "", mutations: [], inverseMutations: [] }, diagnostics, requestedEffects, events: [], uiScope, historyPatch };
+  return { output, mutations, inverseGroup, diagnostics, requestedEffects, events: [], uiScope, historyPatch };
 }
 //#endregion 🔖️Invocation
 

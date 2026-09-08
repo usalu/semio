@@ -9,6 +9,7 @@
 use crate::artifacts::layout::LayoutCamera;
 use semio_framework_value_derive::{FromValue, ToValue};
 pub use crate::artifacts::layout::LayoutDropPreviewState;
+#[cfg(test)]
 use protocol::Mutation;
 
 //#region 🔖️Config
@@ -94,121 +95,10 @@ impl Default for LayoutConfig {
 store::impl_whole_record_config!(LayoutConfig);
 //#endregion 🔖️Config
 
-//#region 🔖️ConfigMutations
-/// 🧮️ [`LayoutConfig`]'s operation enum — one variant per settled interaction; each variant's
-/// `backwards()` re-emits the SAME variant with the old field value read from `base` (no
-/// whole-config snapshot sentinel). `Mutation::Diff` is the WHOLE `LayoutConfig` (not a granular
-/// patch type): `diff()` returns "the full config after this op", and
-/// `store::impl_whole_record_config!` supplies the `MutationDiff<LayoutConfig>` that accepts that
-/// snapshot as a successful replacement, ignoring `base`.
-#[derive(Clone, Debug, PartialEq, dsl::DslOps, ToValue, FromValue)]
-pub enum LayoutConfigMutation {
-    #[dsl(key = "active-page")]
-    SetActivePage { page_id: String },
-    #[dsl(key = "drop-preview")]
-    SetDropPreview {
-        #[dsl(block)]
-        preview: LayoutDropPreviewState,
-    },
-    #[dsl(key = "engagement-input")]
-    SetEngagementInput { value: String },
-    #[dsl(key = "camera")]
-    SetCamera {
-        #[dsl(block)]
-        camera: LayoutCamera,
-    },
-    #[dsl(key = "preview-camera")]
-    SetPreviewCamera {
-        #[dsl(block)]
-        camera: LayoutCamera,
-    },
-    #[dsl(key = "locale")]
-    SetLocale { value: String },
-}
-
-//#region 🔖️OpCodec
-impl protocol::OpText for LayoutConfigMutation {
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        let variants = <Self as dsl::DslVariants>::variants();
-        for (keyword, spec_fn) in &variants {
-            let probe = format!("{} ", keyword);
-            if line == keyword.as_str() || line.starts_with(&probe) {
-                let record = dsl::parse(line, &spec_fn(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline })?;
-                return <Self as dsl::DslVariants>::from_named_record(keyword, &record);
-            }
-        }
-        Err(dsl::__rt::field_error(format!("unknown mutation line '{line}'")))
-    }
-    fn print_op(&self) -> String {
-        let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
-        let variants = <Self as dsl::DslVariants>::variants();
-        let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
-        dsl::print(&record, &spec_fn(), dsl::JoinMode::Inline)
-    }
-}
-
-/// 🎯️ Handcrafted OpBinary (P6).
-impl protocol::OpBinary for LayoutConfigMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        const OP_BINARY_FORMAT: u8 = 1;
-        let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
-        let variants = <Self as dsl::DslVariants>::variants();
-        let ordinal = variants.iter().position(|(k, _)| *k == keyword).ok_or(protocol::ProtocolError::Malformed { what: "op variant", offset: 0, detail: format!("keyword {keyword:?} is not a declared variant") })?;
-        let spec = (variants[ordinal].1)();
-        let body = store::pack_rt::encode_record_body(&spec, &record, &store::PackEncodeOptions::default()).map_err(protocol::ProtocolError::from)?;
-        let mut out = Vec::with_capacity(body.len() + 3);
-        out.push(OP_BINARY_FORMAT);
-        store::pack_rt::write_varint_u64(&mut out, ordinal as u64);
-        out.extend_from_slice(&body);
-        Ok(out)
-    }
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        const OP_BINARY_FORMAT: u8 = 1;
-        let mut reader = store::pack_rt::ByteReader::new(bytes);
-        let format = reader.read_u8()?;
-        if format != OP_BINARY_FORMAT {
-            return Err(protocol::ProtocolError::Malformed { what: "op format", offset: 0, detail: format!("unsupported op format {format}") });
-        }
-        let ordinal = reader.read_varint_u64()?;
-        let variants = <Self as dsl::DslVariants>::variants();
-        let (keyword, spec_fn) = variants.get(ordinal as usize).ok_or(protocol::ProtocolError::Malformed { what: "op variant", offset: 1, detail: format!("ordinal {ordinal} out of range for {} declared variants", variants.len()) })?;
-        let spec = spec_fn();
-        let body = &bytes[reader.position()..];
-        let (record, _report) = store::pack_rt::decode_record_body(body, &spec, &store::PackDecodeOptions::default()).map_err(protocol::ProtocolError::from)?;
-        <Self as dsl::DslVariants>::from_named_record(keyword, &record).map_err(|error| protocol::ProtocolError::Malformed { what: "op record", offset: reader.position() as u64, detail: error.to_string() })
-    }
-}
-
-//#endregion 🔖️OpCodec
-
-impl Mutation<LayoutConfig> for LayoutConfigMutation {
-    type Diff = LayoutConfig;
-
-    fn diff(&self, base: &LayoutConfig) -> protocol::MutationOutcome<LayoutConfig> {
-        let mut next = base.clone();
-        match self {
-            LayoutConfigMutation::SetActivePage { page_id } => next.active_page_id = page_id.clone(),
-            LayoutConfigMutation::SetDropPreview { preview } => next.drop_preview = preview.clone(),
-            LayoutConfigMutation::SetEngagementInput { value } => next.engagement_input = value.clone(),
-            LayoutConfigMutation::SetCamera { camera } => next.camera = camera.clone(),
-            LayoutConfigMutation::SetPreviewCamera { camera } => next.preview_camera = camera.clone(),
-            LayoutConfigMutation::SetLocale { value } => next.locale = value.clone(),
-        }
-        protocol::MutationOutcome::new(next)
-    }
-
-    fn inverse(&self, base: &LayoutConfig) -> Vec<Self> {
-        match self {
-            LayoutConfigMutation::SetActivePage { .. } => vec![LayoutConfigMutation::SetActivePage { page_id: base.active_page_id.clone() }],
-            LayoutConfigMutation::SetDropPreview { .. } => vec![LayoutConfigMutation::SetDropPreview { preview: base.drop_preview.clone() }],
-            LayoutConfigMutation::SetEngagementInput { .. } => vec![LayoutConfigMutation::SetEngagementInput { value: base.engagement_input.clone() }],
-            LayoutConfigMutation::SetCamera { .. } => vec![LayoutConfigMutation::SetCamera { camera: base.camera.clone() }],
-            LayoutConfigMutation::SetPreviewCamera { .. } => vec![LayoutConfigMutation::SetPreviewCamera { camera: base.preview_camera.clone() }],
-            LayoutConfigMutation::SetLocale { .. } => vec![LayoutConfigMutation::SetLocale { value: base.locale.clone() }],
-        }
-    }
-}
-//#endregion 🔖️ConfigMutations
+/// 🧬️ Physical mutation declarations for the layout.config channel.
+#[path = "🧬️schema/🧬️mutations/🦀️.rs"]
+mod mutations;
+pub use mutations::*;
 
 //#region 🧪️Tests
 #[cfg(test)]
@@ -264,28 +154,55 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn config_mutations_apply_and_restore_every_field() {
         let base = LayoutConfig::default();
-        assert_eq!(config_round_trip(&base, &LayoutConfigMutation::SetActivePage { page_id: "page-9".into() }).active_page_id, "page-9");
-        let previewed = config_round_trip(&base, &LayoutConfigMutation::SetDropPreview { preview: LayoutDropPreviewState { kind: "rect".into(), x: 5.0, y: 6.0 } });
+        assert_eq!(config_round_trip(&base, &LayoutConfigMutation::SetActivePage(SetActivePage { page_id: "page-9".into() })).active_page_id, "page-9");
+        let previewed = config_round_trip(&base, &LayoutConfigMutation::SetDropPreview(SetDropPreview { preview: LayoutDropPreviewState { kind: "rect".into(), x: 5.0, y: 6.0 } }));
         assert_eq!(previewed.drop_preview.kind, "rect");
-        assert_eq!(config_round_trip(&base, &LayoutConfigMutation::SetEngagementInput { value: "undo".into() }).engagement_input, "undo");
-        let cam = config_round_trip(&base, &LayoutConfigMutation::SetCamera { camera: LayoutCamera { x: 1.0, y: 2.0, zoom: 3.0 } });
+        assert_eq!(config_round_trip(&base, &LayoutConfigMutation::SetEngagementInput(SetEngagementInput { value: "undo".into() })).engagement_input, "undo");
+        let cam = config_round_trip(&base, &LayoutConfigMutation::SetCamera(SetCamera { camera: LayoutCamera { x: 1.0, y: 2.0, zoom: 3.0 } }));
         assert_eq!(cam.camera, LayoutCamera { x: 1.0, y: 2.0, zoom: 3.0 });
-        let preview_cam = config_round_trip(&base, &LayoutConfigMutation::SetPreviewCamera { camera: LayoutCamera { x: 4.0, y: 5.0, zoom: 6.0 } });
+        let preview_cam = config_round_trip(&base, &LayoutConfigMutation::SetPreviewCamera(SetPreviewCamera { camera: LayoutCamera { x: 4.0, y: 5.0, zoom: 6.0 } }));
         assert_eq!(preview_cam.preview_camera, LayoutCamera { x: 4.0, y: 5.0, zoom: 6.0 });
-        assert_eq!(config_round_trip(&base, &LayoutConfigMutation::SetLocale { value: "de-DE".into() }).locale, "de-DE");
+        assert_eq!(config_round_trip(&base, &LayoutConfigMutation::SetLocale(SetLocale { value: "de-DE".into() })).locale, "de-DE");
     }
 
     #[semio_framework_async_macros::async_test]
     async fn config_snapshot_op_text_round_trips() {
-        store::os_store::test_support::assert_op_line_round_trip(&LayoutConfigMutation::SetActivePage { page_id: "page-2".into() });
-        store::os_store::test_support::assert_op_line_round_trip(&LayoutConfigMutation::SetLocale { value: "en-US".into() });
+        store::os_store::test_support::assert_op_line_round_trip(&LayoutConfigMutation::SetActivePage(SetActivePage { page_id: "page-2".into() }));
+        store::os_store::test_support::assert_op_line_round_trip(&LayoutConfigMutation::SetLocale(SetLocale { value: "en-US".into() }));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn config_mutation_inverses_restore_each_field_without_a_snapshot_sentinel() {
         let base = sample_config();
-        assert_eq!(config_round_trip(&base, &LayoutConfigMutation::SetActivePage { page_id: "page-9".into() }).active_page_id, "page-9");
-        assert_eq!(config_round_trip(&base, &LayoutConfigMutation::SetLocale { value: "fr-FR".into() }).locale, "fr-FR");
+        assert_eq!(config_round_trip(&base, &LayoutConfigMutation::SetActivePage(SetActivePage { page_id: "page-9".into() })).active_page_id, "page-9");
+        assert_eq!(config_round_trip(&base, &LayoutConfigMutation::SetLocale(SetLocale { value: "fr-FR".into() })).locale, "fr-FR");
     }
 }
 //#endregion 🧪️Tests
+
+#[cfg(test)]
+mod contract_vectors {
+    use super::*;
+    use protocol::{Mutation, MutationDiff, OpBinary, OpText};
+    use dsl::os_pack as pack;
+
+    #[test]
+    fn layout_configuration_contract_vectors_match_the_json_oracle() {
+        let vectors: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🔁️mutation-contracts.json")).expect("neutral contract vectors");
+        let base: LayoutConfig = pack::from_json_str(&vectors["base"].to_string()).expect("owned base decoder");
+        assert_eq!(<LayoutConfigMutation as Mutation<LayoutConfig>>::DESCRIPTORS.len(), vectors["cases"].as_array().expect("cases").len());
+        for vector in vectors["cases"].as_array().expect("cases") {
+            let mutation: LayoutConfigMutation = pack::from_json_str(&vector["mutation"].to_string()).expect("owned operation decoder");
+            assert_eq!(serde_json::from_str::<serde_json::Value>(&pack::to_json_string(&mutation)).expect("independent operation oracle"), vector["mutation"]);
+            assert_eq!(mutation.descriptor().semantic_kind, vector["kind"].as_str().expect("semantic kind"));
+            assert_eq!(LayoutConfigMutation::parse_op(&mutation.print_op()).expect("operation text"), mutation);
+            assert_eq!(LayoutConfigMutation::decode_op(&mutation.encode_op().expect("operation binary")).expect("binary decode"), mutation);
+            let outcome = mutation.diff(&base);
+            assert!(outcome.messages().is_empty());
+            let next = outcome.diff().apply(&base).expect("apply diff");
+            assert_eq!(serde_json::from_str::<serde_json::Value>(&pack::to_json_string(&next)).expect("independent state oracle"), vector["expected"]);
+            let restored = mutation.inverse(&base).into_iter().fold(next, |state, inverse| inverse.diff(&state).diff().apply(&state).expect("apply inverse"));
+            assert_eq!(restored, base);
+        }
+    }
+}

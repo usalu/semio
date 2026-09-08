@@ -3,6 +3,7 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { cargoProfileDir, getWorkspaceRoot, selectComponentWasmProfile } from "../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { publicationWasmPath } from "./📜️script.ts";
+import { pluginWasmArtifactPath } from "../🖨️describe/📦️packages/🦀️rust/📜️script.ts";
 
 type GeneratorContract = { readonly previewTarget?: string };
 type LaunchEntry = {
@@ -25,6 +26,7 @@ describe("plugin registry generated preview launchers", () => {
 
     const previewOrder = [
       ["actor-typegen", 206.01], ["assets-build", 206.02], ["async-typegen", 206.03],
+      ["dev-distribution-bundle", 206.035],
       ["framework-manifest", 206.04], ["graph-catalog", 206.05], ["jco-package-adapter", 206.055],
       ["plugin-registry", 206.06], ["print-latex-tokens", 206.07], ["scale-fixture", 206.08],
       ["schema-entity-catalog", 206.09], ["shell-typegen", 206.1], ["styling-tokens", 206.11],
@@ -84,7 +86,14 @@ describe("WASI codegen profile policy", () => {
     const manifest = toml.parse(readFileSync(join(root, "Cargo.toml"), "utf8")) as any;
     expect(manifest.profile.dev["codegen-units"]).toBeUndefined();
     for (const override of Object.values(manifest.profile.dev.package ?? {})) expect((override as any)["codegen-units"]).toBeUndefined();
-    expect(manifest.profile["wasm-dev"]).toEqual({ inherits: "dev", "codegen-units": 1 });
+    const { package: developmentPackageOverrides, ...developmentProfile } = manifest.profile["wasm-dev"];
+    expect(developmentProfile).toEqual({ inherits: "dev", "codegen-units": 1 });
+    expect(developmentPackageOverrides).toEqual(fixture.developmentPackageOverrides);
+    const freshTarget = join(root, "target", "registry-profile-fixture");
+    for (const vector of fixture.artifactPaths) {
+      expect(pluginWasmArtifactPath(root, vector.packageName, vector.profile ?? undefined, freshTarget)).toBe(join(freshTarget, ...vector.expectedRelativePath.split("/")));
+    }
+    console.log("[DEBUG] registry-wasm-profile routes=" + fixture.cases.length + " package-overrides=" + Object.keys(developmentPackageOverrides).length + " artifact-paths=" + fixture.artifactPaths.length);
     expect(manifest.profile["wasm-release"]).toMatchObject({ inherits: "release", "opt-level": "s", lto: "thin", "codegen-units": 1, strip: "symbols", incremental: false, "trim-paths": "object" });
   });
 
@@ -102,7 +111,6 @@ describe("WASI codegen profile policy", () => {
       expect(declaration, path).not.toContain('"debug"');
     }
     const describe = readFileSync(join(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/📦️packages/🦀️rust/📜️script.ts"), "utf8");
-    expect(describe).toContain('"wasm32-wasip2", "wasm-dev"');
     expect(describe.match(/"--target", "wasm32-wasip2", "--profile", "wasm-dev"/g)).toHaveLength(2);
     const scale = readFileSync(join(root, "🧰️framework/🛍️products/💻️os/🧫️fixtures/⚖️scale/📦️packages/🦀️rust/📜️script.ts"), "utf8");
     expect(scale).toContain('"--target", "wasm32-wasip2", "--profile", "wasm-dev"');

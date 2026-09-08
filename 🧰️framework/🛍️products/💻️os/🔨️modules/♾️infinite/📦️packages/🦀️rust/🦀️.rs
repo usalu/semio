@@ -26,10 +26,13 @@ pub use semio_framework_os_kernel::os_vcs;
 pub mod framework_surface_terrain;
 //#endregion 🔖️TerrainSession
 
+#[cfg(any(test, not(all(target_arch = "wasm32", target_env = "p2"))))]
 #[path = "../../🦀️.rs"]
 mod component;
+#[cfg(any(test, not(all(target_arch = "wasm32", target_env = "p2"))))]
 pub use component::*;
 
+#[cfg(any(test, not(all(target_arch = "wasm32", target_env = "p2"))))]
 #[path = "../../🌍️world/🦀️.rs"]
 pub mod world;
 

@@ -62,33 +62,23 @@ pub fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
 //#endregion 🔖️IoDeclaration
 
 //#region 🔖️MediaCodec
-/// 🖼️ Relocated verbatim from the former artifact-tree `⚙️engine` (ticket
-/// 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES): title-card SVG export for the app catalogue/
-/// thumbnail surface. There is no real drawing content to route through semio/drawing here (this is a
-/// generic placeholder title card, not a geometry export), so the shared framework helper stays — but
-/// its output is round-tripped through stdio's own real SVG codec (`parse_svg_xml`/`write_svg_xml`)
-/// before being returned, which both validates it is genuinely spec-conformant SVG and exercises the
-/// real stdio engine rather than returning the framework helper's raw string untouched.
+/// 🖼️ Encodes a portable title card through the shared XML/SVG model.
 pub fn animate_presentation_document_json_to_svg(value: &semio_framework_os_kernel::json::Value) -> Result<(String, u32, u32), String> {
-    use semio_s_plugin_stdio::artifacts::svg::schema::snapshot::{parse_svg_xml, write_svg_xml};
-    let (svg, width, height) = semio_framework_os::title_card_svg(value, "Animate Presentation", 1280, 720)?;
-    let doc = parse_svg_xml(&svg)?;
-    Ok((write_svg_xml(&doc), width, height))
+    use semio_s_plugin_stdio::artifacts::svg::schema::snapshot::write_svg_xml;
+    use semio_s_plugin_stdio::artifacts::xml::schema::snapshot::{XmlAttr, XmlDocument, XmlNode};
+    let title = value.get("title").and_then(|entry| entry.as_str()).or_else(|| value.get("id").and_then(|entry| entry.as_str())).unwrap_or("Animate Presentation");
+    let attributes = |values: &[(&str, &str)]| values.iter().map(|(name, value)| XmlAttr { name: (*name).into(), value: (*value).into() }).collect();
+    let background = XmlNode::Element { name: "rect".into(), attrs: attributes(&[("width", "100%"), ("height", "100%"), ("fill", "white")]), children: Vec::new() };
+    let title = XmlNode::Element { name: "text".into(), attrs: attributes(&[("x", "32"), ("y", "64"), ("font-size", "32"), ("fill", "#111827")]), children: vec![XmlNode::Text { text: title.into() }] };
+    let root = XmlNode::Element { name: "svg".into(), attrs: attributes(&[("xmlns", "http://www.w3.org/2000/svg"), ("viewBox", "0 0 1280 720"), ("width", "1280"), ("height", "720")]), children: vec![background, title] };
+    Ok((write_svg_xml(&XmlDocument { root: Some(root), ..Default::default() }), 1280, 720))
 }
 
-/// 📥️ Builds a degenerate-but-valid one-slide deck from a rasterized DWG drawing, for the DWG import
-/// path. `stdio_gap`: this plugin's write scope explicitly forbids inventing a converter inside
-/// animate — there is no bridge anywhere in stdio/framework from the legacy
-/// `semio_s_plugin_stdio::artifacts::dwg::DwgDrawing` (11 geometry variants: Line/Point/Circle/Arc/Ellipse/LwPolyline/
-/// Spline/Text/Face3d/Polyline3d/PolyfaceMesh) to semio's `SemioDrawingSnapshot`/`DrawNode` tree.
-/// Hand-rolling that conversion here would duplicate `semio_s_plugin_stdio::artifacts::dwg::dwg_drawing_to_svg`'s
-/// existing, correct, shared geometry logic for a hand-rolled struct — reported in
-/// `w5a--report.md`'s stdio_gaps rather than invented. The framework helpers stay (shared,
-/// non-duplicative utilities, not local ad-hoc codec code); the SVG they produce is still round-
-/// tripped through stdio's real SVG codec before rasterization, same as the title-card path.
+/// 📥️ Rasterizes a DWG drawing through the native host into a one-slide deck.
+#[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
 pub fn animate_presentation_document_json_from_dwg(drawing: &semio_s_plugin_stdio::artifacts::dwg::DwgDrawing) -> Result<dsl::DslValue, String> {
     use semio_s_plugin_stdio::artifacts::svg::schema::snapshot::{parse_svg_xml, write_svg_xml};
-    let (svg, width, height) = semio_s_plugin_stdio::artifacts::dwg::dwg_drawing_to_svg(drawing)?;
+    let (svg, width, height) = semio_s_plugin_stdio::artifacts::dwg::standards::v_ac1024::subsets::any::io::dwg_drawing_to_svg(drawing)?;
     let validated_svg = write_svg_xml(&parse_svg_xml(&svg)?);
     let png_base64 = semio_framework_os::rasterize_svg_to_png_base64(&validated_svg, width, height)?;
     let frame = crate::artifacts::presentation::FigureTileFrame { x: 0.0, y: 0.0, width: 1.0, height: 1.0 };
@@ -102,6 +92,25 @@ pub fn animate_presentation_document_json_from_dwg(drawing: &semio_s_plugin_stdi
 mod tests {
     use super::*;
     use semio_framework_os_kernel::json::{object, Object, Value};
+
+    #[test]
+    fn title_cards_match_the_neutral_xml_oracle() {
+        let vectors: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🔣️title-cards.json")).expect("neutral vectors");
+        for row in vectors["cases"].as_array().expect("cases") {
+            let value = dsl::os_pack::json::parse(&row["document"].to_string()).expect("owned JSON");
+            let (svg, width, height) = animate_presentation_document_json_to_svg(&value).expect("title card");
+            let parsed = roxmltree::Document::parse(&svg).expect("independent XML parser");
+            let root = parsed.root_element();
+            assert_eq!(root.tag_name().name(), "svg");
+            assert_eq!(root.attribute("width"), Some(width.to_string().as_str()));
+            assert_eq!(root.attribute("height"), Some(height.to_string().as_str()));
+            assert_eq!(u64::from(width), vectors["width"].as_u64().expect("width"));
+            assert_eq!(u64::from(height), vectors["height"].as_u64().expect("height"));
+            let title = root.descendants().find(|node| node.has_tag_name("text")).expect("title");
+            assert_eq!(title.text(), row["title"].as_str());
+        }
+    }
+
 
     #[test]
     fn animate_presentation_document_json_to_svg_embeds_title() {
@@ -119,6 +128,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
     fn from_dwg_builds_single_slide_deck_from_entity() {
         let drawing = semio_s_plugin_stdio::artifacts::dwg::DwgDrawing {
             layers: vec![semio_s_plugin_stdio::artifacts::dwg::DwgLayer::default()],
@@ -140,6 +150,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
     fn from_dwg_never_errors_on_empty_drawing() {
         let drawing = semio_s_plugin_stdio::artifacts::dwg::DwgDrawing::default();
         let document = animate_presentation_document_json_from_dwg(&drawing).expect("from_dwg on empty drawing");

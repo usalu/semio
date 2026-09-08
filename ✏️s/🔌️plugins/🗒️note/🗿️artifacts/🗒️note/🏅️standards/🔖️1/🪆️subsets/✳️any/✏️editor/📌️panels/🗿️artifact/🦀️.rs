@@ -3,9 +3,9 @@
 use crate::artifacts::note::schema::{block_icon, block_kind, block_name, block_tree_row_id, block_visible};
 use crate::artifacts::note::{NoteBlockNode, NoteSnapshot};
 use crate::editor::note::terminology::NotePlayLabels;
-use crate::editor::note::{NOTE_INTERACTION_BLOCKS, NOTE_PLAY_CONTROLLER_ID};
+use crate::editor::note::{ui_label, NOTE_INTERACTION_BLOCKS, NOTE_PLAY_CONTROLLER_ID};
 use semio_framework_plugin::{
-    tree_item, tree_item_desc, tree_item_with_action, ActionFactory, BuiltNode, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, UiFixedList, UiMapBuilder, UiText, UiValue,
+    tree_item, tree_item_desc, tree_item_with_action, ActionFactory, BuiltNode, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, UiFixedList, UiMapBuilder, UiText, UiValue,
     FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL,
 };
 
@@ -36,14 +36,16 @@ fn block_tree_item(block: &NoteBlockNode) -> semio_framework_plugin::UiAssemblyR
         NoteBlockNode::Group { children, .. } => fixed_nodes(children.iter().map(block_tree_item))?,
         _ => UiFixedList::default(),
     };
-    let mut node = tree_item_desc(block_tree_row_id(block), Label::data(block_name(block)), Some(block_kind(block).into()))?;
+    let mut node = tree_item_desc(block_tree_row_id(block), ui_label(block_name(block))?, Some(block_kind(block).into()))?;
     if let semio_framework_plugin::Component::TreeItem(props) = &mut node.component {
         props.icon = Some(UiText::try_from_str(block_icon(block_kind(block))).ok_or_else(|| PluginAssemblyError::new("ui.fixed-capacity", "note block icon admission failed"))?);
         props.default_open = Some(matches!(block, NoteBlockNode::Group { .. }));
         props.draggable = Some(true);
         props.dimmed = Some(!block_visible(block));
     }
-    node.base.children = nested;
+    for child in nested {
+        node.children.try_push(child).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "note nested block admission failed"))?;
+    }
     Ok(node)
 }
 
@@ -66,14 +68,14 @@ pub fn render(document: &NoteSnapshot, labels: &NotePlayLabels) -> semio_framewo
     let mut items = UiFixedList::default();
     for (kind, label, icon) in [("text", labels.add_text, "type"), ("table", labels.add_table, "table-2"), ("math", labels.add_math, "note-math"), ("image", labels.add_image, "image"), ("group", labels.add_group, "folder-plus")] {
         let action = ActionFactory::new(NOTE_PLAY_CONTROLLER_ID).action("addBlock", Some(add_block_args(kind)?))?;
-        let mut item = tree_item_with_action(format!("note-play-blocks.add.{kind}"), label, None, action)?;
+        let mut item = tree_item_with_action(format!("note-play-blocks.add.{kind}"), ui_label(label.as_str())?, None, action)?;
         if let semio_framework_plugin::Component::TreeItem(props) = &mut item.component {
             props.icon = Some(UiText::try_from_str(icon).ok_or_else(|| PluginAssemblyError::new("ui.fixed-capacity", "note add-block icon admission failed"))?);
         }
         items.try_push(item).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "note action row admission failed"))?;
     }
     if document.blocks.is_empty() {
-        let mut item = tree_item("note-play-blocks.empty", labels.document_empty)?;
+        let mut item = tree_item("note-play-blocks.empty", ui_label(labels.document_empty.as_str())?)?;
         if let semio_framework_plugin::Component::TreeItem(props) = &mut item.component {
             props.icon = Some(UiText::try_from_str("sticky-note").ok_or_else(|| PluginAssemblyError::new("ui.fixed-capacity", "note empty icon admission failed"))?);
         }
@@ -83,7 +85,7 @@ pub fn render(document: &NoteSnapshot, labels: &NotePlayLabels) -> semio_framewo
             items.try_push(block_tree_item(block)?).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "note block list admission failed"))?;
         }
     }
-    PanelTreeBuilder::new("note-play-blocks")?.section("note-play-blocks", Some(labels.document.into()), true, items)?.interaction_domain(NOTE_INTERACTION_BLOCKS)?.build()
+    PanelTreeBuilder::new("note-play-blocks")?.section("note-play-blocks", Some(ui_label(labels.document.as_str())?), true, items)?.interaction_domain(NOTE_INTERACTION_BLOCKS)?.build()
 }
 //#endregion 🔖️Render
 
@@ -105,20 +107,20 @@ mod tests {
     /// when it receives the effect.
     #[semio_framework_async_macros::async_test]
     async fn renders_document_tree() {
-        let mut app = note_app();
+        let mut app = note_app().await;
         let document = crate::artifacts::note::schema::semio_example_snapshot();
         let envelope = store::create_document_envelope::<crate::artifacts::note::NoteSnapshot, crate::artifacts::note::NoteMutation>(&document.schema.clone(), &document.id.clone(), document, None);
-        let files = store::print_document_pack(&envelope).expect("print semio example document pack");
-        app.load_document_pack(&files).expect("load semio example");
-        let json = render_body(&mut app, BODY_DOCUMENT);
+        let files = store::print_document_pack(&envelope).await.expect("print semio example document pack");
+        app.load_document_pack(&files).await.expect("load semio example");
+        let json = render_body(&mut app, BODY_DOCUMENT).await;
         assert!(json.contains("\"type\":\"tree\""));
         assert!(json.contains("Welcome"));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn note_labels_resolve_native_by_default() {
-        let mut app = note_app();
-        let document_json = render_body(&mut app, BODY_DOCUMENT);
+        let mut app = note_app().await;
+        let document_json = render_body(&mut app, BODY_DOCUMENT).await;
         assert!(document_json.contains("Add Text"));
         assert!(document_json.contains("Add Table"));
         assert!(document_json.contains("Add Math"));

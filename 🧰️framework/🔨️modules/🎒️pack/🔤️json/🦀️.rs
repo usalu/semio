@@ -25,7 +25,8 @@
 
 use std::fmt;
 
-use protocol::value::{DslValue, FromValue, ToValue, ValueError};
+use protocol::value::{DslValue, FromValue, ValueError};
+pub use protocol::value::ToValue;
 
 //#region 🔖️Errors
 /// @emoji 🚨️ Every parse failure this crate can produce, with a byte offset into the input.
@@ -565,6 +566,23 @@ pub fn to_dsl_value(value: &Value) -> DslValue {
         Value::String(s) => DslValue::String(s.clone()),
         Value::Array(items) => DslValue::Array(items.iter().map(to_dsl_value).collect()),
         Value::Object(entries) => DslValue::object(entries.iter().map(|(key, value)| (key.to_string(), to_dsl_value(value)))),
+    }
+}
+impl ToValue for Value {
+    fn to_value(&self) -> DslValue {
+        to_dsl_value(self)
+    }
+}
+
+impl FromValue for Value {
+    fn from_value(value: DslValue) -> Result<Self, ValueError> {
+        Ok(from_dsl_value(&value))
+    }
+}
+
+impl ToValue for Object {
+    fn to_value(&self) -> DslValue {
+        DslValue::object(self.iter().map(|(key, value)| (key.to_string(), value.to_value())))
     }
 }
 //#endregion 🔖️DslValueBridge
@@ -1431,9 +1449,8 @@ pub fn from_json_str<T: FromValue>(text: &str) -> Result<T, ValueError> {
 /// 🧩️ `serde_json::json!` replacement — an object/array literal builder over [`Value`], expanded
 /// via the standard TT-muncher recursion (see `json_object_internal!`/`json_array_internal!`,
 /// `#[doc(hidden)]`, exported only so this macro's own expansion can call them from any crate).
-/// Object keys are string literals (`"key": value`); every leaf value goes through
-/// [`Value::from`] (or a nested `json!` for a bracketed/braced leaf), so any expression whose type
-/// already has a `From<_> for Value` impl — including `Option<T>` — works as a leaf.
+/// Object keys are string literals (`"key": value`); leaf expressions are borrowed and encoded
+/// through [`ToValue`], preserving access to records and fields after constructing the JSON tree.
 #[macro_export]
 macro_rules! json {
     (null) => { $crate::json::Value::Null };
@@ -1451,9 +1468,10 @@ macro_rules! json {
             __object
         })
     };
-    ($other:expr) => {
-        $crate::json::Value::from($other)
-    };
+    ($other:expr) => {{
+        use $crate::json::ToValue as _;
+        $crate::json::from_dsl_value(&(&$other).to_value())
+    }};
 }
 
 #[macro_export]
@@ -1503,6 +1521,27 @@ macro_rules! json_object_internal {
 //#region 🔖️Tests
 mod tests {
     use super::*;
+
+    #[test]
+    fn macro_borrows_records_and_matches_json_vectors() {
+        struct Record { name: String, count: u64 }
+        impl ToValue for Record {
+            fn to_value(&self) -> DslValue { DslValue::object([("name".into(), self.name.to_value()), ("count".into(), self.count.to_value())]) }
+        }
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🔣️macro-values.json")).unwrap();
+        for vector in fixture.as_array().unwrap() {
+            let record = Record { name: vector["name"].as_str().unwrap().into(), count: vector["count"].as_u64().unwrap() };
+            let borrowed = &record;
+            let nested = parse(&vector["nested"].to_string()).unwrap();
+            let actual = crate::json!({ "record": record, "name": borrowed.name, "again": &borrowed.name, "nested": nested });
+            let oracle = serde_json::json!({ "record": { "name": record.name, "count": record.count }, "name": record.name, "again": record.name, "nested": vector["nested"] });
+            assert_eq!(serde_json::from_str::<serde_json::Value>(&to_string(&actual)).unwrap(), oracle);
+            let typed: Value = from_json_str(&to_json_string(&nested)).unwrap();
+            assert_eq!(typed, nested);
+            assert_eq!(borrowed.name, vector["name"].as_str().unwrap());
+        }
+    }
+
 
     //#region 🔖️Literals
     #[test]

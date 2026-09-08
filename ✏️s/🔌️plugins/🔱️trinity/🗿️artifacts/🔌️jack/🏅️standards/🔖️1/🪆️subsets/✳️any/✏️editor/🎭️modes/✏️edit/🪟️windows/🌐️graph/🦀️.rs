@@ -18,15 +18,15 @@ pub(crate) fn trinity_lod_measure(window_id: &str, current_mode: &str, jack_acti
         let name = row.get("name").and_then(|value| value.as_str()).unwrap_or(&id).to_string();
         Some(MeasureSelectItem { id: id.clone(), value: id, label: name })
     }));
-    WindowMeasure::Select { id: format!("{window_id}-lod"), label: Some("LOD".into()), value: current_mode.into(), items, on_change: jack_action("setLodMode", Some(json!({ "windowId": window_id }))) }
+    WindowMeasure::Select { id: format!("{window_id}-lod"), label: Some("LOD".into()), value: current_mode.into(), items, on_change: jack_action("setLodMode", Some(pack::json!({ "windowId": window_id }))) }
 }
 
 pub(crate) fn trinity_lod_json_for_window(cfg: &JackConfig, window_id: &str) -> Option<String> {
     let mode = cfg.lod_mode_by_window.get(window_id).map_or(TRINITY_LOD_MODE_AUTOMATIC, String::as_str);
     if mode == TRINITY_LOD_MODE_AUTOMATIC {
-        Some(json!({ "automatic": true }).to_string())
+        Some(pack::json!({ "automatic": true }).to_string())
     } else {
-        Some(json!({ "automatic": false, "forcedLabel": mode }).to_string())
+        Some(pack::json!({ "automatic": false, "forcedLabel": mode }).to_string())
     }
 }
 

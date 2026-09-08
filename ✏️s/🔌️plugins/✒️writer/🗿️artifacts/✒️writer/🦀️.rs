@@ -20,14 +20,18 @@ pub const WRITER_DIALECT: Dialect = Dialect { artifact_kind: "s.writer.writer", 
 
 //#region 🔖️Types
 /// 📷️ Editor viewport transform — session-only runtime state (flattened on the artifact for schema).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord, dsl::ToValue, dsl::FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct WriterCamera {
     #[serde(default)]
+    #[value(default)]
     pub x: f64,
     #[serde(default)]
+    #[value(default)]
     pub y: f64,
     #[serde(default = "default_zoom")]
+    #[value(default = "default_zoom")]
     pub zoom: f64,
 }
 
@@ -38,16 +42,18 @@ impl Default for WriterCamera {
 }
 
 /// 📐️ Editor text selection range.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord, dsl::ToValue, dsl::FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct WriterEditorSelection {
     pub start: usize,
     pub end: usize,
 }
 
 /// ⚙️ Editor chrome settings.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord, dsl::ToValue, dsl::FromValue)]
 #[serde(rename_all = "camelCase", default)]
+#[value(rename_all = "camelCase", default)]
 pub struct WriterEditorSettings {
     pub show_line_numbers: bool,
     pub font_px: u32,
@@ -115,7 +121,7 @@ pub fn text_from_document_snapshot(snapshot: &SemioDocumentSnapshot) -> String {
 pub fn document_child_handle(id: &str, text: &str, language_id: &str) -> WriterDocumentChild {
     use std::hash::{Hash, Hasher};
     let snapshot = document_snapshot_from_text(text, language_id);
-    let content_json = serde_json::to_string(&snapshot).unwrap_or_default();
+    let content_json = dsl::os_pack::json::to_json_string(&snapshot);
     let mut hasher = std::collections::hash_map::DefaultHasher::new();
     content_json.hash(&mut hasher);
     let content_hash = hasher.finish();
@@ -247,9 +253,9 @@ mod tests {
                 }
                 "wireOmission" => {
                     let handle = document_child_handle_with_text("wire", first, "plaintext");
-                    let wire = serde_json::to_value(&handle).expect("third-party serde oracle serializes handle");
+                    let wire: serde_json::Value = serde_json::from_str(&dsl::os_pack::json::to_json_string(&handle)).expect("third-party JSON oracle reads handle");
                     assert!(wire.get("localText").is_none());
-                    let decoded: WriterDocumentChild = serde_json::from_value(wire).expect("third-party serde oracle decodes handle");
+                    let decoded: WriterDocumentChild = dsl::os_pack::json::from_json_str(&wire.to_string()).expect("owned handle decoder reads oracle JSON");
                     assert_eq!(writer_text_for_handle(&decoded), expected);
                     assert_eq!(writer_text_for_handle(&handle), first);
                 }
@@ -303,7 +309,7 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
 /// `.artifact(declaration())` + `.editor::<>()`/`.viewer::<>()` channel is deleted in the SAME pass
 /// (plugin root `🦀️.rs`), never coexisting with this. `kind` uses `WRITER_DIALECT`'s own
 /// `artifact_kind` ("s.writer.writer") — the documented canonical coordinate, not guessed.
-pub fn artifact() -> semio_framework_plugin::app::declarations::ArtifactDeclaration {
+pub fn artifact() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<crate::plugin::WriterApps> {
     use semio_framework_plugin::app::declarations::ArtifactDeclaration;
     use store::os_io::ArtifactKindId;
     ArtifactDeclaration { kind: ArtifactKindId::parse(WRITER_DIALECT.artifact_kind).expect("canonical writer kind"), localization: &[], standards: vec![crate::artifacts::writer::standards::v1::standard()] }

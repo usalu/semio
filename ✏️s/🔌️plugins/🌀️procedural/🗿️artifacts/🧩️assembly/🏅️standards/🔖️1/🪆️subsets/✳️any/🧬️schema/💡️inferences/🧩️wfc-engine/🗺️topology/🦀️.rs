@@ -57,11 +57,13 @@ pub struct GraphTopology {
 
 impl GraphTopology {
     #[inline]
+    #[cfg(test)]
     pub fn node_count(&self) -> usize {
         self.node_count
     }
 
     #[inline]
+    #[cfg(test)]
     pub fn arc_count(&self) -> usize {
         self.out_targets.len()
     }
@@ -70,6 +72,7 @@ impl GraphTopology {
         (self.out_starts[n.index() + 1] - self.out_starts[n.index()]) as usize
     }
 
+    #[cfg(test)]
     pub fn in_degree(&self, n: NodeId) -> usize {
         (self.in_starts[n.index() + 1] - self.in_starts[n.index()]) as usize
     }
@@ -276,12 +279,14 @@ impl AssemblyTopologyBuild {
 /// 🏗️ Accumulates directed arcs and per-node regions before [`GraphTopologyBuilder::build`]
 /// buckets them into the two CSR arrays [`GraphTopology`] reads.
 #[derive(Clone, Debug)]
+#[cfg(test)]
 pub struct GraphTopologyBuilder {
     node_count: usize,
     arcs: Vec<(NodeId, NodeId, RelationId)>,
     regions: Vec<RegionId>,
 }
 
+#[cfg(test)]
 impl GraphTopologyBuilder {
     pub fn new(node_count: usize) -> Self {
         Self { node_count, arcs: Vec::new(), regions: vec![RegionId(0); node_count] }
@@ -346,6 +351,7 @@ impl GraphTopologyBuilder {
 /// undirected views get the same relation registered in both directions (the model relation is
 /// expected to be self-inverse in that case, matching every other symmetric-adjacency convention
 /// in this crate).
+#[cfg(test)]
 pub fn from_graph_view(view: &impl graph_core::GraphView, rel_of: impl Fn(graph_core::EdgeRef) -> RelationId) -> Result<GraphTopology, crate::wfc_engine::error::TopologyError> {
     use crate::wfc_engine::error::TopologyError;
     let mut sorted_nodes: Vec<graph_core::NodeId> = view.nodes().collect();

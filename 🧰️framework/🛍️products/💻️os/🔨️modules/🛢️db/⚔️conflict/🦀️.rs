@@ -3,9 +3,9 @@
 //! pre-filter so a large batch doesn't pay the full intersection cost pairwise, a declarative
 //! command-kind matrix for structural (non-region-derived) commutativity knowledge, and constraint
 //! conflicts (unique name, single parent, non-overlapping intervals — see `Constraint`). Frozen
-//! contract: `.🦑️repo/🎫️tickets/26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS/
+//! contract: `.🧬semio/🦑️repo/🎫️tickets/26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS/
 //! 📋️contract-freeze.md` §C9 (db/conflict bullet), superseding
-//! `.🦑️repo/🎫️tickets/26/07/27/INTRODUCE-DB-PROTOCOL-COMMAND-LAYER-AND-VCS-SLIMMING/contract.md`.
+//! `.🧬semio/🦑️repo/🎫️tickets/26/07/27/INTRODUCE-DB-PROTOCOL-COMMAND-LAYER-AND-VCS-SLIMMING/contract.md`.
 //!
 //! 🎯️ Design choice: per the contract's hard rule ("command payloads are opaque
 //! `protocol::MutationEnvelope`/binary bytes below `db_artifact` — no db crate below it

@@ -1084,7 +1084,7 @@ fn drawing_bounded_tool_job(request: semio_framework_plugin::ArtifactOwnedToolJo
     }
     let tool_id = request.command.command_id();
     let work: Box<dyn semio_framework_plugin::retained_command::ArtifactCommandWork<semio_framework_plugin::EditorApp<DrawingPlayApp>>> =
-        Box::new(semio_framework_plugin::BoundedArtifactCommandWork::new(tool_id, drawing_bounded_reduce, drawing_bounded_extent));
+        Box::new(semio_framework_plugin::retained_command::BoundedArtifactCommandWork::new(tool_id, drawing_bounded_reduce, drawing_bounded_extent));
     let operation_context = semio_framework_plugin::AppOperationContext {
         app_instance_id: request.app_instance_id,
         parent_document_id: request.parent_document_id.clone(),
@@ -1629,7 +1629,7 @@ impl ArtifactEditor for DrawingPlayApp {
 pub(crate) fn drawing_reset_document_effect(scene: &DrawingSnapshot) -> semio_framework_plugin::Effect {
     let pack = <DrawingSnapshot as ArtifactPack>::encode_pack(scene);
     let envelope = store::create_document_envelope::<DrawingSnapshot, DrawingMutation>(DRAWING_DOCUMENT_SCHEMA, &scene.id, scene.clone(), None);
-    let spr = store::print_document_spr(&envelope).expect("drawing document spr encode is infallible for a fresh, edit-free envelope");
+    let spr = semio_framework_plugin::resolve_ready(store::print_document_spr(&envelope)).expect("drawing document spr encode is infallible for a fresh, edit-free envelope");
     semio_framework_plugin::Effect::LoadDocument { pack, spr }
 }
 
@@ -1820,7 +1820,7 @@ pub fn create_drawing_app() -> semio_framework_plugin::AppDefinition {
 #[cfg(test)]
 pub(crate) mod testkit {
     use super::*;
-    use semio_framework_plugin::testkit::{meta, new_app, new_app_with_registry};
+    use semio_framework_plugin::testkit::{meta, new_app_with_registry};
     use semio_framework_plugin::{App, EditorApp, VcsArtifactApp};
 
     pub type DrawingApp = VcsArtifactApp<EditorApp<DrawingPlayApp>>;
@@ -1830,26 +1830,14 @@ pub(crate) mod testkit {
     /// `ArtifactApp` implementor `VcsArtifactApp` wraps, exactly the way
     /// `PluginBuilder::editor::<DrawingPlayApp>` builds it.
 
-    /// 🧪️ A bare app instance — no `AppActionRegistry`, so undeclared internal commands dispatch freely.
+    /// 🧪️ Draw fixtures carry the production manifest and its exact registered factories.
     pub async fn drawing_app() -> DrawingApp {
-        new_app::<EditorApp<DrawingPlayApp>>()
-    }
-
-    /// 🧪️ Adapts `create_drawing_app`'s `AppDefinition` (contract §2.4) into the `App { definition,
-    /// examples }` shape `new_app_with_registry` still expects — framework testkit gap, not
-    /// modifiable here (`🧰️framework/**` is outside this packet's lease).
-    async fn drawing_app_manifest_for_testkit() -> App {
-        App { definition: create_drawing_app(), examples: Vec::new() }
-    }
-
-    /// 🧪️ An app wired to the real manifest registry — enforces View/Shell kind discipline.
-    pub async fn drawing_app_with_registry() -> DrawingApp {
-        new_app_with_registry::<EditorApp<DrawingPlayApp>>(drawing_app_manifest_for_testkit)
+        new_app_with_registry::<EditorApp<DrawingPlayApp>>(|| App { definition: create_drawing_app(), examples: Vec::new() }).await
     }
 
     /// 🧰️ Sets the config's host-owned active utility to `utility`.
     pub async fn set_utility(app: &mut DrawingApp, utility: &str) {
-        app.dispatch_typed(DrawingCommand::SetActiveUtility(set_active_utility::SetActiveUtility { utility_id: utility.into() }), &meta("local")).expect("set active utility");
+        app.dispatch_typed(DrawingCommand::SetActiveUtility(set_active_utility::SetActiveUtility { utility_id: utility.into() }), &meta("local")).await.expect("set active utility");
     }
 }
 //#endregion 🧪️Testkit
@@ -1862,7 +1850,16 @@ mod tests {
     use crate::artifacts::drawing::DrawingLayerNode;
     use semio_framework_plugin::kernel::Effect;
     use semio_framework_plugin::{testkit as fw_testkit, PluginApp, ViewModel, SET_ACTIVE_UTILITY_ACTION_ID};
-    use testkit::{drawing_app, drawing_app_with_registry, set_utility, DrawingApp};
+    use testkit::{drawing_app, set_utility, DrawingApp};
+
+    fn canvas_scene(tree: semio_framework_plugin::ComponentTree) -> semio_framework_plugin::Canvas2dScene {
+        let decoded = match &tree.root.component {
+            semio_framework_plugin::Component::Surface(surface) => semio_framework_ui_scene::decode(surface).map_err(|_| "canvas payload"),
+            _ => Err("canvas surface"),
+        };
+        fw_testkit::project_and_retire_fixture_tree(tree).expect("retire canvas tree");
+        decoded.expect("typed canvas")
+    }
 
     fn drawing_envelope_wire() -> Vec<u8> {
         use store::ArtifactPack;
@@ -1927,7 +1924,7 @@ mod tests {
             let mut bytes = [0; store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES];
             bytes[..chunk.len()].copy_from_slice(chunk);
             let page = store::ArtifactEnvelopeDecodePage::try_from_array(bytes, chunk.len()).expect("bounded Drawing envelope page");
-            app.admit_artifact_envelope_ingress_page(handle, page).unwrap_or_else(|(fault, _page)| panic!("Drawing envelope page admission failed: {fault}"));
+            app.admit_artifact_envelope_ingress_page(handle, page).unwrap_or_else(|(fault, _page)| panic!("Drawing envelope page admission failed: {fault:?}"));
         }
         assert!(app.seal_artifact_envelope_ingress(handle).expect("Drawing envelope seal"));
         handle
@@ -1947,7 +1944,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn drawing_live_envelope_submit_recursive_clone_swap_displaced_store_and_exact_ack_succeed() {
-        let mut app = drawing_app();
+        let mut app = drawing_app().await;
         let base_generation = app.artifact_generation_now();
         let handle = admit_drawing_envelope(&mut app, &drawing_envelope_wire());
         assert_eq!(handle.generation, base_generation);
@@ -1962,7 +1959,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn drawing_live_envelope_cancel_closes_retained_pages_without_publication() {
-        let mut app = drawing_app();
+        let mut app = drawing_app().await;
         let base_generation = app.artifact_generation_now();
         let wire = drawing_envelope_wire();
         let pages = wire.len().div_ceil(store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).max(1);
@@ -1980,7 +1977,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn drawing_live_initializer_candidate_container_commit_ack_cancel_stale_preserve_last_valid_and_exact_handle() {
         for turns in [0usize, 1, 2, 8] {
-            let mut app = drawing_app();
+            let mut app = drawing_app().await;
             let base_generation = app.artifact_generation_now();
             let base_id = app.snapshot().expect("Drawing last-valid snapshot").id;
             let handle = admit_drawing_envelope(&mut app, &drawing_envelope_wire());
@@ -1995,7 +1992,7 @@ mod tests {
             assert_eq!(app.snapshot().expect("Drawing last-valid survives staged cancel").id, base_id);
         }
 
-        let mut app = drawing_app();
+        let mut app = drawing_app().await;
         let handle = admit_drawing_envelope(&mut app, &drawing_envelope_wire());
         assert_eq!(drive_drawing_load(&mut app, handle), semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Ready);
         let stale = semio_framework_plugin::ArtifactEnvelopeDecodeOperationHandle { operation: handle.operation, generation: semio_framework_job::Generation(handle.generation.0 + 1) };
@@ -2016,7 +2013,7 @@ mod tests {
             }
             edits.last_mut().expect("Drawing final edit")["id"] = serde_json::Value::String("x".repeat(store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES + 1));
             let wire = serde_json::to_vec(&value).expect("hostile Drawing edit fixture");
-            let mut app = drawing_app();
+            let mut app = drawing_app().await;
             let generation = app.artifact_generation_now();
             let handle = admit_drawing_envelope(&mut app, &wire);
             assert_eq!(drive_drawing_load(&mut app, handle), semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Fault);
@@ -2024,24 +2021,22 @@ mod tests {
         }
     }
 
-    async fn first_layer_id(app: &DrawingApp) -> String {
+    fn first_layer_id(app: &DrawingApp) -> String {
         layer_id(&app.snapshot().expect("materialize projection").layers[0]).to_string()
     }
 
-    async fn last_layer_id(app: &DrawingApp) -> String {
+    fn last_layer_id(app: &DrawingApp) -> String {
         let projection = app.snapshot().expect("materialize projection");
         layer_id(projection.layers.last().expect("layer")).to_string()
     }
 
     #[semio_framework_async_macros::async_test]
     async fn renders_canvas_scene_with_segments() {
-        let mut app = drawing_app();
+        let mut app = drawing_app().await;
         let example_json = semio_drawing_example_json();
-        let node = app.render(DRAWING_PLAY_BODY_COMPOSITE, Some(example_json.as_str()), &ViewModel::default()).expect("render");
-        let json = serde_json::to_string(&node).unwrap();
-        assert!(json.contains("canvas-2d"));
-        let value = serde_json::to_value(&node).unwrap();
-        let layers_json = value.pointer("/canvas2d/layersJson").and_then(|v| v.as_str()).expect("layersJson string");
+        let node = app.render(DRAWING_PLAY_BODY_COMPOSITE, Some(example_json.as_str()), &ViewModel::default()).await.expect("render");
+        let scene = canvas_scene(node);
+        let layers_json = scene.layers_json.as_str();
         assert!(layers_json.contains("segments"));
         let records: Vec<serde_json::Value> = serde_json::from_str(layers_json).unwrap();
         assert!(records.iter().any(|record| record.get("role").and_then(|value| value.as_str()) == Some("meta")));
@@ -2055,36 +2050,36 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn default_document_exposes_artboard_dimensions_on_canvas() {
-        let mut app = drawing_app();
-        let node = app.render(DRAWING_PLAY_BODY_COMPOSITE, None, &ViewModel::default()).expect("render");
-        let value = serde_json::to_value(&node).unwrap();
-        let layers_json = value.pointer("/canvas2d/layersJson").and_then(|v| v.as_str()).expect("layersJson string");
+        let mut app = drawing_app().await;
+        let node = app.render(DRAWING_PLAY_BODY_COMPOSITE, None, &ViewModel::default()).await.expect("render");
+        let scene = canvas_scene(node);
+        let layers_json = scene.layers_json.as_str();
         assert!(layers_json.contains("1024 × 1024"), "blank documents show default artboard dimensions");
     }
 
     #[semio_framework_async_macros::async_test]
     async fn layers_panel_lists_default_layer() {
-        let mut app = drawing_app();
-        let node = app.render(DRAWING_PLAY_BODY_LAYERS, None, &ViewModel::default()).expect("render");
-        let json = serde_json::to_string(&node).unwrap();
+        let mut app = drawing_app().await;
+        let node = app.render(DRAWING_PLAY_BODY_LAYERS, None, &ViewModel::default()).await.expect("render");
+        let json = fw_testkit::project_and_retire_fixture_tree(node).expect("retire semantic tree");
         assert!(json.contains("drawing-play-layers.add.path"));
         assert!(json.contains("Layer 1"));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn catalogue_panel_lists_boolean_operations() {
-        let mut app = drawing_app();
-        let node = app.render(DRAWING_PLAY_BODY_CATALOGUE, None, &ViewModel::default()).expect("render");
-        let json = serde_json::to_string(&node).unwrap();
+        let mut app = drawing_app().await;
+        let node = app.render(DRAWING_PLAY_BODY_CATALOGUE, None, &ViewModel::default()).await.expect("render");
+        let json = fw_testkit::project_and_retire_fixture_tree(node).expect("retire semantic tree");
         assert!(json.contains("drawing-play-catalogue.path"));
         assert!(json.contains("Boolean union"));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn add_layer_action_emits_op_and_appends_path() {
-        let mut app = drawing_app();
+        let mut app = drawing_app().await;
         let before = app.snapshot().unwrap().layers.len();
-        let result = app.dispatch_typed(DrawingCommand::AddLayer(add_layer::AddLayer { kind: "shape:rect".into() }), &fw_testkit::meta("local")).expect("add layer");
+        let result = app.dispatch_typed(DrawingCommand::AddLayer(add_layer::AddLayer { kind: "shape:rect".into() }), &fw_testkit::meta("local")).await.expect("add layer");
         assert_eq!(result.mutations.len(), 1);
         let projection = app.snapshot().unwrap();
         assert_eq!(projection.layers.len(), before + 1);
@@ -2093,9 +2088,9 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn patch_layers_opacity_emits_granular_operation() {
-        let mut app = drawing_app();
+        let mut app = drawing_app().await;
         let id = first_layer_id(&app);
-        let result = app.dispatch_typed(DrawingCommand::PatchLayers(patch_layers::PatchLayers { layer_ids: vec![id], field: "opacity".into(), value: "0.5".into() }), &fw_testkit::meta("local")).expect("patch");
+        let result = app.dispatch_typed(DrawingCommand::PatchLayers(patch_layers::PatchLayers { layer_ids: vec![id], field: "opacity".into(), value: "0.5".into() }), &fw_testkit::meta("local")).await.expect("patch");
         assert_eq!(result.mutations.len(), 1);
         let projection = app.snapshot().unwrap();
         assert!((crate::artifacts::drawing::schema::layer_base(&projection.layers[0]).opacity - 0.5).abs() < f64::EPSILON);
@@ -2103,17 +2098,17 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn patch_layer_name_emits_op_and_changes_projection() {
-        let mut app = drawing_app();
+        let mut app = drawing_app().await;
         let id = first_layer_id(&app);
-        let result = app.dispatch_typed(DrawingCommand::PatchLayer(patch_layer::PatchLayer { layer_id: id, field: "name".into(), value: "Renamed".into() }), &fw_testkit::meta("local")).expect("patch");
+        let result = app.dispatch_typed(DrawingCommand::PatchLayer(patch_layer::PatchLayer { layer_id: id, field: "name".into(), value: "Renamed".into() }), &fw_testkit::meta("local")).await.expect("patch");
         assert_eq!(result.mutations.len(), 1);
         assert_eq!(crate::artifacts::drawing::schema::layer_base(&app.snapshot().unwrap().layers[0]).name, "Renamed");
     }
 
     #[semio_framework_async_macros::async_test]
     async fn set_active_utility_clears_scratch_and_emits_no_history_entry() {
-        let mut app = drawing_app_with_registry();
-        set_utility(&mut app, "shapeRect");
+        let mut app = drawing_app().await;
+        set_utility(&mut app, "shapeRect").await;
         app.dispatch_typed(
             DrawingCommand::CanvasPointerDown(canvas_pointer_down::CanvasPointerDown {
                 x: 10.0,
@@ -2129,23 +2124,23 @@ mod tests {
                 ..Default::default()
             }),
             &fw_testkit::meta("local"),
-        )
+        ).await
         .expect("down");
         let before = app.snapshot().unwrap();
-        let result = app.dispatch_typed(DrawingCommand::SetActiveUtility(set_active_utility::SetActiveUtility { utility_id: "pen".into() }), &fw_testkit::meta("local")).expect("switch utility");
+        let result = app.dispatch_typed(DrawingCommand::SetActiveUtility(set_active_utility::SetActiveUtility { utility_id: "pen".into() }), &fw_testkit::meta("local")).await.expect("switch utility");
         assert!(result.mutations.is_empty(), "utility switching never emits document operations");
         assert_eq!(app.snapshot().unwrap(), before, "utility switching does not mutate the document");
-        let up = app.dispatch_typed(DrawingCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp { x: 40.0, y: 40.0, width: 800.0, height: 600.0, shift: false, ctrl: false, meta: false }), &fw_testkit::meta("local")).expect("up");
+        let up = app.dispatch_typed(DrawingCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp { x: 40.0, y: 40.0, width: 800.0, height: 600.0, shift: false, ctrl: false, meta: false }), &fw_testkit::meta("local")).await.expect("up");
         assert!(up.mutations.is_empty(), "the in-progress shape draft was cleared on utility switch");
     }
 
     #[semio_framework_async_macros::async_test]
     async fn combine_boolean_creates_boolean_layer() {
-        let mut app = drawing_app();
+        let mut app = drawing_app().await;
         let first_id = first_layer_id(&app);
-        app.dispatch_typed(DrawingCommand::AddLayer(add_layer::AddLayer { kind: "shape:rect".into() }), &fw_testkit::meta("local")).expect("add rect");
+        app.dispatch_typed(DrawingCommand::AddLayer(add_layer::AddLayer { kind: "shape:rect".into() }), &fw_testkit::meta("local")).await.expect("add rect");
         let second_id = last_layer_id(&app);
-        let result = app.dispatch_typed(DrawingCommand::CombineBoolean(combine_boolean::CombineBoolean { operation: "union".into(), ids: vec![first_id, second_id] }), &fw_testkit::meta("local")).expect("combine");
+        let result = app.dispatch_typed(DrawingCommand::CombineBoolean(combine_boolean::CombineBoolean { operation: "union".into(), ids: vec![first_id, second_id] }), &fw_testkit::meta("local")).await.expect("combine");
         assert_eq!(result.mutations.len(), 1);
         assert!(app.snapshot().unwrap().layers.iter().any(|layer| matches!(layer, DrawingLayerNode::Boolean(_))));
     }
@@ -2160,8 +2155,8 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn shape_rect_drag_commits_one_layer_and_requests_utility_reset() {
-        let mut app = drawing_app_with_registry();
-        set_utility(&mut app, "shapeRect");
+        let mut app = drawing_app().await;
+        set_utility(&mut app, "shapeRect").await;
         app.dispatch_typed(
             DrawingCommand::CanvasPointerDown(canvas_pointer_down::CanvasPointerDown {
                 x: 500.0,
@@ -2177,10 +2172,10 @@ mod tests {
                 ..Default::default()
             }),
             &fw_testkit::meta("local"),
-        )
+        ).await
         .expect("down");
-        app.dispatch_typed(DrawingCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove { x: 600.0, y: 500.0, width: 1000.0, height: 800.0 }), &fw_testkit::meta("local")).expect("move");
-        let result = app.dispatch_typed(DrawingCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp { x: 600.0, y: 500.0, width: 1000.0, height: 800.0, shift: false, ctrl: false, meta: false }), &fw_testkit::meta("local")).expect("up");
+        app.dispatch_typed(DrawingCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove { x: 600.0, y: 500.0, width: 1000.0, height: 800.0 }), &fw_testkit::meta("local")).await.expect("move");
+        let result = app.dispatch_typed(DrawingCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp { x: 600.0, y: 500.0, width: 1000.0, height: 800.0, shift: false, ctrl: false, meta: false }), &fw_testkit::meta("local")).await.expect("up");
         assert_eq!(result.mutations.len(), 1, "a shape drag commits as one edit adding exactly the layer");
         let projection = app.snapshot().unwrap();
         assert!(projection.layers.iter().any(|layer| matches!(layer, DrawingLayerNode::Shape(shape) if shape.shape_kind == "rect")));
@@ -2195,8 +2190,8 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn pen_draft_commits_path_layer_on_enter() {
-        let mut app = drawing_app();
-        set_utility(&mut app, "pen");
+        let mut app = drawing_app().await;
+        set_utility(&mut app, "pen").await;
         app.dispatch_typed(
             DrawingCommand::CanvasPointerDown(canvas_pointer_down::CanvasPointerDown {
                 x: 400.0,
@@ -2212,7 +2207,7 @@ mod tests {
                 ..Default::default()
             }),
             &fw_testkit::meta("local"),
-        )
+        ).await
         .expect("p1");
         app.dispatch_typed(
             DrawingCommand::CanvasPointerDown(canvas_pointer_down::CanvasPointerDown {
@@ -2229,9 +2224,9 @@ mod tests {
                 ..Default::default()
             }),
             &fw_testkit::meta("local"),
-        )
+        ).await
         .expect("p2");
-        let result = app.dispatch_typed(DrawingCommand::CanvasCommitDraft(canvas_commit_draft::CanvasCommitDraft {}), &fw_testkit::meta("local")).expect("commit");
+        let result = app.dispatch_typed(DrawingCommand::CanvasCommitDraft(canvas_commit_draft::CanvasCommitDraft {}), &fw_testkit::meta("local")).await.expect("commit");
         assert_eq!(result.mutations.len(), 1, "the draft commits as exactly one AddLayer edit");
         let projection = app.snapshot().unwrap();
         assert!(projection.layers.iter().any(|layer| matches!(layer, DrawingLayerNode::Path(path) if !path.segments.is_empty())));
@@ -2240,9 +2235,9 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn canvas_escape_cancels_draft_without_committing() {
-        let mut app = drawing_app();
+        let mut app = drawing_app().await;
         let before = app.snapshot().unwrap().layers.len();
-        set_utility(&mut app, "pen");
+        set_utility(&mut app, "pen").await;
         app.dispatch_typed(
             DrawingCommand::CanvasPointerDown(canvas_pointer_down::CanvasPointerDown {
                 x: 400.0,
@@ -2258,9 +2253,9 @@ mod tests {
                 ..Default::default()
             }),
             &fw_testkit::meta("local"),
-        )
+        ).await
         .expect("p1");
-        let result = app.dispatch_typed(DrawingCommand::CanvasEscape(canvas_escape::CanvasEscape {}), &fw_testkit::meta("local")).expect("escape");
+        let result = app.dispatch_typed(DrawingCommand::CanvasEscape(canvas_escape::CanvasEscape {}), &fw_testkit::meta("local")).await.expect("escape");
         assert!(result.mutations.is_empty());
         assert_eq!(app.snapshot().unwrap().layers.len(), before);
     }
@@ -2271,24 +2266,24 @@ mod tests {
         // a whole-document swap — `SetSnapshot` is banned vocabulary now (see
         // `🧬️mutations/🦀️.rs`'s module doc); this exercises the same real semantic
         // `create-layer`/`update-layer-transform` mutations a live editor session would emit.
-        let mut app = drawing_app();
-        set_utility(&mut app, "selectMarquee");
+        let mut app = drawing_app().await;
+        set_utility(&mut app, "selectMarquee").await;
         let initial_id = layer_id(&app.snapshot().unwrap().layers[0]).to_string();
-        app.dispatch_typed(DrawingCommand::DeleteLayer(delete_layer::DeleteLayer { layer_id: initial_id }), &fw_testkit::meta("local")).expect("clear default layer");
+        app.dispatch_typed(DrawingCommand::DeleteLayer(delete_layer::DeleteLayer { layer_id: initial_id }), &fw_testkit::meta("local")).await.expect("clear default layer");
 
-        app.dispatch_typed(DrawingCommand::AddLayer(add_layer::AddLayer { kind: "shape:rect".into() }), &fw_testkit::meta("local")).expect("add rect");
+        app.dispatch_typed(DrawingCommand::AddLayer(add_layer::AddLayer { kind: "shape:rect".into() }), &fw_testkit::meta("local")).await.expect("add rect");
         let rect_a_id = layer_id(app.snapshot().unwrap().layers.last().unwrap()).to_string();
         for (field, value) in [("transformX", "10"), ("transformY", "10"), ("transformScaleX", "0.15625"), ("transformScaleY", "0.208333")] {
-            app.dispatch_typed(DrawingCommand::PatchLayer(patch_layer::PatchLayer { layer_id: rect_a_id.clone(), field: field.into(), value: value.into() }), &fw_testkit::meta("local")).expect("position rect a");
+            app.dispatch_typed(DrawingCommand::PatchLayer(patch_layer::PatchLayer { layer_id: rect_a_id.clone(), field: field.into(), value: value.into() }), &fw_testkit::meta("local")).await.expect("position rect a");
         }
 
-        app.dispatch_typed(DrawingCommand::AddLayer(add_layer::AddLayer { kind: "shape:ellipse".into() }), &fw_testkit::meta("local")).expect("add ellipse");
+        app.dispatch_typed(DrawingCommand::AddLayer(add_layer::AddLayer { kind: "shape:ellipse".into() }), &fw_testkit::meta("local")).await.expect("add ellipse");
         let ellipse_b_id = layer_id(app.snapshot().unwrap().layers.last().unwrap()).to_string();
         for (field, value) in [("transformX", "200"), ("transformY", "200")] {
-            app.dispatch_typed(DrawingCommand::PatchLayer(patch_layer::PatchLayer { layer_id: ellipse_b_id.clone(), field: field.into(), value: value.into() }), &fw_testkit::meta("local")).expect("position ellipse b");
+            app.dispatch_typed(DrawingCommand::PatchLayer(patch_layer::PatchLayer { layer_id: ellipse_b_id.clone(), field: field.into(), value: value.into() }), &fw_testkit::meta("local")).await.expect("position ellipse b");
         }
 
-        app.dispatch_typed(DrawingCommand::SetCamera(set_camera::SetCamera { camera: crate::artifacts::drawing::DrawingCamera { x: 0.0, y: 0.0, zoom: 1.0 } }), &fw_testkit::meta("local")).expect("camera");
+        app.dispatch_typed(DrawingCommand::SetCamera(set_camera::SetCamera { camera: crate::artifacts::drawing::DrawingCamera { x: 0.0, y: 0.0, zoom: 1.0 } }), &fw_testkit::meta("local")).await.expect("camera");
         app.dispatch_typed(
             DrawingCommand::CanvasPointerDown(canvas_pointer_down::CanvasPointerDown {
                 x: 400.0,
@@ -2304,10 +2299,10 @@ mod tests {
                 ..Default::default()
             }),
             &fw_testkit::meta("local"),
-        )
+        ).await
         .expect("down");
-        app.dispatch_typed(DrawingCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove { x: 460.0, y: 360.0, width: 800.0, height: 600.0 }), &fw_testkit::meta("local")).expect("move");
-        let result = app.dispatch_typed(DrawingCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp { x: 460.0, y: 360.0, width: 800.0, height: 600.0, shift: false, ctrl: false, meta: false }), &fw_testkit::meta("local")).expect("up");
+        app.dispatch_typed(DrawingCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove { x: 460.0, y: 360.0, width: 800.0, height: 600.0 }), &fw_testkit::meta("local")).await.expect("move");
+        let result = app.dispatch_typed(DrawingCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp { x: 460.0, y: 360.0, width: 800.0, height: 600.0, shift: false, ctrl: false, meta: false }), &fw_testkit::meta("local")).await.expect("up");
         // 🕹️ Selection is framework-owned now (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM):
         // the marquee hit-test requests `interactionSelect` for exactly the contained rect via a
         // `Effect::ReplayShellCommand`, instead of writing a `DrawingConfigMutation::SetSelection`.
@@ -2317,32 +2312,30 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn set_camera_writes_runtime_and_emits_no_operations() {
-        let mut app = drawing_app();
+        let mut app = drawing_app().await;
         let before = app.snapshot().expect("projection");
-        let result = app.dispatch_typed(DrawingCommand::SetCamera(set_camera::SetCamera { camera: crate::artifacts::drawing::DrawingCamera { x: 5.0, y: 5.0, zoom: 2.0 } }), &fw_testkit::meta("local")).expect("camera");
+        let result = app.dispatch_typed(DrawingCommand::SetCamera(set_camera::SetCamera { camera: crate::artifacts::drawing::DrawingCamera { x: 5.0, y: 5.0, zoom: 2.0 } }), &fw_testkit::meta("local")).await.expect("camera");
         assert!(result.mutations.is_empty(), "camera is a view action and emits no operations");
         assert_eq!(app.snapshot().expect("projection"), before, "camera never mutates the document");
-        let json = serde_json::to_string(&app.render(DRAWING_PLAY_BODY_COMPOSITE, None, &ViewModel::default()).expect("render")).unwrap();
-        assert!(json.contains(r#""zoom":2.0"#), "composite scene camera reflects runtime state: {json}");
-        assert!(json.contains(r#""cameraX":5.0"#), "composite scene camera reflects runtime state: {json}");
+        let scene = canvas_scene(app.render(DRAWING_PLAY_BODY_COMPOSITE, None, &ViewModel::default()).await.expect("render"));
+        assert_eq!([scene.camera_x, scene.camera_y, scene.zoom], [5.0, 5.0, 2.0]);
     }
 
     #[semio_framework_async_macros::async_test]
     async fn set_camera_zoom_updates_zoom_and_keeps_pan_via_runtime() {
-        let mut app = drawing_app();
-        app.dispatch_typed(DrawingCommand::SetCamera(set_camera::SetCamera { camera: crate::artifacts::drawing::DrawingCamera { x: 4.0, y: 5.0, zoom: 1.0 } }), &fw_testkit::meta("local")).expect("set camera");
-        let result = app.dispatch_typed(DrawingCommand::SetCameraZoom(set_camera_zoom::SetCameraZoom { value: 3.0 }), &fw_testkit::meta("local")).expect("set camera zoom");
+        let mut app = drawing_app().await;
+        app.dispatch_typed(DrawingCommand::SetCamera(set_camera::SetCamera { camera: crate::artifacts::drawing::DrawingCamera { x: 4.0, y: 5.0, zoom: 1.0 } }), &fw_testkit::meta("local")).await.expect("set camera");
+        let result = app.dispatch_typed(DrawingCommand::SetCameraZoom(set_camera_zoom::SetCameraZoom { value: 3.0 }), &fw_testkit::meta("local")).await.expect("set camera zoom");
         assert!(result.mutations.is_empty(), "camera zoom is a view action and emits no operations");
-        let json = serde_json::to_string(&app.render(DRAWING_PLAY_BODY_COMPOSITE, None, &ViewModel::default()).expect("render")).unwrap();
-        assert!(json.contains(r#""zoom":3.0"#), "zoom updated: {json}");
-        assert!(json.contains(r#""cameraX":4.0"#), "pan preserved across zoom-only update: {json}");
+        let scene = canvas_scene(app.render(DRAWING_PLAY_BODY_COMPOSITE, None, &ViewModel::default()).await.expect("render"));
+        assert_eq!([scene.camera_x, scene.camera_y, scene.zoom], [4.0, 5.0, 3.0]);
     }
 
     #[semio_framework_async_macros::async_test]
     async fn add_layer_undo_round_trip_through_wrapper() {
-        let mut app = drawing_app();
+        let mut app = drawing_app().await;
         let before = app.snapshot().unwrap().layers.len();
-        fw_testkit::assert_undo_redo_round_trip(&mut app, DrawingCommand::AddLayer(add_layer::AddLayer { kind: "path".into() }), |app| app.snapshot().unwrap().layers.len(), before, before + 1);
+        fw_testkit::assert_undo_redo_round_trip(&mut app, DrawingCommand::AddLayer(add_layer::AddLayer { kind: "path".into() }), |app| app.snapshot().unwrap().layers.len(), before, before + 1).await;
     }
 
     #[semio_framework_async_macros::async_test]
@@ -2370,39 +2363,39 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn canvas_pointer_up_direct_pick_requests_interaction_select() {
-        let mut app = drawing_app_with_registry();
+        let mut app = drawing_app().await;
         // 🔖 The default document's one layer is an empty-segment path (no bounds to hit-test against
         // — see `default_drawing_document`), so a real shape is added first, mirroring
         // `marquee_select_covers_contained_layer_only`'s own setup.
         let initial_id = first_layer_id(&app);
-        app.dispatch_typed(DrawingCommand::DeleteLayer(delete_layer::DeleteLayer { layer_id: initial_id }), &fw_testkit::meta("local")).expect("clear default layer");
-        app.dispatch_typed(DrawingCommand::AddLayer(add_layer::AddLayer { kind: "shape:rect".into() }), &fw_testkit::meta("local")).expect("add rect");
+        app.dispatch_typed(DrawingCommand::DeleteLayer(delete_layer::DeleteLayer { layer_id: initial_id }), &fw_testkit::meta("local")).await.expect("clear default layer");
+        app.dispatch_typed(DrawingCommand::AddLayer(add_layer::AddLayer { kind: "shape:rect".into() }), &fw_testkit::meta("local")).await.expect("add rect");
         let rect_id = last_layer_id(&app);
-        app.dispatch_typed(DrawingCommand::SetCamera(set_camera::SetCamera { camera: crate::artifacts::drawing::DrawingCamera { x: 0.0, y: 0.0, zoom: 1.0 } }), &fw_testkit::meta("local")).expect("camera");
-        set_utility(&mut app, "selectDirect");
+        app.dispatch_typed(DrawingCommand::SetCamera(set_camera::SetCamera { camera: crate::artifacts::drawing::DrawingCamera { x: 0.0, y: 0.0, zoom: 1.0 } }), &fw_testkit::meta("local")).await.expect("camera");
+        set_utility(&mut app, "selectDirect").await;
         // 🎯️ Default `shape:rect` geometry is world (0,0)-(128,96); screen (110,110) on a 200x200
         // viewport with the identity camera above maps to world (10,10) — inside the rect.
-        let result = app.dispatch_typed(DrawingCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp { x: 110.0, y: 110.0, width: 200.0, height: 200.0, shift: false, ctrl: false, meta: false }), &fw_testkit::meta("local")).expect("pick");
+        let result = app.dispatch_typed(DrawingCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp { x: 110.0, y: 110.0, width: 200.0, height: 200.0, shift: false, ctrl: false, meta: false }), &fw_testkit::meta("local")).await.expect("pick");
         assert!(result.mutations.is_empty(), "a direct pick is not a document operation");
         assert_eq!(result.requested_effects, vec![canvas_pointer_down::interaction_select_effect(&[rect_id], "replace")]);
     }
 
     #[semio_framework_async_macros::async_test]
     async fn set_selected_opacity_reads_the_framework_interaction_selection() {
-        let mut app = drawing_app_with_registry();
+        let mut app = drawing_app().await;
         let id = first_layer_id(&app);
         let targets = serde_json::to_string(&vec![serde_json::json!({ "granularity": DRAWING_INTERACTION_GRANULARITY, "id": id })]).unwrap();
-        app.handle_action(semio_framework::INTERACTION_SELECT_ACTION_ID, Some(&serde_json::json!({ "domainId": DRAWING_INTERACTION_DOMAIN, "targets": targets, "merge": "replace" })), &fw_testkit::meta("local")).expect("select");
-        let result = app.dispatch_typed(DrawingCommand::SetSelectedOpacity(set_selected_opacity::SetSelectedOpacity { value: 0.25 }), &fw_testkit::meta("local")).expect("opacity");
+        app.handle_action(semio_framework::INTERACTION_SELECT_ACTION_ID, Some(&dsl::json!({ "domainId": DRAWING_INTERACTION_DOMAIN, "targets": targets, "merge": "replace" })), &fw_testkit::meta("local")).await.expect("select");
+        let result = app.dispatch_typed(DrawingCommand::SetSelectedOpacity(set_selected_opacity::SetSelectedOpacity { value: 0.25 }), &fw_testkit::meta("local")).await.expect("opacity");
         assert_eq!(result.mutations.len(), 1);
         assert!((crate::artifacts::drawing::schema::layer_base(&app.snapshot().unwrap().layers[0]).opacity - 0.25).abs() < f64::EPSILON);
     }
 
     #[semio_framework_async_macros::async_test]
     async fn drawing_labels_resolve_native_by_default() {
-        let mut app = drawing_app();
-        let node = app.render(DRAWING_PLAY_BODY_LAYERS, None, &ViewModel::default()).expect("render");
-        let json = serde_json::to_string(&node).unwrap();
+        let mut app = drawing_app().await;
+        let node = app.render(DRAWING_PLAY_BODY_LAYERS, None, &ViewModel::default()).await.expect("render");
+        let json = fw_testkit::project_and_retire_fixture_tree(node).expect("retire semantic tree");
         assert!(json.contains("Add Path"));
         assert!(json.contains("Add Rectangle"));
         assert!(!json.contains("Pfad hinzufügen"));
@@ -2410,23 +2403,23 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn drawing_labels_translate_panels_in_german() {
-        let mut app = drawing_app();
-        app.dispatch_typed(DrawingCommand::SetLocale(set_locale::SetLocale { value: "de-DE".into() }), &fw_testkit::meta("local")).expect("set locale");
-        let layers_node = app.render(DRAWING_PLAY_BODY_LAYERS, None, &ViewModel::default()).expect("render");
-        let layers_json = serde_json::to_string(&layers_node).unwrap();
+        let mut app = drawing_app().await;
+        app.dispatch_typed(DrawingCommand::SetLocale(set_locale::SetLocale { value: "de-DE".into() }), &fw_testkit::meta("local")).await.expect("set locale");
+        let layers_node = app.render(DRAWING_PLAY_BODY_LAYERS, None, &ViewModel::default()).await.expect("render");
+        let layers_json = fw_testkit::project_and_retire_fixture_tree(layers_node).expect("retire layers tree");
         assert!(layers_json.contains("Pfad hinzufügen"));
         assert!(layers_json.contains("Rechteck hinzufügen"));
         assert!(!layers_json.contains("Add Path"));
-        let catalogue_node = app.render(DRAWING_PLAY_BODY_CATALOGUE, None, &ViewModel::default()).expect("render");
-        let catalogue_json = serde_json::to_string(&catalogue_node).unwrap();
+        let catalogue_node = app.render(DRAWING_PLAY_BODY_CATALOGUE, None, &ViewModel::default()).await.expect("render");
+        let catalogue_json = fw_testkit::project_and_retire_fixture_tree(catalogue_node).expect("retire catalogue tree");
         assert!(catalogue_json.contains("\"Ellipse\""));
         assert!(catalogue_json.contains("Nachzeichnung"));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn drawing_io_declares_vector_out_and_export_media_covers_both_ports() {
-        let mut app = drawing_app();
-        app.dispatch_typed(DrawingCommand::AddLayer(add_layer::AddLayer { kind: "shape:rect".into() }), &fw_testkit::meta("local")).expect("add");
+        let mut app = drawing_app().await;
+        app.dispatch_typed(DrawingCommand::AddLayer(add_layer::AddLayer { kind: "shape:rect".into() }), &fw_testkit::meta("local")).await.expect("add");
         let projection = app.snapshot().expect("projection");
         let history = semio_framework_plugin::HistoryView::empty();
         let doc = ArtifactView::new(&projection, &history);
@@ -2486,7 +2479,7 @@ mod tests {
     /// 🔖️ One `DrawingCommand` value per row, in binary-variant-ordinal order — feeds both the
     /// op-text/binary equivalence loop and the "printed line starts with the row's wire keyword"
     /// assertion. Permanent wire guard: appending a variant is safe, reordering breaks the format.
-    async fn every_command() -> Vec<DrawingCommand> {
+    fn every_command() -> Vec<DrawingCommand> {
         vec![
             DrawingCommand::SetSnapshot(set_snapshot::SetSnapshot { snapshot: default_drawing_document("cmd-doc", None) }),
             DrawingCommand::CommitDocument(commit_document::CommitDocument { snapshot: default_drawing_document("cmd-doc-2", None) }),
@@ -2559,7 +2552,7 @@ mod tests {
         assert_eq!(engagement_submit_none.encode_op().expect("encode"), hex_bytes("01050000"));
     }
 
-    async fn hex_bytes(hex: &str) -> Vec<u8> {
+    fn hex_bytes(hex: &str) -> Vec<u8> {
         (0..hex.len()).step_by(2).map(|i| u8::from_str_radix(&hex[i..i + 2], 16).expect("valid hex")).collect()
     }
 
@@ -2614,7 +2607,7 @@ mod tests {
         assert_eq!(DRAWING_BOUNDED_TOOL_IDS.len(), 20);
         let mut routes = DRAWING_GESTURE_TOOL_IDS.iter().chain(DRAWING_BOUNDED_TOOL_IDS).copied().collect::<Vec<_>>();
         routes.sort_unstable();
-        let mut declared = every_command().await.into_iter().map(|command| command.command_id()).collect::<Vec<_>>();
+        let mut declared = every_command().into_iter().map(|command| command.command_id()).collect::<Vec<_>>();
         declared.sort_unstable();
         assert_eq!(routes, declared, "every declared command owns exactly one retained route, and no route names a command that does not exist");
         assert_eq!(routes.windows(2).filter(|pair| pair[0] == pair[1]).count(), 0, "a tool id may be owned by exactly one factory");
@@ -2659,7 +2652,7 @@ mod tests {
         let examples = crate::artifacts::drawing::standards::v1::subsets::any::examples();
         assert!(examples.iter().any(|source| source.id() == "demo"), "the subset registers its demo example");
         let doc = default_drawing_document("example-probe", None);
-        let history = semio_framework_plugin::HistoryView::default();
+        let history = semio_framework_plugin::HistoryView::empty();
         let config = DrawingConfig::default();
         let view = ArtifactView::new(&doc, &history);
         let cfg = ConfigView { snapshot: &config };

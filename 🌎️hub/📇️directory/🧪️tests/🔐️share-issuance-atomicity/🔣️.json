@@ -1,0 +1,13 @@
+{
+  "schema": "semio.hub.share-issuance-atomicity/v1",
+  "cases": [
+    { "name": "live-author", "spaceKind": "studio", "role": "author", "spaceExists": true, "descriptorExists": true, "deleteBeforeInsert": "none", "accepted": true },
+    { "name": "archived-spectator", "spaceKind": "archive", "role": "spectator", "spaceExists": true, "descriptorExists": true, "deleteBeforeInsert": "none", "accepted": true },
+    { "name": "missing-space", "spaceKind": "studio", "role": "author", "spaceExists": false, "descriptorExists": false, "deleteBeforeInsert": "none", "accepted": false },
+    { "name": "missing-descriptor", "spaceKind": "studio", "role": "author", "spaceExists": true, "descriptorExists": false, "deleteBeforeInsert": "none", "accepted": false },
+    { "name": "foreign-document", "spaceKind": "studio", "role": "spectator", "spaceExists": true, "descriptorExists": true, "deleteBeforeInsert": "other-document", "accepted": false },
+    { "name": "descriptor-deleted-at-insert", "spaceKind": "studio", "role": "spectator", "spaceExists": true, "descriptorExists": true, "deleteBeforeInsert": "descriptor", "accepted": false },
+    { "name": "space-deleted-at-insert", "spaceKind": "archive", "role": "spectator", "spaceExists": true, "descriptorExists": true, "deleteBeforeInsert": "space", "accepted": false }
+  ],
+  "sourceHostiles": ["sqlite-select-removed", "sqlite-owner-foreign-key-removed", "postgres-select-lock-removed", "postgres-owner-foreign-key-removed", "neo4j-space-owner-removed", "neo4j-descriptor-owner-removed", "neo4j-count-consumption-removed"]
+}

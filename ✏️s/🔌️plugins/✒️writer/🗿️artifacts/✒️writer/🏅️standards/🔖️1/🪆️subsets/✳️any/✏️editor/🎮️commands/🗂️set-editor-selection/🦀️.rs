@@ -23,5 +23,5 @@ pub struct SetEditorSelection {
 
 pub fn handle(payload: &SetEditorSelection, _doc: &ArtifactView<'_, WriterSnapshot>, cfg: &ConfigView<'_, WriterConfig>) -> Result<Emit<WriterMutation, WriterConfigMutation>, Fault> {
     let config = cfg.snapshot;
-    Ok(Emit::config(vec![WriterConfigMutation::SetEditorSelection { selection: Some(WriterEditorSelection { start: payload.start, end: payload.end }) }, WriterConfigMutation::SetRevision { value: config.revision + 1 }]))
+    Ok(Emit::config(vec![WriterConfigMutation::SetEditorSelection(crate::editor::writer::config::SetEditorSelection { selection: Some(WriterEditorSelection { start: payload.start, end: payload.end }) }), WriterConfigMutation::SetRevision(crate::editor::writer::config::SetRevision { value: config.revision + 1 })]))
 }

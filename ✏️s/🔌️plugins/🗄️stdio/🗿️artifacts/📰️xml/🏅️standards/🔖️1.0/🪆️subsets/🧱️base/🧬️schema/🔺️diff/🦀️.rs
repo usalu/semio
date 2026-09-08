@@ -2,7 +2,7 @@
 //! scalars (`Some(None)` = cleared); `root` nests the recursive `XmlNodeDiff` tree, itself shaped
 //! like the `XmlNode` it targets (`XmlNode::Element` <-> `XmlElementDiff`, `XmlNode::Text` <->
 //! `Text{text}`, everything else -- CData/Comment/ProcessingInstruction, plus any node-KIND change
-//! -- via the `Replace` fallback). Origin of the xml/svg node-diff pattern (`.🦑️repo/🎫️tickets/
+//! -- via the `Replace` fallback). Origin of the xml/svg node-diff pattern (`.🧬semio/🦑️repo/🎫️tickets/
 //! 🎆️26/🌙️08/☀️10/ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION/🧬️schema-design.md`):
 //! svg's own diff types build on this shape but are declared separately in svg's own facet dir.
 //!

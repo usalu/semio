@@ -1,0 +1,3 @@
+(* ebnf stdio.pdf.inference *)
+document = header, body ;
+header = 'schema', space, 'stdio.pdf.inference', newline ;

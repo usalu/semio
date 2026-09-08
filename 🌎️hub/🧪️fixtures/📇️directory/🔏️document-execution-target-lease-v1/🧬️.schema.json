@@ -414,6 +414,7 @@
               "descriptor-trailing-byte",
               "descriptor-noncanonical",
               "descriptor-self-hash",
+              "descriptor-protocol",
               "descriptor-max-plus-one",
               "missing-body",
               "mixed-generation",
@@ -504,7 +505,8 @@
         "version",
         "componentSha256",
         "componentBlake3",
-        "descriptorByteSha256"
+        "descriptorByteSha256",
+        "executionProtocol"
       ],
       "properties": {
         "pluginId": {
@@ -524,6 +526,12 @@
         },
         "descriptorByteSha256": {
           "$ref": "#/$defs/hash"
+        },
+        "executionProtocol": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["appChannelVersion"],
+          "properties": { "appChannelVersion": { "const": 14 } }
         }
       }
     },

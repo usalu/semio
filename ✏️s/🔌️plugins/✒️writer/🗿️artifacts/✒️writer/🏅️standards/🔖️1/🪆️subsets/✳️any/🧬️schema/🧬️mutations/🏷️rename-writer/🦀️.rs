@@ -9,9 +9,10 @@ use serde::{Deserialize, Serialize};
 /// 🏷️ Renames `WriterSnapshot::id` — the document's identity (derived from the last path segment
 /// of `uri` when a file is opened, per `open_document`'s app-level handler) — to `new_id`. Diff/
 /// inverse delegate to the sibling `🔺️diff`/`↩️inverse` leaves.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord, dsl::MutationLeaf, dsl::ToValue, dsl::FromValue)]
 #[mutation_leaf(contract = ::protocol)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 #[dsl(keyword = "rename-writer")]
 pub struct RenameWriter {
     pub new_id: String,

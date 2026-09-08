@@ -6,7 +6,7 @@
   "emoji": "🗣️",
   "aggregateVariant": "SetLocale",
   "payloadSchema": "🧬️.schema.json",
-  "textOpcode": "locale",
+  "textOpcode": "set-locale",
   "binaryTag": 1,
   "invertibility": "explicit-mutation",
   "diffParticipation": "apply-only",

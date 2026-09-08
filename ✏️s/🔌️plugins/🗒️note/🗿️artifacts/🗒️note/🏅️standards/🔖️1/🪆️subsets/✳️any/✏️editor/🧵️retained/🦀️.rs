@@ -293,7 +293,7 @@ impl ArtifactCommandWork<EditorApp<NotePlayApp>> for NoteCommandWork {
         self.workspace_identity
     }
 
-    fn extent(&self, _command: &NoteCommand, _snapshot: &NoteSnapshot, _interaction: &protocol::InteractionState, _context: Option<&semio_framework_plugin::ArtifactOwnedToolJobContext<EditorApp<NotePlayApp>>>) -> Option<usize> {
+    fn extent(&self, _command: &NoteCommand, _snapshot: &NoteSnapshot, _interaction: &protocol::InteractionState, _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<NotePlayApp>>>) -> Option<usize> {
         Some(self.units.len())
     }
 
@@ -305,7 +305,7 @@ impl ArtifactCommandWork<EditorApp<NotePlayApp>> for NoteCommandWork {
         history: &HistoryView,
         _interaction: &protocol::InteractionState,
         _hover: &semio_framework_plugin::app::InteractionHoverState,
-        _context: Option<&semio_framework_plugin::ArtifactOwnedToolJobContext<EditorApp<NotePlayApp>>>,
+        _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<NotePlayApp>>>,
         operation: &AppOperationContext,
     ) -> Result<ArtifactCommandWorkStep<EditorApp<NotePlayApp>>, Fault> {
         if self.complete || self.cursor >= self.units.len() {
@@ -886,10 +886,6 @@ impl NoteOwnedRetirement {
         if let Some(value) = value {
             self.push_string(value);
         }
-    }
-
-    fn push_block(&mut self, block: crate::artifacts::note::NoteBlockNode) {
-        self.blocks.push(block);
     }
 
     fn push_text_child(&mut self, child: crate::artifacts::note::NoteTextChild) {
@@ -2208,21 +2204,13 @@ fn note_semantic_edit<M>(forward: M, inverse: Vec<M>, description: Option<String
 }
 
 fn prepare_note_config(base: &NoteConfig, mutation: NoteConfigMutation) -> Result<(NoteConfig, Vec<NoteConfigMutation>, NoteConfigMutation), String> {
-    let mut post = base.clone();
-    match &mutation {
-        NoteConfigMutation::Snapshot { config } => post = config.clone(),
-        NoteConfigMutation::SetEngagementInput { value } => post.engagement_input = value.clone(),
-        NoteConfigMutation::SetCamera { camera } => post.camera = camera.clone(),
-        NoteConfigMutation::SetActiveUtility { utility_id } => post.active_utility_id = utility_id.clone(),
-        NoteConfigMutation::SetLocale { value } => post.locale = value.clone(),
-    }
-    Ok((post, vec![NoteConfigMutation::Snapshot { config: base.clone() }], mutation))
+    Ok((mutation.diff(base).into_parts().0, mutation.inverse(base), mutation))
 }
 
 impl<P, M> store::ArtifactStoreOneItemPreparationFactory<P, M> for NoteStoreOneItemPreparationFactory<P, M>
 where
     P: Clone + Send + Sync + 'static,
-    M: Clone + serde::Serialize + Send + Sync + 'static,
+    M: Clone + dsl::ToValue + Send + Sync + 'static,
 {
     fn preflight(&self, _mutation: &M, description: Option<&str>, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
         if lane != self.lane || description.is_some_and(|value| value.len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES) {
@@ -2259,7 +2247,7 @@ where
 impl<P, M> store::ArtifactStoreOneItemPreparation<P, M> for NoteStoreOneItemPreparation<P, M>
 where
     P: Clone + Send + Sync + 'static,
-    M: Clone + serde::Serialize + Send + Sync + 'static,
+    M: Clone + dsl::ToValue + Send + Sync + 'static,
 {
     fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {
         if !grant.permits_one() || self.cancelled {
@@ -2947,3 +2935,5 @@ mod materialization_tests {
     }
 }
 //#endregion 🧪️MaterializationTests
+
+use protocol::Mutation;

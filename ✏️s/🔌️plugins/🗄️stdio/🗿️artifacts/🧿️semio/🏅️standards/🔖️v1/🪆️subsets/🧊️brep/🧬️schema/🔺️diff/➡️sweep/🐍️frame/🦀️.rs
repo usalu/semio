@@ -15,13 +15,10 @@ use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::top
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::matrix::Frame3;
 use crate::artifacts::semio::standards::v1::subsets::brep::schema::snapshot::vector::{Pnt3, Vec3};
 
-/// 🐍 One sampled path station: world point, unit tangent, and cumulative arc length from the
-/// path's start (the natural, path-length "station scalar" every rail/lateral fit in the general
-/// sweep chain is built against).
+/// 🐍 One sampled path station: world point and unit tangent for frame propagation.
 pub(super) struct Station {
     pub point: Pnt3,
     pub tangent: Vec3,
-    pub length: f64,
 }
 
 /// 🐍 Samples `📡️wire`'s edges into stations: `min_per_edge` uniform samples, doubled wherever the
@@ -30,7 +27,6 @@ pub(super) struct Station {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(super) fn sample_path(body: &Body, wire: &Wire, min_per_edge: usize, max_per_edge: usize) -> Result<Vec<Station>, KernelError> {
     let mut stations = Vec::new();
-    let mut length = 0.0;
     let mut prev: Option<Pnt3> = None;
     for &(edge_id, forward) in &wire.members {
         let edge = body.edges.get(edge_id).ok_or_else(|| KernelError::MissingEntity(format!("edge {edge_id}")))?;
@@ -44,11 +40,8 @@ pub(super) fn sample_path(body: &Body, wire: &Wire, min_per_edge: usize, max_per
             let point = curve.eval(t);
             let raw_tangent = curve.d1(t).normalized().unwrap_or(Vec3::X);
             let tangent = if forward { raw_tangent } else { -raw_tangent };
-            if let Some(p) = prev {
-                length += (point - p).norm();
-            }
             if prev.map(|p| (point - p).norm() > 1e-12).unwrap_or(true) {
-                stations.push(Station { point, tangent, length });
+                stations.push(Station { point, tangent });
                 prev = Some(point);
             }
         }

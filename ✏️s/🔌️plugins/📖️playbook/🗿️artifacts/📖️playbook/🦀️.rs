@@ -536,9 +536,9 @@ mod tests {
                 }
                 "wireOmission" => {
                     let snapshot = playbook_snapshot_with_steps(PLAYBOOK_DOCUMENT_SCHEMA, "wire", "1", None, one_step(first));
-                    let wire = serde_json::to_value(&snapshot).expect("third-party serde oracle serializes snapshot");
+                    let wire = serde_json::from_str::<serde_json::Value>(&dsl::os_pack::to_json_string(&snapshot)).expect("third-party JSON oracle reads snapshot wire");
                     assert!(wire.pointer("/flow/localOwner").is_none());
-                    let decoded: PlaybookSnapshot = serde_json::from_value(wire).expect("third-party serde oracle decodes snapshot");
+                    let decoded: PlaybookSnapshot = dsl::os_pack::from_json_str(&wire.to_string()).expect("first-party codec decodes snapshot wire");
                     assert!(decoded.flow.local_owner::<PlaybookWorkingScene>().is_none());
                     assert!(playbook_working_scene_owner(&decoded.flow).steps.is_empty());
                     assert_eq!(playbook_working_scene_owner(&snapshot.flow).steps[0].title, first);

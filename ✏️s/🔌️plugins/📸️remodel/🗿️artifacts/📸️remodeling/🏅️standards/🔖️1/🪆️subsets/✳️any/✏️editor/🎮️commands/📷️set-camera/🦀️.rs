@@ -14,7 +14,7 @@ pub struct SetCamera {
 }
 
 pub fn handle(payload: &SetCamera, _doc: &ArtifactView<'_, RemodelingSnapshot>, _cfg: &ConfigView<'_, RemodelingConfig>) -> Result<Emit<RemodelingMutation, RemodelingConfigMutation>, Fault> {
-    Ok(Emit::config(vec![RemodelingConfigMutation::SetCamera { camera: payload.camera.clone() }]))
+    Ok(Emit::config(vec![RemodelingConfigMutation::SetCamera(crate::editor::remodeling::config::SetCamera { camera: payload.camera.clone() })]))
 }
 
 //#region 🧪️Tests

@@ -1,0 +1,4 @@
+# 🗑️ Direct remove-mark-info GraphQL payload.
+input RemoveMarkInfoMutationInput {
+  _unit: Boolean
+}

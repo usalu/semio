@@ -833,7 +833,7 @@
   --text-9xl: 7.2rem;
   --text-9xl--line-height: 1;
   /* #region 🪜️LevelZScale — formula z(k) = k * --z-step (zStep=10), k=0..5 for base..menu (see
-     contract at .🦑️repo/🎫️tickets/26/07/27/UNIFIED-6-LEVEL-UI-SURFACE-SYSTEM/contract.txt). */
+     contract at .🧬semio/🦑️repo/🎫️tickets/26/07/27/UNIFIED-6-LEVEL-UI-SURFACE-SYSTEM/contract.txt). */
   --z-base: 0;
   --z-window: 10;
   --z-pane: 20;
@@ -847,7 +847,7 @@
   --glass-saturate: 1.45;
   /* #region 🎚️LevelKnobs — formula knobs for the unified 6-level surface system (base=0 window=1
      pane=2 panel=3 dialog=4 menu=5); 🖌️ui.css and ui/styling/🔣️.json's "levels" block must stay
-     in lockstep (see contract at .🦑️repo/🎫️tickets/26/07/27/UNIFIED-6-LEVEL-UI-SURFACE-SYSTEM/contract.txt).
+     in lockstep (see contract at .🧬semio/🦑️repo/🎫️tickets/26/07/27/UNIFIED-6-LEVEL-UI-SURFACE-SYSTEM/contract.txt).
      --glass-saturate above (1.45) is reused as-is by the new glass utilities, no duplicate knob. */
   --level-shade-step: 5%;
   --glass-alpha-step: 0.12;

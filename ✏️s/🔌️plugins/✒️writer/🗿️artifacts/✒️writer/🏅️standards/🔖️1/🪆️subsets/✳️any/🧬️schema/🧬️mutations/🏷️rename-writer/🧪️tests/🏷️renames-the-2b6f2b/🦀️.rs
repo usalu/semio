@@ -19,13 +19,13 @@ const DIFF: &str = include_str!("🔺️diff/🔣️.json");
 const OUTCOME: &str = include_str!("🎯️outcome/🔣️.json");
 
 fn before() -> WriterSnapshot {
-    serde_json::from_str(BEFORE).expect("before writer document decodes")
+    dsl::os_pack::json::from_json_str(BEFORE).expect("before writer document decodes")
 }
 fn expected_after() -> WriterSnapshot {
-    serde_json::from_str(AFTER).expect("after writer document decodes")
+    dsl::os_pack::json::from_json_str(AFTER).expect("after writer document decodes")
 }
 fn mutation() -> WriterMutation {
-    serde_json::from_str(MUTATION).expect("rename-writer mutation decodes")
+    dsl::os_pack::json::from_json_str(MUTATION).expect("rename-writer mutation decodes")
 }
 
 /// ▶️ Renaming `brief` to `mission-brief` rewrites `id` and nothing else — `uri`, `languageId` and
@@ -60,12 +60,12 @@ async fn renaming_back_restores_before() {
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {
-        let decoded: WriterSnapshot = serde_json::from_str(text).expect("writer document decodes");
-        let reencoded = serde_json::to_value(&decoded).expect("writer document encodes");
+        let decoded: WriterSnapshot = dsl::os_pack::json::from_json_str(text).expect("writer document decodes");
+        let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::os_pack::json::to_json_string(&decoded)).expect("writer document encodes");
         let original: serde_json::Value = serde_json::from_str(text).expect("writer document reparses");
         assert_eq!(reencoded, original, "rename-writer/renames-the-document-to-mission-brief: committed {label} document JSON is not canonical");
     }
-    let reencoded = serde_json::to_value(mutation()).expect("renameWriter payload encodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::os_pack::json::to_json_string(&(mutation()))).expect("renameWriter payload encodes");
     let original: serde_json::Value = serde_json::from_str(MUTATION).expect("renameWriter payload reparses");
     assert_eq!(reencoded, original, "rename-writer/renames-the-document-to-mission-brief: committed renameWriter JSON is not canonical");
 }
@@ -86,7 +86,7 @@ async fn declared_outcome_holds() {
 #[semio_framework_async_macros::async_test]
 async fn produces_committed_diff() {
     let outcome = <WriterMutation as protocol::Mutation<WriterSnapshot>>::diff(&mutation(), &before());
-    let produced = serde_json::to_value(outcome.diff()).expect("produced rename-writer diff encodes");
+    let produced = serde_json::from_str::<serde_json::Value>(&dsl::os_pack::json::to_json_string(outcome.diff())).expect("produced rename-writer diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
     assert_eq!(produced, committed, "rename-writer/renames-the-document-to-mission-brief: produced diff differs from the committed 🔺️diff/🔣️.json");
 }
@@ -95,10 +95,10 @@ async fn produces_committed_diff() {
 /// nulls, which `WriterDiff` emits because no field carries `skip_serializing_if`.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical() {
-    let decoded: WriterDiff = serde_json::from_str(DIFF).expect("committed rename-writer diff decodes");
+    let decoded: WriterDiff = dsl::os_pack::json::from_json_str(DIFF).expect("committed rename-writer diff decodes");
     assert_eq!(decoded.id.as_deref(), Some("mission-brief"), "rename-writer/renames-the-document-to-mission-brief: the committed diff must set the new identity");
     assert!(decoded.document.is_none() && decoded.artifact.is_none(), "rename-writer/renames-the-document-to-mission-brief: a rename must neither replace the document child nor swap the whole artifact");
-    let reencoded = serde_json::to_value(&decoded).expect("committed diff re-encodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::os_pack::json::to_json_string(&decoded)).expect("committed diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
     assert_eq!(reencoded, original, "rename-writer/renames-the-document-to-mission-brief: committed diff JSON is not canonical");
 }
@@ -106,7 +106,7 @@ async fn committed_diff_is_canonical() {
 /// 🩹 The committed diff alone carries the before-document to the after-document.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
-    let decoded: WriterDiff = serde_json::from_str(DIFF).expect("committed rename-writer diff decodes");
+    let decoded: WriterDiff = dsl::os_pack::json::from_json_str(DIFF).expect("committed rename-writer diff decodes");
     let produced = protocol::MutationDiff::apply(&decoded, &before()).expect("committed diff applies to the before-document");
     assert_eq!(produced, expected_after(), "rename-writer/renames-the-document-to-mission-brief: committed diff did not carry before to after");
 }

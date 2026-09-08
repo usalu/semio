@@ -18,7 +18,7 @@ pub mod set_locale {
     }
 
     pub fn handle(payload: &SetLocale, _doc: &ArtifactView<'_, ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>, _ctx: &mut ShootingDispatchCtx) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
-        Ok(Emit::config(vec![ShootingConfigMutation::SetLocale { value: payload.value.clone() }]))
+        Ok(Emit::config(vec![ShootingConfigMutation::SetLocale(crate::editor::shooting::config::SetLocale { value: payload.value.clone() })]))
     }
 }
 //#endregion 🔖️SetLocale
@@ -35,10 +35,10 @@ mod tests {
         use crate::editor::shooting::testkit::render;
         use crate::editor::shooting::SHOOTING_PLAY_BODY_DOCUMENT;
 
-        let mut app = shooting_app();
-        let result = dispatch(&mut app, ShootingCommand::SetLocale(set_locale::SetLocale { value: "de-DE".into() }));
+        let mut app = shooting_app().await;
+        let result = dispatch(&mut app, ShootingCommand::SetLocale(set_locale::SetLocale { value: "de-DE".into() })).await;
         assert!(result.mutations.is_empty(), "locale is config-only");
-        assert!(render(&mut app, SHOOTING_PLAY_BODY_DOCUMENT).contains("Aufnahmen"), "the document panel now resolves German labels");
+        assert!(render(&mut app, SHOOTING_PLAY_BODY_DOCUMENT).await.contains("Aufnahmen"), "the document panel now resolves German labels");
     }
 }
 //#endregion 🧪️Tests

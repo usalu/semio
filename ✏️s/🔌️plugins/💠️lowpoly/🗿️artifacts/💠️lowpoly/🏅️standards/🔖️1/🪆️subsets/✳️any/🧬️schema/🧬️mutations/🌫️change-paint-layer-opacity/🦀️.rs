@@ -1,6 +1,7 @@
 //! 🌫️ `change-paint-layer-opacity` — sets a paint layer's compositing opacity.
 
 use crate::artifacts::lowpoly::{LowpolyMutation, LowpolySnapshot};
+#[cfg(test)]
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Payload

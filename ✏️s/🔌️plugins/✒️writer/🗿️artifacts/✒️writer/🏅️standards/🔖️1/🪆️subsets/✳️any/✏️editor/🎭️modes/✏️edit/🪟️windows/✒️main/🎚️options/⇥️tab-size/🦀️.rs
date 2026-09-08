@@ -5,7 +5,6 @@ use crate::editor::writer::config::WriterConfig;
 use crate::editor::writer::terminology::WriterPlayLabels;
 use crate::editor::writer::writer_action;
 use semio_framework_plugin::WindowMeasure;
-use serde_json::json;
 
 //#region 🔖️Measure
 pub fn measure(config: &WriterConfig, labels: &WriterPlayLabels) -> WindowMeasure {
@@ -22,7 +21,7 @@ pub fn measure(config: &WriterConfig, labels: &WriterPlayLabels) -> WindowMeasur
         waiting: None,
         disabled: None,
         reveal: None,
-        on_change: writer_action("setEditorSetting", Some(json!({ "field": "tabSize" }))),
+        on_change: writer_action("setEditorSetting", Some(dsl::DslValue::object([("field".into(), dsl::DslValue::String("tabSize".into()))]))),
     }
 }
 //#endregion 🔖️Measure

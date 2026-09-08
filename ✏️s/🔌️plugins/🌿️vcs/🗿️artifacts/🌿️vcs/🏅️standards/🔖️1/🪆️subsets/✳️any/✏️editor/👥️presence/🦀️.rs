@@ -15,7 +15,7 @@ pub struct VcsDemoPresence {}
 
 impl protocol::MutationDiff<VcsDemoPresence> for VcsDemoPresence {
     fn apply(&self, base: &VcsDemoPresence) -> protocol::MutationApplyResult<VcsDemoPresence> {
-        Ok({ base.clone() })
+        Ok(base.clone())
     }
     fn absorb(&mut self, _other: Self) {}
 }

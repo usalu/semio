@@ -1,0 +1,21 @@
+{
+  "controller": "s.shooting.shooting@1/*#editor",
+  "scene": [
+    "setCenterModel",
+    "toggleSun",
+    "setSunAzimuth",
+    "setSunElevation",
+    "setSunIntensity",
+    "setAmbientIntensity",
+    "setShadowEnabled",
+    "setMaterialRoughness"
+  ],
+  "icon": [
+    "setActiveShot",
+    "setActiveShotFormat",
+    "setActiveShotShape"
+  ],
+  "sceneChange": "setCameraDraftLabel",
+  "sceneSubmit": "saveCamera",
+  "iconChange": "setActiveShotLabel"
+}

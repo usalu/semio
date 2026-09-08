@@ -36,6 +36,13 @@ const pluginOutRoot = join(repoRoot, "./🧰️framework/🛍️products/💻️
 const NATIVE_RUNNER_BENIGN_ENV_KEY = "SEMIO_DIRECT_CHILD_BENIGN";
 const NATIVE_RUNNER_BENIGN_ENV_VALUE = "preserved";
 
+function assertRendererCacheHome(): number {
+  const configuredOutDir = relative(import.meta.dir, outDir).replaceAll(sep, "/");
+  const config = readFileSync(join(import.meta.dir, "Trunk.toml"), "utf8");
+  assert.equal(/^dist = "([^"]+)"$/mu.exec(config)?.[1], configuredOutDir, "Trunk must emit WGPU renderer modules inside .🧬semio/🦑️repo");
+  return 1;
+}
+
 function nativeRunnerEnvironmentKeyIsProtected(key: string): boolean {
   const normalized = key.toUpperCase();
   return (
@@ -356,6 +363,7 @@ class NativeRunScript extends BundleScript {
 
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
+    assertRendererCacheHome();
     const { rest } = resolveTestLevel(segments);
     await runCargoTestBudgeted([crateName], this.repoRoot, rest);
     await runVitest(this.root, rest, "🟦️typescript/🧪️test/🟦️s.ts");
@@ -627,9 +635,10 @@ function collectWgpuColorLiteralViolations(bundleRoot: string): string[] {
 
 class LintScript extends BundleScript {
   run(_segments: string[]): void {
+    const artifactChecks = assertRendererCacheHome();
     const violations = collectWgpuColorLiteralViolations(this.root);
     if (violations.length === 0) {
-      console.log("framework-renderer-wgpu: color-literal lint passed");
+      console.log(`framework-renderer-wgpu: color-literal and artifact-home lint passed (${artifactChecks} checks)`);
       return;
     }
     console.error(`framework-renderer-wgpu: found ${violations.length} raw color-construction call(s) outside framework/ui/wgpu theme:`);

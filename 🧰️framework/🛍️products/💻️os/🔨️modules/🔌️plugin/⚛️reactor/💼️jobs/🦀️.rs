@@ -289,6 +289,7 @@ impl Future for JobTick {
 //#region 🔖️Slots
 
 enum JobBody {
+    #[cfg(test)]
     Running {
         task: super::executor::TaskId,
         state: Rc<RefCell<JobState>>,
@@ -319,6 +320,7 @@ crate::component_persistent_local! {
 
 /// ▶️ Same bound the reactor turn loop's own `EXECUTOR.run_until_idle` uses — a defensive cap
 /// against a job task that keeps re-waking itself forever inside one `step_job` call.
+#[cfg(test)]
 const SLICE_MAX_ITERATIONS: u32 = 64;
 
 /// 🛑️ Number of consecutive `step_job` calls a job may return `Running` with no progress bytes AND
@@ -447,8 +449,9 @@ pub async fn step_job(job: u64, budget: JobBudget) -> JobStep {
     }
     let Some((kind, running)) = JOBS.with(|jobs| {
         jobs.borrow().get(&job).map(|slot| {
-            let running = match &slot.body {
+            let running: Option<(super::executor::TaskId, Rc<RefCell<JobState>>)> = match &slot.body {
                 JobBody::UnknownKind | JobBody::AdmissionFailed(_) | JobBody::ExplicitStateMachineRequired | JobBody::Bounded(_) => None,
+                #[cfg(test)]
                 JobBody::Running { task, state } => Some((super::executor::TaskId::clone(task), state.clone())),
             };
             (slot.kind.clone(), running)
@@ -462,7 +465,9 @@ pub async fn step_job(job: u64, budget: JobBudget) -> JobStep {
                 jobs.borrow().get(&job).map(|slot| match &slot.body {
                     JobBody::ExplicitStateMachineRequired => "job.explicit-state-machine-required",
                     JobBody::AdmissionFailed(_) => "job.admission-failed",
-                    JobBody::UnknownKind | JobBody::Running { .. } | JobBody::Bounded(_) => "job.unknown-kind",
+                    JobBody::UnknownKind | JobBody::Bounded(_) => "job.unknown-kind",
+                    #[cfg(test)]
+                    JobBody::Running { .. } => "job.unknown-kind",
                 })
             })
             .unwrap_or("job.unknown");
@@ -553,6 +558,7 @@ pub async fn checkpoint_jobs() -> Vec<JobCheckpointEntry> {
             .iter()
             .map(|(job, slot)| {
                 let checkpoint = match &slot.body {
+                    #[cfg(test)]
                     JobBody::Running { state, .. } => state.borrow().checkpoint.clone(),
                     JobBody::Bounded(owner) => owner.checkpoint(),
                     JobBody::UnknownKind | JobBody::AdmissionFailed(_) | JobBody::ExplicitStateMachineRequired => None,

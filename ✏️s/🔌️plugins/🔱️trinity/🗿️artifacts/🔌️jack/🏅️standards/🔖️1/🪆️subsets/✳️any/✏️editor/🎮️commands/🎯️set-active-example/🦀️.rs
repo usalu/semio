@@ -32,7 +32,7 @@ pub(crate) fn preset_query(preset_id: &str) -> &'static str {
 }
 
 fn error_result_json(message: &str) -> String {
-    json!({ "error": message }).to_string()
+    pack::json!({ "error": message }).to_string()
 }
 fn fixture_dsl_for_preset(preset_id: &str) -> Option<&'static str> {
     match preset_id {
@@ -50,10 +50,10 @@ pub(crate) fn set_active_example(example_id: &str) -> Result<Emit<TrinityGraphMu
             Ok(Emit {
                 effects: vec![crate::editor::jack::reset_document_effect(&next)],
                 config_mutations: vec![
-                    JackConfigMutation::SetActiveFixture { value: example_id.to_string() },
-                    JackConfigMutation::SetCamera { camera: next.camera },
-                    JackConfigMutation::SetQuery { value: query },
-                    JackConfigMutation::SetResult { value: result_json },
+                    JackConfigMutation::SetActiveFixture(crate::editor::jack::config::SetActiveFixture { value: example_id.to_string() }),
+                    JackConfigMutation::SetCamera(crate::editor::jack::config::SetCamera { camera: next.camera }),
+                    JackConfigMutation::SetQuery(crate::editor::jack::config::SetQuery { value: query }),
+                    JackConfigMutation::SetResult(crate::editor::jack::config::SetResult { value: result_json }),
                 ],
                 ..Default::default()
             })

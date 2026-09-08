@@ -285,12 +285,12 @@ mod tests {
     /// `SemioGraphEdge` shape has no native slot for (`radius`/`root`/`edgeKind`/...).
     #[semio_framework_async_macros::async_test]
     async fn node_edge_content_round_trips_through_the_composed_child_snapshot() {
-        let node = dsl::to_dsl_value(&serde_json::json!({
+        let node = dsl::to_dsl_value(&dsl::json!({
             "id": "node-1", "nodeKind": "identity", "shape": "circle", "x": 3.0, "y": 4.0,
             "radius": 24.0, "text": "Alpha", "root": true, "handles": []
         }))
         .unwrap();
-        let edge = dsl::to_dsl_value(&serde_json::json!({ "id": "edge-1", "edgeKind": "wires.owns", "source": "node-1", "target": "node-2" })).unwrap();
+        let edge = dsl::to_dsl_value(&dsl::json!({ "id": "edge-1", "edgeKind": "wires.owns", "source": "node-1", "target": "node-2" })).unwrap();
         let content = wires_content_snapshot_from_scene(std::slice::from_ref(&node), std::slice::from_ref(&edge));
         assert_eq!(content.nodes.len(), 1);
         assert_eq!(content.nodes[0].id.value, "node-1");
@@ -303,7 +303,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn content_child_handle_is_content_addressed_and_deterministic() {
-        let node = dsl::to_dsl_value(&serde_json::json!({ "id": "a", "nodeKind": "identity", "shape": "circle", "x": 0.0, "y": 0.0, "text": "A", "handles": [] })).unwrap();
+        let node = dsl::to_dsl_value(&dsl::json!({ "id": "a", "nodeKind": "identity", "shape": "circle", "x": 0.0, "y": 0.0, "text": "A", "handles": [] })).unwrap();
         let handle_a = wires_content_child_handle(std::slice::from_ref(&node), &[]);
         let handle_b = wires_content_child_handle(std::slice::from_ref(&node), &[]);
         assert_eq!(handle_a.child_id, handle_b.child_id, "same content must mint the same handle");
@@ -314,8 +314,8 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn wires_working_scene_is_owned_by_the_exact_snapshot_child() {
         let owned = wires_content_child_with_owner(Vec::new(), Vec::new());
-        let wire = serde_json::to_vec(&owned).expect("Wires child wire identity");
-        let reconstructed: WiresContentChild = serde_json::from_slice(&wire).expect("Wires child wire roundtrip");
+        let wire = dsl::os_pack::to_json_string(&owned);
+        let reconstructed: WiresContentChild = dsl::os_pack::from_json_str(&wire).expect("Wires child wire roundtrip");
         let observed = serde_json::json!({
             "ownedHasScene": owned.local_owner::<WiresWorkingScene>().is_some(),
             "wireIdentityMatches": owned == reconstructed,
@@ -391,7 +391,7 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
 /// `definition()`'s `ArtifactCapability` rows above (kept, per debt D1) — wiring them into this
 /// field is real follow-up work, not required for this pass (mirrors `📓️w4-sequence-report.md`
 /// `## openQuestions` #2).
-pub fn artifact() -> semio_framework_plugin::app::declarations::ArtifactDeclaration {
+pub fn artifact() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<crate::plugin::ReasoningApps> {
     use semio_framework_plugin::app::declarations::ArtifactDeclaration;
     use store::os_io::ArtifactKindId;
     ArtifactDeclaration { kind: ArtifactKindId::parse("s.reasoning.wires").expect("canonical reasoning.wires kind"), localization: &[], standards: vec![crate::artifacts::wires::standards::v1::standard()] }

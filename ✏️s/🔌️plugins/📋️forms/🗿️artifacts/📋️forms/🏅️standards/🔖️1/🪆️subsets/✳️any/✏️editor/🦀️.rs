@@ -22,17 +22,16 @@ use crate::editor::forms::config::{FormsConfig, FormsConfigMutation};
 use crate::editor::forms::modes::blueprint;
 use crate::editor::forms::modes::blueprint::windows::{builder, try_wizard as try_window};
 use crate::editor::forms::panels::{catalogue as catalogue_panel, document as document_panel, inspection as inspection_panel};
-use crate::editor::forms::presence::{FormsPresence, FormsPresenceMutation};
 use crate::editor::forms::terminology::{forms_play_labels, FormsLabels};
 use dsl::os_pack::json::{object, Object, Value};
 use semio_framework::{ToolExecutionContract, ToolFactoryKey, ToolJobFactoryError};
 use semio_framework_plugin::app::{Dialect, InteractionView};
 use semio_framework_plugin::retained_command::{ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
 use semio_framework_plugin::{
-    ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, AppDefinition, AppOperationContext, ArtifactEditor, ArtifactKindSpec, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract,
+    ActionArgDef, ActionArgOption, ActionDefinition, ActionKind, AppDefinition, AppOperationContext, ArtifactEditor, ArtifactKindSpec, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract,
     ArtifactToolPublicationLane, ArtifactView, CommandDefinition, ConfigView, DomainTopology, DraftView, Editor, EditorApp, Emit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec, IconName, InteractionDefinition, InteractionRef,
     InteractionTopology, InteractiveJobClassification, Label, LocalizedLabel, MediaClass, MediaError, MediaForm, MediaPayload, MediaType, MergeMode, NoDraft, NoDraftMutation, OsMediaCapability, SelectionMethod, SelectionMode, SelectionSpec,
-    TopologyNode, UiNode,
+    TopologyNode,
 };
 use store::EngineHandles;
 
@@ -50,6 +49,21 @@ pub fn forms_action(action: &str, args: Option<semio_framework_plugin::UiValue>)
     semio_framework_plugin::ActionFactory::new(FORMS_PLAY_APP_ID).action(action, args)
 }
 
+
+/// 🏷️ Admits display text into a bounded semantic label.
+pub fn ui_label(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::plugin_app_close_prelude::Label> {
+    value.as_ref().try_into().map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "forms label admission failed"))
+}
+
+/// 🎟️ Propagates a rejected semantic UI admission.
+pub fn ui_admit<T, E>(value: Result<T, E>) -> semio_framework_plugin::UiAssemblyResult<T> {
+    value.map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "forms UI admission failed"))
+}
+
+/// 🔤️ Admits text used by semantic controls.
+pub fn ui_text_value(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiText> {
+    semio_framework_plugin::UiText::try_from_str(value.as_ref()).ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "forms text admission failed"))
+}
 
 /// 🧱️ Admits one fixed UI text action value without JSON staging.
 pub fn ui_value_text(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::UiValue> {
@@ -159,7 +173,7 @@ pub fn effective_try_values(spec: &FormsSnapshot, config: &FormsConfig) -> Objec
 /// active step — was `reset_try_runtime`'s effect on the old `FormsPlayRuntime`, now two config operations
 /// instead of two field writes.
 pub fn reset_try_config_mutations() -> Vec<FormsConfigMutation> {
-    vec![FormsConfigMutation::ClearTryValues, FormsConfigMutation::SetStepIndex { index: 0 }]
+    vec![FormsConfigMutation::ClearTryValues(crate::editor::forms::config::ClearTryValues {}), FormsConfigMutation::SetStepIndex(crate::editor::forms::config::SetStepIndex { index: 0 })]
 }
 
 /// 🔠️ Parses a command's JSON-blob payload field (`value_json`/`values_json`/…), falling back to
@@ -237,15 +251,19 @@ fn extension_render_payload(question: &FormQuestion, params: &Value, surface: &s
 /// preview), or an "Extension unavailable" diagnostic when no contribution is registered for it. Shared
 /// by the try wizard and the inspection panel's kind-specific editor fields.
 pub fn render_extension_question(question: &FormQuestion, values: &Object, contributions: &[ProgramContributionEntry], surface: &str, interactive: bool) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+    use semio_framework_ui_contract::{self as ui, Buildable, HasBase, HasChildren};
     let Some((plugin_id, route)) = find_question_kind_contribution(contributions, &question.kind) else {
-        return semio_framework_plugin::ui_text(Label::data(format!("Extension unavailable: {}", question.kind)));
+        return ui_admit(ui::text(ui_label(format!("Extension unavailable: {}", question.kind))?).try_build());
     };
     let params = extension_params_value(question, values);
     let payload = extension_render_payload(question, &params, surface, interactive);
-    semio_framework_plugin::ui_stack_vertical(vec![
-        semio_framework_plugin::ui_external_slot(plugin_id, route.app_id.as_str(), route.params_body_key.as_str(), &payload),
-        semio_framework_plugin::ui_external_slot(plugin_id, route.app_id.as_str(), route.preview_body_key.as_str(), &payload),
-    ])
+    let mut column = ui::column();
+    for body_key in [&route.params_body_key, &route.preview_body_key] {
+        let props = ui_value_map([("bodyKey", ui_value_text(body_key)?), ("paramsJson", ui_value_text(&payload)?)])?;
+        let slot = ui_admit(ui::extension(ui_text_value(format!("{plugin_id}/{}", route.app_id))?).props(props).try_id(format!("{}.{}", question.id, body_key)))?;
+        column = ui_admit(column.try_child(slot))?;
+    }
+    ui_admit(column.try_build())
 }
 
 /// 🗂️ Every kind offered by the catalogue/inspector kind selector: the built-in kinds (labeled from
@@ -715,8 +733,8 @@ impl ArtifactEditor for FormsPlayApp {
     type ConfigMutation = FormsConfigMutation;
     type Draft = NoDraft;
     type DraftMutation = NoDraftMutation;
-    type Presence = FormsPresence;
-    type PresenceMutation = FormsPresenceMutation;
+    type Presence = semio_framework_plugin::NoPresence;
+    type PresenceMutation = semio_framework_plugin::NoPresenceMutation;
     type Transient = semio_framework_plugin::NoTransient;
     type TransientMutation = semio_framework_plugin::NoTransientMutation;
 
@@ -879,14 +897,15 @@ impl ArtifactEditor for FormsPlayApp {
         let spec = doc.snapshot;
         let config = cfg.snapshot;
         let labels = forms_play_labels(config);
-        match body_key {
+        let node = match body_key {
             FORMS_PLAY_BODY_BLUEPRINT => builder::render(spec, config, labels),
             FORMS_PLAY_BODY_TRY => try_window::render(spec, config, labels),
             FORMS_PLAY_BODY_DOCUMENT => document_panel::render(spec, labels),
             FORMS_PLAY_BODY_CATALOGUE => catalogue_panel::render(config, labels),
             FORMS_PLAY_BODY_INSPECTION => inspection_panel::render(spec),
-            _ => semio_framework_plugin::ui_text(Label::data(format!("Unknown body: {body_key}"))),
-        }
+            _ => return semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
+        }?;
+        Ok(semio_framework_plugin::built_to_component_tree(node))
     }
 }
 //#endregion 🔖️FormsPlayApp
@@ -1043,14 +1062,14 @@ pub fn create_forms_app() -> AppDefinition {
 #[cfg(test)]
 pub(crate) mod testkit {
     use super::*;
-    use semio_framework_plugin::testkit::{meta, new_app, new_app_with_registry};
+    use semio_framework_plugin::testkit::{meta, new_app_with_registry};
     use semio_framework_plugin::{App, EditorApp, InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
 
     pub type FormsApp = VcsArtifactApp<EditorApp<FormsPlayApp>>;
 
-    /// 🧪️ A bare app instance — no `AppActionRegistry`, so undeclared internal commands dispatch freely.
-    pub fn forms_app() -> FormsApp {
-        new_app::<EditorApp<FormsPlayApp>>()
+    /// 🧪️ An app instance with its concrete command registry and retained job proofs.
+    pub async fn forms_app() -> FormsApp {
+        new_app_with_registry::<EditorApp<FormsPlayApp>>(forms_manifest_for_testkit).await
     }
 
     /// 🚧️ SDK GAP (w0-f-report Gap 3): `new_app_with_registry`/`assert_declared_actions_bridge_to_commands`
@@ -1063,16 +1082,25 @@ pub(crate) mod testkit {
 
     /// 🧪️ An app wired to the real manifest registry — enforces View/Shell kind discipline, and the
     /// `kind` default declared on `addQuestion` materializes host-side.
-    pub fn forms_app_with_registry() -> FormsApp {
-        new_app_with_registry::<EditorApp<FormsPlayApp>>(forms_manifest_for_testkit)
+    pub async fn forms_app_with_registry() -> FormsApp {
+        new_app_with_registry::<EditorApp<FormsPlayApp>>(forms_manifest_for_testkit).await
     }
 
-    pub fn dispatch(app: &mut FormsApp, command: FormsCommand) -> InvocationResult {
-        app.dispatch_typed(command, &meta("local")).expect("dispatch")
+    pub async fn config(app: &FormsApp) -> FormsConfig {
+        let files = app.config_pack().await.expect("config pack");
+        store::parse_document_pack::<FormsConfig, FormsConfigMutation>(&files.pack, &files.spr).await.expect("config projection").snapshot
     }
 
-    pub fn render(app: &mut FormsApp, body_key: &str) -> String {
-        dsl::os_pack::json::to_json_string(&app.render(body_key, None, &ViewModel::default()).expect("render"))
+    pub fn action_args(value: &serde_json::Value) -> dsl::DslValue {
+        dsl::os_pack::json_to_dsl_value(&dsl::os_pack::json::parse(&value.to_string()).expect("fixture JSON"))
+    }
+
+    pub async fn dispatch(app: &mut FormsApp, command: FormsCommand) -> InvocationResult {
+        app.dispatch_typed(command, &meta("local")).await.expect("dispatch")
+    }
+
+    pub async fn render(app: &mut FormsApp, body_key: &str) -> String {
+        serde_json::to_string(&app.render(body_key, None, &ViewModel::default()).await.expect("render").root).expect("rendered component JSON")
     }
 
     /// 🧩️ A host contribution registering `"buildingComponent"` as an extension question kind rendered
@@ -1099,7 +1127,7 @@ pub(crate) mod testkit {
     pub fn building_component_question() -> FormQuestion {
         let mut question = crate::editor::forms::commands::add_question::question_shell("geometry".into(), "Geometry".into(), "buildingComponent".into());
         question.fixture_slug = Some("hexagonal-mushroom-column".into());
-        question.params = Some(crate::artifacts::forms::schema::value_to_dsl(&json!({ "height": 6.0, "radius": 0.5, "sides": 6.0 })));
+        question.params = Some(crate::artifacts::forms::schema::value_to_dsl(&dsl::json!({ "height": 6.0, "radius": 0.5, "sides": 6.0 })));
         question
     }
 }
@@ -1291,17 +1319,17 @@ mod tests {
     //#region 🔖️CrossCutting
     #[semio_framework_async_macros::async_test]
     async fn add_question_materializes_kind_default() {
-        let mut app = forms_app_with_registry();
+        let mut app = forms_app_with_registry().await;
         let steps_before = forms_steps(&app.snapshot().expect("projection")).len();
         assert!(steps_before > 0, "seeded fixture has at least one step to receive the question");
-        app.dispatch_typed(FormsCommand::AddQuestion(add_question::AddQuestion { kind: "text".into(), step_id: None }), &meta("local")).expect("add question");
+        app.dispatch_typed(FormsCommand::AddQuestion(add_question::AddQuestion { kind: "text".into(), step_id: None }), &meta("local")).await.expect("add question");
         let spec = app.snapshot().expect("projection");
         assert!(crate::artifacts::forms::schema::flatten_questions(&spec).iter().any(|(_, question)| question.kind == "text"), "kind default materialized from the registry");
     }
 
     #[semio_framework_async_macros::async_test]
     async fn initial_document_seeds_building_component_fixture() {
-        let app = forms_app();
+        let app = forms_app().await;
         let spec = app.snapshot().expect("projection");
         assert!(!crate::artifacts::forms::schema::flatten_questions(&spec).is_empty());
         assert!(crate::artifacts::forms::schema::flatten_questions(&spec).iter().any(|(_, question)| question.kind == "buildingComponent"));
@@ -1310,15 +1338,15 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn extension_question_falls_back_without_contribution() {
         let node = render_extension_question(&building_component_question(), &Object::new(), &[], "try", true);
-        let json = dsl::os_pack::json::to_json_string(&node);
+        let json = serde_json::to_string(&node.expect("semantic component")).expect("component JSON");
         assert!(json.contains("Extension unavailable"));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn extension_question_emits_external_slot_when_contribution_registered() {
         let node = render_extension_question(&building_component_question(), &Object::new(), &building_component_contributions(), "try", true);
-        let json = dsl::os_pack::json::to_json_string(&node);
-        assert!(json.contains("externalSlot"));
+        let json = serde_json::to_string(&node.expect("semantic component")).expect("component JSON");
+        assert!(json.contains("\"type\":\"extension\""));
         assert!(json.contains("forms-module-procedural"));
     }
 
@@ -1340,8 +1368,8 @@ mod tests {
             )),
         }];
         let node = render_extension_question(&building_component_question(), &Object::new(), &topic_only, "try", true);
-        let json = dsl::os_pack::json::to_json_string(&node);
-        assert!(json.contains("externalSlot"));
+        let json = serde_json::to_string(&node.expect("semantic component")).expect("component JSON");
+        assert!(json.contains("\"type\":\"extension\""));
         assert!(json.contains("forms-module-procedural"));
     }
 
@@ -1370,8 +1398,8 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn an_unknown_body_key_renders_a_diagnostic_instead_of_panicking() {
         use crate::editor::forms::testkit::render;
-        let mut app = forms_app();
-        assert!(render(&mut app, "forms.play.nope").contains("Unknown body"));
+        let mut app = forms_app().await;
+        assert!(render(&mut app, "forms.play.nope").await.contains("Unknown body"));
     }
 
     #[semio_framework_async_macros::async_test]
@@ -1392,25 +1420,25 @@ mod tests {
     //#region 🔖️MediaPorts
     #[semio_framework_async_macros::async_test]
     async fn export_media_dictionary_out_returns_default_values() {
-        let app = forms_app();
+        let app = forms_app().await;
         let document = app.snapshot().expect("projection");
         let history = semio_framework_plugin::HistoryView::empty();
         let doc = ArtifactView::new(&document, &history);
-        let media = semio_framework_plugin::resolve_ready(<FormsPlayApp as ArtifactEditor>::export_media("dictionary:out", &doc)).expect("export dictionary:out");
+        let media = <FormsPlayApp as ArtifactEditor>::export_media("dictionary:out", &doc).expect("export dictionary:out");
         assert_eq!(media.media_type, MediaType { class: MediaClass::Data, form: MediaForm::Value });
         let MediaPayload::Structured { schema, json } = media.payload else { panic!("expected structured payload") };
         assert_eq!(schema, "form.dictionary");
         let parsed: Value = dsl::os_pack::json::parse(&json).expect("valid json dictionary");
-        assert!(parsed.is_object());
+        assert!(parsed.as_object().is_some());
     }
 
     #[semio_framework_async_macros::async_test]
     async fn export_media_document_out_round_trips_through_pack() {
-        let app = forms_app();
+        let app = forms_app().await;
         let document = app.snapshot().expect("projection");
         let history = semio_framework_plugin::HistoryView::empty();
         let doc = ArtifactView::new(&document, &history);
-        let media = semio_framework_plugin::resolve_ready(<FormsPlayApp as ArtifactEditor>::export_media("document:out", &doc)).expect("export document:out");
+        let media = <FormsPlayApp as ArtifactEditor>::export_media("document:out", &doc).expect("export document:out");
         let MediaPayload::Structured { schema, json } = media.payload else { panic!("expected structured payload") };
         assert_eq!(schema, FORMS_DOCUMENT_SCHEMA);
         let bytes = store::pack_rt::pack_value_from_base64(&json).expect("decode base64 pack");
@@ -1435,7 +1463,7 @@ mod tests {
         assert_eq!(dictionary_out.direction, semio_framework_plugin::MediaPortDirection::Out);
         assert_eq!(dictionary_out.kind_id.as_deref(), Some("form.dictionary"));
         assert_eq!(dictionary_out.multiplicity, semio_framework::PortMultiplicity::Many);
-        let all_ports = io.all_ports();
+        let all_ports = io.all_ports().await;
         assert!(all_ports.iter().any(|port| port.id == "document:in"));
         assert!(all_ports.iter().any(|port| port.id == "document:out"));
     }

@@ -9,7 +9,7 @@ import { describePluginComponent } from "../../../../../🧰️framework/🛍️
 class WasmScript extends BundleScript {
   run(): void {
     runWasmPackWebBuild({
-      rsDir: this.root, skipEnvVar: "PUZZLE_BOARD_SKIP_WASM_BUILD", logPrefix: "puzzle/board", wasmBaseName: "semio_puzzle", shipProfile: "wasm-release", noDefaultFeatures: true,
+      rsDir: this.root, logPrefix: "puzzle/board", wasmBaseName: "semio_puzzle", shipProfile: "wasm-release", noDefaultFeatures: true,
       pkg: { name: "@semio-tech/puzzle-wasm", files: ["semio_puzzle_bg.wasm", "semio_puzzle.js", "semio_puzzle.d.ts", "semio_puzzle_bg.wasm.d.ts"], main: "semio_puzzle.js", module: "semio_puzzle.js", types: "semio_puzzle.d.ts" },
     });
   }

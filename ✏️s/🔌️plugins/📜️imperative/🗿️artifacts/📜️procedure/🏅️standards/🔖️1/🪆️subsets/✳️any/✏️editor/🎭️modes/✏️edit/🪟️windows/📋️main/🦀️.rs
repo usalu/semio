@@ -62,7 +62,7 @@ fn run_output_rows(run_output_json: &str, offset: usize) -> Vec<TableRow> {
     }
 }
 
-pub fn render(document: &ProcedureSnapshot, run_output_json: &str, labels: &ImperativeLabels) -> BuiltNode {
+pub fn render(document: &ProcedureSnapshot, run_output_json: &str, labels: &ImperativeLabels) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let path = crate::artifacts::procedure::procedure_working_scene(document).path;
     let mut rows = table_rows(&path.steps);
     if !run_output_json.is_empty() {

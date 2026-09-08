@@ -2,11 +2,12 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schema", "componentHex", "descriptorHex", "cases"],
+  "required": ["schema", "componentHex", "descriptorHex", "executionProtocol", "cases"],
   "properties": {
     "schema": { "const": "semio.hub.generation-stage.v1" },
     "componentHex": { "const": "616263" },
-    "descriptorHex": { "const": "646566" },
+    "descriptorHex": { "const": "0001011110010711657865637574696f6e50726f746f636f6c100107116170704368616e6e656c56657273696f6e050000000000002c40" },
+    "executionProtocol": { "const": { "appChannelVersion": 14 } },
     "cases": {
       "const": [
         { "change": "none", "accepted": true },
@@ -27,7 +28,10 @@
         { "change": "missing-actor", "accepted": false },
         { "change": "oversize-actor", "accepted": false },
         { "change": "post-read-actor", "accepted": false },
-        { "change": "actor-symlink", "accepted": false }
+        { "change": "actor-symlink", "accepted": false },
+        { "change": "missing-protocol", "accepted": false },
+        { "change": "unsupported-protocol", "accepted": false },
+        { "change": "receipt-protocol", "accepted": false }
       ]
     }
   }

@@ -34,7 +34,7 @@ pub fn add_block_operation(step_id: &str, block: PlaybookBlock, index: Option<us
 impl protocol::MutationKind<PlaybookSnapshot, PlaybookMutation> for AddBlock {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "add", entity: "block", kind: "add-block", record: "AddedBlock" };
 
-    fn diff(&self, base: &PlaybookSnapshot) -> protocol::MutationOutcome<crate::artifacts::playbook::PlaybookDiff> {
+    fn diff(&self, base: &PlaybookSnapshot) -> protocol::MutationOutcome<PlaybookDiff> {
         super::diff::diff(self, base)
     }
     fn inverse(&self, base: &PlaybookSnapshot) -> Vec<PlaybookMutation> {

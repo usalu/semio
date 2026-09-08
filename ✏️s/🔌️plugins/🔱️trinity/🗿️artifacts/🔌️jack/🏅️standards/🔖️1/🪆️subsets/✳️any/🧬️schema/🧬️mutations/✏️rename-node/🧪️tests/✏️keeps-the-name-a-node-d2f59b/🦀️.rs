@@ -29,17 +29,17 @@ const DIFF: &str = include_str!("🔺️diff/🔣️.json");
 const OUTCOME: &str = include_str!("🎯️outcome/🔣️.json");
 
 fn expected_after() -> JackSnapshot {
-    serde_json::from_str(AFTER).expect("after snapshot decodes")
+    pack::from_json_str(AFTER).expect("after snapshot decodes")
 }
 fn mutation() -> TrinityGraphMutation {
-    serde_json::from_str(MUTATION).expect("mutation decodes")
+    pack::from_json_str(MUTATION).expect("mutation decodes")
 }
 
 /// 🌱️ The committed `⬅️before`, with its composed child resolved to a scene holding one node that
 /// ALREADY carries the payload's requested name. Both the id and the name are read straight off the
 /// committed mutation payload; the node's kind and geometry are inert for this verb.
 fn before() -> JackSnapshot {
-    let mut snapshot: JackSnapshot = serde_json::from_str(BEFORE).expect("before snapshot decodes");
+    let mut snapshot: JackSnapshot = pack::from_json_str(BEFORE).expect("before snapshot decodes");
     let TrinityGraphMutation::RenameNode(payload) = mutation() else {
         panic!("keeps-the-name-a-node-already-carries's committed mutation must be a rename-node");
     };
@@ -108,13 +108,13 @@ async fn inverse_restores_before() {
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {
-        let decoded: JackSnapshot = serde_json::from_str(text).expect("snapshot decodes");
-        let reencoded = serde_json::to_value(&decoded).expect("snapshot encodes");
+        let decoded: JackSnapshot = pack::from_json_str(text).expect("snapshot decodes");
+        let reencoded = serde_json::from_str::<serde_json::Value>(&pack::to_json_string(&decoded)).expect("snapshot encodes");
         let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
         assert_eq!(reencoded, original, "rename-node/keeps-the-name-a-node-already-carries: committed {label} JSON is not canonical");
     }
     assert_eq!(BEFORE, AFTER, "rename-node/keeps-the-name-a-node-already-carries is a no-op: the two committed snapshots must be byte-identical");
-    let reencoded = serde_json::to_value(mutation()).expect("mutation encodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&pack::to_json_string(&mutation())).expect("mutation encodes");
     let original: serde_json::Value = serde_json::from_str(MUTATION).expect("mutation reparses");
     assert_eq!(reencoded, original, "rename-node/keeps-the-name-a-node-already-carries: committed mutation JSON is not canonical");
 }
@@ -141,10 +141,10 @@ async fn declared_outcome_holds() {
 async fn produces_committed_diff() {
     let base = before();
     let outcome = <TrinityGraphMutation as protocol::Mutation<JackSnapshot>>::diff(&mutation(), &base);
-    let produced = serde_json::to_value(outcome.diff()).expect("produced diff encodes");
+    let produced = serde_json::from_str::<serde_json::Value>(&pack::to_json_string(outcome.diff())).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
     assert_eq!(produced, committed, "rename-node/keeps-the-name-a-node-already-carries: produced diff differs from the committed 🔺️diff/🔣️.json");
-    let typed: JackDiff = serde_json::from_str(DIFF).expect("committed diff decodes into JackDiff");
+    let typed: JackDiff = pack::from_json_str(DIFF).expect("committed diff decodes into JackDiff");
     assert!(typed.content.is_none(), "the committed diff must leave the composed content slot untouched — a set `content` would be exactly the re-minted DefaultHasher handle this case exists to avoid");
     assert_eq!(typed, JackDiff::default(), "rename-node's no-op delta is the artifact's Default diff, every one of its nineteen slots left None");
 }
@@ -154,8 +154,8 @@ async fn produces_committed_diff() {
 /// nineteen sparse slots — artifact, presence and config lanes alike — must be present as `null`.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical() {
-    let decoded: JackDiff = serde_json::from_str(DIFF).expect("committed diff decodes");
-    let reencoded = serde_json::to_value(&decoded).expect("diff re-encodes");
+    let decoded: JackDiff = pack::from_json_str(DIFF).expect("committed diff decodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&pack::to_json_string(&decoded)).expect("diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
     assert_eq!(reencoded, original, "rename-node/keeps-the-name-a-node-already-carries: committed diff JSON is not canonical");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
@@ -168,7 +168,7 @@ async fn committed_diff_is_canonical() {
 /// content handle, the camera and the manifest exactly as it found them.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
-    let decoded: JackDiff = serde_json::from_str(DIFF).expect("committed diff decodes");
+    let decoded: JackDiff = pack::from_json_str(DIFF).expect("committed diff decodes");
     let produced = <JackDiff as protocol::MutationDiff<JackSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "rename-node/keeps-the-name-a-node-already-carries: committed diff did not carry before to after");
 }

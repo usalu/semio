@@ -2,6 +2,10 @@
 
 use super::*;
 
+fn third_party_json<T: crate::os_dsl::ToValue + ?Sized>(value: &T) -> serde_json::Value {
+    serde_json::from_str(&crate::os_pack::json::to_json_string(value)).expect("first-party JSON must remain valid RFC 8259")
+}
+
 //#region 🧪️RetainedReplacement
 #[test]
 fn contributed_registry_replacement_preserves_readers_and_drains_old_versions() {
@@ -10,8 +14,8 @@ fn contributed_registry_replacement_preserves_readers_and_drains_old_versions() 
     let manifest = serde_json::to_string(&fixture["manifest"]).unwrap();
     install_flow_extension_manifest(plugin, &manifest).unwrap();
     let reader = flow_extension_registry();
-    assert_eq!(serde_json::to_value(reader.schema("owned").unwrap()).unwrap(), fixture["manifest"]["contributes"]["schemas"][0]);
-    assert_eq!(serde_json::to_value(reader.operator_info("owned.echo").unwrap()).unwrap(), fixture["manifest"]["contributes"]["operators"][0]);
+    assert_eq!(third_party_json(reader.schema("owned").unwrap()), fixture["manifest"]["contributes"]["schemas"][0]);
+    assert_eq!(third_party_json(reader.operator_info("owned.echo").unwrap()), fixture["manifest"]["contributes"]["operators"][0]);
     let mut replacement = fixture["manifest"].clone();
     replacement["name"] = "Replacement".into();
     replacement["contributes"]["schemas"][0]["name"] = "New Schema".into();
@@ -82,7 +86,7 @@ fn registry_replacement_admission_preserves_roots_on_capacity_and_generation_exh
     let manifest = fixture["manifest"].to_string();
     install_flow_extension_manifest(plugin, &manifest).unwrap();
     let reader = flow_extension_registry();
-    let expected = serde_json::to_value(reader.schema("owned").unwrap()).unwrap();
+    let expected = third_party_json(reader.schema("owned").unwrap());
     let capacity = fixture["retiredCapacity"].as_u64().unwrap() as usize;
     assert_eq!(RETIRED_REGISTRY_CAPACITY, capacity);
     for _ in 1..capacity { install_flow_extension_manifest(plugin, &manifest).unwrap(); }
@@ -90,8 +94,8 @@ fn registry_replacement_admission_preserves_roots_on_capacity_and_generation_exh
     assert_eq!(install_flow_extension_manifest(plugin, &manifest), Err("flow.registry-retirement-full"));
     assert_eq!(uninstall_flow_extension("owned"), Err("flow.registry-retirement-full"));
     assert_eq!(flow_extension_state().lock().unwrap().generation, generation);
-    assert_eq!(serde_json::to_value(reader.schema("owned").unwrap()).unwrap(), expected);
-    assert_eq!(serde_json::to_value(flow_extension_registry().schema("owned").unwrap()).unwrap(), expected);
+    assert_eq!(third_party_json(reader.schema("owned").unwrap()), expected);
+    assert_eq!(third_party_json(flow_extension_registry().schema("owned").unwrap()), expected);
     drop(reader);
     for _ in 0..100_000 {
         if retire_flow_extension_registries_step(1, 64).unwrap() == neural::ValueRetirementStep::Complete { break; }
@@ -101,7 +105,7 @@ fn registry_replacement_admission_preserves_roots_on_capacity_and_generation_exh
     assert_eq!(install_flow_extension_manifest(plugin, &manifest), Err("flow.registry-generation-exhausted"));
     assert_eq!(sync_host_flow_extension_contributions("[]"), Err("flow.registry-generation-exhausted"));
     assert_eq!(flow_extension_state().lock().unwrap().generation, maximum);
-    assert_eq!(serde_json::to_value(flow_extension_registry().schema("owned").unwrap()).unwrap(), expected);
+    assert_eq!(third_party_json(flow_extension_registry().schema("owned").unwrap()), expected);
     assert!(flow_extension_state().lock().unwrap().retired.is_empty());
     flow_extension_state().lock().unwrap().generation = generation;
     sync_host_flow_extension_contributions("[]").unwrap();

@@ -1,0 +1,15 @@
+# 🧬️ PDF 1.7/E direct mutation aggregate.
+input PdfEMutationInput {
+  insertEncryptionDictionary: InsertEncryptionDictionaryMutationInput
+  removeEncryptionDictionary: RemoveEncryptionDictionaryMutationInput
+  insertJavascriptAction: InsertJavascriptActionMutationInput
+  removeJavascriptAction: RemoveJavascriptActionMutationInput
+  insertLaunchAction: InsertLaunchActionMutationInput
+  removeLaunchAction: RemoveLaunchActionMutationInput
+  insertMediaAnnotation: InsertMediaAnnotationMutationInput
+  removeMediaAnnotation: RemoveMediaAnnotationMutationInput
+  setOutputIntent: SetOutputIntentMutationInput
+  removeOutputIntent: RemoveOutputIntentMutationInput
+  embedFontFile: EmbedFontFileMutationInput
+  removeFontFile: RemoveFontFileMutationInput
+}

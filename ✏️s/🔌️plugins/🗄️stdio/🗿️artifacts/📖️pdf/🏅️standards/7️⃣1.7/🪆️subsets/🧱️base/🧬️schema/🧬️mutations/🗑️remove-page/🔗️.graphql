@@ -1,0 +1,4 @@
+# 🗑️ Direct remove-page GraphQL payload.
+input RemovePageMutationInput {
+  index: Int
+}

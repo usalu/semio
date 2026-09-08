@@ -8,9 +8,10 @@ use serde::{Deserialize, Serialize};
 //#region 🔖️Mutation
 /// 🔗️ Sets `WriterSnapshot::uri` to `new_uri`. Diff/inverse delegate to the sibling
 /// `🔺️diff`/`↩️inverse` leaves.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord, dsl::MutationLeaf)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord, dsl::MutationLeaf, dsl::ToValue, dsl::FromValue)]
 #[mutation_leaf(contract = ::protocol)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 #[dsl(keyword = "change-uri")]
 pub struct ChangeUri {
     pub new_uri: String,

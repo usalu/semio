@@ -492,13 +492,14 @@ export interface BackboneWorkerTransportOptions {
  * options))`. Opens the underlying document lazily, on the FIRST send (not eagerly at construction),
  * so registering an endpoint that never sends never opens a hub connection for it. */
 export function createBackboneWorkerTransport(worker: BackboneWorkerLike, uri: string, options: BackboneWorkerTransportOptions): BackboneTransport {
+  const clientInstanceId = crypto.randomUUID();
   let opened = false;
   let seq = 0;
   function ensureOpen(): void {
     if (opened) return;
     opened = true;
     const config: ArtifactActorConfig = { documentId: uri, schema: BACKBONE_EFFECT_DOCUMENT_SCHEMA, bindings: [options.hub], actor: options.actor };
-    worker.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "open", ...config }) });
+    worker.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "open", clientInstanceId, ...config }) });
   }
   return {
     send(sendUri: string, payload: readonly number[]): void {
@@ -506,7 +507,7 @@ export function createBackboneWorkerTransport(worker: BackboneWorkerLike, uri: s
       ensureOpen();
       seq += 1;
       const message: ArtifactActorMsg = { kind: "publishPreview", key: uri, seq, payload: [...payload] };
-      worker.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "send", documentId: uri, message }) });
+      worker.postMessage({ wire: encodeBackboneWorkerRequest({ kind: "send", documentId: uri, clientInstanceId, message }) });
     },
   };
 }
@@ -713,7 +714,7 @@ if (import.meta.vitest) {
       return { worker: { postMessage: (message) => posted.push(message), onmessage: null }, posted };
     }
 
-    it("send lazily opens the document once, then posts publishPreview through the existing send request kind", async () => {
+    it("document opening attempt transport stamps one retained owner on its lazy open and every send", async () => {
       const { decodeBackboneWorkerRequest } = await import("./🟦️.ts");
       const { worker, posted } = fakeWorker();
       const transport = createBackboneWorkerTransport(worker, "studio-42", { actor: "actor-1", hub: { kind: "hub", baseUrl: "https://hub.example", spaceId: "space-1" } });
@@ -724,6 +725,9 @@ if (import.meta.vitest) {
       expect(decoded[0]).toMatchObject({ kind: "open", documentId: "studio-42", actor: "actor-1" });
       expect(decoded[1]).toMatchObject({ kind: "send", documentId: "studio-42", message: { kind: "publishPreview", key: "studio-42", seq: 1, payload: [1, 2] } });
       expect(decoded[2]).toMatchObject({ kind: "send", documentId: "studio-42", message: { kind: "publishPreview", key: "studio-42", seq: 2, payload: [3, 4] } });
+      const clientInstanceIds = decoded.map((request) => ("clientInstanceId" in request ? request.clientInstanceId : undefined));
+      expect(clientInstanceIds[0]).toMatch(/^[0-9a-f-]{36}$/u);
+      expect(clientInstanceIds).toEqual([clientInstanceIds[0], clientInstanceIds[0], clientInstanceIds[0]]);
     });
 
     it("send throws if used for a different uri than it was bound to", () => {
@@ -743,7 +747,7 @@ if (import.meta.vitest) {
       const backbone = new EffectBackbone();
       backbone.subscribe("actor-1", "studio-42");
       const dispose = bridgeBackboneWorkerInbound(backbone, worker);
-      const wire = { wire: encodeBackboneWorkerResponse({ kind: "event", documentId: "studio-42", event: { kind: "preview", actor: "peer", key: "studio-42", seq: 1, payload: [42] } }) };
+      const wire = { wire: encodeBackboneWorkerResponse({ kind: "event", documentId: "studio-42", clientInstanceId: "33333333-3333-4333-8333-333333333333", event: { kind: "preview", actor: "peer", key: "studio-42", seq: 1, payload: [42] } }) };
       worker.onmessage?.({ data: wire });
       expect(priorCalls).toEqual([wire]); // chained, not replaced
       expect(backbone.drain("actor-1")).toEqual([{ message: { source: { backbone: { uri: "studio-42" } }, payload: [42] } }]);

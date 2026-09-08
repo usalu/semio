@@ -2,7 +2,6 @@
 
 use crate::artifacts::sequence::{default_snapshot, SequenceCamera, SequenceContentChild, SequenceMutation, SequenceSnapshot, SEQUENCE_DOCUMENT_SCHEMA};
 use schema::ArtifactSchema;
-use serde::{Deserialize, Serialize};
 use store::ArtifactDsl;
 
 //#region 🔖️Artifact
@@ -10,8 +9,8 @@ use store::ArtifactDsl;
 /// `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` (`sequence→C:flow`): `steps`/`edges` are replaced
 /// by the same composed `content` CHILD slot `SequenceSnapshot` carries, mirroring `WriterArtifact`/
 /// `FlowArtifact`'s precedent so `to_snapshot`/`from_snapshot`/`set_snapshot` stay consistent.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ArtifactSchema)]
-#[serde(rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, ArtifactSchema)]
+#[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.sequence.sequence")]
 pub struct SequenceArtifact {
     #[state(artifact)]
@@ -108,7 +107,7 @@ pub fn sequence_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor
 /// — out of scope to change, since both are defined in `framework/plugin`.
 pub fn sequence_example_json() -> String {
     let fixture = <SequenceSnapshot as ArtifactDsl>::parse_dsl(&default_snapshot().print_dsl()).expect("default_snapshot round-trips through its own DSL");
-    serde_json::to_string(&fixture).expect("default_snapshot is a static, hand-built value with no non-finite floats or non-UTF8 keys")
+    dsl::os_pack::to_json_string(&fixture)
 }
 //#endregion 🔖️Example
 

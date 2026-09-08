@@ -15,5 +15,5 @@ pub struct SetActiveUtility {
 }
 
 pub fn handle(payload: &SetActiveUtility, _doc: &ArtifactView<'_, RemodelingSnapshot>, _cfg: &ConfigView<'_, RemodelingConfig>) -> Result<Emit<RemodelingMutation, RemodelingConfigMutation>, Fault> {
-    Ok(Emit::config(vec![RemodelingConfigMutation::SetActiveUtility { utility_id: payload.utility_id.clone() }]))
+    Ok(Emit::config(vec![RemodelingConfigMutation::SetActiveUtility(crate::editor::remodeling::config::SetActiveUtility { utility_id: payload.utility_id.clone() })]))
 }

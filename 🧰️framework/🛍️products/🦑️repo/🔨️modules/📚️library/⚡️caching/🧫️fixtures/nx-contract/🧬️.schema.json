@@ -1,0 +1,273 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "policies",
+    "wasm",
+    "go",
+    "rust",
+    "lifecycle",
+    "generators",
+    "validationPrerequisite",
+    "bootstrap",
+    "entrypoints",
+    "cancellation"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "policies": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "target",
+          "cache",
+          "continuous"
+        ],
+        "properties": {
+          "target": {
+            "type": "string"
+          },
+          "cache": {
+            "type": "boolean"
+          },
+          "continuous": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "wasm": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "project",
+          "output"
+        ],
+        "properties": {
+          "project": {
+            "type": "string"
+          },
+          "output": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "go": {
+      "type": "object",
+      "required": [
+        "manifest",
+        "module",
+        "requires",
+        "replacements"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "manifest": {
+          "type": "string"
+        },
+        "module": {
+          "type": "string"
+        },
+        "requires": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "replacements": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "module",
+              "path"
+            ],
+            "properties": {
+              "module": {
+                "type": "string"
+              },
+              "path": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "rust": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "entry",
+        "files",
+        "inputs"
+      ],
+      "properties": {
+        "entry": {
+          "type": "string"
+        },
+        "files": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "inputs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "lifecycle": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "setupDependencies",
+        "prepareDependencies"
+      ],
+      "properties": {
+        "setupDependencies": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "prepareDependencies": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "generators": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "string"
+      }
+    },
+    "validationPrerequisite": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "target",
+        "prerequisite"
+      ],
+      "properties": {
+        "target": {
+          "type": "string"
+        },
+        "prerequisite": {
+          "type": "string"
+        }
+      }
+    },
+    "bootstrap": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "dotnetProject",
+        "dotnetPath",
+        "compile",
+        "pythonMembers",
+        "stylingProject",
+        "stylingGenerator",
+        "pythonDependencies"
+      ],
+      "properties": {
+        "dotnetProject": {
+          "type": "string"
+        },
+        "dotnetPath": {
+          "type": "string"
+        },
+        "compile": {
+          "type": "string"
+        },
+        "pythonMembers": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "stylingProject": {
+          "type": "string"
+        },
+        "stylingGenerator": {
+          "type": "string"
+        },
+        "pythonDependencies": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "entrypoints": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "project",
+          "target",
+          "prerequisite"
+        ],
+        "properties": {
+          "project": {
+            "type": "string"
+          },
+          "target": {
+            "type": "string"
+          },
+          "prerequisite": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "cancellation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "target",
+        "signal",
+        "maxShutdownMs"
+      ],
+      "properties": {
+        "target": {
+          "type": "string"
+        },
+        "signal": {
+          "enum": [
+            "SIGINT",
+            "SIGTERM"
+          ]
+        },
+        "maxShutdownMs": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    }
+  }
+}

@@ -18,9 +18,9 @@ pub fn handle(_payload: &NextStep, doc: &ArtifactView<'_, FormsSnapshot>, cfg: &
     let steps = forms_steps(spec);
     if index + 1 < steps.len() {
         let step = &steps[index];
-        let values = effective_try_values(spec, config);
+        let values = effective_try_values(spec, config).iter().map(|(key, value)| (key.to_owned(), crate::artifacts::forms::schema::value_to_dsl(value))).collect();
         if can_advance(step, &values) {
-            return Ok(Emit::config(vec![FormsConfigMutation::SetStepIndex { index: config.current_step_index + 1 }]));
+            return Ok(Emit::config(vec![FormsConfigMutation::SetStepIndex(crate::editor::forms::config::SetStepIndex { index: config.current_step_index + 1 })]));
         }
     }
     Ok(Emit::default())

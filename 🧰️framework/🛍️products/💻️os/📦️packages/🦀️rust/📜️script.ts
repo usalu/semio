@@ -15,6 +15,320 @@ function exactCargoStageEnvironments() {
   };
 }
 
+/** 📜️ Verifies history-result publication and exact replay-owner retirement. */
+class DatabaseHistoryCompletionCheckScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    if (segments.length > 1 || (segments.length && segments[0] !== "--native")) throw new Error("database-history-completion-check accepts only --native");
+    const root = join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine/🧪️fixtures/📜️history-completion");
+    const fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8"));
+    const validate = new Ajv2020({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(root, "🧬️.schema.json"), "utf8")));
+    assert(validate(fixture), JSON.stringify(validate.errors));
+    assert.deepEqual(fixture.publication.map((row: { name: string }) => row.name), ["before-poll", "before-registration", "after-pending"].flatMap(stage => ["success", "cancelled"].map(outcome => stage + "-" + outcome)));
+    const { Database } = await import("bun:sqlite");
+    const oracle = new Database(":memory:");
+    try {
+      oracle.run("CREATE TABLE handoff (payload TEXT, location TEXT, waiter INTEGER, wakes INTEGER, admission INTEGER, registry INTEGER)");
+      for (const row of fixture.publication) {
+        oracle.run("DELETE FROM handoff");
+        const payload = row.outcome === "success" ? fixture.operations : { error: "Closed" };
+        oracle.run("INSERT INTO handoff VALUES (?1, 'producer', 0, 0, 1, 1)", [JSON.stringify(payload)]);
+        const snapshot = () => oracle.query("SELECT payload, location, waiter, wakes, admission, registry FROM handoff").get() as { payload: string; location: string; waiter: number; wakes: number; admission: number; registry: number };
+        const publish = () => oracle.run("UPDATE handoff SET location = 'completion', wakes = wakes + waiter, waiter = 0 WHERE location = 'producer'");
+        if (row.publication === "before-poll") publish();
+        let firstReady = snapshot().location === "completion";
+        if (!firstReady) {
+          if (row.publication === "before-registration") publish();
+          oracle.run("UPDATE handoff SET waiter = 1");
+          firstReady = snapshot().location === "completion";
+        }
+        assert.equal(firstReady, row.firstReady, row.name);
+        if (!firstReady) publish();
+        assert.equal(oracle.run("UPDATE handoff SET location = 'consumer', waiter = 0 WHERE location = 'completion'").changes, 1, row.name);
+        assert.equal(JSON.stringify(JSON.parse(snapshot().payload)) === JSON.stringify(payload), row.exactResult, row.name);
+        assert.equal(snapshot().waiter === 0, row.waiterEmpty, row.name);
+        assert.equal(snapshot().wakes, row.wakes, row.name);
+        assert.equal(snapshot().waiter === 0, row.wakeLockReleased, row.name);
+        oracle.run("UPDATE handoff SET location = 'empty', admission = 0, registry = 0 WHERE location = 'consumer'");
+        assert.equal(snapshot().admission === 0, row.admissionReleased, row.name);
+        assert.equal(snapshot().registry === 0, row.registryEmpty, row.name);
+      }
+    } finally {
+      oracle.close();
+    }
+    console.log("[DEBUG] database-history-completion-check: AJV=1 sqlite-publication=" + fixture.publication.length);
+    if (segments[0] !== "--native") return;
+    const receipts = await runExactCargoLaws({
+      cwd: this.repoRoot,
+      ...exactCargoStageEnvironments(),
+      groups: [{
+        package: "semio-framework-os-kernel-db",
+        target: { kind: "lib", name: "db" },
+        cargoArgs: ["--all-features"],
+        laws: [
+          "artifact_history_completion_interleavings_preserve_result_and_wake",
+          "artifact_history_empty_and_two_batch_replay_are_deterministic",
+          "artifact_history_empty_one_cap_plus_one_admission_returns_exact_request",
+          "artifact_history_cancel_before_handoff_retires_full_reservation_before_credit_release",
+          "artifact_history_public_terminal_close_releases_admission_only_after_roots_are_empty",
+        ],
+      }],
+      artifactDir: process.env.SEMIO_TEST_ARTIFACT_DIR,
+      buildBudgetMs: Number(process.env.SEMIO_BUILD_BUDGET_MS ?? 3_600_000),
+      listBudgetMs: 60_000,
+      lawBudgetMs: 120_000,
+      progress(event) {
+        console.log("database-history-completion-native " + event.stage + ": " + (event.law ?? "") + " artifacts=" + event.artifactDir);
+      },
+    });
+    for (const receipt of receipts) console.log("database-history-completion-native-receipt: " + JSON.stringify(receipt));
+  }
+}
+
+/** 📖️ Verifies catalog-root ownership independently of scalar capability opening. */
+class DatabaseCatalogReadOwnershipCheckScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    if (segments.length > 1 || (segments.length && segments[0] !== "--native")) throw new Error("database-catalog-read-ownership-check accepts only --native");
+    const root = join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine/🧪️fixtures/📖️catalog-read-ownership");
+    const fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8"));
+    const validate = new Ajv2020({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(root, "🧬️.schema.json"), "utf8")));
+    assert(validate(fixture), JSON.stringify(validate.errors));
+    assert.deepEqual(fixture.transfers.map((row: { phase: string }) => row.phase), ["Handoff", "RetainWork", "Poll"]);
+    assert.deepEqual(fixture.completion.map((row: { name: string }) => row.name), ["synchronous", "before-wake", "after-finalizer-check", "refused-finalizer"].flatMap(stage => ["pages", "backend-fault"].map(outcome => stage + "-" + outcome)));
+    assert.deepEqual(fixture.recovery.map((row: { name: string }) => row.name), ["retry", "terminal-completion", "terminal-result", "spent-work"].flatMap(path => ["pages", "backend-fault"].map(outcome => path + "-" + outcome)));
+    const { Database } = await import("bun:sqlite");
+    const oracle = new Database(":memory:");
+    try {
+      oracle.run("CREATE TABLE ownership (active INTEGER, location TEXT, admission INTEGER, waiter INTEGER, releases INTEGER, payload TEXT)");
+      const reset = (active: number, location: string, payload: unknown) => {
+        oracle.run("DELETE FROM ownership");
+        oracle.run("INSERT INTO ownership VALUES (?1, ?2, 1, 1, 0, ?3)", [active, location, JSON.stringify(payload)]);
+      };
+      const finalize = () => oracle.run("UPDATE ownership SET active = 4, admission = 0, releases = releases + 1 WHERE active = 0 AND location = 'empty' AND waiter = 0 AND admission = 1");
+      for (const row of fixture.transfers) {
+        reset(1, "stack", fixture.root);
+        const close = oracle.run("UPDATE ownership SET admission = 0 WHERE active = 0 AND location = 'empty'").changes;
+        assert.equal(close === 0, row.closeBlocked, row.name);
+        const paused = oracle.query("SELECT admission, location FROM ownership").get() as { admission: number; location: string };
+        assert.equal(paused.admission === 1, row.admissionRetained, row.name);
+        assert.equal(paused.location === "stack", row.storageRetained, row.name);
+        const submissions = oracle.run("UPDATE ownership SET active = 2 WHERE active = 0").changes;
+        assert.equal(submissions, row.submissionsWhileActive, row.name);
+        oracle.run("UPDATE ownership SET active = 0, location = 'empty', waiter = 0");
+        finalize();
+        assert.equal((oracle.query("SELECT admission = 0 AS empty FROM ownership").get() as { empty: number }).empty === 1, row.finalEmpty, row.name);
+      }
+      for (const row of fixture.completion) {
+        const payload = row.outcome === "pages" ? fixture.root : { key: fixture.root.key, error: "fixture-root-fault" };
+        reset(row.publication === "synchronous" ? 0 : 1, "completion", payload);
+        assert.deepEqual(JSON.parse((oracle.query("SELECT payload FROM ownership").get() as { payload: string }).payload), payload, row.name);
+        oracle.run("UPDATE ownership SET location = 'empty', waiter = 0");
+        finalize();
+        assert.equal((oracle.query("SELECT admission FROM ownership").get() as { admission: number }).admission === 1, row.admissionDuringPublication, row.name);
+        const retirement = row.publication === "after-finalizer-check" || row.publication === "refused-finalizer";
+        const submissions = retirement ? oracle.run("UPDATE ownership SET active = 2 WHERE active = 1").changes : 0;
+        assert.equal(submissions, row.retirementSubmissions, row.name);
+        oracle.run("UPDATE ownership SET active = 0 WHERE active IN (1, 2)");
+        finalize();
+        assert.equal(oracle.run("UPDATE ownership SET active = 2 WHERE active = 0").changes, row.lateSubmissions, row.name);
+        const final = oracle.query("SELECT admission = 0 AND releases = 1 AS empty FROM ownership").get() as { empty: number };
+        assert.equal(final.empty === 1, row.terminalEmpty, row.name);
+      }
+      oracle.run("CREATE TABLE recovery (generation INTEGER, checked_out INTEGER, admission INTEGER, deliveries INTEGER, payload TEXT)");
+      for (const row of fixture.recovery) {
+        oracle.run("DELETE FROM recovery");
+        const payload = row.outcome === "pages" ? fixture.root : { key: fixture.root.key, error: "fixture-root-fault" };
+        oracle.run("INSERT INTO recovery VALUES (1, 0, 1, 0, ?1)", [JSON.stringify(payload)]);
+        if (row.path === "retry") {
+          oracle.run("UPDATE recovery SET generation = generation + 1");
+          assert.equal(oracle.run("UPDATE recovery SET deliveries = deliveries + 1 WHERE generation = 1").changes, row.staleRetrySubmissions, row.name);
+        }
+        if (row.path === "terminal-result" || row.path === "spent-work") {
+          oracle.run("UPDATE recovery SET checked_out = 1");
+          assert.equal(oracle.run("UPDATE recovery SET admission = 0 WHERE checked_out = 0").changes === 0, row.checkoutBlocksRetirement, row.name);
+          oracle.run("UPDATE recovery SET checked_out = 0");
+        } else {
+          assert.equal(row.checkoutBlocksRetirement, false, row.name);
+        }
+        oracle.run("UPDATE recovery SET deliveries = deliveries + 1, admission = 0 WHERE checked_out = 0");
+        const actual = oracle.query("SELECT deliveries, admission, payload FROM recovery").get() as { deliveries: number; admission: number; payload: string };
+        assert.equal(actual.deliveries, 1, row.name);
+        assert.deepEqual(JSON.parse(actual.payload), payload, row.name);
+        assert.equal(actual.admission === 0, row.terminalEmpty, row.name);
+      }
+    } finally {
+      oracle.close();
+    }
+    console.log("[DEBUG] database-catalog-read-ownership-check: AJV=1 sqlite-transfers=" + fixture.transfers.length + " sqlite-completion=" + fixture.completion.length + " sqlite-recovery=" + fixture.recovery.length);
+    if (segments[0] !== "--native") return;
+    const receipts = await runExactCargoLaws({
+      cwd: this.repoRoot,
+      ...exactCargoStageEnvironments(),
+      groups: [{
+        package: "semio-framework-os-kernel-db",
+        target: { kind: "lib", name: "db" },
+        cargoArgs: ["--all-features"],
+        laws: [
+          "database_catalog_read_paused_transfers_exclude_successors_and_public_cleanup",
+          "database_catalog_read_consumed_publication_preserves_exact_root_and_retires",
+          "database_catalog_read_retry_and_terminal_resume_preserve_exact_root",
+          "database_catalog_read_fixed_cap_plus_one_and_generation_aba",
+          "database_catalog_read_success_returns_exact_storage_key_and_root",
+          "database_catalog_read_controlled_wakes_coalesce_and_terminal_never_repolls",
+          "database_catalog_read_publication_between_check_and_waker_registration_is_observed",
+          "database_catalog_read_rejected_mount_retires_storage_and_key_on_distinct_grants",
+          "database_catalog_read_cancel_stale_and_rejection_preserve_exact_storage_key",
+          "database_catalog_read_terminal_result_drop_hands_back_exact_result",
+        ],
+      }],
+      artifactDir: process.env.SEMIO_TEST_ARTIFACT_DIR,
+      buildBudgetMs: Number(process.env.SEMIO_BUILD_BUDGET_MS ?? 3_600_000),
+      listBudgetMs: 60_000,
+      lawBudgetMs: 120_000,
+      progress(event) {
+        console.log("database-catalog-read-ownership-native " + event.stage + ": " + (event.law ?? "") + " artifacts=" + event.artifactDir);
+      },
+    });
+    for (const receipt of receipts) console.log("database-catalog-read-ownership-native-receipt: " + JSON.stringify(receipt));
+  }
+}
+
+/** 📬️ Verifies retained capability completion handoff at every public waiter boundary. */
+class DatabaseCapabilityCompletionCheckScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    if (segments.length > 1 || (segments.length && segments[0] !== "--native")) throw new Error("database-capability-completion-check accepts only --native");
+    const root = join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine/🧪️fixtures/📬️capability-completion");
+    const fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8"));
+    const validate = new Ajv2020({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(root, "🧬️.schema.json"), "utf8")));
+    assert(validate(fixture), JSON.stringify(validate.errors));
+    assert.deepEqual(
+      fixture.publication.map((row: { name: string }) => row.name),
+      ["before-poll", "before-registration", "after-pending"].flatMap((stage) => ["success", "fault"].map((outcome) => stage + "-" + outcome)),
+    );
+    assert.deepEqual(
+      fixture.retirement.map((row: { name: string }) => row.name),
+      ["consumed-before-wake-success", "consumed-before-wake-fault"],
+    );
+    assert.deepEqual(fixture.driveOwnership.map((row: { phase: string }) => row.phase), ["Handoff", "RetainWork", "Poll"]);
+    assert.deepEqual(fixture.leaseCompletion.map((row: { publication: string }) => row.publication), ["synchronous", "active-publisher", "after-finalizer-check", "after-finalizer-check-refused"]);
+    const { Database } = await import("bun:sqlite");
+    const oracle = new Database(":memory:");
+    try {
+      oracle.run("CREATE TABLE handoff (id INTEGER PRIMARY KEY, completion TEXT, waiter INTEGER NOT NULL, wakes INTEGER NOT NULL, admission INTEGER NOT NULL)");
+      const snapshot = () => oracle.query("SELECT completion, waiter, wakes, admission FROM handoff WHERE id = 1").get() as { completion: string | null; waiter: number; wakes: number; admission: number };
+      const reset = () => {
+        oracle.run("DELETE FROM handoff");
+        oracle.run("INSERT INTO handoff VALUES (1, NULL, 0, 0, 1)");
+      };
+      const publish = (outcome: string) => oracle.run("UPDATE handoff SET completion = ?1, wakes = wakes + waiter, waiter = 0 WHERE id = 1", [outcome]);
+      const consume = () => oracle.run("UPDATE handoff SET completion = NULL, waiter = 0, admission = 0 WHERE id = 1 AND completion IS NOT NULL");
+      for (const row of fixture.publication) {
+        reset();
+        if (row.publication === "before-poll") publish(row.outcome);
+        let firstReady = snapshot().completion !== null;
+        if (!firstReady) {
+          if (row.publication === "before-registration") publish(row.outcome);
+          oracle.run("UPDATE handoff SET waiter = 1 WHERE id = 1");
+          firstReady = snapshot().completion !== null;
+        }
+        assert.equal(firstReady, row.firstReady, row.name);
+        if (!firstReady) publish(row.outcome);
+        assert.equal(snapshot().completion, row.outcome, row.name);
+        consume();
+        assert.deepEqual(snapshot(), { completion: null, waiter: 0, wakes: row.wakes, admission: 0 }, row.name);
+      }
+      for (const row of fixture.retirement) {
+        reset();
+        oracle.run("UPDATE handoff SET waiter = 1, completion = ?1 WHERE id = 1", [row.outcome]);
+        consume();
+        assert.equal(snapshot().admission === 0, row.terminalBeforePublisherWake, row.name);
+        oracle.run("UPDATE handoff SET wakes = wakes + waiter, waiter = 0 WHERE id = 1");
+        assert.equal(snapshot().wakes, row.wakes, row.name);
+      }
+      oracle.run("CREATE TABLE ownership (active INTEGER NOT NULL, location TEXT NOT NULL, admission INTEGER NOT NULL, releases INTEGER NOT NULL)");
+      for (const row of fixture.driveOwnership) {
+        oracle.run("DELETE FROM ownership");
+        oracle.run("INSERT INTO ownership VALUES (1, 'stack', 1, 0)");
+        const close = () => oracle.run("UPDATE ownership SET admission = 0, releases = releases + 1 WHERE active = 0 AND location = 'empty' AND admission = 1").changes;
+        assert.equal(close() === 0, row.closeBlocked, row.name);
+        const paused = oracle.query("SELECT admission, location FROM ownership").get() as { admission: number; location: string };
+        assert.equal(paused.admission === 1, row.admissionRetained, row.name);
+        assert.equal(paused.location === "stack", row.storageRetained, row.name);
+        oracle.run("UPDATE ownership SET location = 'terminal', active = 0");
+        assert.equal(close(), 0, row.name);
+        oracle.run("UPDATE ownership SET location = 'empty'");
+        assert.equal(close(), 1, row.name);
+        assert.equal(close(), 0, row.name);
+        assert.equal((oracle.query("SELECT releases FROM ownership").get() as { releases: number }).releases, row.finalReleases, row.name);
+      }
+      for (const row of fixture.leaseCompletion) {
+        oracle.run("DELETE FROM ownership");
+        oracle.run("INSERT INTO ownership VALUES (?1, 'completion', 1, 0)", [row.publication === "synchronous" ? 0 : 1]);
+        const checkedBeforeConsumption = row.publication.startsWith("after-finalizer-check");
+        const readyAtFirstCheck = (oracle.query("SELECT location = 'empty' AS ready FROM ownership").get() as { ready: number }).ready === 1;
+        oracle.run("UPDATE ownership SET location = 'empty'");
+        const finalize = () => oracle.run("UPDATE ownership SET active = 4, admission = 0, releases = releases + 1 WHERE location = 'empty' AND active = 0 AND admission = 1");
+        finalize();
+        assert.equal((oracle.query("SELECT admission FROM ownership").get() as { admission: number }).admission === 1, row.admissionDuringPublication, row.name);
+        let retirementSubmissions = 0;
+        if (checkedBeforeConsumption && !readyAtFirstCheck) {
+          oracle.run("UPDATE ownership SET active = active | 2 WHERE active = 1");
+          oracle.run("UPDATE ownership SET active = active & ~1 WHERE active = 3");
+          retirementSubmissions = (oracle.query("SELECT active = 2 AS queued FROM ownership").get() as { queued: number }).queued;
+          oracle.run("UPDATE ownership SET active = 0 WHERE active = 2");
+        } else {
+          oracle.run("UPDATE ownership SET active = 0 WHERE active = 1");
+        }
+        assert.equal(retirementSubmissions, row.retirementSubmissions, row.name);
+        finalize();
+        assert.equal(oracle.run("UPDATE ownership SET active = 2 WHERE active = 0").changes, row.lateSubmissions, row.name);
+        assert.equal((oracle.query("SELECT releases FROM ownership").get() as { releases: number }).releases, 1, row.name);
+      }
+    } finally {
+      oracle.close();
+    }
+    console.log("database-capability-completion-check: AJV=1 sqlite-publication=" + fixture.publication.length + " sqlite-retirement=" + fixture.retirement.length + " sqlite-drive-ownership=" + fixture.driveOwnership.length + " sqlite-lease-completion=" + fixture.leaseCompletion.length);
+    if (segments[0] !== "--native") return;
+    const receipts = await runExactCargoLaws({
+      cwd: this.repoRoot,
+      ...exactCargoStageEnvironments(),
+      groups: [
+        {
+          package: "semio-framework-os-kernel-db",
+          target: { kind: "lib", name: "db" },
+          cargoArgs: ["--all-features"],
+          laws: [
+            "database_capability_open_paused_transfer_blocks_public_close",
+            "database_capability_open_lease_successors_and_active_publication_retire_once",
+            "database_capability_open_completion_interleavings_preserve_result_and_wake",
+            "database_capability_open_consumed_completion_retires_before_publisher_wake",
+            "database_capability_open_fixed_admission_cap_plus_one_and_generation_aba",
+            "database_capability_open_success_returns_exact_storage_owner_and_scalar",
+            "database_capability_open_cancel_and_stale_generation_retain_exact_owner_for_public_close",
+            "database_capability_open_saturation_and_shutdown_keep_retry_job_and_public_terminal",
+            "database_capability_open_poll_publication_precedes_wake_rearm_at_every_boundary",
+            "database_capability_open_post_ready_cancel_and_stale_retain_public_exact_result",
+            "database_capability_open_rejection_take_retry_and_close_preserve_exact_storage",
+            "database_capability_open_terminal_result_take_resume_and_checked_out_drop_handback",
+            "database_capability_open_retry_contention_is_one_compare_exchange_per_callback",
+            "database_catalog_read_publication_between_check_and_waker_registration_is_observed",
+            "database_catalog_bootstrap_publication_race_and_queue_pressure_keep_exact_successor",
+            "database_create_catalog_publication_check_register_recheck_has_no_lost_wake",
+            "open_at_creates_a_fresh_zero_touch_database_with_an_empty_catalog",
+          ],
+        },
+      ],
+      artifactDir: process.env.SEMIO_TEST_ARTIFACT_DIR,
+      buildBudgetMs: Number(process.env.SEMIO_BUILD_BUDGET_MS ?? 3_600_000),
+      listBudgetMs: 60_000,
+      lawBudgetMs: 120_000,
+      progress(event) {
+        console.log("database-capability-completion-native " + event.stage + ": " + (event.law ?? "") + " artifacts=" + event.artifactDir);
+      },
+    });
+    for (const receipt of receipts) console.log("database-capability-completion-native-receipt: " + JSON.stringify(receipt));
+  }
+}
+
 /** 🔐️ Checks fixed writer capabilities and retained local backend integration. */
 class WalWriterAuthorityCheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
@@ -36,17 +350,38 @@ class WalWriterAuthorityCheckScript extends BundleScript {
     const poolUseFixture = JSON.parse(readFileSync(join(poolUseOwner, "🔣️.json"), "utf8"));
     const validatePoolUse = new Ajv2020({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(poolUseOwner, "🧬️.schema.json"), "utf8")));
     assert(validatePoolUse(poolUseFixture), JSON.stringify(validatePoolUse.errors));
-    assert.deepEqual(poolUseFixture.cases.map((row: { name: string }) => row.name), [
-      "registered-backend-blocks-shutdown",
-      "task-derives-registered-pool",
-      "dropped-facade-retains-use",
-      "compaction-acquires-before-admission",
-      "forged-kind-rejected-before-page-admission",
-      "rollback-reserved-before-owner-transfer",
-      "all-retirement-tiers-full-return-exact-executor",
-      "committed-rollback-retains-use-until-terminal",
-      "prepared-post-transfer-refusal-returns-close-owner",
-    ]);
+    assert.deepEqual(
+      poolUseFixture.cases.map((row: { name: string }) => row.name),
+      [
+        "registered-backend-blocks-shutdown",
+        "task-derives-registered-pool",
+        "dropped-facade-retains-use",
+        "compaction-acquires-before-admission",
+        "forged-kind-rejected-before-page-admission",
+        "rollback-reserved-before-owner-transfer",
+        "all-retirement-tiers-full-return-exact-executor",
+        "committed-rollback-retains-use-until-terminal",
+        "prepared-post-transfer-refusal-returns-close-owner",
+      ],
+    );
+    const { Database } = await import("bun:sqlite");
+    const openingOracle = new Database(":memory:");
+    try {
+      openingOracle.run("CREATE TABLE opening_owner (backend TEXT PRIMARY KEY, retained INTEGER NOT NULL, close_requested INTEGER NOT NULL)");
+      for (const row of poolUseFixture.opening) {
+        openingOracle.run("INSERT INTO opening_owner VALUES (?1, 1, 0)", [row.backend]);
+        openingOracle.run("UPDATE opening_owner SET close_requested = 1 WHERE backend = ?1", [row.backend]);
+        const requested = openingOracle.query("SELECT close_requested FROM opening_owner WHERE backend = ?1").get(row.backend) as { close_requested: number };
+        assert.equal(!!requested.close_requested, row.closeRequestedBeforeRetry);
+        openingOracle.run("DELETE FROM opening_owner WHERE backend = ?1 AND close_requested = 1", [row.backend]);
+        const terminal = openingOracle.query("SELECT count(*) AS retained FROM opening_owner").get() as { retained: number };
+        assert.equal(terminal.retained === 0, row.ledgerBaseline);
+        assert.equal(terminal.retained === 0, row.poolShutdownAfterDrain);
+        assert.equal(terminal.retained === 0, row.reopens);
+      }
+    } finally {
+      openingOracle.close();
+    }
     assert.deepEqual(memoryFixture.writerTable, { slots: fixture.capacity, separateBox: true });
     assert.deepEqual(memoryFixture.controllerCredit, { items: 1, controls: 1, bytesFormula: "wake-plus-two-usize" });
     assert.equal(memoryFixture.retainedPageResults, 44);
@@ -79,7 +414,8 @@ class WalWriterAuthorityCheckScript extends BundleScript {
     const directoryNames = new Set(["segment", "marker"]);
     directoryNames.delete("segment");
     assert.equal(!directoryNames.has("segment") && directoryNames.has("marker") ? "not-found-with-retained-marker" : "invalid", directoryFixture.deleteFaultState);
-    directoryNames.delete("marker"); assert.equal(directoryNames.size, 0);
+    directoryNames.delete("marker");
+    assert.equal(directoryNames.size, 0);
     assert(directoryFixture.delete.indexOf("segment-delete-parent-synced") < directoryFixture.delete.indexOf("marker-deleted"));
     const pinnedWriter = { operation: fixture.controllerBinding.operation, releaseRequested: true };
     assert.equal(pinnedWriter.releaseRequested && pinnedWriter.operation !== fixture.controllerBinding.contender ? "closed" : "ok", fixture.controllerBinding.fenceBeforeCallback);
@@ -87,11 +423,16 @@ class WalWriterAuthorityCheckScript extends BundleScript {
     assert.equal(fixture.controllerBinding.tasksAddedOnRelease, 0);
     assert.equal(fixture.controllerBinding.guardFactoryCallsOnConflict, 0);
     assert.equal(fixture.controllerBinding.faultRetryPreservesKey, true);
-    const pendingWriters = new Map([["fault", "retained"], ["healthy", "retained"]]);
+    const pendingWriters = new Map([
+      ["fault", "retained"],
+      ["healthy", "retained"],
+    ]);
     const faultTrace = ["fault-retained"];
-    pendingWriters.delete("healthy"); faultTrace.push("healthy-terminal");
+    pendingWriters.delete("healthy");
+    faultTrace.push("healthy-terminal");
     assert.equal(pendingWriters.get("fault"), "retained");
-    pendingWriters.delete("fault"); faultTrace.push("fault-retry-terminal");
+    pendingWriters.delete("fault");
+    faultTrace.push("fault-retry-terminal");
     assert.deepEqual(faultTrace, fixture.controllerFaults.coalesced);
     assert.equal(fixture.controllerFaults.outerPanic.executorTurns, 1);
     assert.equal(fixture.controllerFaults.outerPanic.wakesPerOwner, 1);
@@ -103,21 +444,30 @@ class WalWriterAuthorityCheckScript extends BundleScript {
     const copiedSnapshot = Buffer.from(sourceSnapshot);
     assert.equal(sourceSnapshot.length, transfer.bytes);
     sourceSnapshot.fill(0);
-    assert.deepEqual([...copiedSnapshot], Array.from({ length: transfer.bytes }, (_, index) => transfer.pattern[index % transfer.pattern.length]));
+    assert.deepEqual(
+      [...copiedSnapshot],
+      Array.from({ length: transfer.bytes }, (_, index) => transfer.pattern[index % transfer.pattern.length]),
+    );
     assert.equal(Symbol("source-result") === Symbol("independent-input"), transfer.sameOperation);
     const clusterSource = readFileSync(join(owner, "..", "..", "🌐️cluster", "🦀️.rs"), "utf8");
     assert(clusterSource.includes("db_io_copy_page_owner(&pages)") && clusterSource.includes("close_replication_pages(&mut pages)"), "snapshot replication must retire source result before a distinct write owner");
     const walSource = readFileSync(join(owner, "..", "..", "📝️wal", "🦀️.rs"), "utf8");
-    for (const marker of ["struct ArtifactWalAcquiredRejected", "enum ArtifactWalOpenRejected", "retry_open(", "retry_close(", "open_acquired(", "into_open_rejected"]) assert(walSource.includes(marker), "missing retained WAL-open owner primitive: " + marker);
+    for (const marker of ["struct ArtifactWalAcquiredRejected", "enum ArtifactWalOpenRejected", "retry_open(", "retry_close(", "open_acquired(", "into_open_rejected"])
+      assert(walSource.includes(marker), "missing retained WAL-open owner primitive: " + marker);
     assert(!walSource.includes("release_failed_open"), "WAL open rejection must not await and flatten its writer release");
     const artifactSource = readFileSync(join(owner, "..", "..", "🗿️artifact", "🦀️.rs"), "utf8");
-    for (const marker of ["enum ArtifactEngineOpenRejected", "RetainedWal", "has_retained_writer", "Future<Output = Result<ArtifactEngine<A, V>, ArtifactEngineOpenRejected>>"]) assert(artifactSource.includes(marker), "missing engine retained-open propagation: " + marker);
+    for (const marker of ["enum ArtifactEngineOpenRejected", "RetainedWal", "has_retained_writer", "Future<Output = Result<ArtifactEngine<A, V>, ArtifactEngineOpenRejected>>"])
+      assert(artifactSource.includes(marker), "missing engine retained-open propagation: " + marker);
     const engineSource = readFileSync(join(owner, "..", "..", "⚙️engine", "🦀️.rs"), "utf8");
     for (const marker of ["enum DatabaseDocumentOpenRejected", "Result<ArtifactHandle, DatabaseDocumentOpenRejected>", "rejected.retry_close().await"]) assert(engineSource.includes(marker), "missing database retained-open propagation: " + marker);
     for (const marker of ["enum ReplicationRejected", "ArtifactWal::open_acquired", "ReplicationRejected::WalOpen"]) assert(clusterSource.includes(marker), "missing cluster acquired-writer propagation: " + marker);
     for (const outcome of fixture.replication.releaseAfter) {
       const owner = new Set(["document"]);
-      try { assert(["tail", "up-to-date", "snapshot", "leader-corrupt"].includes(outcome)); } finally { owner.delete("document"); }
+      try {
+        assert(["tail", "up-to-date", "snapshot", "leader-corrupt"].includes(outcome));
+      } finally {
+        owner.delete("document");
+      }
       assert.equal(owner.size, 0);
     }
     for (const row of fixture.cases) {
@@ -130,26 +480,42 @@ class WalWriterAuthorityCheckScript extends BundleScript {
         if (step.action === "acquire") {
           if (live.has(step.document)) actual = "conflict";
           else if (generation === 0xffffffffffffffffn) actual = "exhausted";
-          else { live.set(step.document, generation); owners.set(step.owner, { document: step.document, generation: generation++ }); }
+          else {
+            live.set(step.document, generation);
+            owners.set(step.owner, { document: step.document, generation: generation++ });
+          }
         } else if (step.backend !== 0 || permit?.document !== step.document || live.get(step.document) !== permit?.generation) actual = "fenced";
         else if (step.action === "release") live.delete(step.document);
         assert.equal(actual, step.expected, `${row.name}: ${JSON.stringify(step)}`);
       }
       assert.equal(live.size, 0, row.name);
     }
-    assert.deepEqual(fixture.resultRetirement.terminal, Array.from({ length: fixture.resultRetirement.pages + 3 }, (_, index) => index === fixture.resultRetirement.pages + 2));
-    assert.deepEqual(fixture.guardRetirement.terminal, fixture.guardRetirement.stages.map((stage: string) => stage === "terminal"));
+    assert.deepEqual(
+      fixture.resultRetirement.terminal,
+      Array.from({ length: fixture.resultRetirement.pages + 3 }, (_, index) => index === fixture.resultRetirement.pages + 2),
+    );
+    assert.deepEqual(
+      fixture.guardRetirement.terminal,
+      fixture.guardRetirement.stages.map((stage: string) => stage === "terminal"),
+    );
     const rejected = new Set(Array.from({ length: fixture.backendPressure.capacity }, (_, index) => index));
     let retained = rejected.size === fixture.backendPressure.capacity;
     assert.equal(retained, fixture.backendPressure.retainedWhenFull);
     rejected.delete(0);
     if (rejected.size < fixture.backendPressure.capacity) retained = false;
     assert.equal(!retained, fixture.backendPressure.terminalAfterCapacityReturns);
-    const closing = new Map([[fixture.fairRetirement.pinnedSlot, "pinned"], [fixture.fairRetirement.releasingSlot, "releasing"]]);
+    const closing = new Map([
+      [fixture.fairRetirement.pinnedSlot, "pinned"],
+      [fixture.fairRetirement.releasingSlot, "releasing"],
+    ]);
     for (let cursor = 0; cursor < fixture.fairRetirement.maximumOpportunities; cursor++) if (closing.get(cursor) === "releasing") closing.delete(cursor);
     assert.equal(closing.has(fixture.fairRetirement.pinnedSlot), fixture.fairRetirement.pinnedRetained);
     assert.equal(!closing.has(fixture.fairRetirement.releasingSlot), fixture.fairRetirement.releasingRetired);
-    for (const trace of [fixture.maintenanceFairness.continuouslyReady, fixture.maintenanceFairness.firstClassFaults]) assert.deepEqual(trace, trace.map((_: unknown, index: number) => index % fixture.maintenanceFairness.classes.length));
+    for (const trace of [fixture.maintenanceFairness.continuouslyReady, fixture.maintenanceFairness.firstClassFaults])
+      assert.deepEqual(
+        trace,
+        trace.map((_: unknown, index: number) => index % fixture.maintenanceFairness.classes.length),
+      );
     let terminalEpoch = BigInt(fixture.releaseSignal.firstEpoch);
     const waits: bigint[] = [];
     for (const writer of fixture.releaseSignal.writers) {
@@ -158,71 +524,118 @@ class WalWriterAuthorityCheckScript extends BundleScript {
       terminalEpoch += 1n;
       waits.push(required);
       assert.equal(terminalEpoch.toString(), writer.terminalEpoch);
-      assert.equal(waits.every((wait) => terminalEpoch >= wait), fixture.releaseSignal.oldWaitSurvivesReuse);
+      assert.equal(
+        waits.every((wait) => terminalEpoch >= wait),
+        fixture.releaseSignal.oldWaitSurvivesReuse,
+      );
     }
-    console.log(`wal-writer-authority-independent-oracle: AJV=6 exact-u64=1 cases=${fixture.cases.length} mutations=${fixture.mutations.length} remote=${remoteFixture.cases.length} writer-slots=${memoryFixture.writerTable.slots} retained-result=1 directory-barriers=4 wal-open-owner=1 backend-pool-use=${poolUseFixture.cases.length}`);
+    console.log(
+      `wal-writer-authority-independent-oracle: AJV=6 exact-u64=1 cases=${fixture.cases.length} mutations=${fixture.mutations.length} remote=${remoteFixture.cases.length} writer-slots=${memoryFixture.writerTable.slots} retained-result=1 directory-barriers=4 wal-open-owner=1 backend-pool-use=${poolUseFixture.cases.length} physical-opening=${poolUseFixture.opening.length}`,
+    );
     const source = readFileSync(join(owner, "🦀️.rs"), "utf8");
-    for (const marker of ["struct WalWriterPermit", "struct WalWriterTable", "struct WalFileWriterGuard", "try_lock()", "checked_add(1)", "active_operation", "fn release_step"]) assert(source.includes(marker), `missing writer capability primitive: ${marker}`);
+    for (const marker of ["struct WalWriterPermit", "struct WalWriterTable", "struct WalFileWriterGuard", "try_lock()", "checked_add(1)", "active_operation", "fn release_step"])
+      assert(source.includes(marker), `missing writer capability primitive: ${marker}`);
     const explicitRelease = source.slice(source.indexOf("pub fn release(mut self)"), source.indexOf("fn request_release(&self)"));
     assert(!explicitRelease.includes("self.request_release()"), "explicit retained release must stay dormant until its first poll");
     const storageSource = readFileSync(join(owner, "..", "🦀️.rs"), "utf8");
-    for (const marker of ["WalWriterTable<WalFileWriterGuard>", "fn writer_sidecar", "DbIoTask::WalWriterAcquire", "fn pin_writer_operation", "finish_operation_if_pinned", ".semio-wal-writer"]) assert(storageSource.includes(marker), `missing filesystem writer integration: ${marker}`);
-    for (const marker of ["pool_use: Option<Arc<WorkerPoolUse>>", "fn db_io_backend_admit_operation", "Result<Arc<WorkerPool>, DbError>", "pub fn submit_db_io_task(task: DbIoTask)", "db_io_backend_control(owner.kind, slot, generation) != control", "struct DbIoBackendRollbackReservation", "struct DbIoBackendRegistrationRejected", "pub enum DbStorageOpenRejected", "pub async fn retry_close(self) -> Result<DbError, Self>", "register_db_io_backend_prepared_with_use", "Result<DbIoBackendControl, DbIoBackendRegistrationRejected>", "reserved: bool"]) assert(storageSource.includes(marker), `missing backend-owned WorkerPool use boundary: ${marker}`);
+    for (const marker of ["WalWriterTable<WalFileWriterGuard>", "fn writer_sidecar", "DbIoTask::WalWriterAcquire", "fn pin_writer_operation", "finish_operation_if_pinned", ".semio-wal-writer"])
+      assert(storageSource.includes(marker), `missing filesystem writer integration: ${marker}`);
+    for (const marker of [
+      "pool_use: Option<Arc<WorkerPoolUse>>",
+      "fn db_io_backend_admit_operation",
+      "Result<Arc<WorkerPool>, DbError>",
+      "pub fn submit_db_io_task(task: DbIoTask)",
+      "db_io_backend_control(owner.kind, slot, generation) != control",
+      "struct DbIoBackendRollbackReservation",
+      "struct DbIoBackendRegistrationRejected",
+      "pub enum DbStorageOpenRejected",
+      "pub async fn retry_close(self) -> Result<DbError, Self>",
+      "register_db_io_backend_prepared_with_use",
+      "Result<DbIoBackendControl, DbIoBackendRegistrationRejected>",
+      "reserved: bool",
+    ])
+      assert(storageSource.includes(marker), `missing backend-owned WorkerPool use boundary: ${marker}`);
     assert(!storageSource.includes("pub fn submit_db_io_task(pool:"), "DB I/O tasks must derive the exact registered backend pool");
     const registrationSource = storageSource.slice(storageSource.indexOf("pub fn register_db_io_backend("), storageSource.indexOf("fn db_io_writer_release_lane_step"));
     assert(!registrationSource.includes("let _ = db_io_park_lost_owner"), "backend registration must not discard a saturated retirement owner");
     for (const marker of ["MemoryDbIoExecutor::backing_bytes()", "checked_add(writer::release::controller_credit())"]) assert(storageSource.includes(marker), `missing memory writer backing integration: ${marker}`);
     const sqliteSource = readFileSync(join(owner, "..", "🪶️sqlite", "🦀️.rs"), "utf8");
-    for (const marker of ["WalWriterTable<SqliteWalWriterGuard>", "canonical_database", "fn physical_writer_sidecar", "DbIoTask::WalWriterAcquire", "fn pin_writer_operation", "finish_operation_if_pinned", ".semio-wal-writer"]) assert(sqliteSource.includes(marker), `missing SQLite writer integration: ${marker}`);
+    for (const marker of ["WalWriterTable<SqliteWalWriterGuard>", "canonical_database", "fn physical_writer_sidecar", "DbIoTask::WalWriterAcquire", "fn pin_writer_operation", "finish_operation_if_pinned", ".semio-wal-writer"])
+      assert(sqliteSource.includes(marker), `missing SQLite writer integration: ${marker}`);
     const releaseSource = readFileSync(join(owner, "🔔️release/🦀️.rs"), "utf8");
-    for (const marker of ["struct WalWriterSignalCell", "requested: bool", "fn request_release(&mut self)", "impl Drop for WalWriterRelease", "deferred_fault_waiter", "defer_fault_notifications", "suspend_controller_for_refusal", "deferred_wake_pending_for_test"]) assert(releaseSource.includes(marker), `missing bounded deferred refusal primitive: ${marker}`);
+    for (const marker of [
+      "struct WalWriterSignalCell",
+      "requested: bool",
+      "fn request_release(&mut self)",
+      "impl Drop for WalWriterRelease",
+      "deferred_fault_waiter",
+      "defer_fault_notifications",
+      "suspend_controller_for_refusal",
+      "deferred_wake_pending_for_test",
+    ])
+      assert(releaseSource.includes(marker), `missing bounded deferred refusal primitive: ${marker}`);
     assert.equal((storageSource.match(/writer::release::notify_faults/g) ?? []).length, 0, "public DB handback paths must not invoke writer wakers directly");
     assert(storageSource.includes("wal_writer_mounted_stale_controller_defers_cross_key_wake_and_fences_retry_epoch"), "missing mounted stale-controller refusal law");
     if (segments[0] !== "--native") return;
     const receipts = await runExactCargoLaws({
-      cwd: this.repoRoot, ...exactCargoStageEnvironments(),
-      groups: [{ package: "semio-framework-os-kernel-db", target: { kind: "lib", name: "db" }, cargoArgs: ["--all-features"], laws: [
-        "wal_writer_table_matches_neutral_exact_scope_and_aba_rejection",
-        "wal_writer_table_capacity_recycles_slots_without_reusing_generations",
-        "wal_writer_file_lock_excludes_independent_instances_and_processes",
-        "db_io_lost_result_lease_retains_every_page_and_final_handback",
-        "wal_writer_release_retains_pinned_operation_and_faulted_guard",
-        "db_io_lost_backend_retains_exact_owner_under_rejected_registry_pressure",
-        "wal_writer_table_close_advances_other_guards_while_first_operation_is_pinned",
-        "db_io_maintenance_rotates_ready_and_faulted_classes_without_starvation",
-        "wal_writer_release_signal_preserves_exact_waits_across_writer_and_backend_reuse",
-        "wal_writer_mounted_controller_fences_at_signal_and_wakes_outside_registry_without_tasks",
-        "wal_writer_mounted_controller_fault_returns_exact_retry_owner_without_poisoning_other_writer",
-        "wal_writer_mounted_stale_controller_defers_cross_key_wake_and_fences_retry_epoch",
-        "wal_writer_mounted_controller_rerequests_after_async_executor_handback",
-        "wal_writer_mounted_controller_coalesced_fault_does_not_strand_healthy_release",
-        "wal_writer_mounted_controller_outer_panic_faults_waiters_once_and_stops",
-        "db_io_memory_backend_heap_tables_have_exact_preflight_credit_and_terminal_return",
-        "db_io_retained_page_results_survive_same_task_slot_reuse_and_return_exact_credit",
-        "fs_storage_canonical_alias_writer_fences_all_six_mutations",
-        "sqlite_wal_writer_real_database_alias_and_crash_are_exclusive",
-        "fs_wal_directory_barriers_match_neutral_order_and_duplicate_create_is_atomic",
-        "fs_wal_directory_faults_retain_seal_and_delete_order_until_explicit_retry",
-        "fs_replacement_reports_failure_until_renamed_parent_is_synced",
-        "fs_wal_reopen_repairs_unacknowledged_segment_namespace_before_header_ack",
-        "replicate_document_fences_occupied_follower_before_inventory_or_up_to_date",
-        "replicate_document_releases_follower_after_leader_replay_failure",
-        "replicate_document_applies_missing_tail_commands_to_a_fresh_follower",
-        "replicate_document_reports_up_to_date_once_a_follower_catches_up",
-        "replicate_document_transfers_a_snapshot_when_the_follower_is_below_the_retained_floor",
-        "artifact_wal_open_rejection_retains_exact_writer_for_close_or_same_owner_retry",
-        "artifact_engine_create_rejection_propagates_exact_wal_release_owner",
-        "database_document_mount_failure_terminalizes_authority_builder_wal_owner_before_fanout",
-        "db_io_registered_backend_use_blocks_pool_shutdown_until_terminal_close",
-        "db_io_backend_registration_saturation_returns_exact_executor_before_pool_use",
-        "db_io_prepared_registration_failure_returns_exact_close_owner_after_submission_refusal",
-        "db_io_task_uses_registered_backend_pool_not_caller_pool",
-        "db_io_backend_drop_retains_pool_until_deferred_close_terminal",
-        "db_io_forged_backend_kind_is_rejected_before_task_page_admission",
-        "database_compaction_future_acquires_pool_use_before_admission",
-      ] }],
-      artifactDir: process.env.SEMIO_TEST_ARTIFACT_DIR, buildBudgetMs: Number(process.env.SEMIO_BUILD_BUDGET_MS ?? 3_600_000), listBudgetMs: 60_000, lawBudgetMs: 120_000,
-      progress(event) { console.log(`wal-writer-authority-native ${event.stage}: ${event.law ?? ""} artifacts=${event.artifactDir}`); },
+      cwd: this.repoRoot,
+      ...exactCargoStageEnvironments(),
+      groups: [
+        {
+          package: "semio-framework-os-kernel-db",
+          target: { kind: "lib", name: "db" },
+          cargoArgs: ["--all-features"],
+          laws: [
+            "db_io_real_storage_open_drop_retires_queued_backend_and_allows_reopen",
+            "db_io_real_storage_open_fault_drop_retires_registered_backend_without_retry",
+            "wal_writer_table_matches_neutral_exact_scope_and_aba_rejection",
+            "wal_writer_table_capacity_recycles_slots_without_reusing_generations",
+            "wal_writer_file_lock_excludes_independent_instances_and_processes",
+            "db_io_lost_result_lease_retains_every_page_and_final_handback",
+            "wal_writer_release_retains_pinned_operation_and_faulted_guard",
+            "db_io_lost_backend_retains_exact_owner_under_rejected_registry_pressure",
+            "wal_writer_table_close_advances_other_guards_while_first_operation_is_pinned",
+            "db_io_maintenance_rotates_ready_and_faulted_classes_without_starvation",
+            "wal_writer_release_signal_preserves_exact_waits_across_writer_and_backend_reuse",
+            "wal_writer_mounted_controller_fences_at_signal_and_wakes_outside_registry_without_tasks",
+            "wal_writer_mounted_controller_fault_returns_exact_retry_owner_without_poisoning_other_writer",
+            "wal_writer_mounted_stale_controller_defers_cross_key_wake_and_fences_retry_epoch",
+            "wal_writer_mounted_controller_rerequests_after_async_executor_handback",
+            "wal_writer_mounted_controller_coalesced_fault_does_not_strand_healthy_release",
+            "wal_writer_mounted_controller_outer_panic_faults_waiters_once_and_stops",
+            "db_io_memory_backend_heap_tables_have_exact_preflight_credit_and_terminal_return",
+            "db_io_retained_page_results_survive_same_task_slot_reuse_and_return_exact_credit",
+            "fs_storage_canonical_alias_writer_fences_all_six_mutations",
+            "sqlite_wal_writer_real_database_alias_and_crash_are_exclusive",
+            "fs_wal_directory_barriers_match_neutral_order_and_duplicate_create_is_atomic",
+            "fs_wal_directory_faults_retain_seal_and_delete_order_until_explicit_retry",
+            "fs_replacement_reports_failure_until_renamed_parent_is_synced",
+            "fs_wal_reopen_repairs_unacknowledged_segment_namespace_before_header_ack",
+            "replicate_document_fences_occupied_follower_before_inventory_or_up_to_date",
+            "replicate_document_releases_follower_after_leader_replay_failure",
+            "replicate_document_applies_missing_tail_commands_to_a_fresh_follower",
+            "replicate_document_reports_up_to_date_once_a_follower_catches_up",
+            "replicate_document_transfers_a_snapshot_when_the_follower_is_below_the_retained_floor",
+            "artifact_wal_open_rejection_retains_exact_writer_for_close_or_same_owner_retry",
+            "artifact_engine_create_rejection_propagates_exact_wal_release_owner",
+            "database_document_mount_failure_terminalizes_authority_builder_wal_owner_before_fanout",
+            "db_io_registered_backend_use_blocks_pool_shutdown_until_terminal_close",
+            "db_io_backend_registration_saturation_returns_exact_executor_before_pool_use",
+            "db_io_prepared_registration_failure_returns_exact_close_owner_after_submission_refusal",
+            "db_io_task_uses_registered_backend_pool_not_caller_pool",
+            "db_io_backend_drop_retains_pool_until_deferred_close_terminal",
+            "db_io_forged_backend_kind_is_rejected_before_task_page_admission",
+            "database_compaction_future_acquires_pool_use_before_admission",
+          ],
+        },
+      ],
+      artifactDir: process.env.SEMIO_TEST_ARTIFACT_DIR,
+      buildBudgetMs: Number(process.env.SEMIO_BUILD_BUDGET_MS ?? 3_600_000),
+      listBudgetMs: 60_000,
+      lawBudgetMs: 120_000,
+      progress(event) {
+        console.log(`wal-writer-authority-native ${event.stage}: ${event.law ?? ""} artifacts=${event.artifactDir}`);
+      },
     });
     for (const receipt of receipts) console.log(`wal-writer-authority-native-receipt: ${JSON.stringify(receipt)}`);
   }
@@ -239,7 +652,7 @@ class WalCommittedTransactionsCheckScript extends BundleScript {
     assert.deepEqual(fixture.historyProjection.expected, { entries: 1, operationIds: fixture.historyProjection.commands.map((command: any) => command.id), headSeq: fixture.historyProjection.commands.length, commitSeq: 1 });
     assert.equal(new Set(fixture.historyProjection.expected.operationIds).size, fixture.historyProjection.commands.length);
     for (const row of fixture.historyProjection.rejections) {
-      const frontiers = row.records.flatMap((record: any, index: number) => record.kind === "frontier" ? [index] : []);
+      const frontiers = row.records.flatMap((record: any, index: number) => (record.kind === "frontier" ? [index] : []));
       const accepted = row.records.every((record: any) => record.document === "current") && frontiers.length === 1 && frontiers[0] === row.records.length - 1;
       assert.equal(accepted, row.accepted, row.name);
     }
@@ -252,18 +665,27 @@ class WalCommittedTransactionsCheckScript extends BundleScript {
       try {
         for (const [index, segment] of row.segments.entries()) {
           if (index !== row.segments.length - 1 && segment.state !== "sealed") throw "corrupt";
-          assert.deepEqual([...segment.physicalCommitsAfter].sort((a: number, b: number) => a - b), segment.physicalCommitsAfter);
+          assert.deepEqual(
+            [...segment.physicalCommitsAfter].sort((a: number, b: number) => a - b),
+            segment.physicalCommitsAfter,
+          );
           assert.equal(segment.physicalCommitsAfter.at(-1), segment.frames.length - 1);
           let current: { id: string; kinds: string[] } | null = null;
           for (const [ordinal, frame] of segment.frames.entries()) {
-            if (frame.kind === "header") { if (ordinal !== 0 || current !== null) throw "corrupt"; continue; }
+            if (frame.kind === "header") {
+              if (ordinal !== 0 || current !== null) throw "corrupt";
+              continue;
+            }
             if (ordinal === 0) throw "corrupt";
             if (frame.kind === "begin") {
               if (current !== null || BigInt(frame.id) < next || (observed && BigInt(frame.id) !== next)) throw "corrupt";
-              const payload = Buffer.alloc(8); payload.writeBigUInt64LE(BigInt(frame.id));
+              const payload = Buffer.alloc(8);
+              payload.writeBigUInt64LE(BigInt(frame.id));
               const id = payload.readBigUInt64LE();
               if (id === 0xffffffffffffffffn) throw "sequence";
-              next = id + 1n; observed = true; current = { id: id.toString(), kinds: [] };
+              next = id + 1n;
+              observed = true;
+              current = { id: id.toString(), kinds: [] };
             } else if (frame.kind === "commit" || frame.kind === "abort") {
               if (current === null || current.id !== frame.id || (frame.kind === "commit" && current.kinds.length !== frame.count)) throw "corrupt";
               if (frame.kind === "commit") transactions.push(current);
@@ -289,7 +711,14 @@ class WalCommittedTransactionsCheckScript extends BundleScript {
     const faults = JSON.parse(readFileSync(join(owner, "🧪️fixtures/🛑️fail-stop/🔣️.json"), "utf8"));
     const validateFaults = new Ajv2020({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(owner, "🧪️fixtures/🛑️fail-stop/🧬️.schema.json"), "utf8")));
     assert(validateFaults(faults), JSON.stringify(validateFaults.errors));
-    assert.deepEqual(faults.cases.filter((row: any) => row.fault !== "successorAppendError").map((row: any) => [row.fault, row.expectedPhysicalSuffix]), [["shortAppend", "torn"], ["appendError", "absent"], ["syncError", "complete"]]);
+    assert.deepEqual(
+      faults.cases.filter((row: any) => row.fault !== "successorAppendError").map((row: any) => [row.fault, row.expectedPhysicalSuffix]),
+      [
+        ["shortAppend", "torn"],
+        ["appendError", "absent"],
+        ["syncError", "complete"],
+      ],
+    );
     const source = readFileSync(join(owner, "🦀️.rs"), "utf8");
     assert(source.includes("struct WalTransactionGate") && source.includes("frames: [Option<WalRecordFrame>; 64]"), "logical admission must retain fixed frame spans, not owned decoded records");
     assert(source.includes("WalCommittedCursor") && source.includes("WalCommittedTransaction"), "materializers need one shared borrowed committed cursor");
@@ -312,8 +741,12 @@ class WalCommittedTransactionsCheckScript extends BundleScript {
       if (terminal >= 0 && terminal < 10) {
         const number = bytes.subarray(0, terminal + 1).reduceRight((value, byte) => value * 128n + BigInt(byte & 127), 0n);
         if (number <= 0xffffffffffffffffn) {
-          const storage = Buffer.alloc(8); storage.writeBigUInt64LE(number);
-          if (Buffer.from(leb.encodeUIntBuffer(storage)).equals(bytes.subarray(0, terminal + 1))) { value = number.toString(); consumed = terminal + 1; }
+          const storage = Buffer.alloc(8);
+          storage.writeBigUInt64LE(number);
+          if (Buffer.from(leb.encodeUIntBuffer(storage)).equals(bytes.subarray(0, terminal + 1))) {
+            value = number.toString();
+            consumed = terminal + 1;
+          }
         }
       }
       assert.deepEqual({ value, consumed }, { value: row.value, consumed: row.consumed }, row.name);
@@ -322,30 +755,47 @@ class WalCommittedTransactionsCheckScript extends BundleScript {
     console.log(`wal-retained-decoder-independent-oracle: AJV=1 LEB128=1 vectors=${decoder.varints.length}`);
     if (segments[0] === "--native") {
       const receipts = await runExactCargoLaws({
-        cwd: this.repoRoot, ...exactCargoStageEnvironments(),
-        groups: [{ package: "semio-framework-os-kernel-db", target: { kind: "lib", name: "db" }, cargoArgs: ["--all-features"], laws: [
-          "wal_transaction_gate_matches_neutral_committed_spans", "wal_retained_decoder_fuel_resumes_exact_fragmented_bytes",
-          "wal_retained_decoder_cancel_close_preserves_source_and_returns_owner", "wal_committed_cursor_cancel_resume_keeps_transaction_position",
-          "wal_committed_cursor_unfinished_borrow_poison_and_cancelled_close", "artifact_open_ignores_neutral_aborted_command_snapshot_and_cas",
-          "sync_replay_ignores_neutral_aborted_command_snapshot_and_cas", "cli_verify_checks_neutral_logical_commit_boundaries",
-          "open_replays_the_wal_and_reconstructs_state_and_frontier_identically",
-          "wal_retained_varints_match_neutral_exact_u64_and_atomic_interruption",
-          "wal_committed_cursor_single_fuel_and_expired_turns_match_neutral_transactions",
-          "sync_retained_reads_resume_neutral_varints_without_renewing_overall_deadline",
-          "wal_immutable_source_fragmentation_matches_neutral_transactions",
-          "artifact_history_replay_uses_neutral_committed_inventory_and_retires_every_owner",
-          "artifact_history_replay_projects_real_committed_batch_and_cancels_owned_sources",
-          "artifact_history_and_opener_reject_neutral_inner_documents_and_frontier_order",
-          "wal_recovery_aborts_only_incomplete_active_transactions_idempotently",
-          "wal_recovery_abort_fsync_survives_two_independent_filesystem_reopens",
-          "wal_recovery_abort_faults_retry_without_duplicate_abort",
-          "wal_recovery_abort_cancellation_has_one_durable_boundary",
-          "wal_recovery_abort_capacity_exact_and_plus_one_preserves_source",
-          "artifact_history_panic_at_each_phase_transition_retains_then_fault_retires",
-          "db_compact::tests::compaction_applies_only_committed_frontier_snapshot_and_payload_effects",
-        ] }],
-        artifactDir: process.env.SEMIO_TEST_ARTIFACT_DIR, buildBudgetMs: Number(process.env.SEMIO_BUILD_BUDGET_MS ?? 3_600_000), listBudgetMs: 60_000, lawBudgetMs: 120_000,
-        progress(event) { console.log(`wal-committed-transactions-native ${event.stage}: ${event.law ?? ""} artifacts=${event.artifactDir}`); },
+        cwd: this.repoRoot,
+        ...exactCargoStageEnvironments(),
+        groups: [
+          {
+            package: "semio-framework-os-kernel-db",
+            target: { kind: "lib", name: "db" },
+            cargoArgs: ["--all-features"],
+            laws: [
+              "wal_transaction_gate_matches_neutral_committed_spans",
+              "wal_retained_decoder_fuel_resumes_exact_fragmented_bytes",
+              "wal_retained_decoder_cancel_close_preserves_source_and_returns_owner",
+              "wal_committed_cursor_cancel_resume_keeps_transaction_position",
+              "wal_committed_cursor_unfinished_borrow_poison_and_cancelled_close",
+              "artifact_open_ignores_neutral_aborted_command_snapshot_and_cas",
+              "sync_replay_ignores_neutral_aborted_command_snapshot_and_cas",
+              "cli_verify_checks_neutral_logical_commit_boundaries",
+              "open_replays_the_wal_and_reconstructs_state_and_frontier_identically",
+              "wal_retained_varints_match_neutral_exact_u64_and_atomic_interruption",
+              "wal_committed_cursor_single_fuel_and_expired_turns_match_neutral_transactions",
+              "sync_retained_reads_resume_neutral_varints_without_renewing_overall_deadline",
+              "wal_immutable_source_fragmentation_matches_neutral_transactions",
+              "artifact_history_replay_uses_neutral_committed_inventory_and_retires_every_owner",
+              "artifact_history_replay_projects_real_committed_batch_and_cancels_owned_sources",
+              "artifact_history_and_opener_reject_neutral_inner_documents_and_frontier_order",
+              "wal_recovery_aborts_only_incomplete_active_transactions_idempotently",
+              "wal_recovery_abort_fsync_survives_two_independent_filesystem_reopens",
+              "wal_recovery_abort_faults_retry_without_duplicate_abort",
+              "wal_recovery_abort_cancellation_has_one_durable_boundary",
+              "wal_recovery_abort_capacity_exact_and_plus_one_preserves_source",
+              "artifact_history_panic_at_each_phase_transition_retains_then_fault_retires",
+              "db_compact::tests::compaction_applies_only_committed_frontier_snapshot_and_payload_effects",
+            ],
+          },
+        ],
+        artifactDir: process.env.SEMIO_TEST_ARTIFACT_DIR,
+        buildBudgetMs: Number(process.env.SEMIO_BUILD_BUDGET_MS ?? 3_600_000),
+        listBudgetMs: 60_000,
+        lawBudgetMs: 120_000,
+        progress(event) {
+          console.log(`wal-committed-transactions-native ${event.stage}: ${event.law ?? ""} artifacts=${event.artifactDir}`);
+        },
       });
       for (const receipt of receipts) console.log(`wal-committed-transactions-native-receipt: ${JSON.stringify(receipt)}`);
     }
@@ -360,20 +810,36 @@ class WalCommittedCompactionCheckScript extends BundleScript {
     const fixture = JSON.parse(readFileSync(join(owner, "🧪️fixtures/🧾️committed-effects/🔣️.json"), "utf8"));
     const validate = new Ajv2020({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(owner, "🧪️fixtures/🧾️committed-effects/🧬️.schema.json"), "utf8")));
     assert(validate(fixture), JSON.stringify(validate.errors));
-    assert.deepEqual(fixture.segments.map((row: any) => row.index), fixture.segments.map((_: any, index: number) => index));
+    assert.deepEqual(
+      fixture.segments.map((row: any) => row.index),
+      fixture.segments.map((_: any, index: number) => index),
+    );
     assert.equal(fixture.segments.at(-1).state, "active");
-    const committed = fixture.segments.flatMap((segment: any) => segment.transactions.filter((transaction: any) => transaction.outcome === "commit").flatMap((transaction: any) => transaction.records.map((record: any) => ({ ...record, segment: segment.index }))));
-    const horizons = fixture.segments.map((segment: any) => ({ segment: segment.index, head: committed.filter((record: any) => record.segment === segment.index && ["frontier", "snapshot"].includes(record.kind)).reduce((head: number | null, record: any) => head === null ? record.headSeq : Math.max(head, record.headSeq), null) }));
+    const committed = fixture.segments.flatMap((segment: any) =>
+      segment.transactions.filter((transaction: any) => transaction.outcome === "commit").flatMap((transaction: any) => transaction.records.map((record: any) => ({ ...record, segment: segment.index }))),
+    );
+    const horizons = fixture.segments.map((segment: any) => ({
+      segment: segment.index,
+      head: committed.filter((record: any) => record.segment === segment.index && ["frontier", "snapshot"].includes(record.kind)).reduce((head: number | null, record: any) => (head === null ? record.headSeq : Math.max(head, record.headSeq)), null),
+    }));
     const highest = fixture.segments.at(-1).index;
     const deletedSegments = horizons.filter((row: any) => row.segment !== highest && row.head !== null && row.head <= fixture.floorHeadSeq).map((row: any) => row.segment);
-    const deletedPayloads = fixture.actor.payloadReclamation === "deferred-global-reference-authority" ? [] : committed.filter((record: any) => record.kind === "payload" && deletedSegments.includes(record.segment) && !committed.some((live: any) => live.kind === "payload" && live.payload === record.payload && !deletedSegments.includes(live.segment))).map((record: any) => record.payload);
+    const deletedPayloads =
+      fixture.actor.payloadReclamation === "deferred-global-reference-authority"
+        ? []
+        : committed
+            .filter((record: any) => record.kind === "payload" && deletedSegments.includes(record.segment) && !committed.some((live: any) => live.kind === "payload" && live.payload === record.payload && !deletedSegments.includes(live.segment)))
+            .map((record: any) => record.payload);
     const allPayloads = new Set(fixture.segments.flatMap((segment: any) => segment.transactions.flatMap((transaction: any) => transaction.records.filter((record: any) => record.kind === "payload").map((record: any) => record.payload))));
-    assert.deepEqual({
-      deletedSegments: deletedSegments.length,
-      deletedPayloads: new Set(deletedPayloads).size,
-      remainingSegments: fixture.segments.map((row: any) => row.index).filter((index: number) => !deletedSegments.includes(index)),
-      retainedPayloads: [...allPayloads].filter(payload => !deletedPayloads.includes(payload)),
-    }, fixture.expected);
+    assert.deepEqual(
+      {
+        deletedSegments: deletedSegments.length,
+        deletedPayloads: new Set(deletedPayloads).size,
+        remainingSegments: fixture.segments.map((row: any) => row.index).filter((index: number) => !deletedSegments.includes(index)),
+        retainedPayloads: [...allPayloads].filter((payload) => !deletedPayloads.includes(payload)),
+      },
+      fixture.expected,
+    );
     assert.deepEqual(fixture.actor, {
       priority: "command",
       writerAuthority: "retained-artifact-wal",
@@ -405,13 +871,21 @@ class WalCommittedCompactionCheckScript extends BundleScript {
         cwd: this.repoRoot,
         ...exactCargoStageEnvironments(),
         cargoArgs: ["--all-features"],
-        groups: [{ package: "semio-framework-os-kernel-db", target: { kind: "lib", name: "db" }, laws: [
-          "db_compact::tests::compaction_applies_only_committed_frontier_snapshot_and_payload_effects",
-          "db_compact::tests::document_compaction_retains_shared_and_private_cas_without_global_reference_authority",
-          "db_engine::vcs_integration::retained_tests::vcs_store_keeps_exact_history_owners_through_changes_checkpoint_and_bounded_close",
-          "db_engine::tests::compact_document_uses_live_actor_writer_and_restores_submits",
-        ] }],
-        progress(event) { console.log(`wal-committed-compaction-native ${event.stage}: ${event.law ?? ""} artifacts=${event.artifactDir}`); },
+        groups: [
+          {
+            package: "semio-framework-os-kernel-db",
+            target: { kind: "lib", name: "db" },
+            laws: [
+              "db_compact::tests::compaction_applies_only_committed_frontier_snapshot_and_payload_effects",
+              "db_compact::tests::document_compaction_retains_shared_and_private_cas_without_global_reference_authority",
+              "db_engine::vcs_integration::retained_tests::vcs_store_keeps_exact_history_owners_through_changes_checkpoint_and_bounded_close",
+              "db_engine::tests::compact_document_uses_live_actor_writer_and_restores_submits",
+            ],
+          },
+        ],
+        progress(event) {
+          console.log(`wal-committed-compaction-native ${event.stage}: ${event.law ?? ""} artifacts=${event.artifactDir}`);
+        },
       });
       console.log(`wal-committed-compaction-native-receipts: ${JSON.stringify(receipts)}`);
     }
@@ -499,12 +973,20 @@ class DatabaseShutdownCheckScript extends BundleScript {
         cwd: this.repoRoot,
         ...exactCargoStageEnvironments(),
         cargoArgs: ["--all-features"],
-        groups: [{ package: "semio-framework-os-kernel-db", target: { kind: "lib", name: "db" }, laws: [
-          "db_engine::vcs_integration::retained_tests::vcs_shutdown_error_reinstalls_exact_store_and_retry_reaches_terminal",
-          "db_engine::tests::database_shutdown_cancellation_and_vcs_error_preserve_exact_retry_owners",
-          "db_engine::tests::database_shutdown_shared_authority_blocks_without_closing_live_handle",
-        ] }],
-        progress(event) { console.log(`database-shutdown-native ${event.stage}: ${event.law ?? ""} artifacts=${event.artifactDir}`); },
+        groups: [
+          {
+            package: "semio-framework-os-kernel-db",
+            target: { kind: "lib", name: "db" },
+            laws: [
+              "db_engine::vcs_integration::retained_tests::vcs_shutdown_error_reinstalls_exact_store_and_retry_reaches_terminal",
+              "db_engine::tests::database_shutdown_cancellation_and_vcs_error_preserve_exact_retry_owners",
+              "db_engine::tests::database_shutdown_shared_authority_blocks_without_closing_live_handle",
+            ],
+          },
+        ],
+        progress(event) {
+          console.log(`database-shutdown-native ${event.stage}: ${event.law ?? ""} artifacts=${event.artifactDir}`);
+        },
       });
       console.log(`database-shutdown-native-receipts: ${JSON.stringify(receipts)}`);
     }
@@ -663,7 +1145,19 @@ class DocumentMountSingleFlightCheckScript extends BundleScript {
       assert.equal(cleanupResumes, row.expected.cleanupResumes, row.name);
     }
     const source = readFileSync(join(owner, "..", "🦀️.rs"), "utf8");
-    for (const marker of ["enum DatabaseDocumentMountSlot", "Opening {", "struct DatabaseDocumentMountOwner", "DatabaseDocumentMountWork", "DATABASE_DOCUMENT_MOUNT_WAITERS", "fn take_generation", "pub async fn ensure_document", "retained_mount_rejection", "DatabaseDocumentMountWait", "impl Drop for DatabaseDocumentMountWait"]) assert(source.includes(marker), `missing retained document-mount marker: ${marker}`);
+    for (const marker of [
+      "enum DatabaseDocumentMountSlot",
+      "Opening {",
+      "struct DatabaseDocumentMountOwner",
+      "DatabaseDocumentMountWork",
+      "DATABASE_DOCUMENT_MOUNT_WAITERS",
+      "fn take_generation",
+      "pub async fn ensure_document",
+      "retained_mount_rejection",
+      "DatabaseDocumentMountWait",
+      "impl Drop for DatabaseDocumentMountWait",
+    ])
+      assert(source.includes(marker), `missing retained document-mount marker: ${marker}`);
     assert(!source.includes("open_artifacts: Mutex<HashMap<String, Arc<db_artifact::ArtifactAuthority>>>") && source.includes("open_artifacts: Arc<Mutex<DatabaseDocumentMountRegistry>>"));
     const retainedMount = source.slice(source.indexOf("async fn run_document_mount("), source.indexOf("async fn mount_document("));
     assert(retainedMount.indexOf("emit.emit(") >= 0 && retainedMount.indexOf("emit.emit(") < retainedMount.indexOf("Ok(DatabaseDocumentMountReply"));
@@ -674,12 +1168,18 @@ class DocumentMountSingleFlightCheckScript extends BundleScript {
     assert(complete.indexOf("self.terminal.store(true") < complete.indexOf("for (reply, outcome) in fanout.into_iter().flatten()"));
     assert(source.includes("self.registry.try_lock().is_ok()"));
     const mountOwner = source.slice(source.indexOf("impl DatabaseDocumentMountOwner"), source.indexOf("//#region 🔖️Database"));
-    assert(mountOwner.includes("DatabaseDocumentMountDriver::Idle") && mountOwner.includes("DatabaseDocumentMountDriver::Queued") && mountOwner.includes("DatabaseDocumentMountDriver::Polling") && mountOwner.includes("DatabaseDocumentMountDriver::NonRunnable"));
+    assert(
+      mountOwner.includes("DatabaseDocumentMountDriver::Idle") &&
+        mountOwner.includes("DatabaseDocumentMountDriver::Queued") &&
+        mountOwner.includes("DatabaseDocumentMountDriver::Polling") &&
+        mountOwner.includes("DatabaseDocumentMountDriver::NonRunnable"),
+    );
     assert(mountOwner.includes("resume_requested") && mountOwner.includes("wake_requested"));
     assert(mountOwner.includes("Arc::downgrade(self)") && !mountOwner.includes("let owner = self.clone();\n        self.submit_exact"));
     const databaseOpen = source.slice(source.indexOf("async fn open_with("), source.indexOf("fn document_engine_config("));
     assert.equal(databaseOpen.match(/acquire_use\(\)/g)?.length, 1);
-    for (const marker of ["DatabaseCapabilityOpenFuture::try_prepare_with_use", "DatabaseCatalogReadFuture::try_prepare_with_use", "DatabaseCatalogBootstrapFuture::try_prepare_with_use"]) assert(databaseOpen.includes(marker), `database open minted an untracked pool use instead of retaining ${marker}`);
+    for (const marker of ["DatabaseCapabilityOpenFuture::try_prepare_with_use", "DatabaseCatalogReadFuture::try_prepare_with_use", "DatabaseCatalogBootstrapFuture::try_prepare_with_use"])
+      assert(databaseOpen.includes(marker), `database open minted an untracked pool use instead of retaining ${marker}`);
     const catalogPublication = source.slice(source.indexOf("async fn publish_mount_catalog("), source.indexOf("async fn run_open_document_mount("));
     assert(catalogPublication.includes("DatabaseCreateCatalogFuture::try_prepare_with_use(pool, pool_use"));
     const catalogDriveStart = source.indexOf("fn drive_one(self: Arc<Self>, generation: u64)", source.indexOf("//#region 🔖️CreateDocumentCatalogCas"));
@@ -693,7 +1193,25 @@ class DocumentMountSingleFlightCheckScript extends BundleScript {
     const requestDrive = mountOwner.slice(mountOwner.indexOf("fn request_drive(self: &Arc<Self>"), mountOwner.indexOf("fn resume_parked("));
     assert(!requestDrive.includes("self.work.try_lock()") && !requestDrive.includes("self.work.lock()"));
     const artifact = readFileSync(join(owner, "..", "..", "🗿️artifact", "🦀️.rs"), "utf8");
-    for (const marker of ["enum ArtifactRunnerDriver", "RunnableIdle", "Queued", "PollingWake", "Parked", "ClosingReady", "ClosingPollingWake", "ClosingParked", "Terminal", "fn park_terminal_job", "struct ArtifactRunnerClosePoll", "struct ArtifactRunnerPoll", "struct ArtifactRunnerRetirementReservation", "WorkerMaintenanceStep::Retire", "impl Drop for ArtifactAuthority", "pub fn close(mut self) -> Result<(), Self>", "pub fn resume(mut self) -> Result<(), Self>"]) {
+    for (const marker of [
+      "enum ArtifactRunnerDriver",
+      "RunnableIdle",
+      "Queued",
+      "PollingWake",
+      "Parked",
+      "ClosingReady",
+      "ClosingPollingWake",
+      "ClosingParked",
+      "Terminal",
+      "fn park_terminal_job",
+      "struct ArtifactRunnerClosePoll",
+      "struct ArtifactRunnerPoll",
+      "struct ArtifactRunnerRetirementReservation",
+      "WorkerMaintenanceStep::Retire",
+      "impl Drop for ArtifactAuthority",
+      "pub fn close(mut self) -> Result<(), Self>",
+      "pub fn resume(mut self) -> Result<(), Self>",
+    ]) {
       assert(artifact.includes(marker), `missing artifact terminal-authority marker: ${marker}`);
     }
     for (const marker of ["close_error", "WorkerMaintenanceStep::Fault", "artifact_engine_close_fault_retains_exact_runner_until_explicit_maintenance_retry"]) {
@@ -708,43 +1226,57 @@ class DocumentMountSingleFlightCheckScript extends BundleScript {
     const ensure = hub.slice(hub.indexOf("async fn ensure_document(&self"), hub.indexOf("fn bearer("));
     assert(ensure.includes("self.db.ensure_document(id).await") && ensure.includes("rejected.retry_close().await"));
     assert(!ensure.includes("self.db.create_document") && !ensure.includes("self.db.document(id)"));
-    for (const law of ["database_document_mount_coalesces_join_drives_without_shared_pool_starvation", "database_document_mount_cleanup_fault_consumes_racing_resume_request_exactly_once", "database_document_mount_hard_scheduler_fault_retains_nonrunnable_job_without_retry_timer"]) {
+    for (const law of [
+      "database_document_mount_coalesces_join_drives_without_shared_pool_starvation",
+      "database_document_mount_cleanup_fault_consumes_racing_resume_request_exactly_once",
+      "database_document_mount_hard_scheduler_fault_retains_nonrunnable_job_without_retry_timer",
+    ]) {
       assert(source.includes(`fn ${law}(`), `missing exact mount driver law ${law}`);
     }
     console.log(`document-mount-single-flight-independent-oracle: AJV=1 cases=${fixture.cases.length} waiters=${fixture.capacity.waitersPerDocument} owner-futures=${fixture.capacity.ownerFuturesPerDocument}`);
     if (segments[0] !== "--native") return;
     const receipts = await runExactCargoLaws({
-      cwd: this.repoRoot, ...exactCargoStageEnvironments(),
-      groups: [{ package: "semio-framework-os-kernel-db", target: { kind: "lib", name: "db" }, cargoArgs: ["--all-features"], laws: [
-        "db_engine::tests::database_concurrent_ensure_mounts_one_actor_and_one_writer",
-        "db_engine::tests::database_published_opening_joins_without_actor_overwrite",
-        "db_engine::tests::database_cancelled_ensure_waiter_does_not_cancel_mount_owner",
-        "db_engine::tests::database_document_mount_failure_waiters_share_terminal_cleanup_and_retry_generation",
-        "db_engine::tests::database_mount_owner_emits_before_ready_and_survives_elected_waiter_cancellation",
-        "db_engine::tests::database_mount_waiter_capacity_rejects_33_and_reuses_one_cancelled_slot",
-        "db_engine::tests::database_document_mount_fanout_wakes_only_after_registry_unlock_and_internal_owner_handoff",
-        "db_engine::tests::database_shutdown_interrupt_retains_waiterless_opening_owner_until_ready",
-        "db_engine::tests::database_document_mount_unlock_fault_parks_exact_owner_until_controlled_shutdown_resume",
-        "db_engine::tests::database_document_mount_coalesces_join_drives_without_shared_pool_starvation",
-        "db_engine::tests::database_document_mount_cleanup_fault_consumes_racing_resume_request_exactly_once",
-        "db_engine::tests::database_worker_pool_use_blocks_early_shutdown_and_releases_at_terminal_ack",
-        "db_engine::tests::database_worker_pool_use_is_admitted_before_the_first_storage_probe",
-        "db_engine::tests::database_document_mount_hard_scheduler_fault_retains_nonrunnable_job_without_retry_timer",
-        "db_engine::tests::database_create_catalog_resolved_drop_retains_use_until_terminal_drain",
-        "db_artifact::tests::artifact_runner_terminal_authority_latch_preserves_external_job_and_one_resume",
-        "db_artifact::tests::artifact_runner_closing_poll_waits_for_retained_wake_before_next_turn",
-        "db_artifact::tests::artifact_runner_terminal_close_returns_exact_cursor_until_retained_wake",
-        "db_artifact::tests::artifact_runner_terminal_resume_refusal_returns_exact_cursor_for_close",
-        "db_artifact::tests::artifact_authority_drop_transfers_parked_terminal_job_to_registered_close_owner",
-        "db_artifact::tests::artifact_runner_retirement_panic_retains_exact_cursor_until_explicit_retry",
-        "db_artifact::tests::artifact_engine_close_fault_retains_exact_runner_until_explicit_maintenance_retry",
-        "db_artifact::tests::artifact_authority_drop_reuses_registered_retirement_slot_beyond_capacity",
-      ] }],
+      cwd: this.repoRoot,
+      ...exactCargoStageEnvironments(),
+      groups: [
+        {
+          package: "semio-framework-os-kernel-db",
+          target: { kind: "lib", name: "db" },
+          cargoArgs: ["--all-features"],
+          laws: [
+            "db_engine::tests::database_concurrent_ensure_mounts_one_actor_and_one_writer",
+            "db_engine::tests::database_published_opening_joins_without_actor_overwrite",
+            "db_engine::tests::database_cancelled_ensure_waiter_does_not_cancel_mount_owner",
+            "db_engine::tests::database_document_mount_failure_waiters_share_terminal_cleanup_and_retry_generation",
+            "db_engine::tests::database_mount_owner_emits_before_ready_and_survives_elected_waiter_cancellation",
+            "db_engine::tests::database_mount_waiter_capacity_rejects_33_and_reuses_one_cancelled_slot",
+            "db_engine::tests::database_document_mount_fanout_wakes_only_after_registry_unlock_and_internal_owner_handoff",
+            "db_engine::tests::database_shutdown_interrupt_retains_waiterless_opening_owner_until_ready",
+            "db_engine::tests::database_document_mount_unlock_fault_parks_exact_owner_until_controlled_shutdown_resume",
+            "db_engine::tests::database_document_mount_coalesces_join_drives_without_shared_pool_starvation",
+            "db_engine::tests::database_document_mount_cleanup_fault_consumes_racing_resume_request_exactly_once",
+            "db_engine::tests::database_worker_pool_use_blocks_early_shutdown_and_releases_at_terminal_ack",
+            "db_engine::tests::database_worker_pool_use_is_admitted_before_the_first_storage_probe",
+            "db_engine::tests::database_document_mount_hard_scheduler_fault_retains_nonrunnable_job_without_retry_timer",
+            "db_engine::tests::database_create_catalog_resolved_drop_retains_use_until_terminal_drain",
+            "db_artifact::tests::artifact_runner_terminal_authority_latch_preserves_external_job_and_one_resume",
+            "db_artifact::tests::artifact_runner_closing_poll_waits_for_retained_wake_before_next_turn",
+            "db_artifact::tests::artifact_runner_terminal_close_returns_exact_cursor_until_retained_wake",
+            "db_artifact::tests::artifact_runner_terminal_resume_refusal_returns_exact_cursor_for_close",
+            "db_artifact::tests::artifact_authority_drop_transfers_parked_terminal_job_to_registered_close_owner",
+            "db_artifact::tests::artifact_runner_retirement_panic_retains_exact_cursor_until_explicit_retry",
+            "db_artifact::tests::artifact_engine_close_fault_retains_exact_runner_until_explicit_maintenance_retry",
+            "db_artifact::tests::artifact_authority_drop_reuses_registered_retirement_slot_beyond_capacity",
+          ],
+        },
+      ],
       artifactDir: process.env.SEMIO_TEST_ARTIFACT_DIR,
       buildBudgetMs: Number(process.env.SEMIO_BUILD_BUDGET_MS ?? 3_600_000),
       listBudgetMs: 60_000,
       lawBudgetMs: 180_000,
-      progress(event) { console.log(`document-mount-single-flight-native ${event.stage}: ${event.law ?? ""} artifacts=${event.artifactDir}`); },
+      progress(event) {
+        console.log(`document-mount-single-flight-native ${event.stage}: ${event.law ?? ""} artifacts=${event.artifactDir}`);
+      },
     });
     console.log(`document-mount-single-flight-native-receipts: ${JSON.stringify(receipts)}`);
   }
@@ -760,28 +1292,36 @@ class DurableOwnedGroupDecisionCheckScript extends BundleScript {
       const receipts = await runExactCargoLaws({
         cwd: this.repoRoot,
         ...exactCargoStageEnvironments(),
-        groups: [{ package: "semio-framework-os-kernel", target: { kind: "lib" }, laws: [
-          "durable_group::tests::durable_owned_group_decision_matches_neutral_canonical_hash_and_bounds",
-          "durable_group::tests::durable_group_journal_record_projects_edits_only_after_all_three_bound_outcomes_verify",
-          "durable_group::tests::durable_store_prepared_outcome_derives_and_verifies_exact_unbound_bytes",
-          "durable_group::tests::durable_owned_group_decision_rejects_forged_identity_commitment_and_capacity",
-          "durable_group::tests::durable_decision_rejects_deflate_expansion_before_document_body_allocation",
-          "durable_group::tests::durable_store_owned_three_member_bind_and_base_recovery_retain_exact_private_owners",
-          "durable_group::tests::durable_store_private_committed_record_recovers_all_three_stores_without_reappending_journal",
-          "durable_group::tests::durable_json_carriers_preserve_numeric_kinds_and_reject_control_and_resource_excess",
-          "durable_group::tests::durable_store_group_journal_commit_flips_one_shared_root_then_adopts_exactly_once",
-          "durable_group::tests::durable_store_group_cancellation_waits_for_trusted_absence_then_restores_all_old_roots",
-          "durable_group::tests::durable_store_group_stage_error_retains_abort_owner_until_every_root_is_empty",
-          "durable_group::tests::durable_store_group_uncertain_journal_error_retries_same_owner_without_rebegin_or_visibility_change",
-          "durable_group::tests::durable_store_group_rejects_foreign_anchor_receipt_before_visibility_and_aborts_only_after_absence",
-          "durable_group::tests::durable_map_fixed_host_slot_retains_every_live_owner_across_request_error_until_terminal_handoff",
-          "durable_group::tests::durable_map_fixed_host_slot_cancellation_after_uncertain_io_waits_for_trusted_absence",
-        ] }],
+        groups: [
+          {
+            package: "semio-framework-os-kernel",
+            target: { kind: "lib" },
+            laws: [
+              "durable_group::tests::durable_owned_group_decision_matches_neutral_canonical_hash_and_bounds",
+              "durable_group::tests::durable_group_journal_record_projects_edits_only_after_all_three_bound_outcomes_verify",
+              "durable_group::tests::durable_store_prepared_outcome_derives_and_verifies_exact_unbound_bytes",
+              "durable_group::tests::durable_owned_group_decision_rejects_forged_identity_commitment_and_capacity",
+              "durable_group::tests::durable_decision_rejects_deflate_expansion_before_document_body_allocation",
+              "durable_group::tests::durable_store_owned_three_member_bind_and_base_recovery_retain_exact_private_owners",
+              "durable_group::tests::durable_store_private_committed_record_recovers_all_three_stores_without_reappending_journal",
+              "durable_group::tests::durable_json_carriers_preserve_numeric_kinds_and_reject_control_and_resource_excess",
+              "durable_group::tests::durable_store_group_journal_commit_flips_one_shared_root_then_adopts_exactly_once",
+              "durable_group::tests::durable_store_group_cancellation_waits_for_trusted_absence_then_restores_all_old_roots",
+              "durable_group::tests::durable_store_group_stage_error_retains_abort_owner_until_every_root_is_empty",
+              "durable_group::tests::durable_store_group_uncertain_journal_error_retries_same_owner_without_rebegin_or_visibility_change",
+              "durable_group::tests::durable_store_group_rejects_foreign_anchor_receipt_before_visibility_and_aborts_only_after_absence",
+              "durable_group::tests::durable_map_fixed_host_slot_retains_every_live_owner_across_request_error_until_terminal_handoff",
+              "durable_group::tests::durable_map_fixed_host_slot_cancellation_after_uncertain_io_waits_for_trusted_absence",
+            ],
+          },
+        ],
         artifactDir: process.env.SEMIO_TEST_ARTIFACT_DIR,
         buildBudgetMs: Number(process.env.SEMIO_BUILD_BUDGET_MS ?? 3_600_000),
         listBudgetMs: 60_000,
         lawBudgetMs: 120_000,
-        progress(event) { console.log(`durable-owned-group-decision-native ${event.stage}: ${event.law ?? ""} artifacts=${event.artifactDir}`); },
+        progress(event) {
+          console.log(`durable-owned-group-decision-native ${event.stage}: ${event.law ?? ""} artifacts=${event.artifactDir}`);
+        },
       });
       for (const receipt of receipts) console.log(`durable-owned-group-decision-native-receipt: ${JSON.stringify(receipt)}`);
     }
@@ -821,7 +1361,14 @@ class DurableGroupJournalCheckScript extends BundleScript {
     const storeFixture = JSON.parse(readFileSync(join(storeOwner, "🧪️fixtures/🔣️.json"), "utf8"));
     assert.equal(createHash("sha256").update(storeFixture.expected.unsignedJson).digest("hex"), fixture.record.decisionSha256);
     assert.equal(storeFixture.expected.anchorSha256, fixture.record.anchorSha256);
-    const varintBytes = (value: number) => { let bytes = 1; while (value >= 128) { value = Math.floor(value / 128); bytes += 1; } return bytes; };
+    const varintBytes = (value: number) => {
+      let bytes = 1;
+      while (value >= 128) {
+        value = Math.floor(value / 128);
+        bytes += 1;
+      }
+      return bytes;
+    };
     const frameBytes = (payload: number) => varintBytes(payload + 2) + payload + 10;
     const fieldBytes = (value: string) => varintBytes(Buffer.byteLength(value)) + Buffer.byteLength(value);
     const successorHeaderBytes = 32 + frameBytes(fieldBytes(fixture.record.document) + 41) + 75;
@@ -845,13 +1392,29 @@ class DurableGroupJournalCheckScript extends BundleScript {
     assert(append.indexOf("preflight_submit") < append.indexOf("self.wal.submit"));
     assert(append.includes("ArtifactDurableGroupJournalAppendV1::Absent") && append.includes("ArtifactDurableGroupJournalAppendV1::Rejected"));
     const witness = artifactSource.slice(artifactSource.indexOf("struct ArtifactCommittedDurableGroupDecisionV1"), artifactSource.indexOf("//#endregion 🔖️Receipt"));
-    const lowerRecovery = storeSource.slice(storeSource.indexOf("impl<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation> DurableOwnedMapRecoveryHostV1"), storeSource.indexOf("impl<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation> Drop for DurableOwnedMapRecoveryHostV1"));
+    const lowerRecovery = storeSource.slice(
+      storeSource.indexOf("impl<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation> DurableOwnedMapRecoveryHostV1"),
+      storeSource.indexOf("impl<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation> Drop for DurableOwnedMapRecoveryHostV1"),
+    );
     assert(witness.includes("WalCommittedTransaction") && witness.includes("record_count != 1") && witness.includes("transaction.finish()?"));
-    for (const marker of ["ArtifactCommittedDurableGroupRecoveryV1", "ArtifactCommittedDurableGroupRecoveryStateV1::Admitting", "ArtifactCommittedDurableGroupRecoveryAdvanceV1::Fault", "into_store_owned_recovery", "restore_untrusted_committed_record", "acknowledge_restoration(&receipt)", "take_terminal", "take_rejected_terminal"]) assert(witness.includes(marker), `missing committed Store recovery marker ${marker}`);
+    for (const marker of [
+      "ArtifactCommittedDurableGroupRecoveryV1",
+      "ArtifactCommittedDurableGroupRecoveryStateV1::Admitting",
+      "ArtifactCommittedDurableGroupRecoveryAdvanceV1::Fault",
+      "into_store_owned_recovery",
+      "restore_untrusted_committed_record",
+      "acknowledge_restoration(&receipt)",
+      "take_terminal",
+      "take_rejected_terminal",
+    ])
+      assert(witness.includes(marker), `missing committed Store recovery marker ${marker}`);
     assert(!witness.includes("pub fn begin_store_owned_recovery"));
     assert(!witness.includes("fn into_record(") && !witness.includes("fn record(&self)"), "a committed WAL witness has no raw record escape");
     assert(!witness.includes("fn cancel("), "committed Store recovery remains non-cancellable after WAL visibility");
-    assert(lowerRecovery.includes("pub fn advance(&mut self, grant: super::ArtifactStoreOneItemGrant) -> DurableOwnedMapRecoveryAdvanceV1") && lowerRecovery.includes("DurableOwnedMapRecoveryAdvanceV1::Fault(error)"), "lower Store recovery faults must retain their exact host instead of exposing Result/? owner loss");
+    assert(
+      lowerRecovery.includes("pub fn advance(&mut self, grant: super::ArtifactStoreOneItemGrant) -> DurableOwnedMapRecoveryAdvanceV1") && lowerRecovery.includes("DurableOwnedMapRecoveryAdvanceV1::Fault(error)"),
+      "lower Store recovery faults must retain their exact host instead of exposing Result/? owner loss",
+    );
     assert(lowerRecovery.includes("pub fn capture_snapshot(&self) -> Option<"), "lower Store recovery observation must not expose a Result/? owner-loss path");
     const sink = artifactSource.slice(artifactSource.indexOf("struct ArtifactDurableGroupJournalSinkV1"), artifactSource.indexOf("type ArtifactBuildFuture"));
     assert(sink.includes("NotSubmitted") && sink.includes("Awaiting") && sink.includes("Failed") && sink.includes("Committed") && sink.includes("terminal_is_empty"));
@@ -866,7 +1429,9 @@ class DurableGroupJournalCheckScript extends BundleScript {
       "db_artifact::tests::document_authority_durable_group_journal_rejects_hash_before_mailbox",
     ];
     for (const law of laws) assert(artifactSource.includes(`fn ${law.split("::").at(-1)}(`), `missing exact native law ${law}`);
-    console.log(`durable-group-journal-independent-oracle: AJV=1 cases=${fixture.cases.length} witnesses=${fixture.committedDecisionWitnessCases.length} recovery=${fixture.committedRecovery.cases.length} max-event=${maximumEventBytes} store-margin=${fixture.limits.walSegmentBytes - fixture.limits.storeMaximumSegmentBytes}`);
+    console.log(
+      `durable-group-journal-independent-oracle: AJV=1 cases=${fixture.cases.length} witnesses=${fixture.committedDecisionWitnessCases.length} recovery=${fixture.committedRecovery.cases.length} max-event=${maximumEventBytes} store-margin=${fixture.limits.walSegmentBytes - fixture.limits.storeMaximumSegmentBytes}`,
+    );
     if (segments[0] !== "--native") return;
     const receipts = await runExactCargoLaws({
       cwd: this.repoRoot,
@@ -876,7 +1441,9 @@ class DurableGroupJournalCheckScript extends BundleScript {
       buildBudgetMs: Number(process.env.SEMIO_BUILD_BUDGET_MS ?? 3_600_000),
       listBudgetMs: 60_000,
       lawBudgetMs: 180_000,
-      progress(event) { console.log(`durable-group-journal-native ${event.stage}: ${event.law ?? ""} artifacts=${event.artifactDir}`); },
+      progress(event) {
+        console.log(`durable-group-journal-native ${event.stage}: ${event.law ?? ""} artifacts=${event.artifactDir}`);
+      },
     });
     console.log(`durable-group-journal-native-receipts: ${JSON.stringify(receipts)}`);
   }
@@ -893,7 +1460,15 @@ class WalRecoveryCheckScript extends BundleScript {
     const failStop = JSON.parse(readFileSync(join(owner, "🧪️fixtures/🛑️fail-stop/🔣️.json"), "utf8"));
     const validateFailStop = new Ajv2020({ strict: true, allErrors: true }).compile(JSON.parse(readFileSync(join(owner, "🧪️fixtures/🛑️fail-stop/🧬️.schema.json"), "utf8")));
     assert(validateFailStop(failStop), JSON.stringify(validateFailStop.errors));
-    assert.deepEqual(failStop.cases.map((row: any) => [row.name, row.fault, row.expectedPhysicalSuffix]), [["short-append", "shortAppend", "torn"], ["append-error", "appendError", "absent"], ["sync-error", "syncError", "complete"], ["successor-append-error", "successorAppendError", "complete"]]);
+    assert.deepEqual(
+      failStop.cases.map((row: any) => [row.name, row.fault, row.expectedPhysicalSuffix]),
+      [
+        ["short-append", "shortAppend", "torn"],
+        ["append-error", "appendError", "absent"],
+        ["sync-error", "syncError", "complete"],
+        ["successor-append-error", "successorAppendError", "complete"],
+      ],
+    );
     const { default: crc } = await import("crc-32/crc32c.js");
     const leb = await import("@webassemblyjs/leb128");
     const { blake3Hex } = await import("../../🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📜️script.ts");
@@ -902,28 +1477,49 @@ class WalRecoveryCheckScript extends BundleScript {
     const fragmented = Buffer.from(Array.from({ length: 49152 }, (_, index) => (index * 17 + 3) % 251));
     for (const row of fixture.fragmentCopies) assert.equal(checksum(fragmented.subarray(row.offset, row.offset + row.length)), row.crc32c);
     const hash = (bytes: Buffer) => Buffer.from(blake3Hex(bytes), "hex");
-    const u64 = (value: number) => { const bytes = Buffer.alloc(8); bytes.writeBigUInt64LE(BigInt(value)); return bytes; };
+    const u64 = (value: number) => {
+      const bytes = Buffer.alloc(8);
+      bytes.writeBigUInt64LE(BigInt(value));
+      return bytes;
+    };
     const frame = (kind: number, payload: Buffer) => {
       const body = Buffer.concat([Buffer.from([kind, 2]), payload]);
       const size = Buffer.from(leb.encodeU32(body.length));
-      const trailer = Buffer.alloc(8); trailer.writeUInt32LE(checksum(body)); trailer.writeUInt32LE(size.length + body.length + 8, 4);
+      const trailer = Buffer.alloc(8);
+      trailer.writeUInt32LE(checksum(body));
+      trailer.writeUInt32LE(size.length + body.length + 8, 4);
       return Buffer.concat([size, body, trailer]);
     };
-    const header = Buffer.alloc(32); Buffer.from([137, 83, 80, 82, 13, 10, 26, 10]).copy(header);
-    header.writeUInt16LE(1, 8); header.writeUInt32LE(1, 12); header.writeUInt32LE(checksum(header.subarray(0, 20)), 20);
-    let bytes = header; let chain = hash(header); let previousOffset = 0;
-    const batches = [[frame(64, Buffer.concat([Buffer.from([1, 100]), u64(0), Buffer.from([0])]))], ...fixture.commands.map((command: string, index: number) => [frame(65, u64(index + 1)), frame(68, Buffer.from(command)), frame(66, Buffer.concat([u64(index + 1), Buffer.from([1, 0, 0, 0])]))])];
+    const header = Buffer.alloc(32);
+    Buffer.from([137, 83, 80, 82, 13, 10, 26, 10]).copy(header);
+    header.writeUInt16LE(1, 8);
+    header.writeUInt32LE(1, 12);
+    header.writeUInt32LE(checksum(header.subarray(0, 20)), 20);
+    let bytes = header;
+    let chain = hash(header);
+    let previousOffset = 0;
+    const batches = [
+      [frame(64, Buffer.concat([Buffer.from([1, 100]), u64(0), Buffer.from([0])]))],
+      ...fixture.commands.map((command: string, index: number) => [frame(65, u64(index + 1)), frame(68, Buffer.from(command)), frame(66, Buffer.concat([u64(index + 1), Buffer.from([1, 0, 0, 0])]))]),
+    ];
     for (const [index, records] of batches.entries()) {
-      const payload = Buffer.alloc(64); const recordsLength = records.reduce((sum: number, value: Buffer) => sum + value.length, 0);
+      const payload = Buffer.alloc(64);
+      const recordsLength = records.reduce((sum: number, value: Buffer) => sum + value.length, 0);
       chain = hash(Buffer.concat([chain, ...records.map(hash)]));
-      payload.writeBigUInt64LE(BigInt(index + 1)); payload.writeBigUInt64LE(BigInt(previousOffset), 8); payload.writeBigUInt64LE(BigInt(recordsLength), 16); payload.writeUInt32LE(records.length, 24); chain.copy(payload, 32);
-      previousOffset = bytes.length + recordsLength; bytes = Buffer.concat([bytes, ...records, frame(12, payload)]);
+      payload.writeBigUInt64LE(BigInt(index + 1));
+      payload.writeBigUInt64LE(BigInt(previousOffset), 8);
+      payload.writeBigUInt64LE(BigInt(recordsLength), 16);
+      payload.writeUInt32LE(records.length, 24);
+      chain.copy(payload, 32);
+      previousOffset = bytes.length + recordsLength;
+      bytes = Buffer.concat([bytes, ...records, frame(12, payload)]);
       assert.equal(bytes.length, fixture.commitEnds[index]);
     }
     for (const row of fixture.cuts) {
       const prefix = bytes.subarray(0, row.cut);
       const span = row.cut < 32 ? { end: 0, sequence: 0 } : inspectRetainedSprNeutral(prefix, checksum, hash);
-      assert.equal(span.end, row.trustedEnd); assert.equal(Math.max(129, span.end), row.recoveredEnd);
+      assert.equal(span.end, row.trustedEnd);
+      assert.equal(Math.max(129, span.end), row.recoveredEnd);
       assert.equal(Math.max(1, span.sequence), row.nextTxId);
     }
     const expectedAccepted = new Set(["missing", "highest-sealed", "successor-empty", "successor-partial", "successor-header", "compacted-clean"]);
@@ -934,7 +1530,10 @@ class WalRecoveryCheckScript extends BundleScript {
     const open = source.slice(source.indexOf("pub async fn open(storage:", source.indexOf("impl ArtifactWal")), source.indexOf("pub async fn document(&self)", source.indexOf("impl ArtifactWal")));
     assert(!open.includes("delete_segment"), "recovery must not delete a committed segment");
     assert(source.includes("resume_verified") && source.includes("RetainedSprVerification"), "full verification and exact writer resume are required");
-    const replayClose = source.slice(source.indexOf("pub fn close_owner_step(&mut self)", source.indexOf("impl<'storage, S: db_storage::WalStorage> WalReplayCursor")), source.indexOf("pub async fn close_step(&mut self)", source.indexOf("impl<'storage, S: db_storage::WalStorage> WalReplayCursor")));
+    const replayClose = source.slice(
+      source.indexOf("pub fn close_owner_step(&mut self)", source.indexOf("impl<'storage, S: db_storage::WalStorage> WalReplayCursor")),
+      source.indexOf("pub async fn close_step(&mut self)", source.indexOf("impl<'storage, S: db_storage::WalStorage> WalReplayCursor")),
+    );
     assert(replayClose.includes("pages.close_step()") && replayClose.includes("segments.close_step()"), "replay close must retire retained page and list owners");
     assert(!replayClose.includes("control.grant()"), "terminal replay close must remain available after cancellation");
     const artifactClose = source.slice(source.indexOf("pub fn close_step(&mut self)", source.indexOf("impl ArtifactWal")), source.indexOf("//#endregion 🔖️ArtifactWal"));
@@ -948,12 +1547,41 @@ class WalRecoveryCheckScript extends BundleScript {
     assert(segmentFlush.includes("self.poison()"), "every uncertain post-commit failure must poison the live writer");
     const rotate = source.slice(source.indexOf("async fn rotate", source.indexOf("impl ArtifactWal")), source.indexOf("pub fn close_step", source.indexOf("impl ArtifactWal")));
     assert(rotate.indexOf("storage.seal") < rotate.indexOf("self.active.poison()"), "a sealed segment must poison its old live writer before successor creation");
-    const laws = ["db_wal::tests::wal_recovery_preserves_neutral_committed_prefixes", "db_wal::tests::wal_recovery_matches_neutral_lifecycle_without_prefix_replacement", "db_wal::retained_tests::wal_replay_cancellation_remains_set_while_close_reaches_terminal_empty", "db_wal::retained_tests::artifact_wal_repeated_open_close_is_page_budget_neutral", "db_wal::retained_tests::artifact_wal_close_rejects_pending_records_and_closed_writes", "db_wal::retained_tests::artifact_wal_short_append_is_fail_stop_until_reopen", "db_wal::retained_tests::artifact_wal_append_error_is_fail_stop_until_reopen", "db_wal::retained_tests::artifact_wal_sync_error_is_fail_stop_until_reopen", "db_wal::retained_tests::artifact_wal_successor_failure_after_seal_is_fail_stop_until_reopen", "db_testkit::tests::fault_storage_fail_nth_sync_fails_once_after_the_preceding_append"];
-    laws.push(...["single_segment_write_commit_flush_recovers_cleanly", "group_commit_batches_until_policy_threshold_then_commits", "fsync_durability_forces_immediate_commit_regardless_of_policy", "torn_tail_is_recovered_by_truncating_only_the_uncommitted_suffix", "recovery_resumes_next_tx_id_and_accepts_further_submits", "multi_segment_rotation_chains_prev_hash_and_replay_spans_segments", "recovery_rejects_a_torn_non_active_sealed_segment", "empty_document_open_creates_a_fresh_wal"].map(law => `db_wal::tests::${law}`));
+    const laws = [
+      "db_wal::tests::wal_recovery_preserves_neutral_committed_prefixes",
+      "db_wal::tests::wal_recovery_matches_neutral_lifecycle_without_prefix_replacement",
+      "db_wal::retained_tests::wal_replay_cancellation_remains_set_while_close_reaches_terminal_empty",
+      "db_wal::retained_tests::artifact_wal_repeated_open_close_is_page_budget_neutral",
+      "db_wal::retained_tests::artifact_wal_close_rejects_pending_records_and_closed_writes",
+      "db_wal::retained_tests::artifact_wal_short_append_is_fail_stop_until_reopen",
+      "db_wal::retained_tests::artifact_wal_append_error_is_fail_stop_until_reopen",
+      "db_wal::retained_tests::artifact_wal_sync_error_is_fail_stop_until_reopen",
+      "db_wal::retained_tests::artifact_wal_successor_failure_after_seal_is_fail_stop_until_reopen",
+      "db_testkit::tests::fault_storage_fail_nth_sync_fails_once_after_the_preceding_append",
+    ];
+    laws.push(
+      ...[
+        "single_segment_write_commit_flush_recovers_cleanly",
+        "group_commit_batches_until_policy_threshold_then_commits",
+        "fsync_durability_forces_immediate_commit_regardless_of_policy",
+        "torn_tail_is_recovered_by_truncating_only_the_uncommitted_suffix",
+        "recovery_resumes_next_tx_id_and_accepts_further_submits",
+        "multi_segment_rotation_chains_prev_hash_and_replay_spans_segments",
+        "recovery_rejects_a_torn_non_active_sealed_segment",
+        "empty_document_open_creates_a_fresh_wal",
+      ].map((law) => `db_wal::tests::${law}`),
+    );
     const testkitSource = readFileSync(join(owner, "../🧪️testkit/🦀️.rs"), "utf8");
     for (const law of laws) assert((law.startsWith("db_testkit::") ? testkitSource : source).includes(`fn ${law.split("::").at(-1)}(`), `missing exact native law ${law}`);
     if (segments[0] === "--native") {
-      const receipts = await runExactCargoLaws({ cwd: this.repoRoot, ...exactCargoStageEnvironments(), groups: [{ package: "semio-framework-os-kernel-db", target: { kind: "lib", name: "db" }, laws }], progress(event) { console.log(`wal-recovery ${event.stage}: ${event.law ?? ""} artifacts=${event.artifactDir}`); } });
+      const receipts = await runExactCargoLaws({
+        cwd: this.repoRoot,
+        ...exactCargoStageEnvironments(),
+        groups: [{ package: "semio-framework-os-kernel-db", target: { kind: "lib", name: "db" }, laws }],
+        progress(event) {
+          console.log(`wal-recovery ${event.stage}: ${event.law ?? ""} artifacts=${event.artifactDir}`);
+        },
+      });
       console.log(`wal-recovery-native-receipts: ${JSON.stringify(receipts)}`);
     }
     console.log(`wal-recovery-check: ${fixture.cuts.length + fixture.lifecycle.length + fixture.fragmentCopies.length + failStop.cases.length} checks clean`);
@@ -972,17 +1600,26 @@ class WalCapacityCheckScript extends BundleScript {
     const frame = (payload: number) => leb.encodeU32(payload + 2).length + payload + 10;
     const txn = (payload: number) => frame(8) + frame(payload) + frame(12);
     for (const row of fixture.cases) {
-      const lengths = [129]; const segments: number[] = []; let pending = false;
+      const lengths = [129];
+      const segments: number[] = [];
+      let pending = false;
       for (let index = 0; index < 3; index++) {
         if (lengths.at(-1)! + txn(fixture.payloadBytes) + 75 > fixture.maxSegmentBytes) {
           if (pending) lengths[lengths.length - 1] += 75;
-          lengths.push(161); pending = false;
+          lengths.push(161);
+          pending = false;
         }
-        segments.push(lengths.length - 1); lengths[lengths.length - 1] += txn(fixture.payloadBytes); pending = true;
-        if (row.durability === "fsync") { lengths[lengths.length - 1] += 75; pending = false; }
+        segments.push(lengths.length - 1);
+        lengths[lengths.length - 1] += txn(fixture.payloadBytes);
+        pending = true;
+        if (row.durability === "fsync") {
+          lengths[lengths.length - 1] += 75;
+          pending = false;
+        }
       }
       if (pending) lengths[lengths.length - 1] += 75;
-      assert.deepEqual(segments, row.segments); assert.deepEqual(lengths, row.lengths);
+      assert.deepEqual(segments, row.segments);
+      assert.deepEqual(lengths, row.lengths);
     }
     assert.equal(129 + txn(fixture.exactPayloadBytes) + 75, fixture.maxSegmentBytes);
     assert.equal(129 + txn(fixture.oversizedPayloadBytes) + 75, fixture.maxSegmentBytes + 1);
@@ -991,7 +1628,14 @@ class WalCapacityCheckScript extends BundleScript {
     assert(source.includes("fn wal_transaction_frame_bytes("), "missing transaction byte preflight before writes");
     assert(source.includes("const DEFAULT_MAX_SEGMENT_BYTES: u64 = db_storage::DB_IO_MAX_READ_BYTES;"), "WAL and storage must share one byte ceiling");
     if (segments[0] === "--native") {
-      const receipts = await runExactCargoLaws({ cwd: this.repoRoot, ...exactCargoStageEnvironments(), groups: [{ package: "semio-framework-os-kernel-db", target: { kind: "lib", name: "db" }, laws: ["db_wal::tests::wal_capacity_preflight_matches_neutral_memory_and_filesystem_boundaries"] }], progress(event) { console.log(`wal-capacity ${event.stage}: ${event.law ?? ""} artifacts=${event.artifactDir}`); } });
+      const receipts = await runExactCargoLaws({
+        cwd: this.repoRoot,
+        ...exactCargoStageEnvironments(),
+        groups: [{ package: "semio-framework-os-kernel-db", target: { kind: "lib", name: "db" }, laws: ["db_wal::tests::wal_capacity_preflight_matches_neutral_memory_and_filesystem_boundaries"] }],
+        progress(event) {
+          console.log(`wal-capacity ${event.stage}: ${event.law ?? ""} artifacts=${event.artifactDir}`);
+        },
+      });
       console.log(`wal-capacity-native-receipts: ${JSON.stringify(receipts)}`);
     }
     console.log("wal-capacity-check: 6 checks clean");
@@ -1016,6 +1660,33 @@ class CheckScript extends BundleScript {
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     await runCargo(["test", "--manifest-path", "Cargo.toml", "--lib", ...segments], this.root);
+  }
+}
+
+/** 🪪️ Executes the native outer opening-attempt wire law without broadening the browser patch contract. */
+class DocumentOpeningAttemptNativeCheckScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    if (segments.length) throw new Error("document-opening-attempt-native-check accepts no arguments");
+    const receipts = await runExactCargoLaws({
+      cwd: this.repoRoot,
+      ...exactCargoStageEnvironments(),
+      groups: [
+        {
+          package: "semio-framework-os-kernel",
+          target: { kind: "lib" },
+          cargoArgs: ["--features", "sync"],
+          laws: ["os_store::sync::tests::document_opening_attempt_wire_preserves_outer_owner_without_widening_actor_messages"],
+        },
+      ],
+      artifactDir: process.env.SEMIO_TEST_ARTIFACT_DIR,
+      buildBudgetMs: Number(process.env.SEMIO_BUILD_BUDGET_MS ?? 3_600_000),
+      listBudgetMs: 60_000,
+      lawBudgetMs: 120_000,
+      progress(event) {
+        console.log(`document-opening-attempt-native ${event.stage}: ${event.law ?? ""} artifacts=${event.artifactDir}`);
+      },
+    });
+    console.log(`document-opening-attempt-native-receipts: ${JSON.stringify(receipts)}`);
   }
 }
 
@@ -1056,7 +1727,7 @@ export async function directoryEventPageContractOracle(repoRoot: string): Promis
   for (const hostile of fixture.hostileMutations) await assert.rejects(() => contract.parseDirectoryEventPageV1(JSON.stringify(setPath(fixture.valid, hostile.path, hostile.value))), undefined, hostile.name);
   const canonical = JSON.stringify(fixture.valid);
   await assert.rejects(() => contract.parseDirectoryEventPageV1(`${canonical} `), undefined, "trailing-byte");
-  await assert.rejects(() => contract.parseDirectoryEventPageV1(canonical.replace("{\"schema\":", "{\"schema\":\"duplicate\",\"schema\":")), undefined, "duplicate-key");
+  await assert.rejects(() => contract.parseDirectoryEventPageV1(canonical.replace('{"schema":', '{"schema":"duplicate","schema":')), undefined, "duplicate-key");
   const rust = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🧬️schema/🦀️.rs"), "utf8");
   assert(rust.includes("pub struct DirectoryEventPageV1") && rust.includes("pub fn receipt_matches(&self) -> bool"), "Rust event-page contract missing");
   return 5 + fixture.hostileMutations.length + fixture.rawHostiles.length;
@@ -1087,7 +1758,10 @@ export async function directoryEventPageClientOracle(repoRoot: string): Promise<
   assert.throws(() => accept(`${canonical} `, 3));
   const typescript = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🟦️.ts"), "utf8");
   const method = typescript.slice(typescript.indexOf("async eventPage("), typescript.indexOf("stream(since", typescript.indexOf("async eventPage(")));
-  assert(method.includes("response.text()") && method.includes("parseDirectoryEventPageV1(canonicalJson)") && method.includes("page.afterSeqExclusive !== after") && !method.includes("response.json()"), "TypeScript canonical page transport is incomplete");
+  assert(
+    method.includes("response.text()") && method.includes("parseDirectoryEventPageV1(canonicalJson)") && method.includes("page.afterSeqExclusive !== after") && !method.includes("response.json()"),
+    "TypeScript canonical page transport is incomplete",
+  );
   assert(typescript.includes("streamAcknowledged(since:") && typescript.includes("acknowledge: (through: number)"), "TypeScript acknowledged directory frontier is missing");
   const rust = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🔌️client/🦀️.rs"), "utf8");
   assert(rust.includes("pub async fn event_page") && rust.includes("CanonicalDirectoryEventPageV1") && rust.includes("DIRECTORY_EVENT_PAGE_MAX_BYTES"), "Rust canonical page transport is incomplete");
@@ -1105,7 +1779,9 @@ class DirectoryEventPageContractCheckScript extends BundleScript {
         cwd: this.repoRoot,
         ...exactCargoStageEnvironments(),
         groups: [{ package: "semio-framework-os-kernel", target: { kind: "lib" }, laws: ["os_directory::schema::tests::directory_event_page_v1_matches_language_neutral_receipt_and_rejects_hostiles"] }],
-        progress(event) { console.log(`directory-event-page-contract ${event.stage}: ${event.law ?? ""} artifacts=${event.artifactDir}`); },
+        progress(event) {
+          console.log(`directory-event-page-contract ${event.stage}: ${event.law ?? ""} artifacts=${event.artifactDir}`);
+        },
       });
       console.log(`directory-event-page-contract-native-receipts: ${JSON.stringify(receipts)}`);
     }
@@ -1122,7 +1798,9 @@ class DirectoryEventPageClientCheckScript extends BundleScript {
         cwd: this.repoRoot,
         ...exactCargoStageEnvironments(),
         groups: [{ package: "semio-framework-os-kernel", target: { kind: "lib" }, laws: ["os_directory::client::tests::directory_event_page_preserves_canonical_bytes_bounds_and_cancels_before_io"] }],
-        progress(event) { console.log(`directory-event-page-client ${event.stage}: ${event.law ?? ""} artifacts=${event.artifactDir}`); },
+        progress(event) {
+          console.log(`directory-event-page-client ${event.stage}: ${event.law ?? ""} artifacts=${event.artifactDir}`);
+        },
       });
       console.log(`directory-event-page-client-native-receipts: ${JSON.stringify(receipts)}`);
     }
@@ -1201,18 +1879,26 @@ class WalSegmentStateCheckScript extends BundleScript {
         cwd: this.repoRoot,
         ...exactCargoStageEnvironments(),
         cargoArgs: ["--all-features"],
-        groups: [{ package: "semio-framework-os-kernel-db", target: { kind: "lib" }, laws: [
-          "memory_storage_satisfies_wal_storage_laws",
-          "fs_storage_satisfies_wal_storage_laws",
-          "fs_storage_stale_seal_marker_does_not_resurrect_missing_segment",
-          "memory_storage_db_backend_accessors_and_capabilities",
-          "wal_segment_state_observes_active_sealed_and_missing_rows",
-          "wal_segment_state_decoder_rejects_non_boolean_storage_values",
-          "wal_segment_state_query_and_mapper_are_read_only_and_byte_neutral",
-          "wal_cypher_statements_reference_the_expected_label_and_keys",
-          "fault_storage_segment_state_is_observational_and_counter_neutral",
-        ] }],
-        progress(event) { console.log(`wal-segment-state ${event.stage}: ${event.law ?? ""} artifacts=${event.artifactDir}`); },
+        groups: [
+          {
+            package: "semio-framework-os-kernel-db",
+            target: { kind: "lib" },
+            laws: [
+              "memory_storage_satisfies_wal_storage_laws",
+              "fs_storage_satisfies_wal_storage_laws",
+              "fs_storage_stale_seal_marker_does_not_resurrect_missing_segment",
+              "memory_storage_db_backend_accessors_and_capabilities",
+              "wal_segment_state_observes_active_sealed_and_missing_rows",
+              "wal_segment_state_decoder_rejects_non_boolean_storage_values",
+              "wal_segment_state_query_and_mapper_are_read_only_and_byte_neutral",
+              "wal_cypher_statements_reference_the_expected_label_and_keys",
+              "fault_storage_segment_state_is_observational_and_counter_neutral",
+            ],
+          },
+        ],
+        progress(event) {
+          console.log(`wal-segment-state ${event.stage}: ${event.law ?? ""} artifacts=${event.artifactDir}`);
+        },
       });
       console.log(`wal-segment-state-native-receipts: ${JSON.stringify(receipts)}`);
     }
@@ -1258,27 +1944,39 @@ class MemberDialectCheckScript extends BundleScript {
       cargoArgs: segments,
       buildBudgetMs: 3_600_000,
       groups: [
-        { package: "semio-framework-schema", target: { kind: "lib" }, laws: [
-          "artifact_composition_fields_derive_emits_expected_slot_tables",
-          "artifact_composition_fields_default_to_empty_for_leaf_artifacts",
-          "artifact_composition_projection_walks_aliases_nested_options_and_cancels",
-          "artifact_composition_projection_real_child_alias_has_fixed_admission_bounds",
-        ] },
-        { package: "semio-framework-os-kernel", target: { kind: "lib" }, laws: [
-          "member_factory_closed_dialect_matches_neutral_admission_corpus",
-          "member_factory_closed_dialect_rejects_identity_and_owner_substitution",
-          "member_factory_closed_dialect_graph_admission_matches_neutral_corpus",
-          "member_factory_closed_dialect_graph_sync_preserves_prior_state_on_rejection",
-          "member_factory_closed_dialect_parent_projection_matches_neutral_corpus",
-          "initial_child_identity_matches_neutral_coordinates_and_blake3",
-        ] },
-        { package: "semio-framework-plugin", target: { kind: "lib" }, laws: [
-          "fixture_projection_retires_exact_tree_before_return_error_or_panic",
-          "member_factory_parent_snapshot_restore_matches_neutral_corpus",
-          "member_factory_closed_dialect_open_failure_retains_pin_and_drains_exact_member",
-          "member_factory_closed_dialect_register_rejects_pin_without_mutating_member",
-          "member_factory_closed_dialect_fresh_register_and_restore_publish_exact_parent_owner",
-        ] },
+        {
+          package: "semio-framework-schema",
+          target: { kind: "lib" },
+          laws: [
+            "artifact_composition_fields_derive_emits_expected_slot_tables",
+            "artifact_composition_fields_default_to_empty_for_leaf_artifacts",
+            "artifact_composition_projection_walks_aliases_nested_options_and_cancels",
+            "artifact_composition_projection_real_child_alias_has_fixed_admission_bounds",
+          ],
+        },
+        {
+          package: "semio-framework-os-kernel",
+          target: { kind: "lib" },
+          laws: [
+            "member_factory_closed_dialect_matches_neutral_admission_corpus",
+            "member_factory_closed_dialect_rejects_identity_and_owner_substitution",
+            "member_factory_closed_dialect_graph_admission_matches_neutral_corpus",
+            "member_factory_closed_dialect_graph_sync_preserves_prior_state_on_rejection",
+            "member_factory_closed_dialect_parent_projection_matches_neutral_corpus",
+            "initial_child_identity_matches_neutral_coordinates_and_blake3",
+          ],
+        },
+        {
+          package: "semio-framework-plugin",
+          target: { kind: "lib" },
+          laws: [
+            "fixture_projection_retires_exact_tree_before_return_error_or_panic",
+            "member_factory_parent_snapshot_restore_matches_neutral_corpus",
+            "member_factory_closed_dialect_open_failure_retains_pin_and_drains_exact_member",
+            "member_factory_closed_dialect_register_rejects_pin_without_mutating_member",
+            "member_factory_closed_dialect_fresh_register_and_restore_publish_exact_parent_owner",
+          ],
+        },
       ],
     });
     console.log(`[DEBUG] exact member admission laws: ${receipts.reduce((sum, receipt) => sum + receipt.assertions, 0)} executed across ${receipts.length} verified test executables`);
@@ -1287,22 +1985,48 @@ class MemberDialectCheckScript extends BundleScript {
 
 //#region 🧩️JCO Package Adapter
 class GenerateJcoPackageAdapterScript extends BundleScript {
-  run(): void { runNestedCargoPackageAdapter(this.repoRoot, "generate"); }
+  run(): void {
+    runNestedCargoPackageAdapter(this.repoRoot, "generate");
+  }
 }
 class PreviewGeneratedScript extends BundleScript {
-  run(): void { runNestedCargoPackageAdapter(this.repoRoot, "preview"); }
+  run(): void {
+    runNestedCargoPackageAdapter(this.repoRoot, "preview");
+  }
 }
 class CheckJcoPackageAdapterScript extends BundleScript {
-  run(): void { runNestedCargoPackageAdapter(this.repoRoot, "check"); }
+  run(): void {
+    runNestedCargoPackageAdapter(this.repoRoot, "check");
+  }
 }
 //#endregion 🧩️JCO Package Adapter
 
-const router = new ScriptRouter(import.meta.dir).register("check", CheckScript).register("test", TestScript).register("test-scalar-wire-source", ScalarWireSourceScript).register("generate-jco-package-adapter", GenerateJcoPackageAdapterScript).register("preview-generated", PreviewGeneratedScript).register("check-jco-package-adapter", CheckJcoPackageAdapterScript).register("test-native", NativeTestScript).register("test-directory-runtime-source", DirectoryRuntimeSourceScript).register("directory-event-page-contract-check", DirectoryEventPageContractCheckScript).register("directory-event-page-client-check", DirectoryEventPageClientCheckScript).register("directory-event-page-bootstrap-check", DirectoryEventPageBootstrapCheckScript).register("wal-segment-state-check", WalSegmentStateCheckScript).register("test-codec-send-source", CodecSendSourceScript).register("test-backbone-detach-source", BackboneDetachSourceScript).register("test-member-dialect-source", MemberDialectSourceScript).register("member-dialect-check", MemberDialectCheckScript);
+const router = new ScriptRouter(import.meta.dir)
+  .register("check", CheckScript)
+  .register("test", TestScript)
+  .register("document-opening-attempt-native-check", DocumentOpeningAttemptNativeCheckScript)
+  .register("test-scalar-wire-source", ScalarWireSourceScript)
+  .register("generate-jco-package-adapter", GenerateJcoPackageAdapterScript)
+  .register("preview-generated", PreviewGeneratedScript)
+  .register("check-jco-package-adapter", CheckJcoPackageAdapterScript)
+  .register("test-native", NativeTestScript)
+  .register("test-directory-runtime-source", DirectoryRuntimeSourceScript)
+  .register("directory-event-page-contract-check", DirectoryEventPageContractCheckScript)
+  .register("directory-event-page-client-check", DirectoryEventPageClientCheckScript)
+  .register("directory-event-page-bootstrap-check", DirectoryEventPageBootstrapCheckScript)
+  .register("wal-segment-state-check", WalSegmentStateCheckScript)
+  .register("test-codec-send-source", CodecSendSourceScript)
+  .register("test-backbone-detach-source", BackboneDetachSourceScript)
+  .register("test-member-dialect-source", MemberDialectSourceScript)
+  .register("member-dialect-check", MemberDialectCheckScript);
 
 router.register("wal-recovery-check", WalRecoveryCheckScript);
 router.register("wal-capacity-check", WalCapacityCheckScript);
 router.register("wal-committed-transactions-check", WalCommittedTransactionsCheckScript);
 router.register("wal-writer-authority-check", WalWriterAuthorityCheckScript);
+router.register("database-history-completion-check", DatabaseHistoryCompletionCheckScript);
+router.register("database-catalog-read-ownership-check", DatabaseCatalogReadOwnershipCheckScript);
+router.register("database-capability-completion-check", DatabaseCapabilityCompletionCheckScript);
 router.register("wal-committed-compaction-check", WalCommittedCompactionCheckScript);
 router.register("database-shutdown-check", DatabaseShutdownCheckScript);
 router.register("document-mount-single-flight-check", DocumentMountSingleFlightCheckScript);

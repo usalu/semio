@@ -5,6 +5,7 @@
 //! The terrain's one editable property (exaggeration) is document state and lives in
 //! `crate::artifacts::gisterrain`.
 
+#[cfg(test)]
 use serde::{Deserialize, Serialize};
 use semio_framework_value_derive::{FromValue, ToValue};
 

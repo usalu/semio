@@ -17,7 +17,7 @@
 //! unconditionally-mounted board/mesh3d/action-queue logic; its one genuinely GPU-adjacent
 //! function (`render_world_3d`, called only from `📺️renderer`'s native/browser host engine, never
 //! from wasip2 guest logic) is now itself `#[cfg(not(all(target_arch = "wasm32", target_env =
-//! "p2")))]`-gated. See `.🦑️repo/🎫️tickets/26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS/🔍️research/📓️wgpu-tier-split.md`
+//! "p2")))]`-gated. See `.🧬semio/🦑️repo/🎫️tickets/26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS/🔍️research/📓️wgpu-tier-split.md`
 //! for the full per-symbol classification and before/after `cargo tree -i` evidence.
 
 #[path = "../../../../../🖼️assets/🔣️icons/🤖️generated/🦀️icon_name.rs"]
@@ -96,7 +96,7 @@ pub mod geometry;
 /// screen<->world mapping for a bottom-right pannable-camera minimap widget (wgpu parity with the dag
 /// board's `MinimapWidget`). Relocated (as pure geometry, not the paint call) from
 /// `♾️infinite/🎲️board/directed/🕸️dag`'s private `impl` methods — see
-/// `.🦑️repo/🎫️tickets/26/08/05/FRAMEWORK-BUILDER-PASSTHROUGHS-APP-COMMANDS-MACRO-WIDGET-EXTRACTION`.
+/// `.🧬semio/🦑️repo/🎫️tickets/26/08/05/FRAMEWORK-BUILDER-PASSTHROUGHS-APP-COMMANDS-MACRO-WIDGET-EXTRACTION`.
 ///
 /// Deliberately NOT nested inside `widgets` (that module is `#[cfg(feature = "wgpu-engine")]`, pulling in
 /// wgpu/winit/parley/kernel_3d_scene): this math has zero rendering-backend dependency, so it lives at

@@ -171,11 +171,11 @@ impl Element for AxialSpring {
     }
 }
 
-/// 🧬️ O1 closed-set dispatch for `Element` — 13 first-party implementors, all in this crate (12 real
-/// 2D/3D elements in `elements2d`/`elements3d`, plus `AxialSpring` above); see
-/// `📓️terra-fem-report.md`. Must sit textually AFTER the `#[dyn_enum]` trait in this same module (the
-/// generated `__semio_dispatch_Element!` is a bare, textually-scoped `macro_rules!` invocation).
 dyn_enum_close! {
+    /// 🧬️ O1 closed-set dispatch for `Element` — 13 first-party implementors, all in this crate (12 real
+    /// 2D/3D elements in `elements2d`/`elements3d`, plus `AxialSpring` above); see
+    /// `📓️terra-fem-report.md`. Must sit textually AFTER the `#[dyn_enum]` trait in this same module (the
+    /// generated `__semio_dispatch_Element!` is a bare, textually-scoped `macro_rules!` invocation).
     pub enum Elements: Element {
         AxialSpring(AxialSpring),
         Bar2(Bar2),

@@ -195,10 +195,6 @@ impl<K: Ord, V> FixedTable<K, V> {
         self.slots[..self.len].iter().map(|slot| &slot.as_ref().expect("occupied fixed slot").1)
     }
 
-    pub(crate) fn values_mut(&mut self) -> impl Iterator<Item = &mut V> {
-        self.slots[..self.len].iter_mut().map(|slot| &mut slot.as_mut().expect("occupied fixed slot").1)
-    }
-
     pub(crate) fn len(&self) -> usize {
         self.len
     }

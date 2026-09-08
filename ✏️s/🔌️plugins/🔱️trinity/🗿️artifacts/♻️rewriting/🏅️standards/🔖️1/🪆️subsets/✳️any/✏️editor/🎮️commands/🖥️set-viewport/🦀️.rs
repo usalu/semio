@@ -8,7 +8,7 @@ use semio_framework_plugin::{Emit, Fault};
 pub(crate) fn set_viewport(surface_id: &Option<String>, viewport_json: &str) -> Result<Emit<RewriteRuleMutation, RewritingConfigMutation>, Fault> {
     if surface_id.as_deref() == Some(crate::editor::rewriting::TRINITY_REWRITING_PLAY_SURFACE_BEFORE) {
         match pack::from_json_str::<Camera>(viewport_json) {
-            Ok(camera) => Ok(Emit::config(vec![RewritingConfigMutation::SetBeforePaneCamera { camera }])),
+            Ok(camera) => Ok(Emit::config(vec![RewritingConfigMutation::SetBeforePaneCamera(crate::editor::rewriting::config::SetBeforePaneCamera { camera })])),
             Err(_) => Ok(Emit::default()),
         }
     } else {

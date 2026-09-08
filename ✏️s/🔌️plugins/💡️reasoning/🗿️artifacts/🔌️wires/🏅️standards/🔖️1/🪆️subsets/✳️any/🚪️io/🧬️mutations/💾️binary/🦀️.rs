@@ -28,7 +28,6 @@ mod tests {
     use super::*;
     use crate::artifacts::wires::mutations::create_node;
     use crate::artifacts::wires::WiresSnapshot;
-    use serde_json::json;
 
     /// 🗄️ Local envelope/store alias for the whole-store tests below — mirrors the `pub type
     /// MindmapWiresEnvelope`/`MindmapWiresStore` the pre-split `semio_s_mindmap` crate exported,
@@ -37,7 +36,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn op_binary_round_trips_and_agrees_with_text() {
-        let node = dsl::to_dsl_value(&json!({ "id": "node-1", "nodeKind": "identity", "shape": "circle", "x": 0.0, "y": 0.0, "radius": 24.0, "text": "Alpha", "handles": [] })).expect("node serializes");
+        let node = dsl::to_dsl_value(&dsl::json!({ "id": "node-1", "nodeKind": "identity", "shape": "circle", "x": 0.0, "y": 0.0, "radius": 24.0, "text": "Alpha", "handles": [] })).expect("node serializes");
         let operation = create_node(node);
         store::os_store::test_support::assert_op_text_binary_equivalence(&operation);
         let bytes = encode_op(&operation).expect("encode");
@@ -46,19 +45,19 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn store_applies_node_add() {
-        let mut store = MindmapWiresStore::new(store::create_document_envelope(crate::artifacts::wires::MINDMAP_WIRES_SCHEMA, "mindmap-wires", crate::artifacts::wires::empty_wires_snapshot(), None)).expect("valid artifact store fixture");
-        let node = dsl::to_dsl_value(&json!({ "id": "node-1", "nodeKind": "identity", "shape": "circle", "x": 0.0, "y": 0.0, "radius": 24.0, "text": "Alpha", "handles": [] })).expect("node serializes");
-        store.dispatch(store::ArtifactCommand::Apply { mutations: vec![create_node(node)], description: None }).expect("apply");
+        let mut store = MindmapWiresStore::new(store::create_document_envelope(crate::artifacts::wires::MINDMAP_WIRES_SCHEMA, "mindmap-wires", crate::artifacts::wires::empty_wires_snapshot(), None)).await.expect("valid artifact store fixture");
+        let node = dsl::to_dsl_value(&dsl::json!({ "id": "node-1", "nodeKind": "identity", "shape": "circle", "x": 0.0, "y": 0.0, "radius": 24.0, "text": "Alpha", "handles": [] })).expect("node serializes");
+        store.dispatch(store::ArtifactCommand::Apply { mutations: vec![create_node(node)], description: None }).await.expect("apply");
         assert_eq!(crate::artifacts::wires::wires_working_board(&store.snapshot().expect("snapshot")).get("nodes").and_then(|value| value.as_array()).map(|items| items.len()), Some(1));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn document_text_round_trip_with_operation_applied() {
-        let mut store = MindmapWiresStore::new(store::create_document_envelope(crate::artifacts::wires::MINDMAP_WIRES_SCHEMA, "mindmap-wires", crate::artifacts::wires::empty_wires_snapshot(), None)).expect("valid artifact store fixture");
-        let node = dsl::to_dsl_value(&json!({ "id": "node-1", "nodeKind": "identity", "shape": "circle", "x": 0.0, "y": 0.0, "radius": 24.0, "text": "Alpha", "handles": [] })).expect("node serializes");
-        store.dispatch(store::ArtifactCommand::Apply { mutations: vec![create_node(node)], description: None }).expect("apply");
-        store::os_store::test_support::assert_document_text_round_trip(&store);
-        store::os_store::test_support::assert_document_pack_round_trip(&store);
+        let mut store = MindmapWiresStore::new(store::create_document_envelope(crate::artifacts::wires::MINDMAP_WIRES_SCHEMA, "mindmap-wires", crate::artifacts::wires::empty_wires_snapshot(), None)).await.expect("valid artifact store fixture");
+        let node = dsl::to_dsl_value(&dsl::json!({ "id": "node-1", "nodeKind": "identity", "shape": "circle", "x": 0.0, "y": 0.0, "radius": 24.0, "text": "Alpha", "handles": [] })).expect("node serializes");
+        store.dispatch(store::ArtifactCommand::Apply { mutations: vec![create_node(node)], description: None }).await.expect("apply");
+        store::os_store::test_support::assert_document_text_round_trip(&store).await;
+        store::os_store::test_support::assert_document_pack_round_trip(&store).await;
     }
 
     //#region 🔖️CommandEnvelopeTests
@@ -72,11 +71,11 @@ mod tests {
     async fn command_envelope_round_trip_holds_for_an_applied_operation() {
         use protocol::{ArtifactId, Edit, SchemaId};
 
-        let mut store = MindmapWiresStore::new(store::create_document_envelope(crate::artifacts::wires::MINDMAP_WIRES_SCHEMA, "mindmap-wires", crate::artifacts::wires::empty_wires_snapshot(), None)).expect("valid artifact store fixture");
-        let node = dsl::to_dsl_value(&json!({ "id": "node-1", "nodeKind": "identity", "shape": "circle", "x": 0.0, "y": 0.0, "radius": 24.0, "text": "Alpha", "handles": [] })).expect("node serializes");
-        store.dispatch(store::ArtifactCommand::Apply { mutations: vec![create_node(node)], description: None }).expect("apply");
+        let mut store = MindmapWiresStore::new(store::create_document_envelope(crate::artifacts::wires::MINDMAP_WIRES_SCHEMA, "mindmap-wires", crate::artifacts::wires::empty_wires_snapshot(), None)).await.expect("valid artifact store fixture");
+        let node = dsl::to_dsl_value(&dsl::json!({ "id": "node-1", "nodeKind": "identity", "shape": "circle", "x": 0.0, "y": 0.0, "radius": 24.0, "text": "Alpha", "handles": [] })).expect("node serializes");
+        store.dispatch(store::ArtifactCommand::Apply { mutations: vec![create_node(node)], description: None }).await.expect("apply");
         let edit: &Edit<WiresMutation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
-        store::os_store::test_support::assert_command_envelope_round_trip::<WiresSnapshot, WiresMutation>(edit, &ArtifactId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone()));
+        store::os_store::test_support::assert_command_envelope_round_trip::<WiresSnapshot, WiresMutation>(edit, &ArtifactId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone())).await;
     }
     //#endregion 🔖️CommandEnvelopeTests
 }

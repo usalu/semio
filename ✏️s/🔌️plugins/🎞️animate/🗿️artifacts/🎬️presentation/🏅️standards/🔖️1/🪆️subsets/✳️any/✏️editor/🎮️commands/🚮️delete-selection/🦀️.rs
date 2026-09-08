@@ -46,7 +46,7 @@ mod tests {
     async fn delete_selection_removes_the_live_selected_tile() {
         let mut app = presentation_app_with_registry().await;
         dispatch(&mut app, PresentationCommand::AddTile(add_tile::AddTile { crop: None })).await;
-        let tile_id = crate::artifacts::presentation::presentation_working_scene(&app.snapshot().await.expect("projection")).1[0].id.clone();
+        let tile_id = crate::artifacts::presentation::presentation_working_scene(&app.snapshot().expect("projection")).1[0].id.clone();
         let targets = dsl::os_pack::json::to_string(&dsl::os_pack::json::Value::Array(vec![dsl::os_pack::json::object([
             ("granularity".to_string(), dsl::os_pack::json::Value::from(PRESENTATION_INTERACTION_GRANULARITY)),
             ("id".to_string(), dsl::os_pack::json::Value::from(tile_id.clone())),
@@ -59,7 +59,7 @@ mod tests {
         ]);
         app.handle_action(INTERACTION_SELECT_ACTION_ID, Some(&args), &meta("local")).await.expect("interactionSelect");
         dispatch(&mut app, PresentationCommand::DeleteSelection(DeleteSelection {})).await;
-        assert!(crate::artifacts::presentation::presentation_working_scene(&app.snapshot().await.expect("projection")).1.is_empty(), "selected tile must be deleted");
+        assert!(crate::artifacts::presentation::presentation_working_scene(&app.snapshot().expect("projection")).1.is_empty(), "selected tile must be deleted");
     }
 
     #[semio_framework_async_macros::async_test]
@@ -67,7 +67,7 @@ mod tests {
         let mut app = presentation_app_with_registry().await;
         dispatch(&mut app, PresentationCommand::AddTile(add_tile::AddTile { crop: None })).await;
         dispatch(&mut app, PresentationCommand::DeleteSelection(DeleteSelection {})).await;
-        assert_eq!(crate::artifacts::presentation::presentation_working_scene(&app.snapshot().await.expect("projection")).1.len(), 1, "nothing selected means nothing deleted");
+        assert_eq!(crate::artifacts::presentation::presentation_working_scene(&app.snapshot().expect("projection")).1.len(), 1, "nothing selected means nothing deleted");
     }
 }
 //#endregion 🧪️Tests

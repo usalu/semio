@@ -143,14 +143,14 @@ mod tests {
 
     fn populated() -> WiresSnapshot {
         let mut snapshot = empty_wires_snapshot();
-        let node = dsl::to_dsl_value(&serde_json::json!({ "id": "node-1", "nodeKind": "identity", "shape": "circle", "x": 1.0, "y": 2.0, "radius": 24.0, "text": "Alpha", "handles": [] })).unwrap();
+        let node = dsl::to_dsl_value(&dsl::json!({ "id": "node-1", "nodeKind": "identity", "shape": "circle", "x": 1.0, "y": 2.0, "radius": 24.0, "text": "Alpha", "handles": [] })).unwrap();
         snapshot = store::apply_mutation(&snapshot, &crate::artifacts::wires::mutations::create_node(node)).expect("valid mutation").0;
         snapshot
     }
 
     #[semio_framework_async_macros::async_test]
     async fn dsl_round_trip_empty_document() {
-        let document = crate::artifacts::wires::empty_wires_snapshot();
+        let document = empty_wires_snapshot();
         store::os_store::test_support::assert_dsl_round_trip(&document);
     }
 
@@ -159,9 +159,9 @@ mod tests {
         let document = crate::artifacts::wires::schema::metabolism_wires_example_snapshot().expect("valid metabolism fixture mutations");
         assert_eq!(document.wires_fixture.get("identities").and_then(|value| value.as_array()).map(|items| items.len()), Some(7));
         assert_eq!(document.wires_fixture.get("relationships").and_then(|value| value.as_array()).map(|items| items.len()), Some(9));
-        assert_eq!(crate::artifacts::wires::wires_working_board(&document).get("nodes").and_then(|value| value.as_array()).map(|items| items.len()), Some(7));
+        assert_eq!(wires_working_board(&document).get("nodes").and_then(|value| value.as_array()).map(|items| items.len()), Some(7));
         let reparsed = parse_dsl(&print_dsl(&document)).expect("metabolism dsl round trip");
-        assert_eq!(crate::artifacts::wires::wires_working_board(&reparsed).get("nodes").and_then(|value| value.as_array()).map(|items| items.len()), Some(7));
+        assert_eq!(wires_working_board(&reparsed).get("nodes").and_then(|value| value.as_array()).map(|items| items.len()), Some(7));
     }
 
     #[semio_framework_async_macros::async_test]

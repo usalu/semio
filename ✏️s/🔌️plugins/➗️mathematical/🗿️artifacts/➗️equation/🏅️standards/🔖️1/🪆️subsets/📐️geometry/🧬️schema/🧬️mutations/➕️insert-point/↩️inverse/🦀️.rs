@@ -2,7 +2,7 @@
 //! index-keyed addressing law.
 
 use crate::artifacts::equation::standards::v1::subsets::geometry::schema::mutations::remove_point;
-use crate::artifacts::equation::{equation_geometry, EquationMutation, EquationSnapshot};
+use crate::artifacts::equation::{EquationMutation, EquationSnapshot};
 
 //#region 🔖️Inverse
 pub fn inverse(payload: &super::InsertPoint, base: &EquationSnapshot) -> Vec<EquationMutation> {

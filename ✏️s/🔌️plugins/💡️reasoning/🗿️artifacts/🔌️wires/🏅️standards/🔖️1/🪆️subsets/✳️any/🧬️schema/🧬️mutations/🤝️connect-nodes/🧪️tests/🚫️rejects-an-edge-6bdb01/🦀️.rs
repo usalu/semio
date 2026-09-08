@@ -36,16 +36,16 @@ fn board_entries(board: &DslValue, key: &str) -> Vec<DslValue> {
 /// the exact child owner from that snapshot's own persisted `wiresFixture.board` mirror — one node, `node-beta`,
 /// and no edges at all.
 fn before() -> WiresSnapshot {
-    let mut snapshot: WiresSnapshot = serde_json::from_str(BEFORE).expect("before snapshot decodes");
+    let mut snapshot: WiresSnapshot = dsl::os_pack::from_json_str(BEFORE).expect("before snapshot decodes");
     let board = snapshot.wires_fixture.get("board").cloned().unwrap_or(DslValue::Null);
     materialize_wires_content(&mut snapshot.content, board_entries(&board, "nodes"), board_entries(&board, "edges"));
     snapshot
 }
 fn expected_after() -> WiresSnapshot {
-    serde_json::from_str(AFTER).expect("after snapshot decodes")
+    dsl::os_pack::from_json_str(AFTER).expect("after snapshot decodes")
 }
 fn mutation() -> WiresMutation {
-    serde_json::from_str(MUTATION).expect("mutation decodes")
+    dsl::os_pack::from_json_str(MUTATION).expect("mutation decodes")
 }
 
 /// ▶️ A rejected `connect-nodes` leaves the document byte-identical to the committed `after`:
@@ -100,12 +100,12 @@ async fn inverse_is_always_a_disconnect_of_the_payload_edge_id() {
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {
-        let decoded: WiresSnapshot = serde_json::from_str(text).expect("snapshot decodes");
-        let reencoded = serde_json::to_value(&decoded).expect("snapshot encodes");
+        let decoded: WiresSnapshot = dsl::os_pack::from_json_str(text).expect("snapshot decodes");
+        let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::os_pack::to_json_string(&decoded)).expect("snapshot encodes");
         let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
         assert_eq!(reencoded, original, "connect-nodes/rejects-an-edge-whose-source-node-is-absent: committed {label} JSON is not canonical");
     }
-    let reencoded = serde_json::to_value(mutation()).expect("mutation encodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::os_pack::to_json_string(&mutation())).expect("mutation encodes");
     let original: serde_json::Value = serde_json::from_str(MUTATION).expect("mutation reparses");
     assert_eq!(reencoded, original, "connect-nodes/rejects-an-edge-whose-source-node-is-absent: committed connectNodes JSON is not canonical");
     assert!(original.get("edge").is_some() && original.get("relationship").is_some(), "both halves must be written out — a relationship-less edge is expressed as an explicit null, never by omission");

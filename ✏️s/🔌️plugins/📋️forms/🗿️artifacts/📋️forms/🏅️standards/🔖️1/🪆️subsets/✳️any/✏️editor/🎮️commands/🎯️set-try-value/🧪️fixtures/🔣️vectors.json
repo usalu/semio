@@ -1,0 +1,99 @@
+[
+  {
+    "source": "[1,2,3]",
+    "index": 0,
+    "value": 9,
+    "expected": [
+      9,
+      2,
+      3
+    ]
+  },
+  {
+    "source": "[1,2,3]",
+    "index": 1,
+    "value": 9,
+    "expected": [
+      1,
+      9,
+      3
+    ]
+  },
+  {
+    "source": "[1,2,3]",
+    "index": 2,
+    "value": 9,
+    "expected": [
+      1,
+      2,
+      9
+    ]
+  },
+  {
+    "source": "[ 1 , 2 ]",
+    "index": 1,
+    "value": 9,
+    "expected": [
+      1,
+      9
+    ]
+  },
+  {
+    "source": "[\"comma, bracket]\",{\"nested\":[1,2]},3]",
+    "index": 1,
+    "value": {
+      "x": 7
+    },
+    "expected": [
+      "comma, bracket]",
+      {
+        "x": 7
+      },
+      3
+    ]
+  },
+  {
+    "source": "[[1,2],{\"nested\":[3,4]}]",
+    "index": 1,
+    "value": [
+      9
+    ],
+    "expected": [
+      [
+        1,
+        2
+      ],
+      [
+        9
+      ]
+    ]
+  },
+  {
+    "source": "[\"escaped \\\" quote\",2]",
+    "index": 0,
+    "value": "new",
+    "expected": [
+      "new",
+      2
+    ]
+  },
+  {
+    "source": "[1,2",
+    "index": 1,
+    "value": 8,
+    "expected": [
+      0,
+      8
+    ]
+  },
+  {
+    "source": "[]",
+    "index": 2,
+    "value": 5,
+    "expected": [
+      0,
+      0,
+      5
+    ]
+  }
+]

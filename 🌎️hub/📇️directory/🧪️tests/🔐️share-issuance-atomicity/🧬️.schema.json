@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.tech/schemas/hub/share-issuance-atomicity-v1.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "cases", "sourceHostiles"],
+  "properties": {
+    "schema": { "const": "semio.hub.share-issuance-atomicity/v1" },
+    "cases": {
+      "type": "array",
+      "minItems": 7,
+      "maxItems": 7,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "spaceKind", "role", "spaceExists", "descriptorExists", "deleteBeforeInsert", "accepted"],
+        "properties": {
+          "name": { "type": "string", "minLength": 1, "maxLength": 64 },
+          "spaceKind": { "enum": ["studio", "archive"] },
+          "role": { "enum": ["author", "spectator"] },
+          "spaceExists": { "type": "boolean" },
+          "descriptorExists": { "type": "boolean" },
+          "deleteBeforeInsert": { "enum": ["none", "other-document", "descriptor", "space"] },
+          "accepted": { "type": "boolean" }
+        }
+      }
+    },
+    "sourceHostiles": {
+      "type": "array",
+      "minItems": 7,
+      "maxItems": 7,
+      "uniqueItems": true,
+      "items": {
+        "enum": ["sqlite-select-removed", "sqlite-owner-foreign-key-removed", "postgres-select-lock-removed", "postgres-owner-foreign-key-removed", "neo4j-space-owner-removed", "neo4j-descriptor-owner-removed", "neo4j-count-consumption-removed"]
+      }
+    }
+  }
+}

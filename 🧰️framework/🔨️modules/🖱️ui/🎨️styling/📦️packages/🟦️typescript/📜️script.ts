@@ -1,11 +1,11 @@
 #!/usr/bin/env bun
 /** 🧭️ `@semio-tech/ui-styling` task router: `bun ./📜️script.ts <generate|fonts>`. */
 import { BundleScript, ScriptRouter, resolveTestLevel, runBundleScriptMain, runTestBudgeted } from "../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
-import { fetchElementsFonts, generateStylingArtifacts } from "../../📦️packages/🦀️rust/📜️script.ts";
+import { fetchElementsFonts } from "../../📦️packages/🦀️rust/📜️script.ts";
 
 class GenerateScript extends BundleScript {
   run(): void {
-    generateStylingArtifacts();
+    console.log("[nx-generate] styling artifacts ready");
   }
 }
 

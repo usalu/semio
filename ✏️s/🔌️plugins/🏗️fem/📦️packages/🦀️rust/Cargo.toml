@@ -59,5 +59,6 @@ semio-framework-job = { workspace = true }
 semio-framework = { path = "../../../../../🧰️framework/📦️packages/🦀️rust", package = "semio-framework" }
 
 [dev-dependencies]
+serde_json.workspace = true
 semio-framework-async = { path = "../../../../../🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust", features = ["entrypoint"] }
 semio-framework-async-macros = { path = "../../../../../🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }

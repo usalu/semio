@@ -756,6 +756,7 @@ impl PreparedRasterPages {
         self.frame_generation
     }
 
+    #[cfg(any(feature = "wgpu-engine", test))]
     pub(crate) fn page_for_row(&self, row: u32) -> Option<(&[u8], u32)> {
         if row >= self.height || self.rows_per_page == 0 || self.slots.len() != self.page_capacity {
             return None;
@@ -1344,10 +1345,12 @@ impl PreparedRenderCommand {
         self.digest
     }
 
+    #[cfg(feature = "wgpu-engine")]
     pub(crate) fn draw_cursor(&self) -> Option<DrawMeasureCursor> {
         self.draw_cursor
     }
 
+    #[cfg(feature = "wgpu-engine")]
     pub(crate) fn packet_overlay(&self) -> bool {
         self.packet_overlay
     }

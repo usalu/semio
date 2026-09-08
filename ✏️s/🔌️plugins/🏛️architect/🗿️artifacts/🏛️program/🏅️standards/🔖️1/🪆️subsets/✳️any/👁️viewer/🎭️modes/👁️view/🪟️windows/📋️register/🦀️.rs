@@ -9,7 +9,7 @@
 
 use crate::artifacts::program::standards::v1::subsets::any::schema::inferences::status_summary;
 use crate::artifacts::program::ProgramSnapshot;
-use semio_framework_plugin::{ui_text, Label, LocalizedLabel, SurfaceKind, UiNode, UiPresence, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, WindowKindDefinition, WindowOptions};
+use semio_framework_plugin::{tree_item_desc, Label, LocalizedLabel, PanelTreeBuilder, PluginAssemblyError, SurfaceKind, UiFixedList, WindowKindDefinition, WindowOptions};
 
 //#region 🔖️Constants
 pub const ARCHITECT_VIEW_WINDOW_REGISTER: &str = "architect-view-register";
@@ -40,43 +40,27 @@ pub fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-/// 👁️ Local tree-node helpers, mirroring the sibling surface's own presentation factories in shape —
-/// deliberately NOT reused from there (a viewer must never depend on the sibling surface, see this
-/// file's own doc comment); this is intentional, minimal duplication, not an oversight.
-fn view_tree_item(id: impl Into<String>, label: impl Into<String>) -> UiTreeItemNode {
-    UiTreeItemNode::base(id, Label::data(label.into()))
+fn ui_label(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_ui_contract::Label> {
+    value.as_ref().try_into().map_err(|_| PluginAssemblyError::new("architect.viewer.label.capacity", "register label admission failed"))
 }
 
-fn view_tree_section(id: impl Into<String>, label: Option<String>, items: Vec<UiTreeItemNode>) -> UiTreeSectionNode {
-    UiTreeSectionNode { id: id.into(), label: label.map(Label::data), default_open: Some(true), presence: UiPresence::default(), items }
-}
-
-fn view_tree_node(sections: Vec<UiTreeSectionNode>) -> UiNode {
-    UiNode::Tree(UiTreeNode { sections, presence: UiPresence::default(), interaction_domain: None, drop_action: None, menu: None })
-}
-
-/// 👁️ Pure `ProgramSnapshot -> UiNode` read: every non-empty register's entity count plus its
-/// draft/approved split, one tree section per register, sourced entirely from the shared artifact-level
-/// `status_summary` inference (no config, no selection state).
-pub fn render(program: &ProgramSnapshot) -> UiNode {
+/// 👁️ Renders the artifact's non-empty registers and their total, draft and approved counts.
+pub fn render(program: &ProgramSnapshot) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let summary = status_summary(program);
     if summary.total_entities == 0 {
-        return ui_text(Label::data("No entities in this program yet."));
+        return semio_framework_plugin::built_text_node(Label::data("No entities in this program yet."))
+            .map_err(|_| PluginAssemblyError::new("architect.viewer.label.capacity", "register placeholder admission failed"));
     }
-    let sections: Vec<UiTreeSectionNode> = summary
-        .by_register
-        .iter()
-        .filter(|register| register.count > 0)
-        .map(|register| {
-            let items = vec![
-                view_tree_item(format!("architect-view-register.{}.total", register.register), format!("Total: {}", register.count)),
-                view_tree_item(format!("architect-view-register.{}.draft", register.register), format!("Draft: {}", register.draft_count)),
-                view_tree_item(format!("architect-view-register.{}.approved", register.register), format!("Approved: {}", register.approved_count)),
-            ];
-            view_tree_section(format!("architect-view-register.{}", register.register), Some(register.register.clone()), items)
-        })
-        .collect();
-    view_tree_node(sections)
+    let mut tree = PanelTreeBuilder::new("architect-view-register")?;
+    for register in summary.by_register.iter().filter(|register| register.count > 0) {
+        let mut items = UiFixedList::default();
+        for (key, label, count) in [("total", "Total", register.count), ("draft", "Draft", register.draft_count), ("approved", "Approved", register.approved_count)] {
+            let node = tree_item_desc(format!("architect-view-register.{}.{key}", register.register), ui_label(format!("{label}: {count}"))?, None)?;
+            items.try_push(node).map_err(|_| PluginAssemblyError::new("architect.viewer.items.capacity", "register item admission failed"))?;
+        }
+        tree = tree.section(format!("architect-view-register.{}", register.register), Some(ui_label(&register.register)?), true, items)?;
+    }
+    tree.build()
 }
 //#endregion 🔖️Render
 
@@ -95,14 +79,14 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn the_overview_lists_every_non_empty_register_with_its_counts() {
-        let json = serde_json::to_string(&render(&sample_plugin())).expect("json");
+        let json = semio_framework_plugin::testkit::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(render(&sample_plugin()).expect("render"))).expect("retire viewer tree");
         assert!(json.contains("\"elements\""));
         assert!(json.contains("Total: 2"));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn an_empty_program_renders_the_placeholder() {
-        let json = serde_json::to_string(&render(&empty_plugin())).expect("json");
+        let json = semio_framework_plugin::testkit::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(render(&empty_plugin()).expect("render"))).expect("retire viewer tree");
         assert!(json.contains("No entities in this program yet."));
     }
 }

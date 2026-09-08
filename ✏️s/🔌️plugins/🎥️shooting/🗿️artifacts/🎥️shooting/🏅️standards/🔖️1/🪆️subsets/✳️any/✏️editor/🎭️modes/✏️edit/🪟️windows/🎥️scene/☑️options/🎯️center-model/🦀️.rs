@@ -8,7 +8,7 @@ use semio_framework_plugin::WindowMeasure;
 
 //#region 🔖️Measure
 pub fn measure(labels: &ShootingLabels) -> WindowMeasure {
-    WindowMeasure::Toggle { id: "shooting.measure.center-model".into(), icon_id: "focus".into(), label: Some(labels.measure_center_model.into()), pressed: true, text: None, on_change: crate::editor::shooting::shooting_action("setCenterModel", None) }
+    WindowMeasure::Toggle { id: "shooting.measure.center-model".into(), icon_id: "focus".into(), label: Some(labels.measure_center_model.into()), pressed: true, text: None, on_change: crate::editor::shooting::shooting_window_action("setCenterModel", None) }
 }
 //#endregion 🔖️Measure
 

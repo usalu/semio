@@ -2,9 +2,9 @@
 
 use crate::artifacts::program::ProgramSnapshot;
 use crate::editor::architect::catalog::register_entities;
-use crate::editor::architect::chrome::{empty_component_scene, entity_id_from_json, entity_name_from_json};
+use crate::editor::architect::chrome::{entity_id_from_json, entity_name_from_json};
 use crate::editor::architect::config::{active_register, ArchitectConfig};
-use semio_framework_plugin::{ui_text, BlockListScene, Label, LocalizedLabel, SurfaceKind, UiNode, WindowKindDefinition, WindowOptions};
+use semio_framework_plugin::{BlockListScene, Label, LocalizedLabel, SurfaceKind, WindowKindDefinition, WindowOptions};
 
 //#region 🔖️Constants
 pub const ARCHITECT_WINDOW_REGISTER: &str = "architect-register";
@@ -58,11 +58,11 @@ struct RegisterBlockItem {
     kind: String,
 }
 
-pub fn render(program: &ProgramSnapshot, cfg: &ArchitectConfig) -> UiNode {
+pub fn render(program: &ProgramSnapshot, cfg: &ArchitectConfig) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let register = active_register(cfg);
     let entities = register_entities(program, register);
     if entities.is_empty() {
-        return ui_text(Label::data(format!("No entities in register '{register}'.")));
+        return semio_framework_plugin::built_text_node(Label::data(format!("No entities in register '{register}'."))).map_err(|_| crate::editor::architect::ui_capacity_error());
     }
 
     let steps: Vec<RegisterBlockStep> = entities
@@ -83,9 +83,8 @@ pub fn render(program: &ProgramSnapshot, cfg: &ArchitectConfig) -> UiNode {
     // `InteractionView` and `BlockListScene` has no `interaction_domain` field for the wrapper to
     // stamp post-render either (unlike `UiNode::Tree`) — `selected_id` is left at `None`, matching
     // `dag`'s/`space`'s identical `NodeGraphScene` gap.
-    let mut scene = empty_component_scene(ARCHITECT_BODY_REGISTER, SurfaceKind::BlockList);
-    scene.block_list = Some(BlockListScene { steps_json, palette_json, selected_id: None, dragging_id: None, domain_id: None });
-    UiNode::ComponentScene(scene)
+    let scene = BlockListScene { steps_json, palette_json, selected_id: None, dragging_id: None, domain_id: None };
+    semio_framework_plugin::scene_surface(ARCHITECT_BODY_REGISTER, semio_framework_ui_contract::SurfaceKind::BlockList, &scene)
 }
 //#endregion 🔖️Render
 
@@ -104,14 +103,18 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn the_active_registers_rows_become_block_list_steps() {
-        let json = serde_json::to_string(&render(&sample_plugin(), &ArchitectConfig::default())).expect("json");
-        assert!(json.contains("Reception"));
+        let node = render(&sample_plugin(), &ArchitectConfig::default()).expect("register");
+        let semio_framework_plugin::Component::Surface(props) = &node.component else { panic!("register surface") };
+        let scene: BlockListScene = semio_framework_ui_scene::decode(props).expect("packed register");
+        let steps: serde_json::Value = serde_json::from_str(&scene.steps_json).expect("independent step oracle");
+        assert!(steps.to_string().contains("Reception"));
+        crate::editor::architect::testkit::project_render(Ok(node));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn an_empty_register_renders_the_placeholder() {
         let cfg = ArchitectConfig { active_register: "benchmarks".into(), ..ArchitectConfig::default() };
-        let json = serde_json::to_string(&render(&sample_plugin(), &cfg)).expect("json");
+        let json = crate::editor::architect::testkit::project_render(render(&sample_plugin(), &cfg));
         assert!(json.contains("No entities in register 'benchmarks'"));
     }
 }

@@ -4,6 +4,7 @@
     "descriptorVersion": 1,
     "packageId": "semio:gis",
     "execution": "isolated",
+    "executionProtocol": { "appChannelVersion": 14 },
     "manifest": {
       "pluginId": "gis",
       "version": "1.0.0",
@@ -44,6 +45,10 @@
     },
     {
       "name": "plugin-change",
+      "accepted": false
+    },
+    {
+      "name": "execution-protocol-change",
       "accepted": false
     },
     {

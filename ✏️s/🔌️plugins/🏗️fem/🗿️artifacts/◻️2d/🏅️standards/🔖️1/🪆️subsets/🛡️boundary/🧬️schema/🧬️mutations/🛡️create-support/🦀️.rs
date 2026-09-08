@@ -1,7 +1,6 @@
 //! 🌱️ Fem2d mutation — `CreateSupport` payload + `MutationKind` impl.
 
 use crate::artifacts::fem2d::{Fem2dSnapshot, FemSupport};
-use crate::artifacts::fem2d::diff::{Fem2dDiff, Fem2dSupportsDelta};
 use crate::artifacts::fem2d::mutations::Fem2dMutation;
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};

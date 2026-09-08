@@ -61,12 +61,12 @@ pub fn detect(context: &SequenceDetectionContext<'_>) -> Vec<SequenceDetectedMut
 mod mutation_law_tests {
     use super::*;
     use crate::artifacts::sequence::default_snapshot;
-    use protocol::testkit::assert_missing_target_is_error;
+    use protocol::os_spr::testkit::assert_missing_target_is_error;
 
     #[semio_framework_async_macros::async_test]
     async fn change_family_missing_target_is_error() {
         let base = default_snapshot();
-        assert_missing_target_is_error(&base, &change_step_collapsed("missing".into(), true));
+        assert_missing_target_is_error(&base, &change_step_collapsed("missing".into(), true)).await;
     }
 }
 //#endregion 🧪️MutationLaws

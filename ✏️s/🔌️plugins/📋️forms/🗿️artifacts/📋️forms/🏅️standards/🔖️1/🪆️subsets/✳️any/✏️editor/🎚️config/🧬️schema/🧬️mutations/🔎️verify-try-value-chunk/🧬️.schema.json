@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Verify Try Value Chunk",
+  "type": "object",
+  "properties": {
+    "staging_id": {
+      "type": "string"
+    },
+    "content_id": {
+      "type": "string"
+    },
+    "index": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 18446744073709551615
+    },
+    "chunk_count": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 18446744073709551615
+    }
+  },
+  "required": [
+    "staging_id",
+    "content_id",
+    "index",
+    "chunk_count"
+  ],
+  "additionalProperties": false
+}

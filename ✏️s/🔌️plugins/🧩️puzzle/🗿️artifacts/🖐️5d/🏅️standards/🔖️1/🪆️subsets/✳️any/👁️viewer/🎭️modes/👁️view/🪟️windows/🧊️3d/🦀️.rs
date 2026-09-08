@@ -8,7 +8,7 @@
 
 use crate::artifacts::puzzle5d::{Puzzle5dPart, Puzzle5dScale, Puzzle5dSnapshot};
 use semio_framework_plugin::app::{MeshView, MeshWindowKit, WindowKit};
-use semio_framework_plugin::{world3d_mesh_id_from_url, world3d_meshes_json_from_urls, world3d_selection_json, UiNode, WindowKindDefinition};
+use semio_framework_plugin::{world3d_mesh_id_from_url, world3d_meshes_json_from_urls, world3d_selection_json, WindowKindDefinition};
 
 //#region 🔖️Definition
 /// 🧱️ Stitched into the viewer manifest by `crate::viewer::puzzle5d::create_puzzle5d_viewer`. Uses

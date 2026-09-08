@@ -2,7 +2,7 @@
 //! a no-op and there's nothing to undo).
 
 use crate::artifacts::equation::standards::v1::subsets::graph::schema::mutations::delete_node;
-use crate::artifacts::equation::{equation_graph, EquationMutation, EquationSnapshot};
+use crate::artifacts::equation::{EquationMutation, EquationSnapshot};
 
 //#region 🔖️Inverse
 pub fn inverse(payload: &super::CreateNode, base: &EquationSnapshot) -> Vec<EquationMutation> {

@@ -13,7 +13,7 @@
       "destinationRootBytes": 152,
       "maxDestinationPathBytes": 209,
       "admittedFileCount": 32,
-      "ignoredPhysicalRelativePaths": [".DS_Store", ".🦑️repo/**", "node_modules/**", "🟦️typescript/🟨️boot.js"],
+      "ignoredPhysicalRelativePaths": [".DS_Store", ".🧬semio/**", "node_modules/**", "🟦️typescript/🟨️boot.js"],
       "identity": {
         "cargoPackageName": "semio-framework-os-renderer-wgpu",
         "nodePackageName": "@semio-tech/framework-renderer-wgpu",

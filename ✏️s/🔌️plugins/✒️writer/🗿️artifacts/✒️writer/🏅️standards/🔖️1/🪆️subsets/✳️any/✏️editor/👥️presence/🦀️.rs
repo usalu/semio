@@ -1,7 +1,6 @@
 //! 👥️ Writer presence — shareable live ephemeral state + mutations.
 
 use crate::artifacts::writer::{WriterCamera, WriterEditorSelection};
-use protocol::Mutation;
 use serde::{Deserialize, Serialize};
 use store::ArtifactPack;
 
@@ -10,8 +9,9 @@ use store::ArtifactPack;
 /// state only. AST selection/hover no longer live here: the framework broadcasts every declared
 /// interaction domain's selection/hover automatically via its own typed `PresencePeer.interaction`
 /// (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslArtifact)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslArtifact, dsl::ToValue, dsl::FromValue)]
 #[serde(rename_all = "camelCase", default)]
+#[value(rename_all = "camelCase", default)]
 #[dsl(extension = "writer.presence")]
 #[dsl(layout = "lines")]
 pub struct WriterPresence {
@@ -29,7 +29,7 @@ impl Default for WriterPresence {
 
 impl protocol::MutationDiff<WriterPresence> for WriterPresence {
     fn apply(&self, _base: &WriterPresence) -> protocol::MutationApplyResult<WriterPresence> {
-        Ok({ self.clone() })
+        Ok(self.clone())
     }
     fn absorb(&mut self, other: Self) {
         *self = other;
@@ -82,63 +82,33 @@ impl ArtifactPack for WriterPresence {
 }
 //#endregion 🔖️Presence
 
-//#region 🔖️PresenceMutation
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
-#[serde(rename_all = "camelCase")]
-pub enum WriterPresenceMutation {
-    #[dsl(key = "snapshot")]
-    Snapshot {
-        #[dsl(block)]
-        presence: WriterPresence,
-    },
-}
+#[path = "🧬️schema/🧬️mutations/🦀️.rs"]
+mod mutations;
+pub use mutations::*;
 
-impl Mutation<WriterPresence> for WriterPresenceMutation {
-    type Diff = WriterPresence;
 
-    fn diff(&self, _base: &WriterPresence) -> protocol::MutationOutcome<WriterPresence> {
-        match self {
-            Self::Snapshot { presence } => protocol::MutationOutcome::new(presence.clone()),
-        }
-    }
-
-    fn inverse(&self, base: &WriterPresence) -> Vec<Self> {
-        vec![Self::Snapshot { presence: base.clone() }]
-    }
-}
-
-impl protocol::OpText for WriterPresenceMutation {
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        let variants = <Self as dsl::DslVariants>::variants();
-        for (keyword, spec_fn) in &variants {
-            let probe = format!("{keyword} ");
-            if line == keyword.as_str() || line.starts_with(&probe) {
-                let body = if line.len() > keyword.len() { line[keyword.len()..].trim_start() } else { "" };
-                let record = dsl::parse(body, &spec_fn(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline })?;
-                return <Self as dsl::DslVariants>::from_named_record(keyword, &record);
-            }
-        }
-        Err(dsl::__rt::field_error(format!("unknown operation line '{line}'")))
-    }
-    fn print_op(&self) -> String {
-        let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
-        let variants = <Self as dsl::DslVariants>::variants();
-        let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
-        let body = dsl::print(&record, &spec_fn(), dsl::JoinMode::Inline);
-        if body.is_empty() {
-            keyword
-        } else {
-            format!("{keyword} {body}")
+#[cfg(test)]
+mod contract_vectors {
+    use super::*;
+    use protocol::{Mutation, MutationDiff, OpBinary, OpText};
+    use dsl::os_pack as pack;
+    #[test]
+    fn writer_presence_contract_vectors_match_the_json_oracle() {
+        let vectors: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🔁️mutation-contracts.json")).unwrap();
+        let base: WriterPresence = pack::from_json_str(&vectors["base"].to_string()).unwrap();
+        assert_eq!(<WriterPresenceMutation as Mutation<WriterPresence>>::DESCRIPTORS.len(), vectors["cases"].as_array().unwrap().len());
+        for vector in vectors["cases"].as_array().unwrap() {
+            let mutation: WriterPresenceMutation = pack::from_json_str(&vector["mutation"].to_string()).unwrap();
+            assert_eq!(serde_json::from_str::<serde_json::Value>(&pack::to_json_string(&mutation)).unwrap(), vector["mutation"]);
+            assert_eq!(mutation.descriptor().semantic_kind, vector["kind"].as_str().unwrap());
+            assert_eq!(WriterPresenceMutation::parse_op(&mutation.print_op()).unwrap(), mutation);
+            assert_eq!(WriterPresenceMutation::decode_op(&mutation.encode_op().unwrap()).unwrap(), mutation);
+            let outcome = mutation.diff(&base);
+            assert!(outcome.messages().is_empty());
+            let next = outcome.diff().apply(&base).unwrap();
+            assert_eq!(serde_json::from_str::<serde_json::Value>(&pack::to_json_string(&next)).unwrap(), vector["expected"]);
+            let restored = mutation.inverse(&base).into_iter().fold(next, |state, inverse| inverse.diff(&state).diff().apply(&state).unwrap());
+            assert_eq!(restored, base);
         }
     }
 }
-
-impl protocol::OpBinary for WriterPresenceMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        dsl::variants_binary::encode_op(self)
-    }
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        dsl::variants_binary::decode_op(bytes)
-    }
-}
-//#endregion 🔖️PresenceMutation

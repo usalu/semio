@@ -7,7 +7,6 @@ class WasmScript extends BundleScript {
   run(): void {
     runWasmPackWebBuild({
       rsDir: this.root,
-      skipEnvVar: "FRAMEWORK_SURFACE_RS_SKIP_WASM_BUILD",
       logPrefix: "framework/surface/rs",
       wasmBaseName: "framework_surface",
       outputDirectory: "🕸️bindings",

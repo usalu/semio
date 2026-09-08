@@ -5,10 +5,11 @@ use crate::artifacts::forms::FormQuestion;
 use crate::editor::forms::config::FormsConfig;
 use crate::editor::forms::terminology::FormsLabels;
 use crate::editor::forms::{effective_try_values, forms_action, parse_contributions, render_extension_question, ProgramContributionEntry};
-use semio_framework_plugin::{
-    ActionDescriptor, Label, LocalizedLabel, SurfaceKind, UiButtonNode, UiFieldNode, UiInputNode, UiNode, UiPresence, UiSelectItem, UiSelectNode, UiSliderNode, UiStackNode, UiTextNode, UiToggleNode, WindowKindDefinition, WindowOptions,
-};
-use dsl::os_pack::json::{object, Object, Value};
+use semio_framework_plugin::{LocalizedLabel, SurfaceKind, UiAssemblyResult, WindowKindDefinition, WindowOptions};
+use semio_framework_ui_contract as ui;
+use ui::{Buildable, HasBase, HasChildren};
+use crate::editor::forms::{ui_admit, ui_label, ui_text_value, ui_value_map, ui_value_text, ui_value_number};
+use dsl::os_pack::json::{Object, Value};
 use std::collections::HashMap;
 use std::collections::HashSet;
 
@@ -41,8 +42,25 @@ pub fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-fn try_value_action(key: &str) -> ActionDescriptor {
-    forms_action("setTryValue", Some(object([("key".to_string(), Value::from(key))])))
+fn answer_args(key: &str) -> UiAssemblyResult<ui::UiValue> {
+    ui_value_map([("key", ui_value_text(key)?)])
+}
+
+fn display(value: &str, emphasize: bool) -> UiAssemblyResult<ui::BuiltNode> {
+    ui_admit(ui::text(ui_label(value)?).emphasize(emphasize).try_build())
+}
+
+fn stack(axis: ui::Axis, children: Vec<ui::BuiltNode>) -> UiAssemblyResult<ui::BuiltNode> {
+    ui_admit(ui_admit(ui::stack(axis).try_children(children))?.try_build())
+}
+
+fn control(builder: impl Into<ui::BuiltNode>, id: &str, label: &str, args: ui::UiValue) -> UiAssemblyResult<ui::BuiltNode> {
+    let mut node = builder.into();
+    node.key = ui_text_value(id)?;
+    node.accessibility.label = Some(ui_label(label)?);
+    let (action, args) = forms_action("setTryValue", Some(args))?;
+    ui_admit(node.bindings.try_push(ui::ActionBinding { trigger: ui::Trigger::Change, action, args, capability: None }))?;
+    Ok(node)
 }
 
 fn image_question_src(question: &FormQuestion) -> String {
@@ -56,247 +74,126 @@ fn image_question_src(question: &FormQuestion) -> String {
     format!("data:image/png;base64,{src}")
 }
 
-fn render_image_question(question: &FormQuestion) -> UiNode {
-    semio_framework_plugin::ui_image(format!("forms-try.{}.image", question.id), image_question_src(question), Some(Label::data(question.label.clone())))
+fn try_field(question: &FormQuestion, error: Option<&str>, child: ui::BuiltNode) -> UiAssemblyResult<ui::BuiltNode> {
+    let mut field = ui_admit(ui::field(ui_label(&question.label)?).try_id(format!("forms-try.{}", question.id)))?.required(question.required.unwrap_or(false));
+    if let Some(description) = &question.description {
+        field = field.description(ui_text_value(description)?);
+    }
+    if let Some(error) = error {
+        field = field.error(ui_text_value(error)?);
+    }
+    ui_admit(ui_admit(field.try_child(child))?.try_build())
 }
 
-fn ui_text_emphasized(value: impl Into<Label>) -> UiNode {
-    UiNode::Text(UiTextNode { value: value.into(), emphasize: Some(true), data_attributes: None, presence: UiPresence::default(), menu: None })
-}
-
-fn ui_stack_horizontal(children: Vec<UiNode>) -> UiNode {
-    UiNode::Stack(UiStackNode { direction: "horizontal".into(), gap: Some("tight".into()), padding: Some("none".into()), id: None, presence: UiPresence::default(), activate: None, drop_action: None, drop_overlay: None, children, menu: None })
-}
-
-fn try_field(question: &FormQuestion, error: Option<&str>, child: UiNode) -> UiNode {
-    UiNode::Field(UiFieldNode {
-        id: format!("forms-try.{}", question.id),
-        label: Label::data(question.label.clone()),
-        description: question.description.clone(),
-        required: question.required.filter(|required| *required),
-        error: error.map(str::to_string),
-        child: Box::new(child),
-        presence: UiPresence::default(),
-        menu: None,
-    })
-}
-
-fn render_try_question(question: &FormQuestion, values: &Object, contributions: &[ProgramContributionEntry], error: Option<&str>, labels: &FormsLabels) -> UiNode {
+fn render_try_question(question: &FormQuestion, values: &Object, contributions: &[ProgramContributionEntry], error: Option<&str>, labels: &FormsLabels) -> UiAssemblyResult<ui::BuiltNode> {
     let value = values.get(&question.id).cloned().unwrap_or_else(|| json_value_from_dsl(question));
-    let key = question.id.clone();
-    match question.kind.as_str() {
-        "text" | "longText" => try_field(
-            question,
-            error,
-            UiNode::Input(UiInputNode {
-                id: format!("forms-try.{key}.input"),
-                input_kind: question.kind.clone(),
-                value: json_string_value(&value),
-                placeholder: question.placeholder.clone().map(Label::data),
-                commit: None,
-                on_change: try_value_action(&key),
-                min: None,
-                max: None,
-                step: None,
-                accept: None,
-                presence: UiPresence::default(),
-                menu: None,
-            }),
-        ),
-        "number" => try_field(
-            question,
-            error,
-            UiNode::Input(UiInputNode {
-                id: format!("forms-try.{key}.input"),
-                input_kind: "number".into(),
-                value: json_string_value(&value),
-                placeholder: None,
-                commit: None,
-                on_change: try_value_action(&key),
-                min: question.min,
-                max: question.max,
-                step: question.step,
-                accept: None,
-                presence: UiPresence::default(),
-                menu: None,
-            }),
-        ),
-        "slider" => try_field(
-            question,
-            error,
-            UiNode::Slider(UiSliderNode {
-                id: format!("forms-try.{key}.slider"),
-                value: json_f64_value(&value),
-                min: question.min.unwrap_or(0.0),
-                max: question.max.unwrap_or(100.0),
-                step: question.step.unwrap_or(1.0),
-                unit: question.unit.clone(),
-                on_change: try_value_action(&key),
-                presence: UiPresence::default(),
-                menu: None,
-            }),
-        ),
-        "boolean" => try_field(
-            question,
-            error,
-            UiNode::Toggle(UiToggleNode {
-                id: format!("forms-try.{key}.toggle"),
-                icon_id: "check".into(),
-                text: Some(if value.as_bool().unwrap_or(false) { labels.yes.into() } else { labels.no.into() }),
-                on_change: try_value_action(&key),
-                presence: UiPresence::selected(value.as_bool().unwrap_or(false)),
-                menu: None,
-            }),
-        ),
+    let key = question.id.as_str();
+    let label = question.label.as_str();
+    let child = match question.kind.as_str() {
+        "text" | "longText" | "number" | "date" | "color" | "file" => {
+            let kind = match question.kind.as_str() {
+                "longText" => ui::InputKind::LongText,
+                "number" => ui::InputKind::Number,
+                "date" => ui::InputKind::Date,
+                "color" => ui::InputKind::Color,
+                "file" => ui::InputKind::File,
+                _ => ui::InputKind::Text,
+            };
+            let mut input = ui::input(kind).value(ui_text_value(json_string_value(&value))?);
+            if let Some(placeholder) = &question.placeholder { input = input.placeholder(ui_label(placeholder)?); }
+            if let Some(min) = question.min { input = input.min(min); }
+            if let Some(max) = question.max { input = input.max(max); }
+            if let Some(step) = question.step { input = input.step(step); }
+            if let Some(accept) = &question.accept { input = input.accept(ui_text_value(accept)?); }
+            control(input, &format!("forms-try.{key}.input"), label, answer_args(key)?)?
+        }
+        "slider" => {
+            let mut slider = ui::slider(json_f64_value(&value)).min(question.min.unwrap_or(0.0)).max(question.max.unwrap_or(100.0)).step(question.step.unwrap_or(1.0));
+            if let Some(unit) = &question.unit { slider = slider.unit(ui_text_value(unit)?); }
+            control(slider, &format!("forms-try.{key}.slider"), label, answer_args(key)?)?
+        }
+        "boolean" => {
+            let on = value.as_bool().unwrap_or(false);
+            control(ui::toggle(on).icon(ui_text_value("check")?).text(ui_label(if on { labels.yes.as_str() } else { labels.no.as_str() })?), &format!("forms-try.{key}.toggle"), label, answer_args(key)?)?
+        }
         "single" => {
-            let items = question.options.as_ref().map(|options| options.iter().map(|option| UiSelectItem { value: option.value.clone(), label: Label::data(option.label.clone()) }).collect()).unwrap_or_default();
-            try_field(question, error, UiNode::Select(UiSelectNode { id: format!("forms-try.{key}.select"), value: json_string_value(&value), placeholder: None, items, on_change: try_value_action(&key), presence: UiPresence::default(), menu: None }))
+            let mut select = ui::select(ui_text_value(json_string_value(&value))?);
+            for option in question.options.iter().flatten() {
+                select = ui_admit(select.try_item(ui_text_value(&option.value)?, ui_label(&option.label)?))?;
+            }
+            control(select, &format!("forms-try.{key}.select"), label, answer_args(key)?)?
         }
         "multi" => {
-            let selected: HashSet<String> = value.as_array().map(|items| items.iter().filter_map(|entry| entry.as_str().map(str::to_string)).collect()).unwrap_or_default();
-            let chips = question
-                .options
-                .as_ref()
-                .map(|options| {
-                    options
-                        .iter()
-                        .map(|option| {
-                            UiNode::Toggle(UiToggleNode {
-                                id: format!("forms-try.{key}.{}.toggle", option.value),
-                                icon_id: "hash".into(),
-                                text: Some(Label::data(option.label.clone())),
-                                on_change: forms_action("setTryValue", Some(object([("key".to_string(), Value::from(key.clone())), ("optionValue".to_string(), Value::from(option.value.clone()))]))),
-                                presence: UiPresence::selected(selected.contains(&option.value)),
-                                menu: None,
-                            })
-                        })
-                        .collect()
-                })
-                .unwrap_or_default();
-            try_field(question, error, ui_stack_horizontal(chips))
+            let selected: HashSet<&str> = value.as_array().into_iter().flatten().filter_map(Value::as_str).collect();
+            let mut children = Vec::new();
+            for option in question.options.iter().flatten() {
+                let args = ui_value_map([("key", ui_value_text(key)?), ("optionValue", ui_value_text(&option.value)?)])?;
+                children.push(control(ui::toggle(selected.contains(option.value.as_str())).icon(ui_text_value("hash")?).text(ui_label(&option.label)?), &format!("forms-try.{key}.{}.toggle", option.value), &option.label, args)?);
+            }
+            stack(ui::Axis::Horizontal, children)?
         }
-        "date" | "color" => try_field(
-            question,
-            error,
-            UiNode::Input(UiInputNode {
-                id: format!("forms-try.{key}.input"),
-                input_kind: question.kind.clone(),
-                value: json_string_value(&value),
-                placeholder: None,
-                commit: None,
-                on_change: try_value_action(&key),
-                min: None,
-                max: None,
-                step: None,
-                accept: None,
-                presence: UiPresence::default(),
-                menu: None,
-            }),
-        ),
         "vector" => {
-            let array = value.as_array().cloned().unwrap_or_default();
-            let fields = question.fields.as_ref().cloned().unwrap_or_default();
-            let steppers: Vec<UiNode> = fields
-                .iter()
-                .enumerate()
-                .map(|(index, field)| {
-                    let field_value = array.get(index).cloned().unwrap_or(Value::from(field.value.unwrap_or(0.0)));
-                    UiNode::Field(UiFieldNode {
-                        id: format!("forms-try.{key}.{}", field.key),
-                        label: Label::data(field.label.clone().unwrap_or_else(|| field.key.clone())),
-                        description: None,
-                        required: None,
-                        error: None,
-                        presence: UiPresence::default(),
-                        child: Box::new(UiNode::NumberStepper(semio_framework_plugin::UiNumberStepperNode {
-                            id: format!("forms-try.{key}.{}.stepper", field.key),
-                            value: json_f64_value(&field_value),
-                            step: question.step.unwrap_or(0.1),
-                            uniform: true,
-                            on_absolute: forms_action("setTryValue", Some(object([("key".to_string(), Value::from(key.clone())), ("vectorIndex".to_string(), Value::from(index))]))),
-                            on_delta: forms_action("setTryValue", Some(object([("key".to_string(), Value::from(key.clone())), ("vectorIndex".to_string(), Value::from(index))]))),
-                            presence: UiPresence::default(),
-                            menu: None,
-                        })),
-                        menu: None,
-                    })
-                })
-                .collect();
-            try_field(question, error, ui_stack_horizontal(steppers))
+            let mut children = Vec::new();
+            for (index, field) in question.fields.iter().flatten().enumerate() {
+                let value = value.as_array().and_then(|array| array.get(index)).and_then(Value::as_f64).unwrap_or(field.value.unwrap_or(0.0));
+                let args = || ui_value_map([("key", ui_value_text(key)?), ("vectorIndex", ui_value_number(index as f64))]);
+                let id = format!("forms-try.{key}.{}.stepper", field.key);
+                let mut node = control(ui_admit(ui::BuiltNode::try_new(&id, ui::Component::NumberStepper(ui::NumberStepperProps { value, step: question.step.unwrap_or(0.1), uniform: true })))?, &id, field.label.as_deref().unwrap_or(&field.key), args()?)?;
+                let (action, args) = forms_action("setTryValue", Some(args()?))?;
+                ui_admit(node.bindings.try_push(ui::ActionBinding { trigger: ui::Trigger::Delta, action, args, capability: None }))?;
+                let field = ui_admit(ui::field(ui_label(field.label.as_deref().unwrap_or(&field.key))?).try_id(format!("forms-try.{key}.{}", field.key)))?;
+                children.push(ui_admit(ui_admit(field.try_child(node))?.try_build())?);
+            }
+            stack(ui::Axis::Horizontal, children)?
         }
-        "note" => semio_framework_plugin::ui_text(Label::data(question.text.clone().unwrap_or_else(|| question.label.clone()))),
-        "image" => try_field(question, error, render_image_question(question)),
-        "file" => try_field(
-            question,
-            error,
-            UiNode::Input(UiInputNode {
-                id: format!("forms-try.{key}.input"),
-                input_kind: "file".into(),
-                value: json_string_value(&value),
-                placeholder: None,
-                commit: None,
-                on_change: try_value_action(&key),
-                min: None,
-                max: None,
-                step: None,
-                accept: question.accept.clone(),
-                presence: UiPresence::default(),
-                menu: None,
-            }),
-        ),
-        kind if is_extension_question_kind(kind) => render_extension_question(question, values, contributions, "try", true),
-        _ => semio_framework_plugin::ui_text(Label::data(format!("Unsupported kind: {}", question.kind))),
-    }
+        "image" => ui_admit(ui_admit(ui::image(ui_text_value(image_question_src(question))?).alt(ui_label(label)?).try_id(format!("forms-try.{key}.image")))?.try_build())?,
+        "note" => return display(question.text.as_deref().unwrap_or(label), false),
+        kind if is_extension_question_kind(kind) => return render_extension_question(question, values, contributions, "try", true),
+        _ => return display(&format!("Unsupported kind: {}", question.kind), false),
+    };
+    try_field(question, error, child)
 }
 
-/// 🔄️ The question's typed default, as a `dsl::os_pack::json::Value` — used when no try value has been entered
-/// for it yet.
 fn json_value_from_dsl(question: &FormQuestion) -> Value {
     crate::artifacts::forms::schema::dsl_to_value(&default_value_for_question(question))
 }
 
-pub fn render(spec: &crate::artifacts::forms::FormsSnapshot, config: &FormsConfig, labels: &FormsLabels) -> UiNode {
+fn navigation(id: &str, label: &str, icon: &str, command: &str, disabled: bool) -> UiAssemblyResult<ui::BuiltNode> {
+    let (action, args) = forms_action(command, None)?;
+    let mut node: ui::BuiltNode = ui::button(ui_label(label)?).icon(ui_text_value(icon)?).disabled(disabled).into();
+    node.key = ui_text_value(id)?;
+    ui_admit(node.bindings.try_push(ui::ActionBinding { trigger: ui::Trigger::Activate, action, args, capability: None }))?;
+    Ok(node)
+}
+
+pub fn render(spec: &crate::artifacts::forms::FormsSnapshot, config: &FormsConfig, labels: &FormsLabels) -> UiAssemblyResult<ui::BuiltNode> {
     let steps = crate::artifacts::forms::forms_steps(spec);
-    if steps.is_empty() {
-        return semio_framework_plugin::ui_text(labels.no_steps_in_form);
-    }
+    if steps.is_empty() { return display(labels.no_steps_in_form.as_str(), false); }
     let contributions = parse_contributions(config);
     let step_index = (config.current_step_index as usize).min(steps.len().saturating_sub(1));
     let step = &steps[step_index];
     let values = effective_try_values(spec, config);
-    let visible = visible_questions(step, &values);
-    let errors = step_errors(step, &values);
-    let advance = can_advance(step, &values);
+    let validation_values = values.iter().map(|(key, value)| (key.to_owned(), crate::artifacts::forms::schema::value_to_dsl(value))).collect();
+    let visible = visible_questions(step, &validation_values);
+    let errors = step_errors(step, &validation_values);
+    let advance = can_advance(step, &validation_values);
     let errors_by_question: HashMap<&str, &str> = errors.iter().map(|error| (error.block_id.as_str(), error.message.as_str())).collect();
     let mut children = vec![
-        ui_text_emphasized(Label::data(spec.title.clone().unwrap_or_else(|| labels.form_fallback_title.into()))),
-        semio_framework_plugin::ui_text(Label::data(format!("{} {} / {}", labels.step_progress.as_str(), step_index + 1, steps.len()))),
-        ui_text_emphasized(Label::data(step.title.clone())),
+        display(spec.title.as_deref().unwrap_or(labels.form_fallback_title.as_str()), true)?,
+        display(&format!("{} {} / {}", labels.step_progress.as_str(), step_index + 1, steps.len()), false)?,
+        display(&step.title, true)?,
     ];
-    if let Some(description) = &step.description {
-        children.push(semio_framework_plugin::ui_text(Label::data(description.clone())));
-    }
+    if let Some(description) = &step.description { children.push(display(description, false)?); }
     for question in visible {
-        children.push(render_try_question(question, &values, &contributions, errors_by_question.get(question.id.as_str()).copied(), labels));
+        children.push(render_try_question(question, &values, &contributions, errors_by_question.get(question.id.as_str()).copied(), labels)?);
     }
-    let nav = vec![
-        UiNode::Button(UiButtonNode {
-            id: Some("forms-try.back".into()),
-            icon_id: "chevron-left".into(),
-            label: labels.back.into(),
-            action: forms_action("previousStep", None),
-            style: None,
-            presence: UiPresence::disabled_if(step_index == 0),
-            menu: None,
-        }),
-        if step_index + 1 < steps.len() {
-            UiNode::Button(UiButtonNode { id: Some("forms-try.next".into()), icon_id: "chevron-right".into(), label: labels.next.into(), action: forms_action("nextStep", None), style: None, presence: UiPresence::disabled_if(!advance), menu: None })
-        } else {
-            UiNode::Button(UiButtonNode { id: Some("forms-try.submit".into()), icon_id: "check".into(), label: labels.submit.into(), action: forms_action("submit", None), style: None, presence: UiPresence::disabled_if(!advance), menu: None })
-        },
-    ];
-    children.push(ui_stack_horizontal(nav));
-    semio_framework_plugin::ui_stack_vertical(children)
+    let next = if step_index + 1 < steps.len() {
+        navigation("forms-try.next", labels.next.as_str(), "chevron-right", "nextStep", !advance)?
+    } else {
+        navigation("forms-try.submit", labels.submit.as_str(), "check", "submit", !advance)?
+    };
+    children.push(stack(ui::Axis::Horizontal, vec![navigation("forms-try.back", labels.back.as_str(), "chevron-left", "previousStep", step_index == 0)?, next])?);
+    stack(ui::Axis::Vertical, children)
 }
 //#endregion 🔖️Render
 
@@ -309,9 +206,9 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn renders_try_wizard() {
-        let mut app = forms_app();
-        crate::editor::forms::testkit::dispatch(&mut app, crate::editor::forms::FormsCommand::SetActiveExample(crate::editor::forms::commands::set_active_example::SetActiveExample { example_id: "default".into() }));
-        let json = render_body(&mut app, BODY_TRY);
+        let mut app = forms_app().await;
+        crate::editor::forms::testkit::dispatch(&mut app, crate::editor::forms::FormsCommand::SetActiveExample(crate::editor::forms::commands::set_active_example::SetActiveExample { example_id: "default".into() })).await;
+        let json = render_body(&mut app, BODY_TRY).await;
         assert!(json.contains("forms-try"));
         assert!(json.contains("Step 1"));
     }
@@ -320,7 +217,7 @@ mod tests {
     async fn image_question_with_url_src_emits_image_node() {
         let question = FormQuestion { src: Some("https://example.com/picture.png".into()), ..crate::editor::forms::commands::add_question::question_shell("q-image".into(), "Picture".into(), "image".into()) };
         let node = render_try_question(&question, &Object::new(), &[], None, crate::editor::forms::terminology::forms_play_labels(&FormsConfig::default()));
-        let json = dsl::os_pack::json::to_json_string(&node);
+        let json = serde_json::to_string(&node.expect("semantic component")).expect("component JSON");
         assert!(json.contains(r#""type":"image""#));
         assert!(json.contains("https://example.com/picture.png"));
     }
@@ -328,15 +225,15 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn extension_question_emits_external_slot_when_contribution_registered() {
         let node = render_try_question(&building_component_question(), &Object::new(), &building_component_contributions(), None, crate::editor::forms::terminology::forms_play_labels(&FormsConfig::default()));
-        let json = dsl::os_pack::json::to_json_string(&node);
-        assert!(json.contains("externalSlot"));
+        let json = serde_json::to_string(&node.expect("semantic component")).expect("component JSON");
+        assert!(json.contains("\"type\":\"extension\""));
         assert!(json.contains("forms-module-procedural"));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn extension_question_falls_back_without_contribution() {
         let node = render_try_question(&building_component_question(), &Object::new(), &[], None, crate::editor::forms::terminology::forms_play_labels(&FormsConfig::default()));
-        let json = dsl::os_pack::json::to_json_string(&node);
+        let json = serde_json::to_string(&node.expect("semantic component")).expect("component JSON");
         assert!(json.contains("Extension unavailable"));
     }
 
@@ -348,3 +245,25 @@ mod tests {
     }
 }
 //#endregion 🧪️Tests
+
+#[cfg(test)]
+mod control_vectors {
+    use super::*;
+    #[test]
+    fn semantic_question_controls_match_the_language_neutral_vectors() {
+        let vectors: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🔣️controls.json")).unwrap();
+        for vector in vectors["cases"].as_array().unwrap() {
+            let question = &vector["question"];
+            let question = crate::editor::forms::commands::add_question::question_shell(question["id"].as_str().unwrap().into(), question["label"].as_str().unwrap().into(), question["kind"].as_str().unwrap().into());
+            let node = render_try_question(&question, &Object::new(), &[], None, crate::editor::forms::terminology::forms_play_labels(&FormsConfig::default())).unwrap();
+            let control = if question.kind == "note" { &node } else { node.children.get(0).unwrap() };
+            let actual = serde_json::to_value(control).unwrap();
+            assert_eq!(actual["component"]["type"], vector["component"], "{}", question.kind);
+            if vector["interactive"].as_bool().unwrap() {
+                assert_eq!(actual["accessibility"]["label"], vector["question"]["label"]);
+                assert_eq!(actual["bindings"][0]["trigger"], "change");
+                assert_eq!(actual["bindings"][0]["args"]["key"], vector["question"]["id"]);
+            }
+        }
+    }
+}

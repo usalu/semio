@@ -10,7 +10,6 @@
 use crate::artifacts::note::NoteDiff;
 use crate::artifacts::note::NoteSnapshot;
 use protocol::{Mutation, MutationDiff};
-use serde::{Deserialize, Serialize};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Mutations
@@ -22,9 +21,8 @@ use semio_framework_value_derive::{FromValue, ToValue};
 /// text/math/ink, plus table row/column insert/remove). Whole-document replace has NO replacement
 /// here — see `crate::editor::note::reset_document_effect`, which goes through
 /// `Effect::LoadDocument` outside undo history.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::DslEnum, dsl::Mutations)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslEnum, dsl::Mutations)]
 #[value(tag = "mutation", rename_all = "camelCase")]
-#[serde(tag = "mutation", rename_all = "camelCase")]
 #[mutations(snapshot = NoteSnapshot, diff = NoteDiff, schema = "note.note")]
 pub enum NoteMutation {
     RenameNote(RenameNote),
@@ -175,20 +173,20 @@ pub fn inverse_note_mutation_steps(mutation: &NoteMutation, base: &NoteSnapshot)
 /// committed `<slug>/🧪️tests/<fixture>/🦠️mutation/🔣️.json` vectors carry.
 // 🚫️async: E1 pure codec helper (file verified I/O-free) — see R9
 pub fn decode_note_mutation_json(text: &str) -> Result<NoteMutation, String> {
-    serde_json::from_str(text).map_err(|error| error.to_string())
+    dsl::os_pack::from_json_str(text).map_err(|error| error.to_string())
 }
 
 /// 📥️ Decodes a committed `📸️snapshot/{⬅️before,➡️after}/🔣️.json` vector.
 // 🚫️async: E1 pure codec helper (file verified I/O-free) — see R9
 pub fn decode_note_snapshot_json(text: &str) -> Result<NoteSnapshot, String> {
-    serde_json::from_str(text).map_err(|error| error.to_string())
+    dsl::os_pack::from_json_str(text).map_err(|error| error.to_string())
 }
 
 /// 📤️ The snapshot as the same canonical JSON the committed vectors are written in — the
 /// projection an external test host compares through.
 // 🚫️async: E1 pure codec helper (file verified I/O-free) — see R9
 pub fn encode_note_snapshot_json(snapshot: &NoteSnapshot) -> String {
-    serde_json::to_string(snapshot).expect("a NoteSnapshot is always serializable")
+    dsl::os_pack::to_json_string(snapshot)
 }
 //#endregion 🔖️Kinds
 
@@ -235,7 +233,7 @@ mod kinds_catalog {
 mod tests {
     use super::*;
     use crate::artifacts::note::{NoteBlockNode, NoteImageAsset};
-    use protocol::testkit::{assert_fatal_never_applies, assert_missing_target_is_error, assert_mutation_diff_absorb_law, assert_mutation_inverse_law};
+    use protocol::os_spr::testkit::{assert_fatal_never_applies, assert_missing_target_is_error, assert_mutation_diff_absorb_law, assert_mutation_inverse_law};
     use protocol::SemanticMutation;
 
     fn sample_snapshot() -> NoteSnapshot {
@@ -308,21 +306,21 @@ mod tests {
             change_pencil_width(Some(5.0)),
             change_eraser_radius(Some(20.0)),
         ] {
-            assert_mutation_inverse_law(&base, &mutation);
+            assert_mutation_inverse_law(&base, &mutation).await;
         }
         let d1 = change_grid_spacing(Some(10.0)).diff(&base).into_parts().0;
         let mid = MutationDiff::apply(&d1, &base).expect("valid mutation diff");
         let d2 = change_grid_spacing(Some(20.0)).diff(&mid).into_parts().0;
-        assert_mutation_diff_absorb_law(&base, d1, d2);
+        assert_mutation_diff_absorb_law(&base, d1, d2).await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn asset_inverse_law_create_replace_delete() {
         let base = sample_snapshot();
         let asset = NoteImageAsset { mime: "image/jpeg".into(), data: "e".into(), width: None, height: None };
-        assert_mutation_inverse_law(&base, &create_asset("asset-2".into(), asset.clone()));
-        assert_mutation_inverse_law(&base, &replace_asset_payload("asset-1".into(), asset.clone()));
-        assert_mutation_inverse_law(&base, &delete_asset("asset-1".into()));
+        assert_mutation_inverse_law(&base, &create_asset("asset-2".into(), asset.clone())).await;
+        assert_mutation_inverse_law(&base, &replace_asset_payload("asset-1".into(), asset.clone())).await;
+        assert_mutation_inverse_law(&base, &delete_asset("asset-1".into())).await;
     }
 
     #[semio_framework_async_macros::async_test]
@@ -343,43 +341,43 @@ mod tests {
             font_weight: "normal".into(),
             align: "left".into(),
         };
-        assert_mutation_inverse_law(&base, &create_block(new_block.clone(), None, None));
-        assert_mutation_inverse_law(&base, &delete_block("b1".into()));
-        assert_mutation_inverse_law(&base, &delete_blocks(vec!["b1".into(), "b3".into()]));
+        assert_mutation_inverse_law(&base, &create_block(new_block.clone(), None, None)).await;
+        assert_mutation_inverse_law(&base, &delete_block("b1".into())).await;
+        assert_mutation_inverse_law(&base, &delete_blocks(vec!["b1".into(), "b3".into()])).await;
         let dup = crate::artifacts::note::schema::clone_block(&mut crate::artifacts::note::schema::NoteIdOwner::new("mutation-test", 0), base.blocks.iter().find(|b| crate::artifacts::note::schema::block_id(b) == "b1").unwrap());
-        assert_mutation_inverse_law(&base, &duplicate_block("b1".into(), dup));
+        assert_mutation_inverse_law(&base, &duplicate_block("b1".into(), dup)).await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn block_reparent_and_drag_inverse_law() {
         let mut base = sample_snapshot();
         base.blocks.push(NoteBlockNode::Group { id: "g1".into(), name: "Group".into(), x: 0.0, y: 0.0, width: 200.0, height: 200.0, rotation: 0.0, visible: true, locked: false, children: Vec::new() });
-        assert_mutation_inverse_law(&base, &move_block_to_container("b1".into(), Some("g1".into()), 0));
-        assert_mutation_inverse_law(&base, &drag_blocks(vec!["b1".into(), "b2".into()], 5.0, -3.0));
+        assert_mutation_inverse_law(&base, &move_block_to_container("b1".into(), Some("g1".into()), 0)).await;
+        assert_mutation_inverse_law(&base, &drag_blocks(vec!["b1".into(), "b2".into()], 5.0, -3.0)).await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn block_field_inverse_laws() {
         let base = sample_snapshot();
-        assert_mutation_inverse_law(&base, &rename_block("b1".into(), "Renamed".into()));
-        assert_mutation_inverse_law(&base, &change_block_visible("b1".into(), false));
-        assert_mutation_inverse_law(&base, &change_block_locked("b1".into(), true));
-        assert_mutation_inverse_law(&base, &move_block("b1".into(), 42.0, -8.0));
-        assert_mutation_inverse_law(&base, &resize_block("b1".into(), 120.0, 60.0));
-        assert_mutation_inverse_law(&base, &change_block_font_size("b1".into(), 24.0));
-        assert_mutation_inverse_law(&base, &edit_block_text("b1".into(), vec![crate::artifacts::note::NoteTextParagraph { runs: Vec::new() }]));
-        assert_mutation_inverse_law(&base, &edit_block_math("b4".into(), "y = mx + b".into()));
-        assert_mutation_inverse_law(&base, &change_block_ink_width("b2".into(), 6.0));
-        assert_mutation_inverse_law(&base, &edit_block_ink_stroke("b2".into(), vec![[0.0, 0.0], [1.0, 1.0]], 1.0, 2.0, 10.0, 10.0));
+        assert_mutation_inverse_law(&base, &rename_block("b1".into(), "Renamed".into())).await;
+        assert_mutation_inverse_law(&base, &change_block_visible("b1".into(), false)).await;
+        assert_mutation_inverse_law(&base, &change_block_locked("b1".into(), true)).await;
+        assert_mutation_inverse_law(&base, &move_block("b1".into(), 42.0, -8.0)).await;
+        assert_mutation_inverse_law(&base, &resize_block("b1".into(), 120.0, 60.0)).await;
+        assert_mutation_inverse_law(&base, &change_block_font_size("b1".into(), 24.0)).await;
+        assert_mutation_inverse_law(&base, &edit_block_text("b1".into(), vec![crate::artifacts::note::NoteTextParagraph { runs: Vec::new() }])).await;
+        assert_mutation_inverse_law(&base, &edit_block_math("b4".into(), "y = mx + b".into())).await;
+        assert_mutation_inverse_law(&base, &change_block_ink_width("b2".into(), 6.0)).await;
+        assert_mutation_inverse_law(&base, &edit_block_ink_stroke("b2".into(), vec![[0.0, 0.0], [1.0, 1.0]], 1.0, 2.0, 10.0, 10.0)).await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn table_row_column_inverse_laws() {
         let base = sample_snapshot();
-        assert_mutation_inverse_law(&base, &insert_table_row("b3".into()));
-        assert_mutation_inverse_law(&base, &remove_table_row("b3".into()));
-        assert_mutation_inverse_law(&base, &insert_table_column("b3".into()));
-        assert_mutation_inverse_law(&base, &remove_table_column("b3".into()));
+        assert_mutation_inverse_law(&base, &insert_table_row("b3".into())).await;
+        assert_mutation_inverse_law(&base, &remove_table_row("b3".into())).await;
+        assert_mutation_inverse_law(&base, &insert_table_column("b3".into())).await;
+        assert_mutation_inverse_law(&base, &remove_table_column("b3".into())).await;
     }
 
     #[semio_framework_async_macros::async_test]
@@ -437,58 +435,58 @@ mod tests {
             align: "left".into(),
         };
         let outcome = create_block(existing, None, None).diff(&base);
-        assert_fatal_never_applies(&outcome);
+        assert_fatal_never_applies(&outcome).await;
         assert_eq!(outcome.worst_level(), Some(protocol::Severity::Fatal));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn delete_block_missing_target_is_error() {
         let base = sample_snapshot();
-        assert_missing_target_is_error(&base, &delete_block("ghost".into()));
+        assert_missing_target_is_error(&base, &delete_block("ghost".into())).await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn delete_blocks_missing_target_is_error() {
         let base = sample_snapshot();
-        assert_missing_target_is_error(&base, &delete_blocks(vec!["ghost".into()]));
+        assert_missing_target_is_error(&base, &delete_blocks(vec!["ghost".into()])).await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn rename_block_missing_target_is_error() {
         let base = sample_snapshot();
-        assert_missing_target_is_error(&base, &rename_block("ghost".into(), "x".into()));
+        assert_missing_target_is_error(&base, &rename_block("ghost".into(), "x".into())).await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn change_block_locked_missing_target_is_error() {
         let base = sample_snapshot();
-        assert_missing_target_is_error(&base, &change_block_locked("ghost".into(), true));
+        assert_missing_target_is_error(&base, &change_block_locked("ghost".into(), true)).await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn move_block_missing_target_is_error() {
         let base = sample_snapshot();
-        assert_missing_target_is_error(&base, &move_block("ghost".into(), 1.0, 1.0));
+        assert_missing_target_is_error(&base, &move_block("ghost".into(), 1.0, 1.0)).await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn move_block_non_finite_is_fatal() {
         let base = sample_snapshot();
         let outcome = move_block("b1".into(), f64::NAN, 0.0).diff(&base);
-        assert_fatal_never_applies(&outcome);
+        assert_fatal_never_applies(&outcome).await;
         assert_eq!(outcome.worst_level(), Some(protocol::Severity::Fatal));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn resize_block_missing_target_is_error() {
         let base = sample_snapshot();
-        assert_missing_target_is_error(&base, &resize_block("ghost".into(), 10.0, 10.0));
+        assert_missing_target_is_error(&base, &resize_block("ghost".into(), 10.0, 10.0)).await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn drag_blocks_missing_target_is_error() {
         let base = sample_snapshot();
-        assert_missing_target_is_error(&base, &drag_blocks(vec!["ghost".into()], 1.0, 1.0));
+        assert_missing_target_is_error(&base, &drag_blocks(vec!["ghost".into()], 1.0, 1.0)).await;
     }
 
     #[semio_framework_async_macros::async_test]
@@ -509,32 +507,32 @@ mod tests {
             font_weight: "normal".into(),
             align: "left".into(),
         };
-        assert_missing_target_is_error(&base, &duplicate_block("ghost".into(), block));
+        assert_missing_target_is_error(&base, &duplicate_block("ghost".into(), block)).await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn insert_table_row_missing_target_is_error() {
         let base = sample_snapshot();
-        assert_missing_target_is_error(&base, &insert_table_row("ghost".into()));
+        assert_missing_target_is_error(&base, &insert_table_row("ghost".into())).await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn remove_table_row_missing_target_is_error() {
         let base = sample_snapshot();
-        assert_missing_target_is_error(&base, &remove_table_row("ghost".into()));
+        assert_missing_target_is_error(&base, &remove_table_row("ghost".into())).await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn edit_block_text_missing_target_is_error() {
         let base = sample_snapshot();
-        assert_missing_target_is_error(&base, &edit_block_text("ghost".into(), Vec::new()));
+        assert_missing_target_is_error(&base, &edit_block_text("ghost".into(), Vec::new())).await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn replace_asset_payload_missing_target_is_error() {
         let base = sample_snapshot();
         let asset = NoteImageAsset { mime: "image/jpeg".into(), data: "e".into(), width: None, height: None };
-        assert_missing_target_is_error(&base, &replace_asset_payload("ghost".into(), asset));
+        assert_missing_target_is_error(&base, &replace_asset_payload("ghost".into(), asset)).await;
     }
 
     #[semio_framework_async_macros::async_test]
@@ -542,14 +540,14 @@ mod tests {
         let base = sample_snapshot();
         let asset = NoteImageAsset { mime: "image/png".into(), data: "d".into(), width: None, height: None };
         let outcome = create_asset("asset-1".into(), asset).diff(&base);
-        assert_fatal_never_applies(&outcome);
+        assert_fatal_never_applies(&outcome).await;
         assert_eq!(outcome.worst_level(), Some(protocol::Severity::Fatal));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn delete_asset_missing_target_is_error() {
         let base = sample_snapshot();
-        assert_missing_target_is_error(&base, &delete_asset("ghost".into()));
+        assert_missing_target_is_error(&base, &delete_asset("ghost".into())).await;
     }
     //#endregion 🔖️OutcomeLaws
 }

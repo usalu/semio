@@ -6,7 +6,6 @@ use crate::artifacts::note::schema::{block_bounds, block_id, block_locked, block
 use crate::artifacts::note::{NoteBlockNode, NoteCamera, NoteImageAsset, NoteSnapshot};
 use crate::editor::note::config::{NoteConfig, NoteConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
-use serde::Deserialize;
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️CanvasEvents
@@ -14,24 +13,24 @@ use semio_framework_value_derive::{FromValue, ToValue};
 /// `removeBlock`/`putAsset`/`setCamera`); content events diff into `NoteMutation`s via
 /// `note_ops_from_canvas_events`, `setCamera` diffs into a `NoteConfigMutation::SetCamera` instead
 /// (session-only view state, never a document field).
-#[derive(Clone, Debug, Deserialize)]
-#[serde(tag = "mutation")]
+#[derive(Clone, Debug, FromValue)]
+#[value(tag = "mutation")]
 enum NoteCanvasEvent {
-    #[serde(rename = "addBlock", rename_all = "camelCase")]
+    #[value(rename = "addBlock", rename_all = "camelCase")]
     AddBlock {
         block: NoteBlockNode,
-        #[serde(default)]
+        #[value(default)]
         parent_id: Option<String>,
-        #[serde(default)]
+        #[value(default)]
         index: Option<usize>,
     },
-    #[serde(rename = "updateBlock", rename_all = "camelCase")]
+    #[value(rename = "updateBlock", rename_all = "camelCase")]
     UpdateBlock { block_id: String, block: NoteBlockNode },
-    #[serde(rename = "removeBlock", rename_all = "camelCase")]
+    #[value(rename = "removeBlock", rename_all = "camelCase")]
     RemoveBlock { block_id: String },
-    #[serde(rename = "putAsset", rename_all = "camelCase")]
+    #[value(rename = "putAsset", rename_all = "camelCase")]
     PutAsset { key: String, asset: NoteImageAsset },
-    #[serde(rename = "setCamera", rename_all = "camelCase")]
+    #[value(rename = "setCamera", rename_all = "camelCase")]
     SetCamera { camera: NoteCamera },
 }
 
@@ -148,13 +147,13 @@ pub struct InkApplyEvents {
 // sends it) but is no longer acted on.
 pub fn handle(payload: &InkApplyEvents, doc: &ArtifactView<'_, NoteSnapshot>, _cfg: &ConfigView<'_, NoteConfig>, _ctx: &mut crate::editor::note::NoteDispatchCtx) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
     let document = doc.snapshot;
-    let events: Vec<NoteCanvasEvent> = serde_json::from_str(&payload.events_json).unwrap_or_default();
+    let events: Vec<NoteCanvasEvent> = dsl::os_pack::from_json_str(&payload.events_json).unwrap_or_default();
     let mut config_mutations = Vec::new();
     // 📷️ Camera rides in the same batch as content edits but never becomes a document operation —
     // diffs into a config operation instead.
     for event in &events {
         if let NoteCanvasEvent::SetCamera { camera } = event {
-            config_mutations.push(NoteConfigMutation::SetCamera { camera: camera.clone() });
+            config_mutations.push(NoteConfigMutation::SetCamera(crate::editor::note::config::SetCamera { camera: camera.clone() }));
         }
     }
     let operations = note_ops_from_canvas_events(document, &events);
@@ -187,16 +186,16 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn gesture_begin_live_commit_produces_single_undo_step() {
-        let mut app = note_app();
+        let mut app = note_app().await;
         let mut ids = crate::artifacts::note::schema::NoteIdOwner::new("ink-test", 0);
         let block = create_block_by_kind(&mut ids, "text", 10.0, 10.0);
         let new_id = block_id(&block).to_string();
 
         let begin_events = json!([
-            { "mutation": "addBlock", "block": block, "parentId": null, "index": null }
+            { "mutation": "addBlock", "block": serde_json::from_str::<serde_json::Value>(&dsl::os_pack::to_json_string(&block)).expect("block JSON oracle"), "parentId": null, "index": null }
         ])
         .to_string();
-        dispatch(&mut app, NoteCommand::InkApplyEvents(InkApplyEvents { events_json: begin_events, phase: "begin".into(), select_ids: Some(vec![new_id.clone()]) }));
+        dispatch(&mut app, NoteCommand::InkApplyEvents(InkApplyEvents { events_json: begin_events, phase: "begin".into(), select_ids: Some(vec![new_id.clone()]) })).await;
         assert_eq!(app.snapshot().expect("snapshot").blocks.len(), 1);
 
         for x in [20.0, 30.0, 40.0] {
@@ -205,29 +204,29 @@ mod tests {
                 *block_x = x;
             }
             let live_events = json!([
-                { "mutation": "updateBlock", "blockId": new_id, "block": moved }
+                { "mutation": "updateBlock", "blockId": new_id, "block": serde_json::from_str::<serde_json::Value>(&dsl::os_pack::to_json_string(&moved)).expect("moved JSON oracle") }
             ])
             .to_string();
-            dispatch(&mut app, NoteCommand::InkApplyEvents(InkApplyEvents { events_json: live_events, phase: "live".into(), select_ids: None }));
+            dispatch(&mut app, NoteCommand::InkApplyEvents(InkApplyEvents { events_json: live_events, phase: "live".into(), select_ids: None })).await;
         }
         assert_eq!(app.snapshot().expect("snapshot").blocks.len(), 1);
 
         // Commit with no further change emits no operation — the gesture is already recorded.
-        let commit = dispatch(&mut app, NoteCommand::InkApplyEvents(InkApplyEvents { events_json: "[]".into(), phase: "commit".into(), select_ids: None }));
+        let commit = dispatch(&mut app, NoteCommand::InkApplyEvents(InkApplyEvents { events_json: "[]".into(), phase: "commit".into(), select_ids: None })).await;
         assert!(commit.mutations.is_empty(), "a no-operation commit must not create an edit");
         assert_eq!(app.snapshot().expect("snapshot").blocks.len(), 1);
 
         // The whole begin+live gesture coalesced into ONE undoable edit.
-        app.handle_action("undo", None, &semio_framework_plugin::testkit::meta("local")).expect("undo");
+        app.handle_action("undo", None, &semio_framework_plugin::testkit::meta("local")).await.expect("undo");
         assert!(app.snapshot().expect("snapshot").blocks.is_empty(), "a single undo should erase the whole gesture");
     }
 
     #[semio_framework_async_macros::async_test]
     async fn gesture_with_no_changes_creates_no_edit() {
-        let mut app = note_app();
-        dispatch(&mut app, NoteCommand::InkApplyEvents(InkApplyEvents { events_json: "[]".into(), phase: "begin".into(), select_ids: None }));
-        dispatch(&mut app, NoteCommand::InkApplyEvents(InkApplyEvents { events_json: "[]".into(), phase: "commit".into(), select_ids: None }));
-        let undo = app.handle_action("undo", None, &semio_framework_plugin::testkit::meta("local")).expect("undo");
+        let mut app = note_app().await;
+        dispatch(&mut app, NoteCommand::InkApplyEvents(InkApplyEvents { events_json: "[]".into(), phase: "begin".into(), select_ids: None })).await;
+        dispatch(&mut app, NoteCommand::InkApplyEvents(InkApplyEvents { events_json: "[]".into(), phase: "commit".into(), select_ids: None })).await;
+        let undo = app.handle_action("undo", None, &semio_framework_plugin::testkit::meta("local")).await.expect("undo");
         assert!(undo.events.is_empty(), "no gesture edit should exist to undo");
     }
 }

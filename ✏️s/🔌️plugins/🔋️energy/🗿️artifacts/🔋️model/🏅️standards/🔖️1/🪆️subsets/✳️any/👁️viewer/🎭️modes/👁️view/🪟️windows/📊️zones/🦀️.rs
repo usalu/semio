@@ -46,7 +46,7 @@ mod tests {
     async fn render_lists_one_row_per_zone() {
         let document = EnergyModelSnapshot::default();
         let table = render(&document).expect("the table window assembles");
-        assert_eq!(table.key, WINDOW_KIND_ID);
+        assert_eq!(table.key.as_str(), WINDOW_KIND_ID);
         assert!(table.children.is_empty());
     }
 }

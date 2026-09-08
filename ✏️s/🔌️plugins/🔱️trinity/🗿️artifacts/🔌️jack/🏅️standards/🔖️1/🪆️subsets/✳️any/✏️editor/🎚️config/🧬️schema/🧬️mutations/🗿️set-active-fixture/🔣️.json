@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🧬️mutations/🗿️set-active-fixture",
+  "semanticKind": "set-active-fixture",
+  "displayName": "Set Active Fixture",
+  "emoji": "🗿️",
+  "aggregateVariant": "SetActiveFixture",
+  "payloadSchema": "🧬️.schema.json",
+  "textOpcode": "set-active-fixture",
+  "binaryTag": 2,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "apply-only",
+  "outcomeClasses": [
+    "applied"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "text",
+    "binary",
+    "json-schema"
+  ]
+}

@@ -16,8 +16,9 @@ use std::collections::{BTreeMap, VecDeque};
 
 //#region 🔖️Topology
 /// 🧭️ Sequence's step-DAG topology — see module doc for the Kahn's-algorithm derivation.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::ToValue, dsl::FromValue)]
 #[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
 pub struct SequenceTopology {
     pub topo_order: Vec<String>,
     pub depth: BTreeMap<String, u32>,
@@ -94,8 +95,8 @@ mod tests {
         SequenceEdge { id: id.into(), from: from.into(), to: to.into() }
     }
 
-    fn snapshot_from(steps: Vec<SequenceStep>, edges: Vec<SequenceEdge>) -> SequenceSnapshot {
-        SequenceSnapshot::from_fixture(SequenceFixture { schema: crate::artifacts::sequence::SEQUENCE_DOCUMENT_SCHEMA.into(), steps, edges })
+    fn snapshot_from(steps: Vec<SequenceStep>, edges: Vec<SequenceEdge>) -> neural_engine::ColdOwner<SequenceSnapshot> {
+        neural_engine::ColdOwner::new(SequenceSnapshot::from_fixture(SequenceFixture { schema: crate::artifacts::sequence::SEQUENCE_DOCUMENT_SCHEMA.into(), steps, edges }))
     }
 
     #[semio_framework_async_macros::async_test]

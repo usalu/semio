@@ -2,6 +2,8 @@
 /** 🖥️ `semio-framework-pack` task router: `bun ./📜️script.ts test [quick|long|exhaustive] [args…]`. */
 import { BundleScript, ScriptRouter, resolveTestLevel, runBundleScriptMain, runCargo } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 
+import { buildCargoArtifacts } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📜️script.ts";
+
 class TestScript extends BundleScript {
   run(segments: string[]): void {
     const { rest } = resolveTestLevel(segments);
@@ -10,8 +12,8 @@ class TestScript extends BundleScript {
 }
 
 class BuildScript extends BundleScript {
-  run(segments: string[]): void {
-    runCargo(["build", "-p", "semio-framework-pack", ...segments], this.repoRoot);
+  async run(segments: string[]): Promise<void> {
+    await buildCargoArtifacts(`${this.root}/Cargo.toml`, segments, this.repoRoot);
   }
 }
 

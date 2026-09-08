@@ -40,12 +40,18 @@ pub const LAYOUT_DIALECT: Dialect = Dialect { artifact_kind: "s.layout.layout", 
 /// (no `LinkResolver` seam, no mutation dispatch) — same documented-gap posture the migration recipe
 /// sanctions for any composed slot a plugin agent can't wire a live resolver into yet.
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
-#[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub struct LayoutDrawingChild {
     pub handle: store::ArtifactChild<SemioDrawingSnapshot>,
     pub content: SemioDrawingSnapshot,
+}
+
+impl semio_framework_schema::ChildFieldRefs for LayoutDrawingChild {
+    const MANY: bool = false;
+    fn visit_child_field<'a, V: semio_framework_schema::ChildRefVisitor<'a>>(&'a self, slot: &'static str, visitor: &mut V) -> Result<(), V::Error> {
+        visitor.step()?;
+        semio_framework_schema::ChildFieldRefs::visit_child_field(&self.handle, slot, visitor)
+    }
 }
 
 /// 🧪️ Content-addressed child-handle mint (mirrors cad's `cad_model_child_handle` exactly) — hashes
@@ -54,7 +60,7 @@ pub struct LayoutDrawingChild {
 /// different-format imports of otherwise-identical geometry don't collide on the same child id.
 pub fn background_drawing_child_handle(source_tag: &str, content: &SemioDrawingSnapshot) -> LayoutDrawingChild {
     use std::hash::{Hash, Hasher};
-    let content_json = serde_json::to_string(content).expect("SemioDrawingSnapshot is always JSON-serializable");
+    let content_json = dsl::os_pack::json::to_json_string(content);
     let mut hasher = std::collections::hash_map::DefaultHasher::new();
     content_json.hash(&mut hasher);
     let content_hash = hasher.finish();

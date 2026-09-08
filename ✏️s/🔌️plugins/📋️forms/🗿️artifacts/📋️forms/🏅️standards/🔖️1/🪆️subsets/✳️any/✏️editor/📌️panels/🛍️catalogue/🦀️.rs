@@ -3,7 +3,7 @@
 use crate::editor::forms::config::FormsConfig;
 use crate::editor::forms::terminology::FormsLabels;
 use crate::editor::forms::{catalogue_kinds, forms_action, parse_contributions};
-use semio_framework_plugin::{tree_item_with_action, tree_item_with_action_draggable, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL};
+use semio_framework_plugin::{tree_item_with_action, tree_item_with_action_draggable, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL};
 use dsl::os_pack::json::{object, Value};
 
 //#region 🔖️Constants
@@ -30,18 +30,18 @@ pub fn render(config: &FormsConfig, labels: &FormsLabels) -> semio_framework_plu
     for (kind, label, icon) in catalogue_kinds(&contributions, labels) {
         let args = crate::editor::forms::ui_value_map([("kind", crate::editor::forms::ui_value_text(&kind)?)])?;
         let drag_data = object([(FORMS_QUESTION_DRAG_MIME.to_string(), Value::String(object([("kind".to_string(), Value::String(kind.clone()))]).to_string()))]);
-        let mut item = tree_item_with_action_draggable(format!("forms-play-catalogue.{kind}"), Label::data(label), Some(kind.clone()), forms_action("addQuestion", Some(args))?, &drag_data)?;
+        let mut item = tree_item_with_action_draggable(format!("forms-play-catalogue.{kind}"), label, Some(kind.clone()), forms_action("addQuestion", Some(args))?, &drag_data)?;
         if let semio_framework_plugin::Component::TreeItem(props) = &mut item.component {
-            props.icon = Some(icon);
+            props.icon = Some(crate::editor::forms::ui_text_value(icon.as_str())?);
         }
         kind_items.try_push(item).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.catalogue.kinds", "fixed question-kind catalogue admission failed"))?;
     }
     let text_args = crate::editor::forms::ui_value_map([("kind", crate::editor::forms::ui_value_text("text")?)])?;
-    let mut add_step = tree_item_with_action("forms-play-catalogue.add-step", labels.add_step, None, forms_action("addStep", None)?)?;
+    let mut add_step = tree_item_with_action("forms-play-catalogue.add-step", labels.add_step.as_str(), None, forms_action("addStep", None)?)?;
     if let semio_framework_plugin::Component::TreeItem(props) = &mut add_step.component {
         props.icon = Some(semio_framework_plugin::UiText::try_from_str("plus").ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.catalogue.icon", "fixed catalogue icon admission failed"))?);
     }
-    let mut add_question = tree_item_with_action("forms-play-catalogue.add-question", labels.add_text_question, None, forms_action("addQuestion", Some(text_args))?)?;
+    let mut add_question = tree_item_with_action("forms-play-catalogue.add-question", labels.add_text_question.as_str(), None, forms_action("addQuestion", Some(text_args))?)?;
     if let semio_framework_plugin::Component::TreeItem(props) = &mut add_question.component {
         props.icon = Some(semio_framework_plugin::UiText::try_from_str("type").ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.catalogue.icon", "fixed catalogue icon admission failed"))?);
     }
@@ -49,8 +49,8 @@ pub fn render(config: &FormsConfig, labels: &FormsLabels) -> semio_framework_plu
     action_items.try_push(add_step).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.catalogue.actions", "fixed catalogue action admission failed"))?;
     action_items.try_push(add_question).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.catalogue.actions", "fixed catalogue action admission failed"))?;
     PanelTreeBuilder::new("forms-play-catalogue")?
-        .section("forms-play-catalogue.kinds", Some(Label::data(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL)), true, kind_items)?
-        .section("forms-play-catalogue.actions", Some(labels.actions.into()), true, action_items)?
+        .section("forms-play-catalogue.kinds", Some(crate::editor::forms::ui_label(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL)?), true, kind_items)?
+        .section("forms-play-catalogue.actions", Some(crate::editor::forms::ui_label(labels.actions.as_str())?), true, action_items)?
         .build()
 }
 //#endregion 🔖️Render
@@ -64,16 +64,16 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn catalogue_lists_question_kinds() {
-        let mut app = forms_app();
-        let json = render_body(&mut app, BODY_CATALOGUE);
+        let mut app = forms_app().await;
+        let json = render_body(&mut app, BODY_CATALOGUE).await;
         assert!(json.contains("forms-play-catalogue.text"));
         assert!(json.contains("forms-play-catalogue.add-step"));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn catalogue_items_export_the_question_kind_drag_mime() {
-        let mut app = forms_app();
-        let json = render_body(&mut app, BODY_CATALOGUE);
+        let mut app = forms_app().await;
+        let json = render_body(&mut app, BODY_CATALOGUE).await;
         assert!(json.contains(FORMS_QUESTION_DRAG_MIME));
         assert!(json.contains(r#""draggable":true"#) || json.contains(r#""draggable": true"#));
     }

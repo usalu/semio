@@ -15,7 +15,7 @@
 
 use crate::artifacts::equation::standards::v1::subsets::graph::schema::mutations::disconnect_nodes::DisconnectNodes;
 use crate::artifacts::equation::{equation_graph, EquationDiff, EquationMutation, EquationSnapshot};
-use semio_framework_os_kernel::{FromValue, ToValue};
+use semio_framework_os_kernel::ToValue;
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("📸️snapshot/➡️after/🔣️.json");

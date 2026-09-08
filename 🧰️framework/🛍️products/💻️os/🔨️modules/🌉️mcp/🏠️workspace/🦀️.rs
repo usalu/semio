@@ -2213,6 +2213,10 @@ mod quick {
         let selected = inference_list.meta.as_ref().expect("ready tools/list selection metadata");
         assert_eq!(selected["semio"]["hubSelectedPackages"][0]["package"]["pluginId"], "gis");
         assert_ne!(selected["semio"]["hubSelectedPackages"][0]["package"]["componentSha256"], "");
+        assert_eq!(
+            selected["semio"]["hubSelectedPackages"][0]["package"]["executionProtocol"]["appChannelVersion"],
+            semio_framework_os_kernel::os_spr::CHANNEL_VERSION
+        );
         let inference_result = server.tools.call("inference_list", serde_json::json!({})).expect("inference_list registered");
         assert!(!inference_result.is_error);
         assert_eq!(inference_result.structured_content.as_ref().expect("inference roster")["declared"][0]["owner"], "gis");

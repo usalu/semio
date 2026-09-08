@@ -6,7 +6,7 @@
 
 ---
 
-Write an indepthh refactor plan for our monorepo (find all violations, come up with a new mechanisms if necessary, everything end to end, etc).
+Write an indepth refactor plan for our monorepo (find all violations, come up with new mechanisms if necessary, everything end to end, etc).
 Use the latest wip ueli branch: github.com/usalu/semio/tree/🐙ueli/⛳wip at this commit:
 
 ---
@@ -88,12 +88,10 @@ Use a single Opus 5 agent for creating the plan, a single Cursor Grok 4.5 High a
 Exhaustively plan for work fleets of maximum possible parallel agents.
 Use the main chat with GPT 5.6 Sol Ultra for creating the plan, then use the main chat with GPT 5.6 Sol Extra-High for main plan coordination and use multiple GPT 5.6 Terra Extra-High agents for task execution and use multiple GPT 5.6 Luna Extra-High agents for read-only explorations and audits.
 
-
 ---
 
 XXX is extremly adhoc. Make sure it has absolutely clean mechanisms, exhaustively feature complete and is battle-tested.
 Everything end to end.
-
 
 # 🔍️ Web
 
@@ -113,7 +111,7 @@ should be:
 
 ---
 
-The io mechanism for 
+The io mechanism for
 
 ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📄txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💾️binary/📡️component.protocol.semio
 
@@ -144,7 +142,7 @@ We want to write a complex brep kernel and we need test files for it. We want ST
 
 ---
 
-Persisted state is event sourced/materialized/projected   
+Persisted state is event sourced/materialized/projected
 
 ---
 
@@ -154,17 +152,17 @@ violations e.g.
 
 ---
 
-Our testing 
-use [FRAME3DD](https://sourceforge.net/p/frame3dd/code/HEAD/tree/trunk/) to 
+Our testing
+use [FRAME3DD](https://sourceforge.net/p/frame3dd/code/HEAD/tree/trunk/) to
 
 ---
 
 The compose technology must be entirely migrated into our new os, s, artifact, app, mutation, test, etc systems.
-Make sure all algorithms are correctly 
+Make sure all algorithms are correctly
 
 ---
 
-Every artifact must have different viewers: snapshot, 
+Every artifact must have different viewers: snapshot,
 
 ---
 
@@ -186,9 +184,9 @@ The current artifact importers and exporters are extermly adhoc.
 There must be a complete mesh of handcrafted subset to subset importers and exporters.
 Every artifact standard subset is completly independant.
 If there is code that is shared than it must use modules to share code at the lowest level where it makes sense.
-violations are e.g. 
+violations are e.g.
 /Users/ueli/Documents/semio/✏️s/🔌️plugins/🖨️
-raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📄️pdf/🔖️1.4/✳️any/🦀️component.rs where all the serializers and exporters are not 
+raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/📄️pdf/🔖️1.4/✳️any/🦀️component.rs where all the serializers and exporters are not
 
 ---
 
@@ -197,6 +195,7 @@ We want to develop a proper testing setup and use it to refactor our entire repo
 Our repository is a polyglot, multi-implementation (the same code will be reimplemented in different languages) that uses a language agnostic domain-driven folder and file taxonomy tree and the tests must follow the same tree style.
 Our long-term goal is to be dependency free at runtime and use dependencies only for testing our own implementations.
 The new way of developing features should be:
+
 1. Research if an existing library already has support for this feature
 2. If not, find the best library for this feature
 3. Create a test that uses the library to produce the desired output
@@ -229,8 +228,8 @@ How would you architect an async multithreaded runtime with one main pure ui thr
 
 We want to make our software LLM-first.
 What architectural changes do you recommend?
-We have a plugin-based (which have again extensions) virtual operating system. 
-We want to design a single MCP-Server that assists in every part (authoring artifacts, remote controlling the ui, etc). 
+We have a plugin-based (which have again extensions) virtual operating system.
+We want to design a single MCP-Server that assists in every part (authoring artifacts, remote controlling the ui, etc).
 
 ---
 
@@ -261,14 +260,15 @@ Make an exhaustive bullet list tree we can use to implement a rust crate.
 
 ---
 
- We want to develop a database for efficiently storing, querying, resolving conflicts, etc for collaborative editing of large documents in rust.
+We want to develop a database for efficiently storing, querying, resolving conflicts, etc for collaborative editing of large documents in rust.
 We dont have CRUDs but instead use CQRS with event sourcing because we have distributed collaborative local first editing on documents. The document isnt shared but just stored once as initial document and then the current state is materialized through projection. Every document has a diff datastructure. Every command yields a diff. Every command implements inverse command calls.
 We have git like system for version control but addtionally with real time preview of the commands of the others (but there is only one tree of commands saved on the server).
 We want to develop our own database managment system.
 Assumptions:
+
 - Not more than a few hundrend authors edit and read in realtime
 - Read doesnt need to be in real time and based on commits but several thousands can read at the same time
-What architecture do you recommend? 
+  What architecture do you recommend?
 
 ---
 
@@ -578,8 +578,21 @@ TODO: Start new project `elements` that offers domain-agnostic primitives (such 
 
 ---
 
-Every test must follow the convention `<parent>/🧪️tests/<test-name>/<implementation>` 
-Get rid of all legacy (such as *.test.* pattern etc)
+fixtures should only hold pure fixtures and tests should hold tests,
+
+✏️s/🔌️plugins/🌍️gis/🧪️fixtures/🌉️component-cold-map-patch/🦀️.rs
+
+---
+
+Make sure to properly abstract everything.
+
+e.g. violations such as locale that is a global os wide setting and not jack specific
+✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🧬️mutations/🗣️set-locale/🦀️.rs
+
+---
+
+Every test must follow the convention `<parent>/🧪️tests/<test-name>/<implementation>`
+Get rid of all legacy (such as _.test._ pattern etc)
 e.g. violations
 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/📦️packages/🟦️typescript/🎯️targets/⚛️react/🏛️space-administration.test.tsx
 etc
@@ -604,7 +617,6 @@ e.g. violations
 🌎️hub/🗿️artifact-authority/🗂️chunk-cas/🦀️.rs # generic and not unique among siblings
 🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust/tests/🌾flatten-with-skip.rs # missing emoji
 
-
 ---
 
 Under packages should only be the package declaration but no actual implementation.
@@ -619,8 +631,6 @@ Also some artifacts are duplicated, make sure all semio scoped artifacts are jus
 e.g.
 ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✳️presentation/
 ---
-
-
 
 ---
 
@@ -647,10 +657,9 @@ e.g.
 
 Still a huge amount of open/closed princinple violations. This means e.g. s could be deleted and no code in framework should be out of date.
 violations
-e.g. /Users/ueli/Documents/semio/📜️script.ts wrongly depends on individual implementations (such as plugins, etc), has policies that should be local and should only have repo wide code, no specific 
+e.g. /Users/ueli/Documents/semio/📜️script.ts wrongly depends on individual implementations (such as plugins, etc), has policies that should be local and should only have repo wide code, no specific
 /Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📇️registry/🔒️migration.json wrongly depends on s
 etc.
-
 
 ---
 
@@ -672,7 +681,6 @@ The goal of the repo is to have 0 external dependencies, so all frameworks can b
 
 `<name>.<serialization-artifact>...<kind>.<subset>.<standard>.<artifact>(.<seralization-subset>.<serialization-standard>)?`
 
-
 `nakagin-capsule-tower-flat.snapshot.puzzle5d.v1.semio.complete.2-0.glb` # semio puzzle5d artifact exported as glb 2.0
 `nakagin-capsule-tower-flat.snapshot.puzzle5d.v1.semio.dtv.x4.ifc` # semio puzzle5d artifact exported as ifc 4x3 design transfer view
 `nakagin-capsule-tower-flat.snapshot.puzzle5d.v1.semio.cv.2x3.ifc` # semio puzzle5d artifact exported as ifc 2x3 coordination view
@@ -680,7 +688,6 @@ The goal of the repo is to have 0 external dependencies, so all frameworks can b
 `33-projektetage.presentation.v1.semio.h-264.isobmff.mp4` # semio presentation artifact exported as isobmff video h264 codec
 
 `bachelor-thesis.a.2-0.pdf` # pdf 2.0/a archive artifact
-
 
 ---
 
@@ -692,7 +699,6 @@ The goal of the repo is to have 0 external dependencies, so all frameworks can b
 `nakagin-capsule-tower-flat.proto.2024.*.snapshot.*.v1.puzzle.semio` # uses defined protobuf schema with 2024 version
 `nakagin-capsule-tower-flat.ifc.4x3.dtv.snapshot.*.v1.puzzle.semio` # uses defined protobuf schema with 2024 version
 `nakagin-capsule-tower-flat.ifc.2x3.cv.snapshot.*.v1.puzzle.semio` # uses defined protobuf schema with 2024 version
-
 
 ---
 
@@ -823,7 +829,7 @@ Operations have a config with parameters
 
 e.g. puzzle 3d fill is an interaction.
 stochastic-extend is a mutation that takes a number, a distribution, a seed and then adds the number of objects to the aggregation depending on the distribution.
-The fill interaction has a count slider, a seed stepper, a distribution tree. 
+The fill interaction has a count slider, a seed stepper, a distribution tree.
 When the slider is increased, then the stochastic-extend mutation is called with the new count, the same distribution and the same seed. When the slider is decreased, then the number for stochastic-extend is decreased. The special part is that when the slider is increased again, then a new stochastic-extend is started with for the remaining new objects. This achieves the experience that when the slider is decreased and ramped up again, then the new objects are always
 
 ---
@@ -832,7 +838,7 @@ The current goal of where all apps are combined into workflows nodes, remain non
 Instead we adjusted the design:
 We introduce operations.
 Operations are a new level in between edits and mutations (An edit has operations, an operation yields mutations, every mutation yields a diff, hence an operation transitiviely also yields diffs which can be merged into a total operation diff)
-An operation takes an artifact and parameters as an input and returns mutations for that artifact. 
+An operation takes an artifact and parameters as an input and returns mutations for that artifact.
 Nodes in a workflow are no longer apps but operations.
 Operations have a config with parameters
 Operations are state machines (depending on some parameters others
@@ -866,7 +872,7 @@ Operations are state machines (depending on some parameters others
           <assetfile>
         tests
           component.rs
-        
+
 ```
 
 ---
@@ -896,7 +902,7 @@ The user can open artifacts in different viewers and editors and configure defau
         component.ts
         …
     …
-        
+
 ```
 
 ---
@@ -938,11 +944,11 @@ Achieve the following end to end:
   - users that can create and share spaces.
   - spaces are persisted in db.
   - space share presence inside an app with the same artifact peer to peer between all active users.
-  - 
+  -
 
 ---
 
-Collaboration in spaces is 
+Collaboration in spaces is
 
 ---
 
@@ -963,6 +969,7 @@ Make sure that the mechanism is fullblown, automatically has support for declara
 ---
 
 The following architecture must be reached:
+
 - Every artifact has a schema, snapshot, diff, mutations, inferences, io system.
 - Every artifact is tracked over vcs.
 - Every artifact has children artifacts that have their own version history and referenced artifacts that also have their own version history.
@@ -990,15 +997,14 @@ Every mutation defines read dependencies and write dependencies on the schema (e
 First automatic compaction is done by the engine and then the manual compaction for each artifact kind is done.
 
 Automatic compaction e.g. includes:
-- When then the diff is empty, then the mutation can be skipped (e.g. renaming something with the name that it already has, flattening a design twice, etc)
-- 
 
+- When then the diff is empty, then the mutation can be skipped (e.g. renaming something with the name that it already has, flattening a design twice, etc)
+-
 
 Every artifact must define inside schema: `compaction/component.rs` that receives a list of mutations and produces a compacted list of mutations.
 
 e.g. when a mutation only affects a static subset of the schema and rerunning the mutation again just overwrites the same data, then only the last mutation wins, as long as no other mutation needed that data in between.
 an
-
 
 ```
 <artifact>
@@ -1029,16 +1035,14 @@ an
           <assetfile>
         tests
           component.rs
-        
+
 ```
 
 ---
 
-
-
 ---
 
-The process models need to be 
+The process models need to be
 
 ---
 
@@ -1076,8 +1080,6 @@ s
 ```
 
 ---
-
-
 
 ---
 
@@ -1318,13 +1320,13 @@ CC5 (Faceted B-Rep): Includes CC1 plus faceted boundary representation (models m
 CC6 (Advanced B-Rep): Includes CC1 plus advanced boundary representation. This is the standard solid 3D model. When you export a standard, solid STEP file from CAD software like SolidWorks, Inventor, or NX, you are usually utilizing CC6.
 
 e.g. ifc 2x3 has cv20, sav, cobie subsets.
-Coordination View 2.0 (CV 2.0)	The industry standard for coordinating 3D models between architectural, structural, and MEP (mechanical, electrical, plumbing) disciplines. It focuses heavily on spatial geometry.
-Structural Analysis View	Transfers analytical structural models (nodes, loads, and connections) to structural engineering and calculation software.
+Coordination View 2.0 (CV 2.0) The industry standard for coordinating 3D models between architectural, structural, and MEP (mechanical, electrical, plumbing) disciplines. It focuses heavily on spatial geometry.
+Structural Analysis View Transfers analytical structural models (nodes, loads, and connections) to structural engineering and calculation software.
 Basic FM Handover (COBie)
 
 e.g. ifc 4 has rv, dtv subsets.
-Reference View (RV)	Designed for read-only coordination (like clash detection). It simplifies complex geometries into basic shapes. Because the model cannot be easily reverse-engineered, it protects the author's intellectual property.
-Design Transfer View (DTV)	Designed for a higher-fidelity, one-way handover. It attempts to retain parametric data (like an extruded wall) so the receiving party can import and edit the elements in their own software.
+Reference View (RV) Designed for read-only coordination (like clash detection). It simplifies complex geometries into basic shapes. Because the model cannot be easily reverse-engineered, it protects the author's intellectual property.
+Design Transfer View (DTV) Designed for a higher-fidelity, one-way handover. It attempts to retain parametric data (like an extruded wall) so the receiving party can import and edit the elements in their own software.
 
 etc.
 
@@ -1332,6 +1334,7 @@ etc.
 
 The current codebase doesnt follow clean architecture.
 e.g. the open closed principle is extensively violated a lot such as:
+
 - s is an os. os shouldnt depend or know anything from s.
   - 🧰️framework/🔨️modules/🔺️mesh/🦀️component.rs implements plenty of stdio functionality which is part of s studio plugin.
   - wrong registrations such as 🧰️framework/🔨️modules/🚪️io/📇️registry/📇️catalog.json
@@ -1356,6 +1359,7 @@ The goal is to have a an artifact system where artifacts can evolve, adhere to e
 Everything must be thought together (schema, standards, subsets, version control, multi-user, etc)
 You must use existing files for testing (recreate them by using the anaylzer and then the builder).
 Here a list of examples (copy them over to the artifact example assets folder):
+
 - ♻️mit-bestand/🎤️präsentation/📅️33.projektetage/🌐️public/📄️bachelor-thesis-ueli-saluz.pdf
 - temp/architectural_example.dwg
 - 🧰️framework/🔨️modules/🖼️assets/🖼️images/🖼️dancing.gif
@@ -1500,7 +1504,6 @@ Existing file types are now also just artifacts. A existing wkt such as gltf use
 Bundle all well known files types into a stdio plugin that has no apps and only defines artifacts.
 All artifacts must have a builder and a decomposer which is the main utility that is usable by other plugins.
 
-
 ```
 s
   plugins
@@ -1594,6 +1597,7 @@ s
 ---
 
 Every artifact has a text and binary representation.
+
 ```
 <artifact>
   text
@@ -1671,7 +1675,6 @@ All mutations construct from their arguments a diff.
       …
   …
 ```
-
 
 ---
 
@@ -2054,7 +2057,8 @@ plugin
 
 ---
 
-Every artifact must define diff, sqlite, 
+Every artifact must define diff, sqlite,
+
 ```
 <artifact>
   diff
@@ -2126,7 +2130,6 @@ Make sure os/s follows this architecture:
 
 every plugin registers artifacts, apps
 
-
 ---
 
 Design proper error handeling, boundaries, strategies, mechanisms, etc
@@ -2179,10 +2182,11 @@ Everything must be 100% app-specific, domain driven, token efficient, streaming 
 ---
 
 Every single app must be
+
 - non destructive
 - have configuration (every ui interaction changes the configuration)
 - have a ui that only displays the results from headless engine
-Every app is instiatable as a node as part of a workflow. When a node is opened and ui interaction happens then the configuration is changed and saved as part of the workflow.
+  Every app is instiatable as a node as part of a workflow. When a node is opened and ui interaction happens then the configuration is changed and saved as part of the workflow.
 
 ---
 
@@ -2275,7 +2279,7 @@ Add Variation Selector-16 (U+FE0F) to all text style emojis in the codebase. For
                             <package-tree*> e.g. packages in rust, modules in python, …
                             📦️.<extension> e.g. 📦️.rs for lib.rs or main.rs, 📦️.tsx for index.tsx, …
             🎛️ # app
-                <app> 
+                <app>
                     🔨️ # module
                         <module> e.g. engine, dsl, op, pack, protocol, ui, …
                             ⚡️ # implementation
@@ -2351,7 +2355,7 @@ Add Variation Selector-16 (U+FE0F) to all text style emojis in the codebase. For
                             <package-tree*> e.g. packages in rust, modules in python, …
                             📦️.<extension> e.g. 📦️.rs for lib.rs or main.rs, 📦️.tsx for index.tsx, …
             🎛️ # app
-                <app> 
+                <app>
                     🔨️ # module
                         <module> e.g. engine, dsl, op, pack, protocol, ui, …
                             ⚡️ # implementation
@@ -2377,6 +2381,7 @@ Show the name of the command and the op as secondary label
 The final goal for s is to create, share and store any kind of design knowledge.
 This involves generalizing/augmenting/changing/refactoring the current system which yet is fragmented but it must be 100% unified.
 The target is:
+
 - space (collections, users)
   - collection (a tree of folders with artifacts - Exportable and importable as zip file)
     - artifact (puzzles, meshes, breps, layouts, flows, files, workflows, etc - Exportable and importable as files)
@@ -2406,6 +2411,7 @@ End to end for a workforce of agents.
 ---
 
 The target architecture is:
+
 - app defines
   - document
     - entities
@@ -2418,9 +2424,9 @@ The target architecture is:
     - op (maximum token efficient and consistent textual representation of a command)
     - operations (yield diff)
       - inverse (calls to other operations to invert the operation)
-The apps use store for local-first in-memory state managment with optional hot-swappable backbone.
-Make sure to identify all gaps and plan all mechanisms and refactor to achieve this architecture.
-End to end for a workforce of agents
+        The apps use store for local-first in-memory state managment with optional hot-swappable backbone.
+        Make sure to identify all gaps and plan all mechanisms and refactor to achieve this architecture.
+        End to end for a workforce of agents
 
 ---
 
@@ -2471,7 +2477,7 @@ Plan clean mechanisms and refactor all technologies. Then use a workforce of par
 
 ---
 
-Every dsl must be maximum token/parser efficient (implicit dont repeat schema, dont add additional ascii art characters e.g. turtle graphics is a good example, allow for verbose syntax but also prefer implicit, etc) and intuitive to the domain, make existing languages subset (e.g. svg paths). Make sure to optimize layout for lazy loading (streaming support) in order to display and access data before the complete document is loaded. Use all enhaced strategies such as Structure of Arrays (SoA) for data optimized processing. 
+Every dsl must be maximum token/parser efficient (implicit dont repeat schema, dont add additional ascii art characters e.g. turtle graphics is a good example, allow for verbose syntax but also prefer implicit, etc) and intuitive to the domain, make existing languages subset (e.g. svg paths). Make sure to optimize layout for lazy loading (streaming support) in order to display and access data before the complete document is loaded. Use all enhaced strategies such as Structure of Arrays (SoA) for data optimized processing.
 Repeat patterns across dsls:
 : for typting
 camelCase for names
@@ -2487,20 +2493,21 @@ Plan clean mechanisms and refactor all technologies. Then use a workforce of par
 ---
 
 All technologies should be split/generalized/augmented into these parts:
+
 - library
-	- stateful (not rebuilding complete document but initial document with operations)
-	- vcs integrated (implemented with commands/operations/diffs, every operation has inverse operation, every operation yields diff, diffs are applied centrally, etc)
+  - stateful (not rebuilding complete document but initial document with operations)
+  - vcs integrated (implemented with commands/operations/diffs, every operation has inverse operation, every operation yields diff, diffs are applied centrally, etc)
 - dsl (handcrafted textual representation for a document with custom syntax, etc)
 - op (handcrafted textual representations for a commands with custom syntax, etc)
 - ui
-	- uses the library under hood
-	- use dsl to initially load the document
-	- all ui actions trigger ops
-Every op is on a single line.
-The vcs stores the initial document in the dsl and then ops.
-Add compile time validation, checks etc for both dsl and ops.
-Develop clean mechanisms, refactor everything, work end to end.
-Plan workforce of parallel agents to achieve this.
+  - uses the library under hood
+  - use dsl to initially load the document
+  - all ui actions trigger ops
+    Every op is on a single line.
+    The vcs stores the initial document in the dsl and then ops.
+    Add compile time validation, checks etc for both dsl and ops.
+    Develop clean mechanisms, refactor everything, work end to end.
+    Plan workforce of parallel agents to achieve this.
 
 ---
 
@@ -2739,7 +2746,7 @@ Per window stack only one tab can be active.
 
 ui: On all action icons, drag handles, etc where there is no label, when hovering over them they should show a tooltip. The tooltip should show the hotkey if there is one.
 e.g. drag handle:
-Click and hold left click to drag `<name>` 
+Click and hold left click to drag `<name>`
 e.g. Click and hold left click to drag Perspective Window
 
 ---
@@ -2758,7 +2765,7 @@ e.g. buttons for hide, etc on tree items currently only appear on hover but only
 
 ---
 
-All context menu items must be enumerated and while the context menu is open, the number keyboard and the arrows can be used to hover over options, when pressing spacebar or enter it is equivalent to clicking the option. 
+All context menu items must be enumerated and while the context menu is open, the number keyboard and the arrows can be used to hover over options, when pressing spacebar or enter it is equivalent to clicking the option.
 For nested context menus, left and right arrow keys also work.
 Make wasd also work.
 
@@ -2769,21 +2776,22 @@ The ui state must be encoded in a single shared byte buffer between the framewor
 ---
 
 All ui elements are on different levels
+
 1. base
 2. windows
 3. panes
 4. panels
 5. dialog (such as introdction or tutorial steps)
 6. context menu
-All ui elements must work on all of these levels.
-The background color for every level turns slightely darker in light mode and lighter in dark mode. The glassy effect also increases for every level.
-Make sure that the complete ui is enforcing this, has clean mechanisms, everything is properly refactored and no element asigns e.g. filling or glassy manually but instead inherits everything from the level they are in.
-First plan proper mechanisms and then refactor every app to use it. Use a workforce of parallel agents /workflows 
+   All ui elements must work on all of these levels.
+   The background color for every level turns slightely darker in light mode and lighter in dark mode. The glassy effect also increases for every level.
+   Make sure that the complete ui is enforcing this, has clean mechanisms, everything is properly refactored and no element asigns e.g. filling or glassy manually but instead inherits everything from the level they are in.
+   First plan proper mechanisms and then refactor every app to use it. Use a workforce of parallel agents /workflows
 
 ---
 
 Merge expertise and compact into a new configuration mechanism: driver
-In the default drivers all the ui elements must show all the interaction possibilities such as drag handles and fully communicate what they are such as labels. 
+In the default drivers all the ui elements must show all the interaction possibilities such as drag handles and fully communicate what they are such as labels.
 In the compact driver it is assumed that the user fully knows the ui and the mechanisms. Everything is rendered full and ui elements only appear when the user goes with the cursor in the region (e.g. the navbar appears on the top once the cursor is there and disappears again when the cursor leaves. same for footer. same for pane toggles, same for gumball, etc Further all labels are hidden and only the icons are shown. e.g. no drag handles are shown and the complete ui element is draggable
 Introduce configurable driver where everything can be changed and add these two drivers. allow the user to create there own driver.
 
@@ -2794,7 +2802,7 @@ During interaction demonstration the cursor is muted and a new cursor appears.
 The demonstration only shows when the cursor is not moving. If the user moves the cursor during the demonstration, the demonstration stops. If the user stops moving the cursor and the step is still active, show the demonstration again from the beginning.
 e.g. mouse left click, mouse right click, mouse click and drag, etc
 Show correct mouse cursors, etc
-e.g. for drag and drop allow for id based definition, absolute coordinates and normalized coordinates (such as  0-1 for windows) both screen coordinate system and local coordinate system (such as 2d and 3d)
+e.g. for drag and drop allow for id based definition, absolute coordinates and normalized coordinates (such as 0-1 for windows) both screen coordinate system and local coordinate system (such as 2d and 3d)
 
 ---
 
@@ -2803,7 +2811,7 @@ All ui elements share this and must render a visually distinguishable state for 
 A ui element can be in one of three states. The status state has 4 states. hover and selected are always possible and must be composable.
 
 state: introducing | status (default) | hidden
-status: idle (default), loading, waiting, finished, 
+status: idle (default), loading, waiting, finished,
 hover: boolean
 selected: Boolean
 
@@ -2945,26 +2953,26 @@ Refactor everything
 ---
 
 Parallel
- Orthographic
-  Plan
-  Top
-  Front
-  Back
-  Left
-  Right
- Axonometric
-  Isometric
-  Dimetric
-  Trimetric
- Oblique
-  Cabinet
-  Cavalier
-  Military
+Orthographic
+Plan
+Top
+Front
+Back
+Left
+Right
+Axonometric
+Isometric
+Dimetric
+Trimetric
+Oblique
+Cabinet
+Cavalier
+Military
 Perspective
- 1-point
- 2-point
- 3-point
- Curvilinear
+1-point
+2-point
+3-point
+Curvilinear
 Make sure all angle values, etc are adjustable
 Implement it general for infinite worlds so that puzzle 3d, cad, etc have it
 
@@ -2977,10 +2985,12 @@ Implement it general for infinite worlds so that puzzle 3d, cad, etc have it
 The tree of the fill tool is not correctly structured and rendered.
 The verbindungspunkte tree section has too large font and wrongly sits on the right.
 The following items should be clean:
+
 - <Count Slider>
 - Distribution
-	- <ObjectKind with Slider>
-		- <VortexKind with Slider>
+  - <ObjectKind with Slider>
+      - <VortexKind with Slider>
+
 Make sure that the distributions are correct. The slider of the vortex kind is the probability of the object kind times the probability of the vortex kind.
 Make sure that all object kinds add to 1 and all vortex kind add to one.
 e.g. when the object kind is increased then automatically the vortex kind slider raise proportionally.
@@ -12027,7 +12037,7 @@ The workshop offers different machines.
 The different machines has different capabilities.
 Every capability can be turned into a step.
 Make sure the extension mechanism are clean and feature complete.
-Complete the extensions with exhaustive machines, capabilities, etc 
+Complete the extensions with exhaustive machines, capabilities, etc
 
 ---
 
@@ -12043,7 +12053,7 @@ Analyze in depth where it comes from and plan exhaustive advances extensions/ref
 ---
 
 Extend the demonstrator from a single long line of 3 apps into a grid of 2 rows with 3 columns.
-Basically extend the existing 
+Basically extend the existing
 The new row consists of: Aussuchen (sourcing), Bearbeiten (process), Verfolgen (gis 2d)
 Add the same effect which currently just works with x coordinate of cursor into 2d and do the same along the oter axis.
 
@@ -12058,7 +12068,6 @@ Aggregator (branded version of puzzle 3d)
 The main page of the demonstrator (not considering the introduction) is a strip of all three demonstrators next to each other (display height and three times the display width). There is a glass overlay with the three names. The x coordinate of the mouse is used to scroll horizontally between the apps. When hovered over the name the demonstrator strip, the part is untinted. When clicking on the name then the site jumps to e.g. demonstrator.entwerfen.mit-bestand.de/generator with the actual app. The introdcution needs to be split into the general part and the app specific part.
 
 ---
-
 
 ### 🟨️33.projekttage
 

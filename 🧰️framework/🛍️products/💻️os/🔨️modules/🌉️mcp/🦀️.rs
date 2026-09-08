@@ -685,6 +685,9 @@ fn workspace_tool_catalog_meta(workspace: &HeadlessWorkspace) -> Option<serde_js
                     "componentSha256": selection.lease.package.component_sha256,
                     "componentBlake3": selection.lease.package.component_blake3,
                     "descriptorByteSha256": selection.lease.package.descriptor_byte_sha256,
+                    "executionProtocol": {
+                        "appChannelVersion": selection.lease.package.execution_protocol.app_channel_version,
+                    },
                 }
             })).collect::<Vec<_>>()
         }

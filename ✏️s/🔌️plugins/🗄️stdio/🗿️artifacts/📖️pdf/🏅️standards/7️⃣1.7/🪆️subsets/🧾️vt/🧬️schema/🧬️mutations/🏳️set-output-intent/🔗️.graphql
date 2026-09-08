@@ -1,0 +1,4 @@
+# 🏳️ Direct set-output-intent GraphQL payload.
+input SetOutputIntentMutationInput {
+  identifier: String!
+}

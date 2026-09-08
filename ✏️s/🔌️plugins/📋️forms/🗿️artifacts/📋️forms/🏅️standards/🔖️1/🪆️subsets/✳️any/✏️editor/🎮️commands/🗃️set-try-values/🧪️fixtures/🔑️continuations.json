@@ -1,0 +1,110 @@
+[
+  {
+    "name": "exact",
+    "left": {
+      "appId": "1",
+      "documentId": "doc-a",
+      "operationId": "11",
+      "generation": 7,
+      "baseRevision": "0000000000000000000000000000000000000000000000000000000000000000"
+    },
+    "right": {
+      "appId": "1",
+      "documentId": "doc-a",
+      "operationId": "11",
+      "generation": 7,
+      "baseRevision": "0000000000000000000000000000000000000000000000000000000000000000"
+    },
+    "same": true
+  },
+  {
+    "name": "appId",
+    "left": {
+      "appId": "1",
+      "documentId": "doc-a",
+      "operationId": "11",
+      "generation": 7,
+      "baseRevision": "0000000000000000000000000000000000000000000000000000000000000000"
+    },
+    "right": {
+      "appId": "2",
+      "documentId": "doc-a",
+      "operationId": "11",
+      "generation": 7,
+      "baseRevision": "0000000000000000000000000000000000000000000000000000000000000000"
+    },
+    "same": false
+  },
+  {
+    "name": "documentId",
+    "left": {
+      "appId": "1",
+      "documentId": "doc-a",
+      "operationId": "11",
+      "generation": 7,
+      "baseRevision": "0000000000000000000000000000000000000000000000000000000000000000"
+    },
+    "right": {
+      "appId": "1",
+      "documentId": "doc-b",
+      "operationId": "11",
+      "generation": 7,
+      "baseRevision": "0000000000000000000000000000000000000000000000000000000000000000"
+    },
+    "same": false
+  },
+  {
+    "name": "operationId",
+    "left": {
+      "appId": "1",
+      "documentId": "doc-a",
+      "operationId": "11",
+      "generation": 7,
+      "baseRevision": "0000000000000000000000000000000000000000000000000000000000000000"
+    },
+    "right": {
+      "appId": "1",
+      "documentId": "doc-a",
+      "operationId": "12",
+      "generation": 7,
+      "baseRevision": "0000000000000000000000000000000000000000000000000000000000000000"
+    },
+    "same": false
+  },
+  {
+    "name": "generation",
+    "left": {
+      "appId": "1",
+      "documentId": "doc-a",
+      "operationId": "11",
+      "generation": 7,
+      "baseRevision": "0000000000000000000000000000000000000000000000000000000000000000"
+    },
+    "right": {
+      "appId": "1",
+      "documentId": "doc-a",
+      "operationId": "11",
+      "generation": 8,
+      "baseRevision": "0000000000000000000000000000000000000000000000000000000000000000"
+    },
+    "same": false
+  },
+  {
+    "name": "baseRevision",
+    "left": {
+      "appId": "1",
+      "documentId": "doc-a",
+      "operationId": "11",
+      "generation": 7,
+      "baseRevision": "0000000000000000000000000000000000000000000000000000000000000000"
+    },
+    "right": {
+      "appId": "1",
+      "documentId": "doc-a",
+      "operationId": "11",
+      "generation": 7,
+      "baseRevision": "1111111111111111111111111111111111111111111111111111111111111111"
+    },
+    "same": false
+  }
+]

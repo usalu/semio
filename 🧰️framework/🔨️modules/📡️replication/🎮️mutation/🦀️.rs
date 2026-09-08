@@ -4,7 +4,7 @@
 //! rerun the same deciders against these types. Op payloads stay schema-opaque: this module
 //! never parses an `Op`, it only threads it through the trait seams a technology implements.
 //!
-//! Frozen contract: `.🦑️repo/🎫️tickets/26/07/27/PROTOCOL-BINARY-OP-LOG-LAYER/contract.md`
+//! Frozen contract: `.🧬semio/🦑️repo/🎫️tickets/26/07/27/PROTOCOL-BINARY-OP-LOG-LAYER/contract.md`
 //! `## Amendment` §`protocol_command`.
 
 //#region 🔖️Mutation
@@ -1041,7 +1041,7 @@ mod mutation_leaf_metadata_tests {
 /// @emoji 📨️ One outcome-carried diagnostic from a `Mutation`/`MutationKind::diff` — the level
 /// vocabulary is [`crate::diagnostic::Severity`] (`Info < Warning < Error < Fatal`, that declaration
 /// order IS the level order via `derive(Ord)`); `code` is one of the frozen seven `mutation.*`
-/// codes (`.🦑️repo/🎫️tickets/26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS/
+/// codes (`.🧬semio/🦑️repo/🎫️tickets/26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS/
 /// 📋️contract-freeze.md` §C2 — closed set, no per-plugin codes, ever); `message` is English prose
 /// (UI localizes by `code`, never by parsing `message`); `target` is the address of the offending
 /// element (outermost segment first, matching [`MutationKind::target`]'s convention); `op_index` is
@@ -1355,7 +1355,7 @@ pub trait DiffCodec: Sized {
 //#region 🔖️Foreign
 /// @emoji 🌉️ A mutation step aimed at an artifact OTHER than the one being mutated. Cross-boundary
 /// identity travels as plain strings, never `semio_framework::*`/`io::*` types — see the
-/// dependency-edge law at `.🦑️repo/🎫️tickets/26/08/16/PLUGIN-DEPENDENCIES-ARTIFACT-CONTRIBUTIONS-AND-COMPOSITE-MUTATIONS/📋️contract-freeze.md`
+/// dependency-edge law at `.🧬semio/🦑️repo/🎫️tickets/26/08/16/PLUGIN-DEPENDENCIES-ARTIFACT-CONTRIBUTIONS-AND-COMPOSITE-MUTATIONS/📋️contract-freeze.md`
 /// §0.
 #[derive(Clone, Debug, PartialEq)]
 pub struct ForeignTarget {
@@ -1495,7 +1495,7 @@ pub struct MutationMeta {
     /// (synthesized by a contributor plugin's `contributor.artifact-mutation-plan` response), or
     /// `Transaction` (applied as one member of a cross-artifact composite gesture initiated
     /// elsewhere). Additive, mirrors `group_id`/`semantic_kind`/`label` above — see
-    /// `.🦑️repo/🎫️tickets/26/08/16/PLUGIN-DEPENDENCIES-ARTIFACT-CONTRIBUTIONS-AND-COMPOSITE-MUTATIONS/📋️contract-freeze.md`
+    /// `.🧬semio/🦑️repo/🎫️tickets/26/08/16/PLUGIN-DEPENDENCIES-ARTIFACT-CONTRIBUTIONS-AND-COMPOSITE-MUTATIONS/📋️contract-freeze.md`
     /// §1.
     pub origin: MutationOrigin,
 }

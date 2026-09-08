@@ -303,19 +303,15 @@ impl RasterOwnedRetirement {
     }
 
     fn layer_fields(layer: RasterLayerNode) -> RasterLayerFields {
-        let mut strings: [Option<String>; 4] = Default::default();
-        let (children, values) = match layer {
+        let (strings, children, values) = match layer {
             RasterLayerNode::Pixel { id, name, blend_mode, image_key, .. } => {
-                strings = [Some(id), Some(name), Some(blend_mode), image_key];
-                (None, None)
+                ([Some(id), Some(name), Some(blend_mode), image_key], None, None)
             }
             RasterLayerNode::Group { id, name, blend_mode, children, .. } => {
-                strings = [Some(id), Some(name), Some(blend_mode), None];
-                (Some(children), None)
+                ([Some(id), Some(name), Some(blend_mode), None], Some(children), None)
             }
             RasterLayerNode::Adjustment { id, name, blend_mode, adjustment_kind, params, .. } => {
-                strings = [Some(id), Some(name), Some(blend_mode), Some(adjustment_kind)];
-                (None, Some(params))
+                ([Some(id), Some(name), Some(blend_mode), Some(adjustment_kind)], None, Some(params))
             }
         };
         RasterLayerFields { strings, children, values, string_cursor: 0 }
@@ -1905,7 +1901,6 @@ impl RasterLayerCloneAuthority {
                             let (source_key, _) = self.parameter_key.next(source)?.ok_or("raster-store.clone-parameter-advance")?;
                             let pending_key = self.pending_parameter_key.as_ref().ok_or("raster-store.clone-parameter-key")?;
                             if target.page_required_for_insert(pending_key) {
-                                let page_bytes = RasterOwnedMap::<dsl::DslValue>::conservative_page_credit_bytes();
                                 if !raster_reserve_unit(cx) {
                                     return Ok(false);
                                 }
@@ -2279,7 +2274,6 @@ impl RasterSnapshotCloneAuthority {
                 if self.asset_field >= 5 {
                     let (key, _) = self.pending_asset.as_ref().expect("Raster pending asset remains retained");
                     if target.assets.page_required_for_insert(key) {
-                        let page_bytes = RasterOwnedMap::<RasterAssetChild>::conservative_page_credit_bytes();
                         if !raster_reserve_unit(cx) {
                             return Ok(false);
                         }
@@ -3169,7 +3163,6 @@ impl RasterMutationCandidateAuthority {
                         *self.pending_asset = Some((key, child));
                     }
                     3 => {
-                        let length = "raster-asset-".len() + 16;
                         if !raster_reserve_unit(cx) {
                             return Ok(false);
                         }
@@ -3208,7 +3201,6 @@ impl RasterMutationCandidateAuthority {
                         let snapshot = self.value.as_mut().ok_or("raster-store.mutation-asset-snapshot")?;
                         let pending_key = &self.pending_asset.as_ref().ok_or("raster-store.mutation-asset-owner")?.0;
                         if snapshot.assets.page_required_for_insert(pending_key) {
-                            let page_bytes = RasterOwnedMap::<RasterAssetChild>::conservative_page_credit_bytes();
                             if !raster_reserve_unit(cx) {
                                 return Ok(false);
                             }

@@ -42,7 +42,7 @@ impl Rgba {
 
 //#region 🔖️Level
 /// 🪜️ The unified 6-level UI surface axis (base..menu, both z-order and glass/shade formula input)
-/// — see `ui/styling/🔣️tokens.json`'s `levels` block and `.🦑️repo/🎫️tickets/26/07/27/UNIFIED-6-LEVEL-UI-SURFACE-SYSTEM/contract.txt`.
+/// — see `ui/styling/🔣️tokens.json`'s `levels` block and `.🧬semio/🦑️repo/🎫️tickets/26/07/27/UNIFIED-6-LEVEL-UI-SURFACE-SYSTEM/contract.txt`.
 /// Replaces the old unlinked level-name axis (canvas/window/panel/overlay/temporary) plus a
 /// separate glass-tier axis (panel/ribbon/menu/windowOptions) with one formula-derived enum.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]

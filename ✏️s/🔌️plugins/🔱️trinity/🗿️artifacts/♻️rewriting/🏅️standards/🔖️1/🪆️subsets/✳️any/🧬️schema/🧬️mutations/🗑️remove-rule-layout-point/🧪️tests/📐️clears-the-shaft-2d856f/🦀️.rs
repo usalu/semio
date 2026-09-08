@@ -28,13 +28,13 @@ const DIFF: &str = include_str!("🔺️diff/🔣️.json");
 const OUTCOME: &str = include_str!("🎯️outcome/🔣️.json");
 
 fn before() -> RewritingSnapshot {
-    serde_json::from_str(BEFORE).expect("before snapshot decodes")
+    pack::from_json_str(BEFORE).expect("before snapshot decodes")
 }
 fn expected_after() -> RewritingSnapshot {
-    serde_json::from_str(AFTER).expect("after snapshot decodes")
+    pack::from_json_str(AFTER).expect("after snapshot decodes")
 }
 fn mutation() -> RewriteRuleMutation {
-    serde_json::from_str(MUTATION).expect("mutation decodes")
+    pack::from_json_str(MUTATION).expect("mutation decodes")
 }
 
 /// ▶️ `remove-rule-layout-point` carries `before` to exactly the committed `after` by taking ONE var out
@@ -77,12 +77,12 @@ async fn inverse_restores_before() {
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {
-        let decoded: RewritingSnapshot = serde_json::from_str(text).expect("snapshot decodes");
-        let reencoded = serde_json::to_value(&decoded).expect("snapshot encodes");
+        let decoded: RewritingSnapshot = pack::from_json_str(text).expect("snapshot decodes");
+        let reencoded = serde_json::from_str::<serde_json::Value>(&pack::to_json_string(&decoded)).expect("snapshot encodes");
         let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
         assert_eq!(reencoded, original, "remove-rule-layout-point/clears-the-shaft-layout-point: committed {label} JSON is not canonical");
     }
-    let reencoded = serde_json::to_value(mutation()).expect("mutation encodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&pack::to_json_string(&mutation())).expect("mutation encodes");
     let original: serde_json::Value = serde_json::from_str(MUTATION).expect("mutation reparses");
     assert_eq!(reencoded, original, "remove-rule-layout-point/clears-the-shaft-layout-point: committed mutation JSON is not canonical");
 }
@@ -107,10 +107,10 @@ async fn declared_outcome_holds() {
 async fn produces_committed_diff() {
     let base = before();
     let outcome = <RewriteRuleMutation as protocol::Mutation<RewritingSnapshot>>::diff(&mutation(), &base);
-    let produced = serde_json::to_value(outcome.diff()).expect("produced diff encodes");
+    let produced = serde_json::from_str::<serde_json::Value>(&pack::to_json_string(outcome.diff())).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
     assert_eq!(produced, committed, "remove-rule-layout-point/clears-the-shaft-layout-point: produced diff differs from the committed 🔺️diff/🔣️.json");
-    let typed: RewritingDiff = serde_json::from_str(DIFF).expect("committed diff decodes into RewritingDiff");
+    let typed: RewritingDiff = pack::from_json_str(DIFF).expect("committed diff decodes into RewritingDiff");
     let layout = typed.rule_layout.as_ref().expect("remove-rule-layout-point's delta carries a rule_layout map");
     assert_eq!(layout.len(), 1, "a single-var removal must appear in the delta as exactly one entry, got {layout:?}");
     assert_eq!(layout.get("shaft"), Some(&None), "a removal is encoded as an explicit None under the key, never as an omitted key");
@@ -124,8 +124,8 @@ async fn produces_committed_diff() {
 /// `remove-rule-layout-point` never touches — must be present as `null`.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical() {
-    let decoded: RewritingDiff = serde_json::from_str(DIFF).expect("committed diff decodes");
-    let reencoded = serde_json::to_value(&decoded).expect("diff re-encodes");
+    let decoded: RewritingDiff = pack::from_json_str(DIFF).expect("committed diff decodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&pack::to_json_string(&decoded)).expect("diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
     assert_eq!(reencoded, original, "remove-rule-layout-point/clears-the-shaft-layout-point: committed diff JSON is not canonical");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
@@ -137,7 +137,7 @@ async fn committed_diff_is_canonical() {
 /// complete description of the `remove-rule-layout-point` change, not a summary of it.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
-    let decoded: RewritingDiff = serde_json::from_str(DIFF).expect("committed diff decodes");
+    let decoded: RewritingDiff = pack::from_json_str(DIFF).expect("committed diff decodes");
     let produced = <RewritingDiff as protocol::MutationDiff<RewritingSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "remove-rule-layout-point/clears-the-shaft-layout-point: committed diff did not carry before to after");
 }

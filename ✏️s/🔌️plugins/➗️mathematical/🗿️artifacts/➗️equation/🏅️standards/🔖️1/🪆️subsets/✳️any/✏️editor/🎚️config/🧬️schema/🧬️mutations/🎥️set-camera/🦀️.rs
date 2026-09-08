@@ -4,7 +4,7 @@ use super::{EquationConfig, EquationConfigMutation, EquationCamera};
 
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord, dsl::MutationLeaf)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
-#[dsl(keyword = "camera")]
+#[dsl(keyword = "set-camera")]
 #[mutation_leaf(contract = ::protocol)]
 pub struct SetCamera {
     #[dsl(block)]

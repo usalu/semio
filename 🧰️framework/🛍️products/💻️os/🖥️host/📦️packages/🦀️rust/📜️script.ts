@@ -1152,7 +1152,6 @@ class WasmScript extends BundleScript {
   run(): void {
     runWasmPackWebBuild({
       rsDir: this.root,
-      skipEnvVar: "FRAMEWORK_OS_HOST_RS_SKIP_WASM_BUILD",
       logPrefix: "framework/os/host/rs",
       wasmBaseName: "semio_framework_os",
       pkg: {

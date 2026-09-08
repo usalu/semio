@@ -1,0 +1,12 @@
+{
+  "schema": "semio.hub.trusted-publication/v1",
+  "generationId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "profileId": "publication-fixture",
+  "cases": [
+    { "change": "none", "accepted": true },
+    { "change": "component", "accepted": false },
+    { "change": "descriptor", "accepted": false },
+    { "change": "actor", "accepted": false },
+    { "change": "bundle", "accepted": false }
+  ]
+}

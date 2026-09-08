@@ -112,7 +112,6 @@ fn home_retained_extent(command: &HomeCommand, _snapshot: &SHomeSnapshot, _inter
         HomeCommand::DeleteVirtualFileSystemNode(payload) => payload.node_id.len(),
         HomeCommand::RenameSpace(payload) => payload.space_id.len().saturating_add(payload.name.len()),
         HomeCommand::FoldDirectoryEvents(payload) => payload.events_json.len(),
-        _ => return None,
     };
     let limit = if matches!(command, HomeCommand::SetActivePanelTab(_) | HomeCommand::SetClient(_)) { HOME_CONFIG_VALUE_BYTES } else { HOME_RETAINED_RAW_BYTES };
     (admitted <= limit).then_some(HOME_RETAINED_WORK_ITEMS)
@@ -219,8 +218,10 @@ fn home_config_edit(forward: HomeConfigMutation, inverse: HomeConfigMutation, de
     }
 }
 
+#[cfg(test)]
 struct HomeConfigByteCounter { bytes: usize }
 
+#[cfg(test)]
 impl std::io::Write for HomeConfigByteCounter {
     fn write(&mut self, bytes: &[u8]) -> std::io::Result<usize> {
         if self.bytes.saturating_add(bytes.len()) > HOME_CONFIG_STEP_BYTES { return Err(std::io::Error::from(std::io::ErrorKind::InvalidData)); }
@@ -391,11 +392,6 @@ impl ArtifactEditor for HomeApp {
         Some(std::sync::Arc::new(HomeConfigPreparationFactory))
     }
 
-    /// 🧾️ `controller:` is the runtime tool controller — the surface app id
-    /// `tool_job_registration` is called with, NOT the manifest's UI `controller_id` (`s-home`);
-    /// `contract:` reads the one `home_retained_contract()` the factory itself publishes, because
-    /// `validate_tool_job_rows` joins proof and registration by exact contract equality. Both are
-    /// pinned by `interactive_job_catalog_tests::tool_proof_catalogs_match_the_runtime_identity_they_are_joined_against`.
     semio_framework_plugin::bounded_first_step_tool_proofs! {
         owner: EditorApp<HomeApp>,
         owner_file: "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
@@ -562,7 +558,7 @@ impl ArtifactEditor for HomeApp {
 /// `EditorBuilder` (contract §2.4, W0-F gap 4) — `create_home_app` never called either, so nothing is
 /// dropped here (unlike other W2 packets that had to note a loss).
 pub async fn create_home_app() -> semio_framework_plugin::AppDefinition {
-    let mut definition = Editor::builder(crate::artifacts::home::HOME_DIALECT)
+    let definition = Editor::builder(crate::artifacts::home::HOME_DIALECT)
         .document(["semio", "s", "home"])
         .icon_id("home")
         .mode_def(crate::editor::home::modes::explore::definition())

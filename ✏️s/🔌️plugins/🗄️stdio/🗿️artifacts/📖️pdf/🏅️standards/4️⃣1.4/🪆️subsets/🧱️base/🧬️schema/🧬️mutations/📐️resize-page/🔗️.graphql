@@ -1,0 +1,5 @@
+# 📐️ resize-page payload.
+input ResizePageInput {
+  index: Pdf14Index!
+  width: Float!
+  height: Float!

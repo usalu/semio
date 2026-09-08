@@ -33,7 +33,7 @@ pub fn handle(payload: &SetActiveExample, _doc: &ArtifactView<'_, crate::artifac
     } else {
         empty_wires_snapshot()
     };
-    Ok(Emit { effects: vec![crate::editor::wires::reset_wires_document_effect(&next)], config_mutations: vec![WiresConfigMutation::SetDrag { node_id: None, last_x: 0.0, last_y: 0.0 }], ..Default::default() })
+    Ok(Emit { effects: vec![crate::editor::wires::reset_wires_document_effect(&next)], config_mutations: vec![WiresConfigMutation::SetDrag(crate::editor::wires::config::SetDrag { node_id: None, last_x: 0.0, last_y: 0.0 })], ..Default::default() })
 }
 
 //#region 🧪️Tests
@@ -52,8 +52,8 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn set_active_example_metabolism_loads_seven_nodes() {
         use semio_framework_plugin::Effect;
-        let mut app = new_app();
-        let result = dispatch(&mut app, WiresCommand::SetActiveExample(SetActiveExample { example_id: WIRES_PLAY_EXAMPLE_METABOLISM_ID.into() }));
+        let mut app = new_app().await;
+        let result = dispatch(&mut app, WiresCommand::SetActiveExample(SetActiveExample { example_id: WIRES_PLAY_EXAMPLE_METABOLISM_ID.into() })).await;
         assert!(result.mutations.is_empty(), "setActiveExample replaces the whole document via an effect, not in-history mutations");
         let Effect::LoadDocument { pack, .. } = result.requested_effects.first().expect("setActiveExample must emit a LoadDocument effect") else {
             panic!("expected a LoadDocument effect");
@@ -65,8 +65,8 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn set_active_example_unknown_id_loads_empty_document() {
         use semio_framework_plugin::Effect;
-        let mut app = metabolism_app();
-        let result = dispatch(&mut app, WiresCommand::SetActiveExample(SetActiveExample { example_id: "nope".into() }));
+        let mut app = metabolism_app().await;
+        let result = dispatch(&mut app, WiresCommand::SetActiveExample(SetActiveExample { example_id: "nope".into() })).await;
         let Effect::LoadDocument { pack, .. } = result.requested_effects.first().expect("setActiveExample must emit a LoadDocument effect") else {
             panic!("expected a LoadDocument effect");
         };

@@ -5,9 +5,8 @@ use crate::artifacts::shooting::{shooting_asset_scale, ShootingAsset, ShootingSh
 use crate::editor::shooting::config::ShootingConfig;
 use crate::editor::shooting::modes::edit::windows::scene::options;
 use crate::editor::shooting::terminology::ShootingLabels;
-use crate::editor::shooting::SHOOTING_PLAY_APP_ID;
 use semio_framework_plugin::{
-    build_world_3d_scene, world3d_mesh_id_from_url, world3d_meshes_json_from_kinds_and_urls, world3d_scene, world3d_selection_json, LocalizedLabel, SurfaceKind, UiNode, WindowEngagement, WindowEngagementInput, WindowEngagementPossible,
+    world3d_mesh_id_from_url, world3d_meshes_json_from_kinds_and_urls, world3d_scene, world3d_selection_json, LocalizedLabel, SurfaceKind, WindowEngagement, WindowEngagementInput, WindowEngagementPossible,
     WindowEngagementStatus, WindowKindDefinition, WindowMeasure, WindowOptions, World3dScene, WorldSunConfig,
 };
 use dsl::json;
@@ -75,8 +74,8 @@ pub fn engagement(snapshot: &ShootingSnapshot, config: &ShootingConfig, labels: 
             value: Some(config.camera_draft_label.clone()),
             placeholder: Some(labels.camera_label_placeholder.into()),
             disabled: None,
-            on_change: Some(crate::editor::shooting::shooting_action("setCameraDraftLabel", None)),
-            on_submit: Some(crate::editor::shooting::shooting_action("saveCamera", None)),
+            on_change: Some(crate::editor::shooting::shooting_window_action("setCameraDraftLabel", None)),
+            on_submit: Some(crate::editor::shooting::shooting_window_action("saveCamera", None)),
             on_repeat_last: None,
             on_abort: None,
         }),
@@ -91,9 +90,9 @@ pub fn engagement(snapshot: &ShootingSnapshot, config: &ShootingConfig, labels: 
                     id: format!("shooting.camera.{}", saved.id),
                     label: saved.label.clone(),
                     detail: Some(labels.load_camera.into()),
-                    action: Some(crate::editor::shooting::shooting_action(
+                    action: Some(crate::editor::shooting::shooting_window_action(
                         "loadSavedCamera",
-                        Some(crate::editor::shooting::ui_value_map([("id", crate::editor::shooting::ui_value_text(&saved.id).expect("saved camera id fits ui text capacity"))]).expect("single-entry args fit ui map capacity")),
+                        Some(dsl::DslValue::object([("id".into(), dsl::DslValue::String(saved.id.clone()))])),
                     )),
                 })
                 .collect(),
@@ -214,11 +213,11 @@ fn shooting_fit_json(cfg: &ShootingConfig) -> String {
     json!({ "enabled": cfg.center_model, "revision": cfg.fit_revision, "padding": 1.25 }).to_string()
 }
 
-pub fn render(snapshot: &ShootingSnapshot, cfg: &ShootingConfig) -> UiNode {
-    build_world_3d_scene(
+pub fn render(snapshot: &ShootingSnapshot, cfg: &ShootingConfig) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+    semio_framework_plugin::scene_surface(
         SHOOTING_PLAY_SURFACE_SCENE,
-        SHOOTING_PLAY_APP_ID,
-        World3dScene {
+        semio_framework_ui_contract::SurfaceKind::World3d,
+        &World3dScene {
             environment_json: Some(shooting_environment_json(snapshot)),
             frame_json: crate::artifacts::shooting::schema::active_shot(snapshot).map(shooting_frame_json),
             fit_json: Some(shooting_fit_json(cfg)),
@@ -233,42 +232,36 @@ pub fn render(snapshot: &ShootingSnapshot, cfg: &ShootingConfig) -> UiNode {
 mod tests {
     use super::*;
     use crate::editor::shooting::testkit::{scene_window_measures, shooting_app};
-    use crate::editor::shooting::SHOOTING_PLAY_BODY_SCENE as BODY_SCENE;
-    use semio_framework_plugin::{PluginApp, ViewModel};
 
     #[semio_framework_async_macros::async_test]
     async fn renders_world_model_scene() {
-        let mut app = shooting_app();
-        let node = app.render(BODY_SCENE, None, &ViewModel::default()).expect("render");
-        let json = serde_json::to_string(&node).unwrap();
-        assert!(json.contains("world-3d"));
-        let payload: Value = parse(&json).unwrap();
-        let environment: Value = parse(payload["world3d"]["environmentJson"].as_str().unwrap()).unwrap();
+        let mut app = shooting_app().await;
+        let scene = crate::editor::shooting::testkit::world_scene(&mut app).await;
+        let environment: Value = parse(scene.environment_json.as_deref().unwrap()).unwrap();
         assert_eq!(environment["sun"]["azimuth"], json!(45.0));
         assert_eq!(environment["material"]["roughness"], json!(1.0));
-        let frame: Value = parse(payload["world3d"]["frameJson"].as_str().unwrap()).unwrap();
+        let frame: Value = parse(scene.frame_json.as_deref().unwrap()).unwrap();
         assert_eq!(frame["width"], json!(256));
         assert_eq!(frame["shape"], json!("rectangle"));
-        let fit: Value = parse(payload["world3d"]["fitJson"].as_str().unwrap()).unwrap();
+        let fit: Value = parse(scene.fit_json.as_deref().unwrap()).unwrap();
         assert_eq!(fit["enabled"], json!(true));
-        let camera: Value = parse(payload["world3d"]["cameraJson"].as_str().unwrap()).unwrap();
+        let camera: Value = parse(&scene.camera_json).unwrap();
         assert_eq!(camera["zoom"], json!(1.0));
         assert_eq!(camera["projection"], json!("perspective"));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn model_scene_uses_asset_mesh_urls() {
-        let mut app = shooting_app();
-        let node = app.render(BODY_SCENE, None, &ViewModel::default()).expect("render");
-        let json = serde_json::to_string(&node).unwrap();
-        assert!(json.contains("mesh:🧊️base"));
-        assert!(json.contains("/mesh/🧊️base.glb"));
+        let mut app = shooting_app().await;
+        let scene = crate::editor::shooting::testkit::world_scene(&mut app).await;
+        assert!(scene.meshes_json.contains("mesh:🧊️base"));
+        assert!(scene.meshes_json.contains("/mesh/🧊️base.glb"));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn window_measures_surface_eight_scene_measures() {
-        let mut app = shooting_app();
-        let measures = scene_window_measures(&mut app);
+        let mut app = shooting_app().await;
+        let measures = scene_window_measures(&mut app).await;
         assert_eq!(measures.len(), 8);
     }
 

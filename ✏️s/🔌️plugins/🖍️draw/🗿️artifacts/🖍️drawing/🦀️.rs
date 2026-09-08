@@ -14,7 +14,7 @@ pub const DRAWING_UTILITY_IDS: &[&str] = &["selectMarquee", "selectLasso", "sele
 // FIELD's own name — an inner keyword too would double it (`transform { transform x=0 ... }`),
 // same reasoning as `note`'s `NoteImageAsset`.
 /// 🎥️ Camera pose (pan + zoom). Ephemeral view state owned by the `drawing` app runtime struct
-/// (`DrawingConfig`), never a `DrawingSnapshot` field — see `.🦑️repo/🎫️tickets/26/07/31/
+/// (`DrawingConfig`), never a `DrawingSnapshot` field — see `.🧬semio/🦑️repo/🎫️tickets/26/07/31/
 /// MOVE-DRAWING-PLUGIN-CAMERA-TO-RUNTIME-STATE`.
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]

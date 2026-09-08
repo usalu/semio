@@ -6,6 +6,7 @@
 //! content.
 
 use crate::artifacts::note::NoteCamera;
+#[cfg(test)]
 use protocol::Mutation;
 use serde::{Deserialize, Serialize};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -89,107 +90,10 @@ impl Default for NoteConfig {
 store::impl_whole_record_config!(NoteConfig);
 //#endregion 🔖️Config
 
-//#region 🔖️ConfigMutations
-/// @emoji 🧮️ `NoteConfig`'s operation enum — mirrors `shooting_op::ShootingConfigMutation`'s pilot shape
-/// exactly: one variant per settled interaction (the pre-migration `NotePlayRuntime` field writes), plus
-/// a generic `Snapshot` every variant's `backwards()` returns — since a config-only "View" dispatch is a
-/// plain `Apply` (not an `AmendLast`), each tick is its own distinct, real config edit, and "undo this
-/// tick" is exactly "restore the whole-config snapshot from just before it".
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::DslOps)]
-pub enum NoteConfigMutation {
-    #[dsl(key = "snapshot")]
-    Snapshot {
-        #[dsl(block)]
-        config: NoteConfig,
-    },
-    #[dsl(key = "engagement-input")]
-    SetEngagementInput { value: String },
-    #[dsl(key = "camera")]
-    SetCamera {
-        #[dsl(block)]
-        camera: NoteCamera,
-    },
-    #[dsl(key = "active-utility")]
-    SetActiveUtility { utility_id: String },
-    #[dsl(key = "locale")]
-    SetLocale { value: String },
-}
+#[path = "🧬️schema/🧬️mutations/🦀️.rs"]
+mod mutations;
+pub use mutations::*;
 
-//#region 🔖️OpCodec
-impl protocol::OpText for NoteConfigMutation {
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        let variants = <Self as dsl::DslVariants>::variants();
-        for (keyword, spec_fn) in &variants {
-            let probe = format!("{} ", keyword);
-            if line == keyword.as_str() || line.starts_with(&probe) {
-                let record = dsl::parse(line, &spec_fn(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline })?;
-                return <Self as dsl::DslVariants>::from_named_record(keyword, &record);
-            }
-        }
-        Err(dsl::__rt::field_error(format!("unknown operation line '{line}'")))
-    }
-    fn print_op(&self) -> String {
-        let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
-        let variants = <Self as dsl::DslVariants>::variants();
-        let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
-        dsl::print(&record, &spec_fn(), dsl::JoinMode::Inline)
-    }
-}
-
-/// 🎯️ Handcrafted OpBinary (P6).
-impl protocol::OpBinary for NoteConfigMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        const OP_BINARY_FORMAT: u8 = 1;
-        let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
-        let variants = <Self as dsl::DslVariants>::variants();
-        let ordinal = variants.iter().position(|(k, _)| *k == keyword).ok_or(protocol::ProtocolError::Malformed { what: "op variant", offset: 0, detail: format!("keyword {keyword:?} is not a declared variant") })?;
-        let spec = (variants[ordinal].1)();
-        let body = store::pack_rt::encode_record_body(&spec, &record, &store::PackEncodeOptions::default()).map_err(protocol::ProtocolError::from)?;
-        let mut out = Vec::with_capacity(body.len() + 3);
-        out.push(OP_BINARY_FORMAT);
-        store::pack_rt::write_varint_u64(&mut out, ordinal as u64);
-        out.extend_from_slice(&body);
-        Ok(out)
-    }
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        const OP_BINARY_FORMAT: u8 = 1;
-        let mut reader = store::pack_rt::ByteReader::new(bytes);
-        let format = reader.read_u8()?;
-        if format != OP_BINARY_FORMAT {
-            return Err(protocol::ProtocolError::Malformed { what: "op format", offset: 0, detail: format!("unsupported op format {format}") });
-        }
-        let ordinal = reader.read_varint_u64()?;
-        let variants = <Self as dsl::DslVariants>::variants();
-        let (keyword, spec_fn) = variants.get(ordinal as usize).ok_or(protocol::ProtocolError::Malformed { what: "op variant", offset: 1, detail: format!("ordinal {ordinal} out of range for {} declared variants", variants.len()) })?;
-        let spec = spec_fn();
-        let body = &bytes[reader.position()..];
-        let (record, _report) = store::pack_rt::decode_record_body(body, &spec, &store::PackDecodeOptions::default()).map_err(protocol::ProtocolError::from)?;
-        <Self as dsl::DslVariants>::from_named_record(keyword, &record).map_err(|error| protocol::ProtocolError::Malformed { what: "op record", offset: reader.position() as u64, detail: error.to_string() })
-    }
-}
-
-//#endregion 🔖️OpCodec
-
-impl Mutation<NoteConfig> for NoteConfigMutation {
-    type Diff = NoteConfig;
-
-    fn diff(&self, base: &NoteConfig) -> protocol::MutationOutcome<NoteConfig> {
-        let mut next = base.clone();
-        match self {
-            NoteConfigMutation::Snapshot { config } => return protocol::MutationOutcome::new(config.clone()),
-            NoteConfigMutation::SetEngagementInput { value } => next.engagement_input = value.clone(),
-            NoteConfigMutation::SetCamera { camera } => next.camera = camera.clone(),
-            NoteConfigMutation::SetActiveUtility { utility_id } => next.active_utility_id = utility_id.clone(),
-            NoteConfigMutation::SetLocale { value } => next.locale = value.clone(),
-        }
-        protocol::MutationOutcome::new(next)
-    }
-
-    fn inverse(&self, base: &NoteConfig) -> Vec<Self> {
-        vec![NoteConfigMutation::Snapshot { config: base.clone() }]
-    }
-}
-//#endregion 🔖️ConfigMutations
 
 //#region 🧪️Tests
 #[cfg(test)]
@@ -213,25 +117,49 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn note_config_operation_text_and_binary_round_trip_every_variant() {
-        let config = NoteConfig { engagement_input: "Renaming…".into(), camera: NoteCamera { x: 3.0, y: -1.5, zoom: 1.75 }, active_utility_id: "pencil".into(), locale: "de-DE".into() };
-        store::os_store::test_support::assert_op_text_binary_equivalence(&NoteConfigMutation::Snapshot { config });
-        store::os_store::test_support::assert_op_text_binary_equivalence(&NoteConfigMutation::SetEngagementInput { value: "Renaming…".into() });
-        store::os_store::test_support::assert_op_text_binary_equivalence(&NoteConfigMutation::SetCamera { camera: NoteCamera { x: 4.0, y: 5.0, zoom: 2.0 } });
-        store::os_store::test_support::assert_op_text_binary_equivalence(&NoteConfigMutation::SetActiveUtility { utility_id: "eraserStroke".into() });
-        store::os_store::test_support::assert_op_text_binary_equivalence(&NoteConfigMutation::SetLocale { value: "de-DE".into() });
+        store::os_store::test_support::assert_op_text_binary_equivalence(&NoteConfigMutation::SetEngagementInput(SetEngagementInput { value: "Renaming…".into() }));
+        store::os_store::test_support::assert_op_text_binary_equivalence(&NoteConfigMutation::SetCamera(SetCamera { camera: NoteCamera { x: 4.0, y: 5.0, zoom: 2.0 } }));
+        store::os_store::test_support::assert_op_text_binary_equivalence(&NoteConfigMutation::SetActiveUtility(SetActiveUtility { utility_id: "eraserStroke".into() }));
+        store::os_store::test_support::assert_op_text_binary_equivalence(&NoteConfigMutation::SetLocale(SetLocale { value: "de-DE".into() }));
     }
 
-    /// 🧮️ Every `NoteConfigMutation`'s `backwards()` is the whole-config snapshot from just before it —
-    /// mirrors `shooting_op`'s analogous coverage.
+    /// ↩️ Inversion restores the utility captured before the operation.
     #[semio_framework_async_macros::async_test]
-    async fn note_config_operation_backwards_is_always_a_snapshot_of_the_prior_config() {
+    async fn note_config_operation_inverse_restores_the_prior_utility() {
         let base = NoteConfig::default();
-        let operation = NoteConfigMutation::SetActiveUtility { utility_id: "pencil".into() };
-        assert_eq!(operation.inverse(&base), vec![NoteConfigMutation::Snapshot { config: base.clone() }]);
+        let operation = NoteConfigMutation::SetActiveUtility(SetActiveUtility { utility_id: "pencil".into() });
+        assert_eq!(operation.inverse(&base), vec![NoteConfigMutation::SetActiveUtility(SetActiveUtility { utility_id: base.active_utility_id.clone() })]);
         let next = operation.diff(&base).into_parts().0;
         assert_eq!(next.active_utility_id, "pencil");
-        let restored = NoteConfigMutation::Snapshot { config: base.clone() }.diff(&next).into_parts().0;
+        let restored = operation.inverse(&base)[0].diff(&next).into_parts().0;
         assert_eq!(restored, base);
     }
 }
 //#endregion 🧪️Tests
+
+#[cfg(test)]
+mod contract_vectors {
+    use super::*;
+    use protocol::{Mutation, MutationDiff, OpBinary, OpText};
+    use dsl::os_pack as pack;
+
+    #[test]
+    fn note_configuration_contract_vectors_match_the_json_oracle() {
+        let vectors: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🔁️mutation-contracts.json")).expect("neutral contract vectors");
+        let base: NoteConfig = pack::from_json_str(&vectors["base"].to_string()).expect("owned base decoder");
+        assert_eq!(<NoteConfigMutation as Mutation<NoteConfig>>::DESCRIPTORS.len(), vectors["cases"].as_array().expect("cases").len());
+        for vector in vectors["cases"].as_array().expect("cases") {
+            let mutation: NoteConfigMutation = pack::from_json_str(&vector["mutation"].to_string()).expect("owned operation decoder");
+            assert_eq!(serde_json::from_str::<serde_json::Value>(&pack::to_json_string(&mutation)).expect("independent operation oracle"), vector["mutation"]);
+            assert_eq!(mutation.descriptor().semantic_kind, vector["kind"].as_str().expect("semantic kind"));
+            assert_eq!(NoteConfigMutation::parse_op(&mutation.print_op()).expect("operation text"), mutation);
+            assert_eq!(NoteConfigMutation::decode_op(&mutation.encode_op().expect("operation binary")).expect("binary decode"), mutation);
+            let outcome = mutation.diff(&base);
+            assert!(outcome.messages().is_empty());
+            let next = outcome.diff().apply(&base).expect("apply diff");
+            assert_eq!(serde_json::from_str::<serde_json::Value>(&pack::to_json_string(&next)).expect("independent state oracle"), vector["expected"]);
+            let restored = mutation.inverse(&base).into_iter().fold(next, |state, inverse| inverse.diff(&state).diff().apply(&state).expect("apply inverse"));
+            assert_eq!(restored, base);
+        }
+    }
+}

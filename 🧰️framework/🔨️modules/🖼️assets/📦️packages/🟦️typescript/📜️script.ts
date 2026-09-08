@@ -931,6 +931,7 @@ class GenerateLogoScript extends BundleScript {
 
 class ExportLogoScript extends BundleScript {
   async run(): Promise<void> {
+    process.env.PLAYWRIGHT_BROWSERS_PATH ??= join(this.repoRoot, "node_modules/.cache/ms-playwright");
     const logoDir = join(assetsRoot(), "🪧️logos");
     const inputPath = join(logoDir, "🎞️animation/⚡️animated.svg");
     const outputPath = join(logoDir, "🎞️animation/🎬️animation.mp4");

@@ -1,6 +1,5 @@
 //! 👥️ Note play presence — shareable live ephemeral state + mutations.
 
-use protocol::Mutation;
 use serde::{Deserialize, Serialize};
 use semio_framework_value_derive::{FromValue, ToValue};
 use store::ArtifactPack;
@@ -30,7 +29,7 @@ impl Default for NotePresence {
 
 impl protocol::MutationDiff<NotePresence> for NotePresence {
     fn apply(&self, _base: &NotePresence) -> protocol::MutationApplyResult<NotePresence> {
-        Ok({ self.clone() })
+        Ok(self.clone())
     }
     fn absorb(&mut self, other: Self) {
         *self = other;
@@ -83,64 +82,34 @@ impl ArtifactPack for NotePresence {
 }
 //#endregion 🔖️Presence
 
-//#region 🔖️PresenceMutation
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::DslOps)]
-#[serde(rename_all = "camelCase")]
-#[value(rename_all = "camelCase")]
-pub enum NotePresenceMutation {
-    #[dsl(key = "snapshot")]
-    Snapshot {
-        #[dsl(block)]
-        presence: NotePresence,
-    },
-}
+#[path = "🧬️schema/🧬️mutations/🦀️.rs"]
+mod mutations;
+pub use mutations::*;
 
-impl Mutation<NotePresence> for NotePresenceMutation {
-    type Diff = NotePresence;
 
-    fn diff(&self, _base: &NotePresence) -> protocol::MutationOutcome<NotePresence> {
-        match self {
-            Self::Snapshot { presence } => protocol::MutationOutcome::new(presence.clone()),
-        }
-    }
+#[cfg(test)]
+mod contract_vectors {
+    use super::*;
+    use protocol::{Mutation, MutationDiff, OpBinary, OpText};
+    use dsl::os_pack as pack;
 
-    fn inverse(&self, base: &NotePresence) -> Vec<Self> {
-        vec![Self::Snapshot { presence: base.clone() }]
-    }
-}
-
-impl protocol::OpText for NotePresenceMutation {
-    fn parse_op(line: &str) -> Result<Self, store::TextError> {
-        let variants = <Self as dsl::DslVariants>::variants();
-        for (keyword, spec_fn) in &variants {
-            let probe = format!("{keyword} ");
-            if line == keyword.as_str() || line.starts_with(&probe) {
-                let body = if line.len() > keyword.len() { line[keyword.len()..].trim_start() } else { "" };
-                let record = dsl::parse(body, &spec_fn(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline })?;
-                return <Self as dsl::DslVariants>::from_named_record(keyword, &record);
-            }
-        }
-        Err(dsl::__rt::field_error(format!("unknown operation line '{line}'")))
-    }
-    fn print_op(&self) -> String {
-        let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
-        let variants = <Self as dsl::DslVariants>::variants();
-        let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
-        let body = dsl::print(&record, &spec_fn(), dsl::JoinMode::Inline);
-        if body.is_empty() {
-            keyword
-        } else {
-            format!("{keyword} {body}")
+    #[test]
+    fn note_presence_contract_vectors_match_the_json_oracle() {
+        let vectors: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🔁️mutation-contracts.json")).expect("neutral contract vectors");
+        let base: NotePresence = pack::from_json_str(&vectors["base"].to_string()).expect("owned base decoder");
+        assert_eq!(<NotePresenceMutation as Mutation<NotePresence>>::DESCRIPTORS.len(), vectors["cases"].as_array().expect("cases").len());
+        for vector in vectors["cases"].as_array().expect("cases") {
+            let mutation: NotePresenceMutation = pack::from_json_str(&vector["mutation"].to_string()).expect("owned operation decoder");
+            assert_eq!(serde_json::from_str::<serde_json::Value>(&pack::to_json_string(&mutation)).expect("independent operation oracle"), vector["mutation"]);
+            assert_eq!(mutation.descriptor().semantic_kind, vector["kind"].as_str().expect("semantic kind"));
+            assert_eq!(NotePresenceMutation::parse_op(&mutation.print_op()).expect("operation text"), mutation);
+            assert_eq!(NotePresenceMutation::decode_op(&mutation.encode_op().expect("operation binary")).expect("binary decode"), mutation);
+            let outcome = mutation.diff(&base);
+            assert!(outcome.messages().is_empty());
+            let next = outcome.diff().apply(&base).expect("apply diff");
+            assert_eq!(serde_json::from_str::<serde_json::Value>(&pack::to_json_string(&next)).expect("independent state oracle"), vector["expected"]);
+            let restored = mutation.inverse(&base).into_iter().fold(next, |state, inverse| inverse.diff(&state).diff().apply(&state).expect("apply inverse"));
+            assert_eq!(restored, base);
         }
     }
 }
-
-impl protocol::OpBinary for NotePresenceMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        dsl::variants_binary::encode_op(self)
-    }
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        dsl::variants_binary::decode_op(bytes)
-    }
-}
-//#endregion 🔖️PresenceMutation

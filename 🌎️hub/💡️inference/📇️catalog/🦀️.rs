@@ -19,6 +19,12 @@ use serde::{Deserialize, Serialize};
 const GIS_MAP_BINDING_DOMAIN: &[u8] = b"semio.hub.gis-map-frozen-binding/v1\0";
 const GIS_MAP_NATIVE_EXECUTABLE: &str = "semio_s_plugin_gis::gis_map_inference_service";
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+struct GisMapFrozenExecutionProtocolV1 {
+    app_channel_version: u32,
+}
+
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 struct GisMapFrozenPackageV1 {
@@ -28,6 +34,7 @@ struct GisMapFrozenPackageV1 {
     component_sha256: String,
     component_blake3: String,
     descriptor_byte_sha256: String,
+    execution_protocol: GisMapFrozenExecutionProtocolV1,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -157,6 +164,7 @@ fn validate_gis_map_binding_projection(projection: &GisMapFrozenBindingProjectio
         || projection.package.plugin_id != "gis"
         || projection.package.package_id != "semio:gis"
         || projection.package.version.is_empty()
+        || projection.package.execution_protocol.app_channel_version != directory::os_spr::CHANNEL_VERSION
         || projection.artifact.kind != "s.gis.gismap"
         || projection.artifact.schema != "gis.map"
         || projection.parent_dialect.artifact_kind != projection.artifact.kind
@@ -217,6 +225,7 @@ fn verified_gis_map_binding_with_service(catalog: Arc<VerifiedTrustedCatalog>, n
         || hex_lower(package.component_sha256()) != selection.package.component_sha256
         || hex_lower(&package.package_ref().hash.0) != selection.package.component_blake3
         || hex_lower(package.descriptor_sha256()) != selection.package.descriptor_byte_sha256
+        || package.descriptor().execution_protocol.app_channel_version != selection.package.execution_protocol.app_channel_version
         || package.descriptor().package_id != selection.package.package_id
         || package.descriptor().manifest.version != selection.package.version
     {
@@ -241,6 +250,7 @@ fn verified_gis_map_binding_with_service(catalog: Arc<VerifiedTrustedCatalog>, n
             component_sha256: selection.package.component_sha256.clone(),
             component_blake3: selection.package.component_blake3.clone(),
             descriptor_byte_sha256: selection.package.descriptor_byte_sha256.clone(),
+            execution_protocol: GisMapFrozenExecutionProtocolV1 { app_channel_version: selection.package.execution_protocol.app_channel_version },
         },
         artifact: GisMapFrozenArtifactV1 { kind: selection.artifact.kind.clone(), schema: selection.artifact.schema.clone(), pack_schema_hash: selection.artifact.pack_schema_hash.clone() },
         parent_dialect: GisMapFrozenDialectV1 { artifact_kind: selection.parent_dialect.artifact_kind.clone(), standard: selection.parent_dialect.standard.clone(), subset: selection.parent_dialect.subset.clone() },

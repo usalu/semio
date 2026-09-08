@@ -814,7 +814,7 @@ function artifactBootstrapError(message: string): Error {
   return new Error(`artifact bootstrap ${message}`);
 }
 
-function equalBytes(left: readonly number[], right: readonly number[]): boolean {
+function equalBytes(left: readonly number[] | Readonly<Uint8Array>, right: readonly number[] | Readonly<Uint8Array>): boolean {
   return left.length === right.length && left.every((byte, index) => byte === right[index]);
 }
 

@@ -2,6 +2,7 @@
 
 use crate::artifacts::gisterrain::diff::GisTerrainDiff;
 use crate::artifacts::gisterrain::GisTerrainSnapshot;
+#[cfg(test)]
 use serde::{Deserialize, Serialize};
 use semio_framework_value_derive::{FromValue, ToValue};
 

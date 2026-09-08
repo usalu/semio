@@ -6,9 +6,12 @@ use semio_framework_plugin::plugin_app_close_prelude::*;
 use semio_framework_plugin::{ExecutionMode, Plugin, PluginApp};
 
 //#region 🗃️Apps
-/// 🗃️ Closed runtime app fleet for the declaration-owned reasoning surfaces.
 semio_framework_dispatch_macros::dyn_enum_close! {
-    pub enum ReasoningApps: PluginApp {}
+    /// 🗃️ Closed runtime app fleet for the declaration-owned reasoning surfaces.
+    pub enum ReasoningApps: PluginApp {
+        Editor(VcsArtifactApp<EditorApp<crate::editor::wires::ReasoningWiresPlayApp>>),
+        Viewer(VcsArtifactApp<ViewerApp<crate::viewer::wires::WiresViewer>>),
+    }
 }
 //#endregion 🗃️Apps
 
@@ -40,12 +43,12 @@ mod surface_tests {
 
     #[semio_framework_async_macros::async_test]
     async fn wires_viewer_never_mutates() {
-        assert_viewer_never_mutates::<crate::viewer::wires::WiresViewer>();
+        assert_viewer_never_mutates::<crate::viewer::wires::WiresViewer>().await;
     }
 
     #[semio_framework_async_macros::async_test]
     async fn wires_editor_and_viewer_share_dialect() {
-        assert_editor_and_viewer_share_dialect::<crate::editor::wires::ReasoningWiresPlayApp, crate::viewer::wires::WiresViewer>();
+        assert_editor_and_viewer_share_dialect::<crate::editor::wires::ReasoningWiresPlayApp, crate::viewer::wires::WiresViewer>().await;
     }
 }
 //#endregion 🧪️SurfaceTests
@@ -68,8 +71,8 @@ mod identity_tests {
 
     /// 🏗️ The whole guest assembly, named — `plugin()` runs `try_build`'s own `semio:<plugin_id>`
     /// package-identity preflight plus every artifact-declaration preflight.
-    fn assembled_plugin() -> semio_framework_plugin::Plugin<crate::ReasoningApps> {
-        match crate::plugin().await {
+    fn assembled_plugin() -> semio_framework_plugin::Plugin<super::ReasoningApps> {
+        match super::plugin() {
             Ok(plugin) => plugin,
             Err(error) => panic!("plugin assembly rejected: {error:?}"),
         }
@@ -92,7 +95,7 @@ mod identity_tests {
         let package_id = fixture["packageId"].as_str().expect("fixture packageId");
         assert_eq!(package_id, format!("semio:{plugin_id}"));
 
-        let manifest = assembled_plugin().await.manifest;
+        let manifest = assembled_plugin().manifest;
         assert_eq!(manifest.plugin_id, plugin_id);
         assert!(COMPONENT_MANIFEST.contains(&format!("package = \"{package_id}\"")), "Cargo component package is not {package_id}");
         assert!(COMPONENT_MANIFEST.contains(&format!("name = \"{}\"", fixture["packageName"].as_str().expect("fixture packageName"))));

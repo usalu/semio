@@ -7,35 +7,68 @@
       "options": {
         "cwd": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🐍️python",
         "command": "bun ./📜️script.ts generate"
-      }
+      },
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [
+        "@semio-tech/ui-styling-tokens:generate"
+      ]
     },
     "test": {
       "executor": "nx:run-commands",
       "options": {
         "cwd": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🐍️python",
         "command": "bun ./📜️script.ts test"
-      }
+      },
+      "outputs": [],
+      "dependsOn": [
+        "deps",
+        "@semio-tech/ui-styling-tokens:generate"
+      ]
     },
     "test-quick": {
       "executor": "nx:run-commands",
       "options": {
         "cwd": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🐍️python",
         "command": "bun ./📜️script.ts test quick"
-      }
+      },
+      "outputs": [],
+      "dependsOn": [
+        "deps",
+        "@semio-tech/ui-styling-tokens:generate"
+      ]
     },
     "test-long": {
       "executor": "nx:run-commands",
       "options": {
         "cwd": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🐍️python",
         "command": "bun ./📜️script.ts test long"
-      }
+      },
+      "outputs": [],
+      "dependsOn": [
+        "deps",
+        "@semio-tech/ui-styling-tokens:generate"
+      ]
     },
     "test-exhaustive": {
       "executor": "nx:run-commands",
       "options": {
         "cwd": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🐍️python",
         "command": "bun ./📜️script.ts test exhaustive"
-      }
+      },
+      "outputs": [],
+      "dependsOn": [
+        "deps",
+        "@semio-tech/ui-styling-tokens:generate"
+      ]
+    },
+    "deps": {
+      "cache": false,
+      "outputs": [],
+      "options": {
+        "command": "bun ./📜️script.ts deps"
+      },
+      "parallelism": false
     }
   }
 }

@@ -22,6 +22,7 @@ impl PatternSet {
     }
 
     /// 🎭️ All-one (full) set over `len` patterns.
+    #[cfg(test)]
     pub fn new_full(len: usize) -> Self {
         let mut set = Self::new_empty(len);
         set.fill();
@@ -63,6 +64,7 @@ impl PatternSet {
     }
 
     #[inline]
+    #[cfg(test)]
     pub fn is_empty_universe(&self) -> bool {
         self.len == 0
     }
@@ -87,6 +89,7 @@ impl PatternSet {
     }
 
     /// 🎭️ Sets every bit `0..len` (trailing bits in the final word stay zero).
+    #[cfg(test)]
     pub fn fill(&mut self) {
         if self.len == 0 {
             return;
@@ -99,11 +102,13 @@ impl PatternSet {
         }
     }
 
+    #[cfg(test)]
     pub fn clear_all(&mut self) {
         self.words.fill(0);
     }
 
     /// 🎭️ In-place `self &= other`.
+    #[cfg(test)]
     pub fn and_with(&mut self, other: &PatternSet) {
         debug_assert_eq!(self.len, other.len);
         for (a, b) in self.words.iter_mut().zip(other.words.iter()) {
@@ -112,6 +117,7 @@ impl PatternSet {
     }
 
     /// 🎭️ In-place `self |= other`.
+    #[cfg(test)]
     pub fn or_with(&mut self, other: &PatternSet) {
         debug_assert_eq!(self.len, other.len);
         for (a, b) in self.words.iter_mut().zip(other.words.iter()) {
@@ -120,6 +126,7 @@ impl PatternSet {
     }
 
     /// 🎭️ In-place `self &= !other`.
+    #[cfg(test)]
     pub fn and_not_with(&mut self, other: &PatternSet) {
         debug_assert_eq!(self.len, other.len);
         for (a, b) in self.words.iter_mut().zip(other.words.iter()) {
@@ -127,10 +134,12 @@ impl PatternSet {
         }
     }
 
+    #[cfg(test)]
     pub fn count_ones(&self) -> u32 {
         self.words.iter().map(|w| w.count_ones()).sum()
     }
 
+    #[cfg(test)]
     pub fn is_all_zero(&self) -> bool {
         self.words.iter().all(|&w| w == 0)
     }
@@ -147,6 +156,7 @@ impl PatternSet {
     }
 
     /// 🎭️ Iterates set bits in ascending order, skipping whole zero words at a time.
+    #[cfg(test)]
     pub fn iter_ones(&self) -> impl Iterator<Item = PatternId> + '_ {
         self.words.iter().enumerate().flat_map(|(word_idx, &word)| {
             let mut remaining = word;
@@ -163,15 +173,18 @@ impl PatternSet {
 
     /// 🎭️ Read-only access to the backing words, e.g. for stable-hash fingerprinting.
     #[inline]
+    #[cfg(test)]
     pub fn words(&self) -> &[u64] {
         &self.words
     }
 
+    #[cfg(test)]
     pub fn is_subset_of(&self, other: &PatternSet) -> bool {
         debug_assert_eq!(self.len, other.len);
         self.words.iter().zip(other.words.iter()).all(|(a, b)| a & !b == 0)
     }
 
+    #[cfg(test)]
     pub fn intersects(&self, other: &PatternSet) -> bool {
         debug_assert_eq!(self.len, other.len);
         self.words.iter().zip(other.words.iter()).any(|(a, b)| a & b != 0)
@@ -201,6 +214,7 @@ impl PatternSet {
     /// 🎭️ Fused restrict-and-collect: `removed_out = self & !allowed; self &= allowed`. Returns the
     /// number of bits actually cleared. The single fused pass this crate's hot loop needs — avoids
     /// computing the removed mask and the restricted set in two separate scans.
+    #[cfg(test)]
     pub fn restrict_returning_removed(&mut self, allowed: &PatternSet, removed_out: &mut PatternSet) -> u32 {
         debug_assert_eq!(self.len, allowed.len);
         debug_assert_eq!(self.len, removed_out.len);

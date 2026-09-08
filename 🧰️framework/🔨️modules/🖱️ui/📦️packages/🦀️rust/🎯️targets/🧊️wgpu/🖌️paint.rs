@@ -9,7 +9,7 @@
 //! `paint_tree` runs, as an earlier revision of this comment used to caveat. `WidgetState`-backed
 //! composites have since gained real paint support too: an open `Select`'s popup expands live
 //! (`paint_select`'s `open`/`retained` params, wired by the W2 pass — see
-//! `.🦑️repo/🎫️tickets/26/07/11/WGPU-RENDERER-FULL-PARITY/report-w2-ui-wgpu-integration.md`), and a focused
+//! `.🧬semio/🦑️repo/🎫️tickets/26/07/11/WGPU-RENDERER-FULL-PARITY/report-w2-ui-wgpu-integration.md`), and a focused
 //! `Input`'s caret/selection-highlight render straight from its live `EditState` (`paint_input`,
 //! W2 widget-visuals pass). `Tree`'s live scroll offset (`WidgetState::scroll_offset`) remains the
 //! one rest-state-only exception — no scrollable-viewport paint exists yet, out of every pass to
@@ -2491,7 +2491,7 @@ mod tests {
     // single `UiStatus` enum, so "loading and waiting both set" is unrepresentable — which is the point.
 
     //#region 🔖️FidelityFixes
-    // 🩹️ One test per fidelity gap this pass closed (see `.🦑️repo/🎫️tickets/26/07/11/WGPU-RENDERER-FULL-PARITY/report-w1c-paint-parity.md`),
+    // 🩹️ One test per fidelity gap this pass closed (see `.🧬semio/🦑️repo/🎫️tickets/26/07/11/WGPU-RENDERER-FULL-PARITY/report-w1c-paint-parity.md`),
     // additive to the pre-existing tests above.
 
     fn button(id: &str, disabled: bool) -> UiNode {
@@ -2753,7 +2753,7 @@ mod tests {
     //#endregion 🔖️FidelityFixes
 
     //#region 🔖️W2InteractivityFixes
-    // 🔽️🎴️🌳️ Tests for `.🦑️repo/🎫️tickets/26/07/11/WGPU-RENDERER-FULL-PARITY`'s W2 pass: Select popup painting
+    // 🔽️🎴️🌳️ Tests for `.🧬semio/🦑️repo/🎫️tickets/26/07/11/WGPU-RENDERER-FULL-PARITY`'s W2 pass: Select popup painting
     // (`paint_select` + `sync_select_popup_rows`), Stack `activate`/`selected`/`drop_action`
     // (`paint_stack_frame` + `sync_interactive_state`'s `DROP_TARGET` sync), and Tree row real layout
     // + `DRAG_SOURCE` sync (`sync_tree_row_layout`/`sync_tree_item_layout`).
@@ -2891,7 +2891,7 @@ mod tests {
     //#endregion 🔖️W2InteractivityFixes
 
     //#region 🔖️W2WidgetVisuals
-    // 🖱️✍️🎯️ Tests for `.🦑️repo/🎫️tickets/26/07/11/WGPU-RENDERER-FULL-PARITY`'s W2 widget-visuals pass: a
+    // 🖱️✍️🎯️ Tests for `.🧬semio/🦑️repo/🎫️tickets/26/07/11/WGPU-RENDERER-FULL-PARITY`'s W2 widget-visuals pass: a
     // focused `Input`'s caret/selection-highlight (`paint_input`, sourced from `tree::EditState`),
     // and the `formControlFocusBorderClass`-matching focus ring ported onto every remaining
     // focusable control kind (`Button`/`Select`/`Toggle`/`NumberStepper`/`IconSelect`, plus a

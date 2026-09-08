@@ -1119,7 +1119,7 @@ pub fn create_fem2d_app() -> semio_framework_plugin::AppDefinition {
 #[cfg(test)]
 pub(crate) mod testkit {
     use super::*;
-    use semio_framework_plugin::testkit::{meta, new_app, new_app_with_registry};
+    use semio_framework_plugin::testkit::{meta, new_app};
     use semio_framework_plugin::{EditorApp, InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
 
     pub type Fem2dApp = VcsArtifactApp<EditorApp<Fem2dPlayApp>>;
@@ -1127,18 +1127,6 @@ pub(crate) mod testkit {
     /// 🧪️ A bare app instance — no `AppActionRegistry`, so undeclared internal commands dispatch freely.
     pub fn fem2d_app() -> Fem2dApp {
         semio_framework_plugin::resolve_ready(new_app::<EditorApp<Fem2dPlayApp>>())
-    }
-
-    /// 🧪️ Adapts `create_fem2d_app`'s `AppDefinition` into the `App { definition, examples }` shape
-    /// `testkit::new_app_with_registry` expects, carrying the SAME example list the subset root hands
-    /// the real host (`SubsetDeclaration.examples`) so a test host's switcher sees what a live one does.
-    fn fem2d_app_manifest_for_testkit() -> semio_framework_plugin::App {
-        semio_framework_plugin::App { definition: create_fem2d_app(), examples: vec![crate::artifacts::fem2d::examples::demo::source().into()] }
-    }
-
-    /// 🧪️ An app wired to the real manifest registry — enforces View/Shell kind discipline.
-    pub fn fem2d_app_with_registry() -> Fem2dApp {
-        semio_framework_plugin::resolve_ready(new_app_with_registry::<EditorApp<Fem2dPlayApp>>(fem2d_app_manifest_for_testkit))
     }
 
     pub async fn dispatch(app: &mut Fem2dApp, command: Fem2dCommand) -> InvocationResult {
@@ -1153,7 +1141,7 @@ pub(crate) mod testkit {
     }
 
     pub fn render(app: &mut Fem2dApp, body_key: &str) -> String {
-        dsl::json::to_json_string(&semio_framework_plugin::resolve_ready(app.render(body_key, None, &ViewModel::default())).expect("render"))
+        semio_framework_plugin::testkit::project_and_retire_fixture_tree(semio_framework_plugin::resolve_ready(app.render(body_key, None, &ViewModel::default())).expect("render")).expect("fixture projection")
     }
 }
 //#endregion 🧪️Testkit
@@ -1373,24 +1361,24 @@ mod tests {
     async fn fem2d_io_declares_geometry_in_and_results_out_ports() {
         let io = fem2d_io();
         assert_eq!(io.document_schema, crate::artifacts::fem2d::FEM_2D_SCHEMA);
-        assert_eq!(io.document_media_type.class, semio_framework_plugin::MediaClass::TwoD);
-        assert_eq!(io.document_media_type.form, semio_framework_plugin::MediaForm::Vector);
+        assert_eq!(io.document_media_type.class, MediaClass::TwoD);
+        assert_eq!(io.document_media_type.form, MediaForm::Vector);
         assert_eq!(io.artifact.id, "2d.fem");
         assert_eq!(io.artifact.component_kind, "fem2d");
 
         let geometry_in = io.ports.iter().find(|port| port.id == "geometry:in").expect("geometry:in declared");
         assert_eq!(geometry_in.direction, semio_framework_plugin::MediaPortDirection::In);
         assert!(geometry_in.required, "geometry:in is a required input port");
-        assert_eq!(geometry_in.media_type.class, semio_framework_plugin::MediaClass::TwoD);
-        assert_eq!(geometry_in.media_type.form, semio_framework_plugin::MediaForm::Vector);
+        assert_eq!(geometry_in.media_type.class, MediaClass::TwoD);
+        assert_eq!(geometry_in.media_type.form, MediaForm::Vector);
         assert_eq!(geometry_in.multiplicity, semio_framework::PortMultiplicity::One);
 
         let results_out = io.ports.iter().find(|port| port.id == "results:out").expect("results:out declared");
         assert_eq!(results_out.direction, semio_framework_plugin::MediaPortDirection::Out);
         assert!(!results_out.required, "results:out is optional");
         assert_eq!(results_out.kind_id.as_deref(), Some("computation.fem2d"));
-        assert_eq!(results_out.media_type.class, semio_framework_plugin::MediaClass::Data);
-        assert_eq!(results_out.media_type.form, semio_framework_plugin::MediaForm::Value);
+        assert_eq!(results_out.media_type.class, MediaClass::Data);
+        assert_eq!(results_out.media_type.form, MediaForm::Value);
     }
 
     /// 🗣️ B1: the manifest itself (not a runtime `cfg.locale`-driven overlay) now carries every

@@ -9,6 +9,34 @@
     "family:os-kernel"
   ],
   "targets": {
+    "document-opening-attempt-native-check": {
+      "executor": "nx:run-commands", "cache": false,
+      "options": { "command": "bun ./📜️script.ts document-opening-attempt-native-check", "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust" }
+    },
+    "database-history-completion-check": {
+      "executor": "nx:run-commands", "cache": false,
+      "options": { "command": "bun ./📜️script.ts database-history-completion-check", "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust" }
+    },
+    "database-history-completion-native-check": {
+      "executor": "nx:run-commands", "cache": false,
+      "options": { "command": "bun ./📜️script.ts database-history-completion-check --native", "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust" }
+    },
+    "database-catalog-read-ownership-check": {
+      "executor": "nx:run-commands",
+      "options": { "command": "bun ./📜️script.ts database-catalog-read-ownership-check", "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust" }
+    },
+    "database-catalog-read-ownership-native-check": {
+      "executor": "nx:run-commands",
+      "options": { "command": "bun ./📜️script.ts database-catalog-read-ownership-check --native", "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust" }
+    },
+    "database-capability-completion-check": {
+      "executor": "nx:run-commands", "cache": false,
+      "options": { "command": "bun ./📜️script.ts database-capability-completion-check", "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust" }
+    },
+    "database-capability-completion-native-check": {
+      "executor": "nx:run-commands", "cache": false,
+      "options": { "command": "bun ./📜️script.ts database-capability-completion-check --native", "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust" }
+    },
     "database-shutdown-check": {
       "executor": "nx:run-commands", "cache": false,
       "options": { "command": "bun ./📜️script.ts database-shutdown-check", "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust" }

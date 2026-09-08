@@ -11,7 +11,6 @@ use crate::artifacts::gismap::mutations::{
 use crate::artifacts::gismap::GisMapSnapshot;
 use dsl::{FromValue, ToValue};
 use protocol::Mutation;
-use serde::{Deserialize, Serialize};
 use store::{ArtifactEnvelope, ArtifactStore};
 
 //#region 🔹Operation

@@ -329,7 +329,7 @@ impl store::ArtifactStoreOneItemPreparationFactory<Fem3dSnapshot, Fem3dMutation>
 
 impl store::ArtifactStoreOneItemPreparation<Fem3dSnapshot, Fem3dMutation> for Fem3dArtifactPreparation {
     fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, String> {
-        use protocol::{Mutation as _, MutationDiff as _};
+        use protocol::Mutation as _;
         if !grant.permits_one() || self.cancelled {
             return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked);
         }
@@ -633,6 +633,7 @@ pub fn fem3d_results_out_port() -> semio_framework_plugin::MediaPortSpec {
 /// model/results windows (`crate::editor::fem3d::modes::edit::windows::{model, results}`), per the
 /// migration recipe's `DocumentHelpers` rule — a helper with 2+ window consumers belongs at the app
 /// level, not duplicated per window.
+#[cfg(test)]
 use crate::fem3d_engine::mesh_preview;
 
 /// 🧭️ Hamilton quaternion product `a * b`, both `[x,y,z,w]` — applying `b`'s rotation first, then `a`'s.
@@ -688,9 +689,11 @@ fn fem3d_deformed_position(pos: [f64; 3], node_id: &str, displacements: Option<&
 }
 
 /// 🧊️ Half-extent-ish scale of the small box instance drawn at each node.
+#[cfg(test)]
 const NODE_SIZE_3D: f64 = 0.05;
 /// 🧊️ Cross-section (x/y) thickness of the oriented box prism drawn for each `Bar`/`Frame` member —
 /// a fixed visual thickness, not the member's actual section dimensions (see `fem3d_structural_instances`).
+#[cfg(test)]
 const MEMBER_THICKNESS_3D: f64 = 0.05;
 
 #[cfg(test)]
@@ -1235,8 +1238,8 @@ pub fn create_fem3d_app() -> AppDefinition {
 #[cfg(test)]
 pub(crate) mod testkit {
     use super::*;
-    use semio_framework_plugin::testkit::{meta, new_app, new_app_with_registry};
-    use semio_framework_plugin::{ArtifactApp, EditorApp, InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
+    use semio_framework_plugin::testkit::{meta, new_app};
+    use semio_framework_plugin::{EditorApp, InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
 
     pub type Fem3dApp = VcsArtifactApp<EditorApp<Fem3dPlayApp>>;
 
@@ -1245,19 +1248,6 @@ pub(crate) mod testkit {
     /// `VcsArtifactApp` wraps, exactly the way `PluginBuilder::editor::<Fem3dPlayApp>` builds it.
     pub fn fem3d_app() -> Fem3dApp {
         semio_framework_plugin::resolve_ready(new_app::<EditorApp<Fem3dPlayApp>>())
-    }
-
-    /// 🚧️ SDK GAP: `new_app_with_registry` still expects `fn() -> App` (contract §2.4's
-    /// `App { definition, examples }` split was not threaded through this testkit fn) — wrap the now
-    /// `AppDefinition`-returning `create_fem3d_app` the same way the cad pilot's own
-    /// `cad_app_manifest_for_testkit` does.
-    fn fem3d_app_manifest_for_testkit() -> semio_framework_plugin::App {
-        semio_framework_plugin::App { definition: create_fem3d_app(), examples: Vec::new() }
-    }
-
-    /// 🧪️ An app wired to the real manifest registry — enforces View/Shell kind discipline.
-    pub fn fem3d_app_with_registry() -> Fem3dApp {
-        semio_framework_plugin::resolve_ready(new_app_with_registry::<EditorApp<Fem3dPlayApp>>(fem3d_app_manifest_for_testkit))
     }
 
     pub async fn dispatch(app: &mut Fem3dApp, command: Fem3dCommand) -> InvocationResult {
@@ -1272,7 +1262,7 @@ pub(crate) mod testkit {
     }
 
     pub fn render(app: &mut Fem3dApp, body_key: &str) -> String {
-        dsl::json::to_json_string(&semio_framework_plugin::resolve_ready(app.render(body_key, None, &ViewModel::default())).expect("render"))
+        semio_framework_plugin::testkit::project_and_retire_fixture_tree(semio_framework_plugin::resolve_ready(app.render(body_key, None, &ViewModel::default())).expect("render")).expect("fixture projection")
     }
 
     /// 🧪️ An app reset to the empty document. `Fem3dPlayApp::initial_snapshot` now boots the bundled
@@ -1298,7 +1288,7 @@ mod tests {
     fn retained_command_fixture_matches_exact_routes_and_value_codec_boundaries() {
         use store::ArtifactStoreOneItemPreparationFactory as _;
         let fixture: dsl::DslValue = dsl::json::from_json_str(include_str!("🧪️fixtures/🚧️retained-command-limits/🔣️.json")).expect("language-neutral retained fixture");
-        let migrated: Vec<&str> = fixture["routes"].as_array().expect("routes").iter().filter(|row| row["disposition"] == "Migrated").map(|row| row["id"].as_str().expect("route id")).collect();
+        let migrated: Vec<&str> = fixture["routes"].as_array().expect("routes").iter().filter(|row| row["disposition"].as_str() == Some("Migrated")).map(|row| row["id"].as_str().expect("route id")).collect();
         assert_eq!(migrated, FEM3D_RETAINED_TOOL_IDS);
         assert_eq!(FEM3D_RETAINED_PUBLICATION_CONTRACTS.len(), migrated.len());
         for (row, contract) in fixture["routes"].as_array().expect("routes").iter().zip(FEM3D_RETAINED_PUBLICATION_CONTRACTS) {
@@ -1375,7 +1365,7 @@ mod tests {
         // 🧷️ `validate_tool_job_rows` compares `registration.contract == row.contract` byte for byte, so
         // the proof rows and the registered factory MUST build from the one `fem3d_retained_contract()`.
         assert_eq!(fem3d_retained_contract().shape, ToolExecutionShape::BoundedFirstStep);
-        assert_eq!(semio_framework::ToolJobFactory::execution_contract(&Fem3dRetainedCommandJobFactory::new("s.fem.fem3d@1/*#editor")), fem3d_retained_contract());
+        assert_eq!(ToolJobFactory::execution_contract(&Fem3dRetainedCommandJobFactory::new("s.fem.fem3d@1/*#editor")), fem3d_retained_contract());
         let mut sorted_ids = FEM3D_RETAINED_TOOL_IDS.to_vec();
         sorted_ids.sort_unstable();
         sorted_ids.dedup();
@@ -1629,7 +1619,7 @@ mod tests {
     /// 🎞️ `"geometry:in"` decodes an extruded-footprint JSON contract into a new `FemSolid` operation.
     #[semio_framework_async_macros::async_test]
     async fn import_media_geometry_in_adds_a_new_solid_3d() {
-        let mut app: Fem3dApp = crate::editor::fem3d::testkit::fem3d_empty_app().await;
+        let mut app: Fem3dApp = testkit::fem3d_empty_app().await;
         dispatch(&mut app, Fem3dCommand::AddMaterial(add_material::AddMaterial { name: "Concrete".into(), e: 30e9, g: 12.5e9 })).await;
         let snapshot = app.snapshot().expect("snapshot");
         let history = semio_framework_plugin::HistoryView::empty();
@@ -1672,24 +1662,24 @@ mod tests {
     async fn fem3d_io_declares_geometry_in_and_results_out_ports() {
         let io = fem3d_io();
         assert_eq!(io.document_schema, crate::artifacts::fem3d::FEM_3D_SCHEMA);
-        assert_eq!(io.document_media_type.class, semio_framework_plugin::MediaClass::ThreeD);
-        assert_eq!(io.document_media_type.form, semio_framework_plugin::MediaForm::Any);
+        assert_eq!(io.document_media_type.class, MediaClass::ThreeD);
+        assert_eq!(io.document_media_type.form, MediaForm::Any);
         assert_eq!(io.artifact.id, "3d.fem");
         assert_eq!(io.artifact.component_kind, "fem3d");
 
         let geometry_in = io.ports.iter().find(|port| port.id == "geometry:in").expect("geometry:in declared");
         assert_eq!(geometry_in.direction, semio_framework_plugin::MediaPortDirection::In);
         assert!(geometry_in.required, "geometry:in is a required input port");
-        assert_eq!(geometry_in.media_type.class, semio_framework_plugin::MediaClass::ThreeD);
-        assert_eq!(geometry_in.media_type.form, semio_framework_plugin::MediaForm::Any);
+        assert_eq!(geometry_in.media_type.class, MediaClass::ThreeD);
+        assert_eq!(geometry_in.media_type.form, MediaForm::Any);
         assert_eq!(geometry_in.multiplicity, semio_framework::PortMultiplicity::One);
 
         let results_out = io.ports.iter().find(|port| port.id == "results:out").expect("results:out declared");
         assert_eq!(results_out.direction, semio_framework_plugin::MediaPortDirection::Out);
         assert!(!results_out.required, "results:out is optional");
         assert_eq!(results_out.kind_id.as_deref(), Some("computation.fem3d"));
-        assert_eq!(results_out.media_type.class, semio_framework_plugin::MediaClass::Data);
-        assert_eq!(results_out.media_type.form, semio_framework_plugin::MediaForm::Value);
+        assert_eq!(results_out.media_type.class, MediaClass::Data);
+        assert_eq!(results_out.media_type.form, MediaForm::Value);
     }
     //#endregion 🔖️MediaPorts
 

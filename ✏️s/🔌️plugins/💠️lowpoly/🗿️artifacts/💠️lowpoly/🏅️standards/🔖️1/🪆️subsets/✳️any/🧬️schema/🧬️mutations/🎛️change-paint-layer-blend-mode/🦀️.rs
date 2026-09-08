@@ -1,6 +1,7 @@
 //! 🎛️ `change-paint-layer-blend-mode` — sets a paint layer's compositing blend mode.
 
 use crate::artifacts::lowpoly::{LowpolyMutation, LowpolySnapshot};
+#[cfg(test)]
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Payload

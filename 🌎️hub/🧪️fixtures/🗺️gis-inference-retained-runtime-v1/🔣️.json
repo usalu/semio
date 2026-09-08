@@ -1,0 +1,63 @@
+{
+  "schema": "semio.hub.gis-inference-retained-runtime/v1",
+  "limits": { "operations": 32, "workUnits": 4096, "claimLeaseMs": 30000, "jobLifetimeMs": 120000, "closeMs": 5000 },
+  "traces": [
+    {
+      "name": "accepted-running-before-release",
+      "steps": ["submit", "response-drop", "compute-enter", "compute-release", "terminal"],
+      "expected": { "response": "running", "events": ["accepted", "running", "succeeded"], "retainedAtResponse": 1, "retainedAtTerminal": 0, "offers": 1, "executions": 1 }
+    },
+    {
+      "name": "owner-cancel-during-checkpoint",
+      "steps": ["submit", "compute-enter", "cancel", "checkpoint", "terminal"],
+      "expected": { "response": "running", "events": ["accepted", "running", "cancel-requested", "cancelled"], "retainedAtResponse": 1, "retainedAtTerminal": 0, "offers": 0, "executions": 1 }
+    },
+    {
+      "name": "revocation-before-terminal-recheck",
+      "steps": ["submit", "compute-enter", "compute-release", "revoke-author", "terminal"],
+      "expected": { "response": "running", "events": ["accepted", "running", "cancelled"], "retainedAtResponse": 1, "retainedAtTerminal": 0, "offers": 0, "executions": 1 }
+    },
+    {
+      "name": "same-request-one-owner",
+      "steps": ["submit", "duplicate-submit", "compute-enter", "compute-release", "terminal"],
+      "expected": { "response": "running", "events": ["accepted", "running", "succeeded"], "retainedAtResponse": 1, "retainedAtTerminal": 0, "offers": 1, "executions": 1 }
+    },
+    {
+      "name": "late-result-after-cancel",
+      "steps": ["submit", "compute-enter", "cancel", "compute-release", "terminal"],
+      "expected": { "response": "running", "events": ["accepted", "running", "cancel-requested", "cancelled"], "retainedAtResponse": 1, "retainedAtTerminal": 0, "offers": 0, "executions": 1 }
+    },
+    {
+      "name": "claim-heartbeat-no-steal",
+      "steps": ["submit", "compute-enter", "claim-heartbeat", "duplicate-submit", "compute-release", "terminal"],
+      "expected": { "response": "running", "events": ["accepted", "running", "succeeded"], "retainedAtResponse": 1, "retainedAtTerminal": 0, "offers": 1, "executions": 1 }
+    },
+    {
+      "name": "admission-or-spawn-refusal",
+      "steps": ["submit", "spawn-refused", "terminal"],
+      "expected": { "response": "capacity", "events": ["accepted", "failed"], "retainedAtResponse": 0, "retainedAtTerminal": 0, "offers": 0, "executions": 0 }
+    },
+    {
+      "name": "runtime-close-drains-worker",
+      "steps": ["submit", "compute-enter", "close", "checkpoint", "terminal"],
+      "expected": { "response": "running", "events": ["accepted", "running", "cancel-requested", "cancelled"], "retainedAtResponse": 1, "retainedAtTerminal": 0, "offers": 0, "executions": 1 }
+    },
+    {
+      "name": "foreign-cancel-inert",
+      "steps": ["submit", "compute-enter", "foreign-cancel", "checkpoint", "compute-release", "terminal"],
+      "expected": { "response": "running", "events": ["accepted", "running", "succeeded"], "retainedAtResponse": 1, "retainedAtTerminal": 0, "offers": 1, "executions": 1 }
+    }
+  ],
+  "sourceHostiles": [
+    "inline-compute",
+    "detached-blocking",
+    "request-drop-cancel",
+    "release-before-join",
+    "publish-without-author-recheck",
+    "duplicate-owner",
+    "request-clock-heartbeat",
+    "unrenewed-claim",
+    "close-abort",
+    "foreign-cancel"
+  ]
+}

@@ -2,7 +2,6 @@
 
 use crate::artifacts::sequence::diff::SequenceDiff;
 use crate::artifacts::sequence::SequenceSnapshot;
-use serde::{Deserialize, Serialize};
 
 pub use crate::artifacts::sequence::standards::v1::subsets::step::schema::mutations::change_step_collapsed::{change_step_collapsed, ChangeStepCollapsed};
 pub use crate::artifacts::sequence::standards::v1::subsets::dependency::schema::mutations::connect_steps::{connect_steps, ConnectSteps};
@@ -16,9 +15,8 @@ pub use crate::artifacts::sequence::schema::operations::*;
 
 //#region 🔖️Aggregate
 /// 🧮️ Closed sequence mutation vocabulary backed by direct semantic owners.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::ToValue, dsl::FromValue, dsl::DslEnum, dsl::Mutations)]
+#[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslEnum, dsl::Mutations)]
 #[value(tag = "mutation", rename_all = "camelCase")]
-#[serde(tag = "mutation", rename_all = "camelCase")]
 #[mutations(snapshot = SequenceSnapshot, diff = SequenceDiff, schema = "sequence.sequence")]
 pub enum SequenceMutation {
     CreateStep(CreateStep),
@@ -29,6 +27,15 @@ pub enum SequenceMutation {
     ConnectSteps(ConnectSteps),
     DisconnectSteps(DisconnectSteps),
     DuplicateStep(DuplicateStep),
+}
+impl neural_engine::ColdRetire for SequenceMutation {
+    fn retire_cold(self) {
+        match self {
+            Self::CreateStep(value) => value.step.retire_cold(),
+            Self::EditStepParams(value) => value.params.retire_cold(),
+            Self::DeleteStep(_) | Self::MoveStep(_) | Self::ChangeStepCollapsed(_) | Self::ConnectSteps(_) | Self::DisconnectSteps(_) | Self::DuplicateStep(_) => {}
+        }
+    }
 }
 //#endregion 🔖️Aggregate
 

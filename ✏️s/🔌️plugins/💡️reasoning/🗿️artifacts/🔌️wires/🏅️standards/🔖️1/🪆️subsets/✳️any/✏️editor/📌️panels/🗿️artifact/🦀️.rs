@@ -5,7 +5,7 @@ use crate::artifacts::wires::WiresSnapshot;
 use crate::editor::wires::terminology::WiresLabels;
 use crate::editor::wires::{ui_value_map, ui_value_text, wires_action, WIRES_GRANULARITY_EDGE, WIRES_GRANULARITY_NODE, WIRES_INTERACTION_GRAPH};
 use semio_framework_plugin::{
-    tree_item_with_action, BuiltNode, InteractionTarget, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, UiFixedList, UiValue, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL,
+    tree_item_with_action, BuiltNode, InteractionTarget, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, UiFixedList, UiValue, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL,
     INTERACTION_SELECT_ACTION_ID,
 };
 
@@ -81,22 +81,22 @@ pub fn render(document: &WiresSnapshot, labels: &WiresLabels) -> semio_framework
             Some(kind) => wires_identity_kind_name(wires, kind).filter(|kind_name| kind_name != label),
             None => None,
         };
-        let item = tree_item_with_action(node_id, Label::data(label), description, wires_action(INTERACTION_SELECT_ACTION_ID, Some(selection_args(node_id, WIRES_GRANULARITY_NODE)?))?)?;
+        let item = tree_item_with_action(node_id, crate::editor::wires::ui_label(label)?, description, wires_action(INTERACTION_SELECT_ACTION_ID, Some(selection_args(node_id, WIRES_GRANULARITY_NODE)?))?)?;
         identity_items.try_push(item).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "wires identity admission failed"))?;
     }
     let mut relationship_items = UiFixedList::<BuiltNode>::default();
     for edge in fixture_edges(board) {
         let edge_id = edge.get("id").and_then(|value| value.as_str()).ok_or_else(|| PluginAssemblyError::new("ui.document", "wires relationship id is required"))?;
         let label = wires_relationship_document_label(wires, edge_id, labels).unwrap_or_else(|| edge_id.into());
-        let item = tree_item_with_action(edge_id, Label::data(label), None, wires_action(INTERACTION_SELECT_ACTION_ID, Some(selection_args(edge_id, WIRES_GRANULARITY_EDGE)?))?)?;
+        let item = tree_item_with_action(edge_id, crate::editor::wires::ui_label(label)?, None, wires_action(INTERACTION_SELECT_ACTION_ID, Some(selection_args(edge_id, WIRES_GRANULARITY_EDGE)?))?)?;
         relationship_items.try_push(item).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "wires relationship admission failed"))?;
     }
     // 🕹️ `.selected()?`/`.highlighted()?`/`.selection_change()` deleted — the framework stamps this
     // tree's presence from the "graph" `InteractionState` post-render and would overwrite whatever
     // this function stamped anyway.
     PanelTreeBuilder::new(WIRES_PLAY_DOCUMENT_NAMESPACE)?
-        .section_or_placeholder("wires-play-document.identities", Some(labels.identities.into()), true, identity_items, Label::data("(none)"))?
-        .section_or_placeholder("wires-play-document.relationships", Some(labels.relationships.into()), false, relationship_items, Label::data("(none)"))?
+        .section_or_placeholder("wires-play-document.identities", Some(crate::editor::wires::ui_label(labels.identities.as_str())?), true, identity_items, crate::editor::wires::ui_label("(none)")?)?
+        .section_or_placeholder("wires-play-document.relationships", Some(crate::editor::wires::ui_label(labels.relationships.as_str())?), false, relationship_items, crate::editor::wires::ui_label("(none)")?)?
         .interaction_domain(WIRES_INTERACTION_GRAPH)?
         .build()
 }
@@ -111,8 +111,8 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn document_has_identities_section() {
-        let mut app = metabolism_app();
-        let json = render_body(&mut app, APP_BODY_DOCUMENT);
+        let mut app = metabolism_app().await;
+        let json = render_body(&mut app, APP_BODY_DOCUMENT).await;
         assert!(json.contains("wires-play-document.identities"));
         assert!(json.contains("Metabolism"));
     }

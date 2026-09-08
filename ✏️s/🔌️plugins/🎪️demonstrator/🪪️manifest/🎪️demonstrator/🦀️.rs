@@ -25,8 +25,8 @@ const PLUGIN_LABEL: &str = "Entwerfen mit Bestand";
 const PLUGIN_VERSION: &str = "0.1.0";
 
 //#region 🔌️Plugin
-/// 🗃️ Closed runtime app fleet for the demonstrator's owned and bundled surfaces.
 semio_framework_dispatch_macros::dyn_enum_close! {
+    /// 🗃️ Closed runtime app fleet for the demonstrator's owned and bundled surfaces.
     pub enum DemonstratorApps: PluginApp {
         PlaygroundEditor(VcsArtifactApp<EditorApp<crate::editor::playground::PlaygroundEditor>>),
         PlaygroundViewer(VcsArtifactApp<ViewerApp<crate::viewer::playground::PlaygroundViewer>>),

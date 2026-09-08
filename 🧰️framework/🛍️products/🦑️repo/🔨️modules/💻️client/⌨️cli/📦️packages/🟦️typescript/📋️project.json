@@ -16,7 +16,12 @@
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts build",
         "forwardAllArgs": true
-      }
+      },
+      "cache": true,
+      "outputs": [
+        "{projectRoot}/../../../client",
+        "{projectRoot}/../../../client.exe"
+      ]
     },
     "test": {
       "executor": "nx:run-commands",

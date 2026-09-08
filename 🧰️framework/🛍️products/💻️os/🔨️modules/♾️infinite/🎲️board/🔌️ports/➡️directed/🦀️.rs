@@ -49,7 +49,13 @@ pub mod scene_json {
                 ("targetTip".to_string(), dsl::ToValue::to_value(&self.target_tip)),
                 ("selected".to_string(), dsl::ToValue::to_value(&self.selected)),
                 ("style".to_string(), dsl::ToValue::to_value(&self.style)),
-                ("userData".to_string(), match &self.user_data { Some(v) => dsl::DslValue::from(v), None => dsl::DslValue::Null }),
+                (
+                    "userData".to_string(),
+                    match &self.user_data {
+                        Some(v) => dsl::DslValue::from(v),
+                        None => dsl::DslValue::Null,
+                    },
+                ),
                 ("visible".to_string(), dsl::ToValue::to_value(&self.visible)),
                 ("locked".to_string(), dsl::ToValue::to_value(&self.locked)),
             ])
@@ -145,7 +151,13 @@ pub mod scene_json {
                 ("endY".to_string(), dsl::ToValue::to_value(&self.end_y)),
                 ("selected".to_string(), dsl::ToValue::to_value(&self.selected)),
                 ("style".to_string(), dsl::ToValue::to_value(&self.style)),
-                ("userData".to_string(), match &self.user_data { Some(v) => dsl::DslValue::from(v), None => dsl::DslValue::Null }),
+                (
+                    "userData".to_string(),
+                    match &self.user_data {
+                        Some(v) => dsl::DslValue::from(v),
+                        None => dsl::DslValue::Null,
+                    },
+                ),
                 ("visible".to_string(), dsl::ToValue::to_value(&self.visible)),
                 ("locked".to_string(), dsl::ToValue::to_value(&self.locked)),
             ])
@@ -184,7 +196,19 @@ pub mod scene_json {
                     _ => {}
                 }
             }
-            Ok(WireDescJson { id: id.ok_or_else(|| dsl::ValueError::new("WireDescJson missing id"))?, source: source.ok_or_else(|| dsl::ValueError::new("WireDescJson missing source"))?, wire_kind, target, end_x, end_y, selected, style, user_data, visible, locked })
+            Ok(WireDescJson {
+                id: id.ok_or_else(|| dsl::ValueError::new("WireDescJson missing id"))?,
+                source: source.ok_or_else(|| dsl::ValueError::new("WireDescJson missing source"))?,
+                wire_kind,
+                target,
+                end_x,
+                end_y,
+                selected,
+                style,
+                user_data,
+                visible,
+                locked,
+            })
         }
     }
 
@@ -224,7 +248,13 @@ pub mod scene_json {
                 ("camera".to_string(), dsl::ToValue::to_value(&self.camera)),
                 ("nodes".to_string(), dsl::DslValue::Array(self.nodes.iter().map(dsl::DslValue::from).collect())),
                 ("edges".to_string(), dsl::DslValue::Array(self.edges.iter().map(dsl::DslValue::from).collect())),
-                ("meta".to_string(), match &self.meta { Some(v) => dsl::DslValue::from(v), None => dsl::DslValue::Null }),
+                (
+                    "meta".to_string(),
+                    match &self.meta {
+                        Some(v) => dsl::DslValue::from(v),
+                        None => dsl::DslValue::Null,
+                    },
+                ),
             ])
         }
     }
@@ -259,13 +289,7 @@ pub mod scene_json {
                     _ => {}
                 }
             }
-            Ok(FixtureJson {
-                schema: schema.ok_or_else(|| dsl::ValueError::new("FixtureJson missing schema"))?,
-                camera: camera.ok_or_else(|| dsl::ValueError::new("FixtureJson missing camera"))?,
-                nodes,
-                edges,
-                meta,
-            })
+            Ok(FixtureJson { schema: schema.ok_or_else(|| dsl::ValueError::new("FixtureJson missing schema"))?, camera: camera.ok_or_else(|| dsl::ValueError::new("FixtureJson missing camera"))?, nodes, edges, meta })
         }
     }
 
@@ -717,6 +741,7 @@ pub mod types {
 
     // #region 🔖️Icons
     use std::cell::{Cell, RefCell};
+    #[cfg(any(test, not(all(target_arch = "wasm32", target_env = "p2"))))]
     use std::hash::{Hash, Hasher};
     use std::mem::ManuallyDrop;
     use std::sync::Arc;
@@ -739,10 +764,13 @@ pub mod types {
     }
 
     const ICON_PAINT_CACHE_CAPACITY: usize = 256;
+    #[cfg(any(test, not(all(target_arch = "wasm32", target_env = "p2"))))]
     const ICON_PAINT_CACHE_KEY_BYTE_CAPACITY: usize = 256;
+    #[cfg(any(test, not(all(target_arch = "wasm32", target_env = "p2"))))]
     const ICON_PAINT_SOURCE_BYTE_CAPACITY: usize = 16 * 1024;
 
     #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+    #[cfg(any(test, not(all(target_arch = "wasm32", target_env = "p2"))))]
     struct IconPaintToken {
         slot: u16,
         generation: u64,
@@ -768,14 +796,17 @@ pub mod types {
     }
 
     impl IconPaintRegistry {
+        #[cfg(any(test, not(all(target_arch = "wasm32", target_env = "p2"))))]
         fn index(&self, key: &str) -> Option<usize> {
             self.slots.iter().position(|slot| slot.epoch == self.epoch && slot.key.as_deref() == Some(key) && slot.value.is_some())
         }
 
+        #[cfg(any(test, not(all(target_arch = "wasm32", target_env = "p2"))))]
         fn get(&self, key: &str) -> Option<&CachedIconPaint> {
             self.slots.get(self.index(key)?)?.value.as_ref()
         }
 
+        #[cfg(any(test, not(all(target_arch = "wasm32", target_env = "p2"))))]
         fn reserve(&mut self, key: &str) -> Option<IconPaintToken> {
             if key.len() > ICON_PAINT_CACHE_KEY_BYTE_CAPACITY || self.get(key).is_some() {
                 self.faulted = true;
@@ -792,6 +823,7 @@ pub mod types {
             Some(IconPaintToken { slot: index as u16, generation: slot.generation })
         }
 
+        #[cfg(any(test, not(all(target_arch = "wasm32", target_env = "p2"))))]
         fn publish(&mut self, token: IconPaintToken, value: CachedIconPaint) {
             let slot = self.slots.get_mut(usize::from(token.slot)).expect("reserved icon cache slot remains present");
             assert_eq!(slot.generation, token.generation, "reserved icon cache generation remains current");
@@ -800,6 +832,7 @@ pub mod types {
             slot.value = Some(value);
         }
 
+        #[cfg(any(test, not(all(target_arch = "wasm32", target_env = "p2"))))]
         fn abort(&mut self, token: IconPaintToken) {
             let slot = self.slots.get_mut(usize::from(token.slot)).expect("reserved icon cache slot remains present");
             assert_eq!(slot.generation, token.generation, "aborted icon cache generation remains current");
@@ -818,8 +851,18 @@ pub mod types {
     pub struct IconPaintCache {
         cache: RefCell<ManuallyDrop<IconPaintRegistry>>,
         retirement_cursor: Cell<u16>,
+        retirement_credited_bytes: Cell<usize>,
+        retirement_scene: Cell<Option<infinite::canvas::OpaqueSceneRetirementToken>>,
         closing: Cell<bool>,
         pub themed_icon_lookup: infinite::canvas::icon_codec::ThemedSvgLookup,
+    }
+
+    /// 📸️ One icon-retirement turn with current credit and physical release split.
+    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+    pub enum IconPaintRetirementStep {
+        Blocked,
+        Pending { released_items: usize, credited_bytes: usize, released_bytes: usize },
+        Complete,
     }
 
     pub struct CachedIconPaintLease<'a> {
@@ -840,20 +883,34 @@ pub mod types {
 
     impl Default for IconPaintCache {
         fn default() -> Self {
-            Self { cache: RefCell::new(ManuallyDrop::new(IconPaintRegistry::default())), retirement_cursor: Cell::new(0), closing: Cell::new(false), themed_icon_lookup: |_| None }
+            Self {
+                cache: RefCell::new(ManuallyDrop::new(IconPaintRegistry::default())),
+                retirement_cursor: Cell::new(0),
+                retirement_credited_bytes: Cell::new(0),
+                retirement_scene: Cell::new(None),
+                closing: Cell::new(false),
+                themed_icon_lookup: |_| None,
+            }
         }
     }
 
     impl Clone for IconPaintCache {
         fn clone(&self) -> Self {
-            Self { cache: RefCell::new(ManuallyDrop::new(IconPaintRegistry::default())), retirement_cursor: Cell::new(0), closing: Cell::new(false), themed_icon_lookup: self.themed_icon_lookup }
+            Self {
+                cache: RefCell::new(ManuallyDrop::new(IconPaintRegistry::default())),
+                retirement_cursor: Cell::new(0),
+                retirement_credited_bytes: Cell::new(0),
+                retirement_scene: Cell::new(None),
+                closing: Cell::new(false),
+                themed_icon_lookup: self.themed_icon_lookup,
+            }
         }
     }
 
     impl Drop for IconPaintCache {
         fn drop(&mut self) {
             let terminal = self.terminal_is_empty();
-            let never_admitted = self.cache.get_mut().slots.iter().all(|slot| slot.key.is_none() && slot.value.is_none());
+            let never_admitted = self.retirement_scene.get().is_none() && self.cache.get_mut().slots.iter().all(|slot| slot.key.is_none() && slot.value.is_none());
             debug_assert!(terminal || never_admitted, "IconPaintCache with admitted resources must reach terminal-empty through close_step before release");
             if terminal || never_admitted {
                 unsafe { ManuallyDrop::drop(self.cache.get_mut()) };
@@ -867,28 +924,62 @@ pub mod types {
         }
 
         pub fn clear(&self) {
+            assert!(self.retirement_scene.get().is_none(), "icon cache invalidation cannot detach an admitted scene retirement");
+            assert_eq!(self.retirement_credited_bytes.get(), 0, "icon cache invalidation cannot detach admitted byte credit");
             self.cache.borrow_mut().invalidate();
             self.retirement_cursor.set(0);
         }
 
         pub fn close_step(&self) -> bool {
+            matches!(self.close_page(1, usize::MAX), IconPaintRetirementStep::Complete)
+        }
+
+        pub fn close_page(&self, maximum_items: usize, maximum_bytes: usize) -> IconPaintRetirementStep {
             self.closing.set(true);
+            if maximum_items == 0 || maximum_bytes == 0 {
+                return IconPaintRetirementStep::Blocked;
+            }
+            if let Some(token) = self.retirement_scene.get() {
+                return match infinite::canvas::advance_opaque_scene_retirement(token, maximum_items, maximum_bytes) {
+                    infinite::canvas::OpaqueSceneRetirementStep::Blocked => IconPaintRetirementStep::Blocked,
+                    infinite::canvas::OpaqueSceneRetirementStep::Pending { released_items, credited_bytes, released_bytes } => IconPaintRetirementStep::Pending { released_items, credited_bytes, released_bytes },
+                    infinite::canvas::OpaqueSceneRetirementStep::Complete { released_items, credited_bytes, released_bytes } => {
+                        self.retirement_scene.set(None);
+                        IconPaintRetirementStep::Pending { released_items, credited_bytes, released_bytes }
+                    }
+                    infinite::canvas::OpaqueSceneRetirementStep::Fault => {
+                        self.cache.borrow_mut().faulted = true;
+                        IconPaintRetirementStep::Blocked
+                    }
+                };
+            }
             let index = usize::from(self.retirement_cursor.get());
             if index == ICON_PAINT_CACHE_CAPACITY {
-                return true;
+                return IconPaintRetirementStep::Complete;
             }
             let mut cache = self.cache.borrow_mut();
             let slot = &mut cache.slots[index];
+            let released_bytes = slot.key.as_ref().map_or(0, String::capacity).saturating_add(match slot.value.as_ref().map(|value| &value.body) {
+                Some(CachedIconBody::Raster(image)) if Arc::strong_count(image) == 1 => image.retirement_exclusive_backing_bytes(),
+                Some(CachedIconBody::Raster(_)) | Some(CachedIconBody::Vector(_)) | None => 0,
+            });
+            let remaining_bytes = released_bytes.saturating_sub(self.retirement_credited_bytes.get());
+            let credited_bytes = maximum_bytes.min(remaining_bytes);
+            self.retirement_credited_bytes.set(self.retirement_credited_bytes.get().saturating_add(credited_bytes));
+            if self.retirement_credited_bytes.get() != released_bytes {
+                return IconPaintRetirementStep::Pending { released_items: 0, credited_bytes, released_bytes: 0 };
+            }
             if let Some(CachedIconPaint { body: CachedIconBody::Vector(_), .. }) = slot.value.as_ref() {
                 let Some(token) = infinite::canvas::reserve_opaque_scene_retirement() else {
                     cache.faulted = true;
-                    return false;
+                    return IconPaintRetirementStep::Blocked;
                 };
                 let paint = slot.value.take().expect("vector icon retirement slot remains occupied");
                 let CachedIconBody::Vector(scene) = paint.body else {
                     unreachable!("vector icon retirement was witnessed before ownership transfer");
                 };
                 infinite::canvas::publish_opaque_scene_retirement(token, scene);
+                self.retirement_scene.set(Some(token));
             } else {
                 slot.value = None;
             }
@@ -896,11 +987,16 @@ pub mod types {
             slot.epoch = 0;
             slot.generation = slot.generation.wrapping_add(1).max(1);
             self.retirement_cursor.set((index + 1) as u16);
-            false
+            self.retirement_credited_bytes.set(0);
+            IconPaintRetirementStep::Pending { released_items: 1, credited_bytes, released_bytes }
         }
 
         pub fn terminal_is_empty(&self) -> bool {
-            self.closing.get() && usize::from(self.retirement_cursor.get()) == ICON_PAINT_CACHE_CAPACITY && self.cache.borrow().slots.iter().all(|slot| slot.key.is_none() && slot.value.is_none())
+            self.closing.get()
+                && usize::from(self.retirement_cursor.get()) == ICON_PAINT_CACHE_CAPACITY
+                && self.retirement_credited_bytes.get() == 0
+                && self.retirement_scene.get().is_none()
+                && self.cache.borrow().slots.iter().all(|slot| slot.key.is_none() && slot.value.is_none())
         }
 
         pub fn faulted(&self) -> bool {
@@ -912,6 +1008,7 @@ pub mod types {
             self.cache.borrow().slots.iter().filter(|slot| slot.key.is_some()).count()
         }
 
+        #[cfg(any(test, not(all(target_arch = "wasm32", target_env = "p2"))))]
         fn icon_vector_cache_key(tag: &str, svg: &str, fg: Color, bg: Color) -> String {
             let mut hasher = std::collections::hash_map::DefaultHasher::new();
             svg.hash(&mut hasher);
@@ -921,6 +1018,7 @@ pub mod types {
             format!("v8|{tag}|{hx:x}|{}|{:02x}{:02x}{:02x}{:02x}|{:02x}{:02x}{:02x}{:02x}", svg.len(), f.r, f.g, f.b, f.a, b.r, b.g, b.b, b.a)
         }
 
+        #[cfg(any(test, not(all(target_arch = "wasm32", target_env = "p2"))))]
         fn icon_raster_cache_key(rgba: &Arc<[u8]>, w: u32, h: u32) -> String {
             let mut hasher = std::collections::hash_map::DefaultHasher::new();
             rgba.as_ref().hash(&mut hasher);
@@ -2002,7 +2100,11 @@ mod quadrant_tests {
         cache.clear();
         assert!(cache.get_or_build(svg, fg, bg, true).is_some());
         assert_eq!(cache.occupied_slots(), 2);
-        while !cache.close_step() {}
+        let mut retained_scene_seen = false;
+        while !cache.close_step() {
+            retained_scene_seen |= cache.retirement_scene.get().is_some();
+        }
+        assert!(retained_scene_seen, "vector icon scene remains retained until its exact retirement cursor drains");
         assert!(cache.terminal_is_empty());
     }
 

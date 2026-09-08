@@ -1,0 +1,17 @@
+[
+  {
+    "schema": "reasoning.mindmap.fixture",
+    "camera": { "x": 1.0, "y": 2.0, "zoom": 1.5 },
+    "nodes": [
+      { "id": "München", "x": 2.5, "y": 3.5, "shape": "circle", "radius": 10.0 },
+      { "id": "node-b", "x": 20.0, "y": 0.0, "shape": "circle", "radius": 10.0 }
+    ],
+    "edges": [{ "id": "edge-a-b", "source": "München", "target": "node-b" }]
+  },
+  {
+    "schema": "puzzle.2d.fixture",
+    "camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
+    "nodes": [],
+    "edges": []
+  }
+]

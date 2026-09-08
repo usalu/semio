@@ -35,15 +35,15 @@ fn cached_program() -> Path {
 }
 
 fn before() -> ProcedureSnapshot {
-    let mut snapshot: ProcedureSnapshot = serde_json::from_str(BEFORE).expect("before imperative document decodes");
+    let mut snapshot: ProcedureSnapshot = dsl::os_pack::from_json_str(BEFORE).expect("before imperative document decodes");
     crate::artifacts::procedure::materialize_procedure_flow(&mut snapshot.flow, &cached_program());
     snapshot
 }
 fn expected_after() -> ProcedureSnapshot {
-    serde_json::from_str(AFTER).expect("after imperative document decodes")
+    dsl::os_pack::from_json_str(AFTER).expect("after imperative document decodes")
 }
 fn mutation() -> ProcedureMutation {
-    serde_json::from_str(MUTATION).expect("create-step mutation decodes")
+    dsl::os_pack::from_json_str(MUTATION).expect("create-step mutation decodes")
 }
 fn built_outcome() -> protocol::MutationOutcome<ProcedureDiff> {
     <ProcedureMutation as protocol::Mutation<ProcedureSnapshot>>::diff(&mutation(), &before())
@@ -79,12 +79,12 @@ async fn the_unused_inverse_is_a_delete_of_the_contested_id() {
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {
-        let decoded: ProcedureSnapshot = serde_json::from_str(text).expect("imperative document decodes");
-        let reencoded = serde_json::to_value(&decoded).expect("imperative document encodes");
+        let decoded: ProcedureSnapshot = dsl::os_pack::from_json_str(text).expect("imperative document decodes");
+        let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::os_pack::to_json_string(&decoded)).expect("imperative document encodes");
         let original: serde_json::Value = serde_json::from_str(text).expect("imperative document reparses");
         assert_eq!(reencoded, original, "create-step/rejects-a-duplicate-step-id-at-the-root-path: committed {label} document JSON is not canonical");
     }
-    let reencoded = serde_json::to_value(mutation()).expect("createStep payload encodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::os_pack::to_json_string(&mutation())).expect("createStep payload encodes");
     let original: serde_json::Value = serde_json::from_str(MUTATION).expect("createStep payload reparses");
     assert_eq!(reencoded, original, "create-step/rejects-a-duplicate-step-id-at-the-root-path: committed createStep JSON is not canonical");
 }

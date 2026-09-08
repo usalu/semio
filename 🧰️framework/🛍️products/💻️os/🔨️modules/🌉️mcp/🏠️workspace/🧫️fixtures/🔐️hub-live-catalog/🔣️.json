@@ -9,7 +9,8 @@
       "packageId": "semio:gis",
       "version": "0.1.0",
       "componentSha256": "3333333333333333333333333333333333333333333333333333333333333333",
-      "descriptorByteSha256": "4444444444444444444444444444444444444444444444444444444444444444"
+      "descriptorByteSha256": "4444444444444444444444444444444444444444444444444444444444444444",
+      "executionProtocol": { "appChannelVersion": 14 }
     },
     "expectedInferenceOwners": ["gis"]
   },
@@ -18,7 +19,8 @@
     "packageId": "semio:local-only",
     "version": "9.9.9",
     "componentSha256": "5555555555555555555555555555555555555555555555555555555555555555",
-    "descriptorByteSha256": "6666666666666666666666666666666666666666666666666666666666666666"
+    "descriptorByteSha256": "6666666666666666666666666666666666666666666666666666666666666666",
+    "executionProtocol": { "appChannelVersion": 14 }
   },
   "states": [
     { "binding": "ready", "selectedPlugins": ["gis"], "localFallback": false },
@@ -32,6 +34,7 @@
     { "name": "package-id", "field": "packageId", "value": "semio:other" },
     { "name": "package-version", "field": "version", "value": "9.9.9" },
     { "name": "component-hash", "field": "componentSha256", "value": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb" },
-    { "name": "descriptor-byte-hash", "field": "descriptorByteSha256", "value": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc" }
+    { "name": "descriptor-byte-hash", "field": "descriptorByteSha256", "value": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc" },
+    { "name": "execution-protocol", "field": "executionProtocol", "value": { "appChannelVersion": 13 } }
   ]
 }

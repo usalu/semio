@@ -15,5 +15,5 @@ pub struct SetCameraZoom {
 pub fn handle(payload: &SetCameraZoom, _doc: &ArtifactView<'_, NoteSnapshot>, cfg: &ConfigView<'_, NoteConfig>, _ctx: &mut crate::editor::note::NoteDispatchCtx) -> Result<Emit<NoteMutation, NoteConfigMutation>, Fault> {
     let mut camera = cfg.snapshot.camera.clone();
     camera.zoom = payload.value;
-    Ok(Emit::config(vec![NoteConfigMutation::SetCamera { camera }]))
+    Ok(Emit::config(vec![NoteConfigMutation::SetCamera(crate::editor::note::config::SetCamera { camera })]))
 }

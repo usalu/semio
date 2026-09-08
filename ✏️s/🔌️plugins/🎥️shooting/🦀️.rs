@@ -6,8 +6,8 @@ use semio_framework_plugin::plugin_app_close_prelude::*;
 use semio_framework_plugin::{ExecutionMode, Plugin, PluginApp};
 
 //#region 🗃️Apps
-/// 🗃️ Closed runtime app fleet for the shooting editor and viewer surfaces.
 semio_framework_dispatch_macros::dyn_enum_close! {
+    /// 🗃️ Closed runtime app fleet for the shooting editor and viewer surfaces.
     pub enum ShootingApps: PluginApp {
         ShootingEditor(VcsArtifactApp<EditorApp<crate::editor::shooting::ShootingPlayApp>>),
         ShootingViewer(VcsArtifactApp<ViewerApp<crate::viewer::shooting::ShootingViewer>>),

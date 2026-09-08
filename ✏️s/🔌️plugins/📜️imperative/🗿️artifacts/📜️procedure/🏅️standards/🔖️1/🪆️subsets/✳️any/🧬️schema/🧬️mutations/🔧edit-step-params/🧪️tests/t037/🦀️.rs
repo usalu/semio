@@ -36,15 +36,15 @@ fn cached_program() -> Path {
 }
 
 fn before() -> ProcedureSnapshot {
-    let mut snapshot: ProcedureSnapshot = serde_json::from_str(BEFORE).expect("before imperative document decodes");
+    let mut snapshot: ProcedureSnapshot = dsl::os_pack::from_json_str(BEFORE).expect("before imperative document decodes");
     crate::artifacts::procedure::materialize_procedure_flow(&mut snapshot.flow, &cached_program());
     snapshot
 }
 fn expected_after() -> ProcedureSnapshot {
-    serde_json::from_str(AFTER).expect("after imperative document decodes")
+    dsl::os_pack::from_json_str(AFTER).expect("after imperative document decodes")
 }
 fn mutation() -> ProcedureMutation {
-    serde_json::from_str(MUTATION).expect("edit-step-params mutation decodes")
+    dsl::os_pack::from_json_str(MUTATION).expect("edit-step-params mutation decodes")
 }
 fn built_outcome() -> protocol::MutationOutcome<ProcedureDiff> {
     <ProcedureMutation as protocol::Mutation<ProcedureSnapshot>>::diff(&mutation(), &before())
@@ -84,12 +84,12 @@ async fn the_inverse_resends_the_identical_dictionary() {
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {
-        let decoded: ProcedureSnapshot = serde_json::from_str(text).expect("imperative document decodes");
-        let reencoded = serde_json::to_value(&decoded).expect("imperative document encodes");
+        let decoded: ProcedureSnapshot = dsl::os_pack::from_json_str(text).expect("imperative document decodes");
+        let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::os_pack::to_json_string(&decoded)).expect("imperative document encodes");
         let original: serde_json::Value = serde_json::from_str(text).expect("imperative document reparses");
         assert_eq!(reencoded, original, "edit-step-params/warns-that-step-1-already-carries-the-requested-params: committed {label} document JSON is not canonical");
     }
-    let reencoded = serde_json::to_value(mutation()).expect("editStepParams payload encodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::os_pack::to_json_string(&mutation())).expect("editStepParams payload encodes");
     let original: serde_json::Value = serde_json::from_str(MUTATION).expect("editStepParams payload reparses");
     assert_eq!(reencoded, original, "edit-step-params/warns-that-step-1-already-carries-the-requested-params: committed editStepParams JSON is not canonical");
 }
@@ -115,7 +115,7 @@ async fn declared_outcome_holds() {
 /// sibling `text` seed handle is never dragged along either.
 #[semio_framework_async_macros::async_test]
 async fn produces_committed_diff() {
-    let produced = serde_json::to_value(built_outcome().diff()).expect("produced edit-step-params diff encodes");
+    let produced = serde_json::from_str::<serde_json::Value>(&dsl::os_pack::to_json_string(built_outcome().diff())).expect("produced edit-step-params diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
     assert_eq!(produced, committed, "edit-step-params/warns-that-step-1-already-carries-the-requested-params: produced diff differs from the committed 🔺️diff/🔣️.json");
 }
@@ -124,9 +124,9 @@ async fn produces_committed_diff() {
 /// seven fields is emitted as `null` because none carries `skip_serializing_if`.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical() {
-    let decoded: ProcedureDiff = serde_json::from_str(DIFF).expect("committed edit-step-params diff decodes");
+    let decoded: ProcedureDiff = dsl::os_pack::from_json_str(DIFF).expect("committed edit-step-params diff decodes");
     assert_eq!(decoded, ProcedureDiff::default(), "edit-step-params/warns-that-step-1-already-carries-the-requested-params: a no-op's committed diff must be the type's own default");
-    let reencoded = serde_json::to_value(&decoded).expect("committed diff re-encodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::os_pack::to_json_string(&decoded)).expect("committed diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
     assert_eq!(reencoded, original, "edit-step-params/warns-that-step-1-already-carries-the-requested-params: committed diff JSON is not canonical");
 }
@@ -135,7 +135,7 @@ async fn committed_diff_is_canonical() {
 /// it must still be the committed diff that does it.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
-    let decoded: ProcedureDiff = serde_json::from_str(DIFF).expect("committed edit-step-params diff decodes");
+    let decoded: ProcedureDiff = dsl::os_pack::from_json_str(DIFF).expect("committed edit-step-params diff decodes");
     let produced = protocol::MutationDiff::apply(&decoded, &before()).expect("committed diff applies to the before-document");
     assert_eq!(produced, expected_after(), "edit-step-params/warns-that-step-1-already-carries-the-requested-params: committed diff did not carry before to after");
 }

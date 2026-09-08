@@ -1,0 +1,191 @@
+{
+  "version": 1,
+  "policies": [
+    {
+      "target": "setup",
+      "cache": false,
+      "continuous": false
+    },
+    {
+      "target": "publish",
+      "cache": false,
+      "continuous": false
+    },
+    {
+      "target": "update",
+      "cache": false,
+      "continuous": false
+    },
+    {
+      "target": "clean-test",
+      "cache": false,
+      "continuous": false
+    },
+    {
+      "target": "format",
+      "cache": false,
+      "continuous": false
+    },
+    {
+      "target": "deploy",
+      "cache": false,
+      "continuous": false
+    },
+    {
+      "target": "bench",
+      "cache": false,
+      "continuous": false
+    },
+    {
+      "target": "dev",
+      "cache": false,
+      "continuous": true
+    },
+    {
+      "target": "serve",
+      "cache": false,
+      "continuous": true
+    },
+    {
+      "target": "watch",
+      "cache": false,
+      "continuous": true
+    },
+    {
+      "target": "dev-storybook",
+      "cache": false,
+      "continuous": true
+    },
+    {
+      "target": "test-watch",
+      "cache": false,
+      "continuous": true
+    }
+  ],
+  "wasm": [
+    {
+      "project": "@semio-tech/framework-editor-rs",
+      "output": "{projectRoot}/pkg"
+    },
+    {
+      "project": "@semio-tech/framework-actor-rs",
+      "output": "{projectRoot}/pkg"
+    },
+    {
+      "project": "@semio-tech/framework-surface-rs",
+      "output": "{projectRoot}/pkg"
+    },
+    {
+      "project": "@semio-tech/framework-os-host-rs",
+      "output": "{projectRoot}/pkg"
+    },
+    {
+      "project": "@semio-tech/trinity-jack-lsp",
+      "output": "{projectRoot}/pkg"
+    },
+    {
+      "project": "@semio-tech/puzzle-plugin",
+      "output": "{projectRoot}/pkg"
+    },
+    {
+      "project": "semio-framework-os-flow-core",
+      "output": "{projectRoot}/../../🕸️bindings"
+    }
+  ],
+  "go": {
+    "manifest": "module semio.test/client\n\ngo 1.25\n\nrequire (\n semio.test/library v0.0.0\n example.com/remote v1.0.0\n)\nreplace (\n semio.test/library => ../library\n)\n",
+    "module": "semio.test/client",
+    "requires": [
+      "semio.test/library",
+      "example.com/remote"
+    ],
+    "replacements": [
+      {
+        "module": "semio.test/library",
+        "path": "../library"
+      }
+    ]
+  },
+  "rust": {
+    "entry": "src/lib.rs",
+    "files": {
+      "src/lib.rs": "// mod decoy;\n/* #[path=\"absent.rs\"] mod ignored; */\n#[path = \"../domain/shared.rs\"] mod shared;\nmod child;\n#[path=\".\"] mod inline { #[path=\"../domain/other.rs\"] mod other; }\npub fn content() -> usize { shared::VALUE + child::VALUE }\n",
+      "src/child.rs": "pub const VALUE: usize = include_str!(\"data.txt\").len();\n",
+      "src/data.txt": "bytes\n",
+      "domain/shared.rs": "pub const VALUE: usize = 42;\n",
+      "domain/other.rs": "pub const TEXT: &str = r#\"mod false_module;\"#;\n",
+      "unrelated/ignored.rs": "compile_error!(\"unrelated\");\n"
+    },
+    "inputs": [
+      "domain/other.rs",
+      "domain/shared.rs",
+      "src/child.rs",
+      "src/data.txt",
+      "src/lib.rs"
+    ]
+  },
+  "lifecycle": {
+    "setupDependencies": [
+      "deps-javascript",
+      "deps-python",
+      "deps-cargo",
+      "deps-go",
+      "deps-dotnet",
+      "deps-cpp",
+      "deps-browsers",
+      "deps-wasm",
+      "deps-tools"
+    ],
+    "prepareDependencies": [
+      "@semio-tech/framework-schema:generate",
+      "@semio-tech/ui-styling-tokens:generate",
+      "@semio-tech/assets:build",
+      "@semio-tech/framework-graph:generate",
+      "@semio-tech/plugin-registry:generate"
+    ]
+  },
+  "generators": [
+    "schema-entity-catalog",
+    "styling-tokens",
+    "graph-catalog",
+    "plugin-registry"
+  ],
+  "validationPrerequisite": {
+    "target": "@semio-tech/plugin-registry:generate",
+    "prerequisite": "repo:generator-inputs"
+  },
+  "bootstrap": {
+    "dotnetProject": "@semio-tech/repo-test-dotnet",
+    "dotnetPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🔷️dotnet",
+    "compile": "🔷️.cs",
+    "pythonMembers": [],
+    "stylingProject": "@semio-tech/ui-styling-py",
+    "stylingGenerator": "@semio-tech/ui-styling-tokens:generate",
+    "pythonDependencies": [
+      "@semio-tech/ui-styling-py:deps",
+      "@semio-tech/energy-oracle-py:deps"
+    ]
+  },
+  "entrypoints": [
+    {
+      "project": "@semio-tech/repo-coordinator",
+      "target": "dev",
+      "prerequisite": "build"
+    },
+    {
+      "project": "@semio-tech/repo-coordinator",
+      "target": "start",
+      "prerequisite": "build"
+    },
+    {
+      "project": "@semio-tech/assets",
+      "target": "logo",
+      "prerequisite": "generate-logo"
+    }
+  ],
+  "cancellation": {
+    "target": "@semio-tech/repo-coordinator:dev",
+    "signal": "SIGTERM",
+    "maxShutdownMs": 5000
+  }
+}

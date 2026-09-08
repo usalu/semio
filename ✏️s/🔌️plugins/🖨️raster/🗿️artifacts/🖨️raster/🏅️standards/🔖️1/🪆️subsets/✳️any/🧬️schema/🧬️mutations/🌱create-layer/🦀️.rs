@@ -3,7 +3,6 @@
 pub mod mutation {
 use crate::artifacts::raster::diff::RasterDiff;
 use crate::artifacts::raster::mutations::RasterMutation;
-use crate::artifacts::raster::schema::{find_layer, layer_node_id};
 use crate::artifacts::raster::{RasterLayerNode, RasterSnapshot};
 
 //#region 🔖️CreateLayer

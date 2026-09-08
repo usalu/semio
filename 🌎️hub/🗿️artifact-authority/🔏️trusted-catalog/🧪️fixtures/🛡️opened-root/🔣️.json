@@ -9,7 +9,8 @@
   "current": {
     "profileId": "local-stdio-gis-open-v1",
     "generationId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-    "bundleSha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+    "bundleSha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "publicationRevision": "1"
   },
   "relativePaths": [
     { "id": "component", "value": "packages/gis/component.wasm", "accepted": true },

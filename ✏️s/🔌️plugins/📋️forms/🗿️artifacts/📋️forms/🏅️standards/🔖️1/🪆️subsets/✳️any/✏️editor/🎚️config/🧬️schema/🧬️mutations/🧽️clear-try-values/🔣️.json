@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🧬️mutations/🧽️clear-try-values",
+  "semanticKind": "clear-try-values",
+  "displayName": "Clear Try Values",
+  "emoji": "🧽️",
+  "aggregateVariant": "ClearTryValues",
+  "payloadSchema": "🧬️.schema.json",
+  "textOpcode": "clear-try-values",
+  "binaryTag": 9,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "apply-only",
+  "outcomeClasses": [
+    "applied"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "text",
+    "binary",
+    "json-schema"
+  ]
+}

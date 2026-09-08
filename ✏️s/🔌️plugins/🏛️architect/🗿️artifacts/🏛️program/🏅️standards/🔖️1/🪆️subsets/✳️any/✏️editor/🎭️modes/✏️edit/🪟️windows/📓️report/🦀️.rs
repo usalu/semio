@@ -1,7 +1,8 @@
 //! 📄️ Architect report window — the last generated `ProgramReport`, rendered as a section tree.
 
 use crate::editor::architect::config::{parse_active_report, ArchitectConfig};
-use semio_framework_plugin::{tree_item_desc, ui_text, Label, LocalizedLabel, PanelTreeBuilder, PluginAssemblyError, SurfaceKind, UiFixedList, WindowKindDefinition, WindowOptions};
+use crate::editor::architect::ui_label;
+use semio_framework_plugin::{tree_item_desc,  LocalizedLabel, PanelTreeBuilder, PluginAssemblyError, SurfaceKind, UiFixedList, WindowKindDefinition, WindowOptions};
 
 //#region 🔖️Constants
 pub(crate) const ARCHITECT_WINDOW_REPORT: &str = "architect-report";
@@ -35,25 +36,25 @@ pub(crate) fn definition() -> WindowKindDefinition {
 //#region 🔖️Render
 pub(crate) fn render(cfg: &ArchitectConfig) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let Some(report) = parse_active_report(cfg) else {
-        return ui_text(Label::data("Run validation, analysis, or report to populate this panel."));
+        return crate::editor::architect::ui_node(semio_framework_ui_contract::text(ui_label("Run validation, analysis, or report to populate this panel.")?), "architect-report.empty");
     };
     let mut tree = PanelTreeBuilder::new("architect-report")?;
     let mut meta = UiFixedList::default();
-    for item in [tree_item_desc("architect-report.kind", Label::data(format!("Kind: {:?}", report.kind)), None)?, tree_item_desc("architect-report.generated", Label::data(format!("Generated: {}", report.generated_at)), None)?] {
+    for item in [tree_item_desc("architect-report.kind", ui_label(format!("Kind: {:?}", report.kind))?, None)?, tree_item_desc("architect-report.generated", ui_label(format!("Generated: {}", report.generated_at))?, None)?] {
         meta.try_push(item).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "architect report metadata admission failed"))?;
     }
-    tree = tree.section("architect-report.meta", Some(Label::data(report.title.clone())), true, meta)?;
-    for (index, section) in report.sections.iter()?.enumerate() {
+    tree = tree.section("architect-report.meta", Some(ui_label(report.title.clone())?), true, meta)?;
+    for (index, section) in report.sections.iter().enumerate() {
         let mut items = UiFixedList::default();
         if !section.body.is_empty() {
-            let item = tree_item_desc(format!("architect-report.section.{index}.body"), Label::data(&section.body), None)?;
+            let item = tree_item_desc(format!("architect-report.section.{index}.body"), ui_label(&section.body)?, None)?;
             items.try_push(item).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "architect report body admission failed"))?;
         }
         for (bullet_index, bullet) in section.bullets.iter().enumerate() {
-            let item = tree_item_desc(format!("architect-report.section.{index}.bullet.{bullet_index}"), Label::data(format!("• {bullet}")), None)?;
+            let item = tree_item_desc(format!("architect-report.section.{index}.bullet.{bullet_index}"), ui_label(format!("• {bullet}"))?, None)?;
             items.try_push(item).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "architect report bullet admission failed"))?;
         }
-        tree = tree.section(format!("architect-report.section.{index}"), Some(Label::data(section.heading.clone())), true, items)?;
+        tree = tree.section(format!("architect-report.section.{index}"), Some(ui_label(section.heading.clone())?), true, items)?;
     }
     tree.build()
 }
@@ -78,14 +79,14 @@ mod tests {
     async fn a_report_in_the_config_renders_its_section_headings() {
         let report = build_report(&sample_plugin(), ReportKind::ExecutiveSummary);
         let cfg = ArchitectConfig { active_report_json: serde_json::to_string(&report).expect("json"), ..ArchitectConfig::default() };
-        let json = serde_json::to_string(&render(&cfg)).expect("json");
+        let json = crate::editor::architect::testkit::project_render(render(&cfg));
         assert!(json.contains("Overview"));
         assert!(json.contains("architect-report.section"));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn no_report_renders_the_placeholder() {
-        let json = serde_json::to_string(&render(&ArchitectConfig::default())).expect("json");
+        let json = crate::editor::architect::testkit::project_render(render(&ArchitectConfig::default()));
         assert!(json.contains("Run validation, analysis, or report"));
     }
 }

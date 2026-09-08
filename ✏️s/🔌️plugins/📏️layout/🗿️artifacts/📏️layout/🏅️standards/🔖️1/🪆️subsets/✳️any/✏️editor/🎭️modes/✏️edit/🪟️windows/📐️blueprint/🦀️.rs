@@ -4,8 +4,7 @@
 use crate::artifacts::layout::LayoutSnapshot;
 use crate::editor::layout::canvas::canvas_layers;
 use crate::editor::layout::config::LayoutConfig;
-use crate::editor::layout::LAYOUT_PLAY_APP_ID;
-use semio_framework_plugin::{build_canvas_2d_scene, Canvas2dScene, LocalizedLabel, SurfaceKind, UiNode, WindowKindDefinition, WindowOptions};
+use semio_framework_plugin::{Canvas2dScene, LocalizedLabel, SurfaceKind, WindowKindDefinition, WindowOptions};
 
 //#region 🔖️Constants
 pub const LAYOUT_PLAY_WINDOW_BLUEPRINT: &str = "layout-blueprint";
@@ -37,9 +36,9 @@ pub fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-pub fn render(engine: &mut crate::editor::layout::engine::scene::LayoutEngine, doc: &LayoutSnapshot, config: &LayoutConfig) -> UiNode {
+pub fn render(engine: &mut crate::editor::layout::engine::scene::LayoutEngine, doc: &LayoutSnapshot, config: &LayoutConfig) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     let camera = &config.camera;
-    build_canvas_2d_scene(LAYOUT_PLAY_SURFACE_BLUEPRINT, LAYOUT_PLAY_APP_ID, Canvas2dScene { camera_x: camera.x, camera_y: camera.y, zoom: camera.zoom, layers_json: canvas_layers(engine, doc, config, true), snapshot: None })
+    semio_framework_plugin::scene_surface(LAYOUT_PLAY_SURFACE_BLUEPRINT, semio_framework_ui_contract::SurfaceKind::Canvas2d, &Canvas2dScene { camera_x: camera.x, camera_y: camera.y, zoom: camera.zoom, layers_json: canvas_layers(engine, doc, config, true), snapshot: None })
 }
 //#endregion 🔖️Render
 
@@ -51,8 +50,8 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn renders_blueprint_canvas_scene() {
-        let mut app = layout_app();
-        assert!(render_body(&mut app, LAYOUT_PLAY_BODY_BLUEPRINT).contains("canvas-2d"));
+        let mut app = layout_app().await;
+        assert!(render_body(&mut app, LAYOUT_PLAY_BODY_BLUEPRINT).await.contains("canvas-2d"));
     }
 
     #[semio_framework_async_macros::async_test]
@@ -60,8 +59,8 @@ mod tests {
         // 🧷️ `layers_json` is a `String` field (`Canvas2dScene.layers_json`), so the render's own JSON
         // encoding escapes its embedded quotes — assert on the unquoted substrings that survive either
         // way rather than on an exact `"key":"value"` shape.
-        let mut app = layout_app();
-        let json = render_body(&mut app, LAYOUT_PLAY_BODY_BLUEPRINT);
+        let mut app = layout_app().await;
+        let json = render_body(&mut app, LAYOUT_PLAY_BODY_BLUEPRINT).await;
         assert!(json.contains("layout.page-bg"));
         assert!(json.contains("0.97"));
         assert!(json.contains("layout.guide.margin"));
@@ -73,8 +72,8 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn inherited_frame_gets_dashed_stroke_in_blueprint() {
-        let mut app = layout_app();
-        let json = render_body(&mut app, LAYOUT_PLAY_BODY_BLUEPRINT);
+        let mut app = layout_app().await;
+        let json = render_body(&mut app, LAYOUT_PLAY_BODY_BLUEPRINT).await;
         assert!(json.contains("dash") && json.contains("4.0") && json.contains("3.0"));
     }
 

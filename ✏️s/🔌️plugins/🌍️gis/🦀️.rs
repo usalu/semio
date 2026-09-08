@@ -6,8 +6,8 @@ use semio_framework_plugin::plugin_app_close_prelude::*;
 use semio_framework_plugin::{ExecutionMode, HostMediaHandlerDeclaration, Plugin, PluginApp};
 
 //#region 🗃️Apps
-/// 🗃️ Closed runtime app fleet for both GIS artifact surfaces.
 semio_framework_dispatch_macros::dyn_enum_close! {
+    /// 🗃️ Closed runtime app fleet for both GIS artifact surfaces.
     pub enum GisApps: PluginApp {
         Gis2dEditor(VcsArtifactApp<EditorApp<crate::editor::gis2d::Gis2dPlayApp>>),
         GisMapViewer(VcsArtifactApp<ViewerApp<crate::viewer::gismap::GisMapViewer>>),

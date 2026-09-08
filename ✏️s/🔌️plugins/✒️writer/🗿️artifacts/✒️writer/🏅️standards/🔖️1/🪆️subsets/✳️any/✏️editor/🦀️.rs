@@ -24,15 +24,17 @@ use crate::editor::writer::modes::edit::windows::main;
 use crate::editor::writer::panels::{catalogue as catalogue_panel, document as document_panel, inspection as inspection_panel};
 use crate::editor::writer::presence::{WriterPresence, WriterPresenceMutation};
 use crate::editor::writer::terminology::writer_play_labels;
-use semio_framework::{kernel::Effect, InteractiveJobClassification, RetainedToolWireInput, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError};
+use semio_framework::action_bus::RetainedToolWireInput;
+use semio_framework::{kernel::Effect, InteractiveJobClassification, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError};
 use semio_framework_job::{Checkpoint, CommitCandidate, InteractiveJob, InteractiveJobCloseStep, JobFault, JobPayloadStream, Operation, RetainedJobPayload, StepContext, StepOutcome};
 use semio_framework_plugin::app::{ArtifactOwnedToolJobFactory, ArtifactOwnedToolJobRequest, ArtifactToolCompletion, ArtifactToolCompletionRejection, ArtifactToolFactoryRegistry, EditorApp, EphemeralEmit, InteractionView};
 use semio_framework_plugin::{
-    engagement_token_matches, strip_engagement_prefix, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionFactory, ActionKind, AppActionRegistry, AppIo, ArtifactEditor, ArtifactView, ConfigView, ContextMenuItemSpec,
+    engagement_token_matches, strip_engagement_prefix, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionKind, AppActionRegistry, AppIo, ArtifactEditor, ArtifactView, ConfigView, ContextMenuItemSpec,
     ContextMenuRequest, ContextMenuTextContext, Dialect, DomainTopology, DraftView, Editor, Emit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, InteractionTopology, Label, LocalizedLabel, Media,
-    MediaClass, MediaError, MediaForm, MediaPayload, MediaType, Menu, MergeMode, NoDraft, NoDraftMutation, SelectionMethod, SelectionMode, SelectionSpec, TopologyNode, UiNode, WindowMeasure,
+    MediaClass, MediaError, MediaForm, MediaPayload, MediaType, Menu, MergeMode, NoDraft, NoDraftMutation, SelectionMethod, SelectionMode, SelectionSpec, TopologyNode, WindowMeasure,
 };
 use serde::{Deserialize, Serialize};
+#[cfg(test)]
 use serde_json::Value;
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -40,7 +42,7 @@ use store::ArtifactPack;
 use store::EngineHandles;
 
 //#region 🔖️Constants
-pub const WRITER_PLAY_APP_ID: &str = "writer-play";
+pub const WRITER_PLAY_APP_ID: &str = "s.writer.writer@1/*#editor";
 pub use catalogue_panel::WRITER_PLAY_BODY_CATALOGUE;
 pub use document_panel::WRITER_PLAY_BODY_ARTIFACT;
 pub use inspection_panel::WRITER_PLAY_BODY_INSPECTION;
@@ -48,8 +50,13 @@ pub use main::{WRITER_PLAY_BODY_MAIN, WRITER_PLAY_WINDOW_KIND};
 
 /// 🎯️ An `ActionDescriptor` addressed at this app — the single factory every taxonomy node's chrome
 /// (`🎚️options/*`, `📌️panels/*`) builds its `on_change`/item actions with.
-pub fn writer_action(action: &str, args: Option<semio_framework_plugin::UiValue>) -> semio_framework_plugin::UiAssemblyResult<(semio_framework_plugin::ActionId, Option<semio_framework_plugin::UiValue>)> {
-    ActionFactory::new(WRITER_PLAY_APP_ID).action(action, args)
+pub fn writer_action(action: &str, args: Option<dsl::DslValue>) -> ActionDescriptor {
+    ActionDescriptor { controller_id: WRITER_PLAY_APP_ID.into(), action: action.into(), args }
+}
+
+/// 🏷️ Admits display text into a bounded semantic label.
+pub fn ui_label(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_ui_contract::Label> {
+    value.as_ref().try_into().map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "writer label admission failed"))
 }
 
 /// 🧱️ Admits one fixed UI text action value without JSON staging.
@@ -158,8 +165,7 @@ pub fn writer_chapter_payload(document: &WriterSnapshot) -> WriterChapterPayload
 /// for `scene`'s own `schema`/`id` — a genesis envelope with no history to encode.
 fn reset_document_effect_now(scene: &WriterSnapshot) -> Effect {
     let pack = <WriterSnapshot as ArtifactPack>::encode_pack(scene);
-    let envelope = store::create_document_envelope::<WriterSnapshot, WriterMutation>(&scene.schema, &scene.id, scene.clone(), None);
-    let spr = store::print_document_spr(&envelope).expect("writer document spr encode is infallible for a fresh, edit-free envelope");
+    let spr = semio_framework::io::resolve_ready(store::empty_document_spr(&scene.id, &scene.schema));
     Effect::LoadDocument { pack, spr }
 }
 
@@ -399,35 +405,35 @@ impl WriterCommandToolJob {
         Ok(match command {
             WriterCommand::TextEdit(payload) => Emit::amend(vec![WriterMutation::EditText(crate::artifacts::writer::op::EditText { text: payload.text })], "writer-text-edit"),
             WriterCommand::SetText(payload) => Emit::mutations(vec![WriterMutation::EditText(crate::artifacts::writer::op::EditText { text: payload.text })]),
-            WriterCommand::SetCamera(payload) => Emit::config(vec![WriterConfigMutation::SetCamera { camera: payload.camera }]),
-            WriterCommand::RequestCompletions(_) => Emit::config(vec![WriterConfigMutation::SetRevision { value: config.revision + 1 }]),
-            WriterCommand::LintDocument(_) => Emit::config(vec![WriterConfigMutation::SetLintSignal { value: config.lint_signal + 1 }, WriterConfigMutation::SetRevision { value: config.revision + 1 }]),
+            WriterCommand::SetCamera(payload) => Emit::config(vec![WriterConfigMutation::SetCamera(crate::editor::writer::config::SetCamera { camera: payload.camera })]),
+            WriterCommand::RequestCompletions(_) => Emit::config(vec![WriterConfigMutation::SetRevision(crate::editor::writer::config::SetRevision { value: config.revision + 1 })]),
+            WriterCommand::LintDocument(_) => Emit::config(vec![WriterConfigMutation::SetLintSignal(crate::editor::writer::config::SetLintSignal { value: config.lint_signal + 1 }), WriterConfigMutation::SetRevision(crate::editor::writer::config::SetRevision { value: config.revision + 1 })]),
             WriterCommand::SetEditorSelection(payload) => Emit::config(vec![
-                WriterConfigMutation::SetEditorSelection { selection: Some(crate::editor::writer::config::WriterEditorSelection { start: payload.start, end: payload.end }) },
-                WriterConfigMutation::SetRevision { value: config.revision + 1 },
+                WriterConfigMutation::SetEditorSelection(crate::editor::writer::config::SetEditorSelection { selection: Some(crate::editor::writer::config::WriterEditorSelection { start: payload.start, end: payload.end }) }),
+                WriterConfigMutation::SetRevision(crate::editor::writer::config::SetRevision { value: config.revision + 1 }),
             ]),
             WriterCommand::ToggleLineNumbers(_) => {
                 let mut settings = config.editor_settings.clone();
                 settings.show_line_numbers = !settings.show_line_numbers;
-                Emit::config(vec![WriterConfigMutation::SetEditorSettings { settings }, WriterConfigMutation::SetRevision { value: config.revision + 1 }])
+                Emit::config(vec![WriterConfigMutation::SetEditorSettings(crate::editor::writer::config::SetEditorSettings { settings }), WriterConfigMutation::SetRevision(crate::editor::writer::config::SetRevision { value: config.revision + 1 })])
             }
             WriterCommand::SetFontPx(payload) => {
                 let mut settings = config.editor_settings.clone();
                 settings.font_px = payload.value;
-                Emit::config(vec![WriterConfigMutation::SetEditorSettings { settings }, WriterConfigMutation::SetRevision { value: config.revision + 1 }])
+                Emit::config(vec![WriterConfigMutation::SetEditorSettings(crate::editor::writer::config::SetEditorSettings { settings }), WriterConfigMutation::SetRevision(crate::editor::writer::config::SetRevision { value: config.revision + 1 })])
             }
             WriterCommand::SetLineHeight(payload) => {
                 let mut settings = config.editor_settings.clone();
                 settings.line_height = payload.value;
-                Emit::config(vec![WriterConfigMutation::SetEditorSettings { settings }, WriterConfigMutation::SetRevision { value: config.revision + 1 }])
+                Emit::config(vec![WriterConfigMutation::SetEditorSettings(crate::editor::writer::config::SetEditorSettings { settings }), WriterConfigMutation::SetRevision(crate::editor::writer::config::SetRevision { value: config.revision + 1 })])
             }
             WriterCommand::SetTabSize(payload) => {
                 let mut settings = config.editor_settings.clone();
                 settings.tab_size = payload.value.max(1);
-                Emit::config(vec![WriterConfigMutation::SetEditorSettings { settings }, WriterConfigMutation::SetRevision { value: config.revision + 1 }])
+                Emit::config(vec![WriterConfigMutation::SetEditorSettings(crate::editor::writer::config::SetEditorSettings { settings }), WriterConfigMutation::SetRevision(crate::editor::writer::config::SetRevision { value: config.revision + 1 })])
             }
             WriterCommand::EngagementInput(payload) if payload.value != config.engagement_input => {
-                Emit::config(vec![WriterConfigMutation::SetEngagementInput { value: payload.value }, WriterConfigMutation::SetRevision { value: config.revision + 1 }])
+                Emit::config(vec![WriterConfigMutation::SetEngagementInput(crate::editor::writer::config::SetEngagementInput { value: payload.value }), WriterConfigMutation::SetRevision(crate::editor::writer::config::SetRevision { value: config.revision + 1 })])
             }
             WriterCommand::EngagementInput(_) => Emit::default(),
             WriterCommand::SetActiveExample(payload) => {
@@ -438,13 +444,13 @@ impl WriterCommandToolJob {
                 };
                 Emit { effects: vec![reset_document_effect_now(&document)], ..Default::default() }
             }
-            WriterCommand::SetSnapshot(payload) => serde_json::from_str::<WriterSnapshot>(&payload.json).map(|document| Emit { effects: vec![reset_document_effect_now(&document)], ..Default::default() }).unwrap_or_default(),
+            WriterCommand::SetSnapshot(payload) => dsl::os_pack::json::from_json_str::<WriterSnapshot>(&payload.json).map(|document| Emit { effects: vec![reset_document_effect_now(&document)], ..Default::default() }).unwrap_or_default(),
             WriterCommand::OpenDocument(payload) => open_document::emit(&payload),
-            WriterCommand::SetSnapshotJson(payload) => serde_json::from_str::<WriterSnapshot>(&payload.json).map(|document| Emit { effects: vec![reset_document_effect_now(&document)], ..Default::default() }).unwrap_or_default(),
-            WriterCommand::SetFixtureJson(payload) => serde_json::from_str::<WriterSnapshot>(&payload.json).map(|document| Emit { effects: vec![reset_document_effect_now(&document)], ..Default::default() }).unwrap_or_default(),
+            WriterCommand::SetSnapshotJson(payload) => dsl::os_pack::json::from_json_str::<WriterSnapshot>(&payload.json).map(|document| Emit { effects: vec![reset_document_effect_now(&document)], ..Default::default() }).unwrap_or_default(),
+            WriterCommand::SetFixtureJson(payload) => dsl::os_pack::json::from_json_str::<WriterSnapshot>(&payload.json).map(|document| Emit { effects: vec![reset_document_effect_now(&document)], ..Default::default() }).unwrap_or_default(),
             WriterCommand::FormatDocument(_) => {
                 let formatted = crate::artifacts::writer::schema::format_writer_text(text, &snapshot.language_id);
-                let mut emit = Emit::config(vec![WriterConfigMutation::SetFormatSignal { value: config.format_signal + 1 }]);
+                let mut emit = Emit::config(vec![WriterConfigMutation::SetFormatSignal(crate::editor::writer::config::SetFormatSignal { value: config.format_signal + 1 })]);
                 if formatted != text.as_ref() {
                     emit.artifact_mutations = vec![WriterMutation::EditText(crate::artifacts::writer::op::EditText { text: formatted })];
                 }
@@ -472,37 +478,36 @@ impl WriterCommandToolJob {
             WriterCommand::EngagementSubmit(payload) => {
                 let value = payload.value.unwrap_or_else(|| config.engagement_input.clone());
                 let trimmed = value.trim();
-                let mut config_mutations = vec![WriterConfigMutation::SetEngagementInput { value: String::new() }, WriterConfigMutation::SetRevision { value: config.revision + 1 }];
+                let mut config_mutations = vec![WriterConfigMutation::SetEngagementInput(crate::editor::writer::config::SetEngagementInput { value: String::new() }), WriterConfigMutation::SetRevision(crate::editor::writer::config::SetRevision { value: config.revision + 1 })];
                 let mut artifact_mutations = Vec::new();
                 if engagement_token_matches(trimmed, "format") {
-                    config_mutations.push(WriterConfigMutation::SetFormatSignal { value: config.format_signal + 1 });
+                    config_mutations.push(WriterConfigMutation::SetFormatSignal(crate::editor::writer::config::SetFormatSignal { value: config.format_signal + 1 }));
                     let formatted = crate::artifacts::writer::schema::format_writer_text(text, &snapshot.language_id);
                     if formatted != text.as_ref() {
                         artifact_mutations.push(WriterMutation::EditText(crate::artifacts::writer::op::EditText { text: formatted }));
                     }
                 } else if engagement_token_matches(trimmed, "lint") {
-                    config_mutations.push(WriterConfigMutation::SetLintSignal { value: config.lint_signal + 1 });
+                    config_mutations.push(WriterConfigMutation::SetLintSignal(crate::editor::writer::config::SetLintSignal { value: config.lint_signal + 1 }));
                 } else if engagement_token_matches(trimmed, "line numbers") || engagement_token_matches(trimmed, "numbers") || engagement_token_matches(trimmed, "gutter") {
                     let mut settings = config.editor_settings.clone();
                     settings.show_line_numbers = !settings.show_line_numbers;
-                    config_mutations.push(WriterConfigMutation::SetEditorSettings { settings });
+                    config_mutations.push(WriterConfigMutation::SetEditorSettings(crate::editor::writer::config::SetEditorSettings { settings }));
                 } else if let Some(rest) = strip_engagement_prefix(trimmed, "font size").or_else(|| strip_engagement_prefix(trimmed, "font")) {
                     if let Ok(px) = rest.parse::<u32>() {
                         let mut settings = config.editor_settings.clone();
                         settings.font_px = px;
-                        config_mutations.push(WriterConfigMutation::SetEditorSettings { settings });
+                        config_mutations.push(WriterConfigMutation::SetEditorSettings(crate::editor::writer::config::SetEditorSettings { settings }));
                     }
                 } else if let Some(rest) = strip_engagement_prefix(trimmed, "tab size").or_else(|| strip_engagement_prefix(trimmed, "tab")) {
                     if let Ok(size) = rest.parse::<u32>() {
                         let mut settings = config.editor_settings.clone();
                         settings.tab_size = size.max(1);
-                        config_mutations.push(WriterConfigMutation::SetEditorSettings { settings });
+                        config_mutations.push(WriterConfigMutation::SetEditorSettings(crate::editor::writer::config::SetEditorSettings { settings }));
                     }
                 }
                 Emit { artifact_mutations, config_mutations, ..Default::default() }
             }
-            WriterCommand::SetLocale(payload) => Emit::config(vec![WriterConfigMutation::SetLocale { value: payload.value }]),
-            _ => return Err("writer command job received an unregistered command"),
+            WriterCommand::SetLocale(payload) => Emit::config(vec![WriterConfigMutation::SetLocale(crate::editor::writer::config::SetLocale { value: payload.value })]),
         })
     }
 
@@ -787,7 +792,7 @@ struct WriterConfigStorePreparation {
     base: Option<store::SnapshotRead<WriterConfig>>,
     mutation: Option<WriterConfigMutation>,
     description: Option<String>,
-    authority: Option<std::sync::Arc<store::ArtifactStoreOneItemLiveAuthority>>,
+    authority: Option<Arc<store::ArtifactStoreOneItemLiveAuthority>>,
     prepared: Option<store::ArtifactStoreOneItemPrepared<WriterConfig, WriterConfigMutation>>,
     checkpoint: store::ArtifactStoreOneItemCheckpoint,
     cancelled: bool,
@@ -800,14 +805,14 @@ fn writer_config_retained_bytes(config: &WriterConfig) -> usize {
 
 fn writer_config_mutation_retained_bytes(mutation: &WriterConfigMutation) -> usize {
     match mutation {
-        WriterConfigMutation::Snapshot { config } => writer_config_retained_bytes(config),
-        WriterConfigMutation::SetEngagementInput { value } | WriterConfigMutation::SetLocale { value } => value.len(),
-        WriterConfigMutation::SetEditorSelection { .. }
-        | WriterConfigMutation::SetFormatSignal { .. }
-        | WriterConfigMutation::SetLintSignal { .. }
-        | WriterConfigMutation::SetRevision { .. }
-        | WriterConfigMutation::SetEditorSettings { .. }
-        | WriterConfigMutation::SetCamera { .. } => 0,
+        WriterConfigMutation::ReplaceConfig(crate::editor::writer::config::ReplaceConfig { config }) => writer_config_retained_bytes(config),
+        WriterConfigMutation::SetEngagementInput(crate::editor::writer::config::SetEngagementInput { value }) | WriterConfigMutation::SetLocale(crate::editor::writer::config::SetLocale { value }) => value.len(),
+        WriterConfigMutation::SetEditorSelection(crate::editor::writer::config::SetEditorSelection { .. })
+        | WriterConfigMutation::SetFormatSignal(crate::editor::writer::config::SetFormatSignal { .. })
+        | WriterConfigMutation::SetLintSignal(crate::editor::writer::config::SetLintSignal { .. })
+        | WriterConfigMutation::SetRevision(crate::editor::writer::config::SetRevision { .. })
+        | WriterConfigMutation::SetEditorSettings(crate::editor::writer::config::SetEditorSettings { .. })
+        | WriterConfigMutation::SetCamera(crate::editor::writer::config::SetCamera { .. }) => 0,
     }
 }
 
@@ -826,17 +831,17 @@ fn prepare_writer_config(base: &WriterConfig, mutation: WriterConfigMutation) ->
     }
     let mut post = base.clone();
     match &mutation {
-        WriterConfigMutation::Snapshot { config } => post = config.clone(),
-        WriterConfigMutation::SetEditorSelection { selection } => post.editor_selection = selection.clone(),
-        WriterConfigMutation::SetFormatSignal { value } => post.format_signal = *value,
-        WriterConfigMutation::SetLintSignal { value } => post.lint_signal = *value,
-        WriterConfigMutation::SetRevision { value } => post.revision = *value,
-        WriterConfigMutation::SetEditorSettings { settings } => post.editor_settings = settings.clone(),
-        WriterConfigMutation::SetEngagementInput { value } => post.engagement_input = value.clone(),
-        WriterConfigMutation::SetCamera { camera } => post.camera = camera.clone(),
-        WriterConfigMutation::SetLocale { value } => post.locale = value.clone(),
+        WriterConfigMutation::ReplaceConfig(crate::editor::writer::config::ReplaceConfig { config }) => post = config.clone(),
+        WriterConfigMutation::SetEditorSelection(crate::editor::writer::config::SetEditorSelection { selection }) => post.editor_selection = selection.clone(),
+        WriterConfigMutation::SetFormatSignal(crate::editor::writer::config::SetFormatSignal { value }) => post.format_signal = *value,
+        WriterConfigMutation::SetLintSignal(crate::editor::writer::config::SetLintSignal { value }) => post.lint_signal = *value,
+        WriterConfigMutation::SetRevision(crate::editor::writer::config::SetRevision { value }) => post.revision = *value,
+        WriterConfigMutation::SetEditorSettings(crate::editor::writer::config::SetEditorSettings { settings }) => post.editor_settings = settings.clone(),
+        WriterConfigMutation::SetEngagementInput(crate::editor::writer::config::SetEngagementInput { value }) => post.engagement_input = value.clone(),
+        WriterConfigMutation::SetCamera(crate::editor::writer::config::SetCamera { camera }) => post.camera = camera.clone(),
+        WriterConfigMutation::SetLocale(crate::editor::writer::config::SetLocale { value }) => post.locale = value.clone(),
     }
-    Ok((post, vec![WriterConfigMutation::Snapshot { config: base.clone() }], mutation))
+    Ok((post, vec![WriterConfigMutation::ReplaceConfig(crate::editor::writer::config::ReplaceConfig { config: base.clone() })], mutation))
 }
 
 fn writer_store_edit<M>(
@@ -919,7 +924,7 @@ impl store::ArtifactStoreOneItemPreparation<WriterConfig, WriterConfigMutation> 
         let (post, inverse, forward) = prepare_writer_config(base.get(), mutation)?;
         let authority = self.authority.as_ref().ok_or_else(|| "Writer config preparation lost its Store authority".to_string())?;
         let edit = writer_store_edit("writer-config-retained", forward, inverse, self.description.take(), authority);
-        let prepared = authority.prepare_one_item(edit, std::sync::Arc::new(post))?;
+        let prepared = authority.prepare_one_item(edit, Arc::new(post))?;
         self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: 1, digest: prepared.edit_digest() };
         self.prepared = Some(prepared);
         Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint))
@@ -983,7 +988,7 @@ struct WriterArtifactStorePreparation {
     base: Option<store::SnapshotRead<WriterSnapshot>>,
     mutation: Option<WriterMutation>,
     description: Option<String>,
-    authority: Option<std::sync::Arc<store::ArtifactStoreOneItemLiveAuthority>>,
+    authority: Option<Arc<store::ArtifactStoreOneItemLiveAuthority>>,
     prepared: Option<store::ArtifactStoreOneItemPrepared<WriterSnapshot, WriterMutation>>,
     checkpoint: store::ArtifactStoreOneItemCheckpoint,
     cancelled: bool,
@@ -1067,7 +1072,7 @@ impl store::ArtifactStoreOneItemPreparation<WriterSnapshot, WriterMutation> for 
         let (post, inverse, forward) = prepare_writer_artifact(base.get(), mutation)?;
         let authority = self.authority.as_ref().ok_or_else(|| "Writer Artifact preparation lost its Store authority".to_string())?;
         let edit = writer_store_edit("writer-artifact-retained", forward, inverse, self.description.take(), authority);
-        let prepared = authority.prepare_one_item(edit, std::sync::Arc::new(post))?;
+        let prepared = authority.prepare_one_item(edit, Arc::new(post))?;
         self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: 1, digest: prepared.edit_digest() };
         self.prepared = Some(prepared);
         Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint))
@@ -1145,22 +1150,22 @@ impl ArtifactEditor for WriterPlayApp {
     const DIALECT: Dialect = crate::artifacts::writer::WRITER_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = WRITER_DOCUMENT_SCHEMA;
 
-    fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
-        Some(std::sync::Arc::new(WriterArtifactStorePreparationFactory))
+    fn build_artifact_store_one_item_preparation_factory() -> Option<Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
+        Some(Arc::new(WriterArtifactStorePreparationFactory))
     }
 
-    fn build_config_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Config, Self::ConfigMutation>>> {
-        Some(std::sync::Arc::new(WriterConfigStorePreparationFactory))
+    fn build_config_store_one_item_preparation_factory() -> Option<Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Config, Self::ConfigMutation>>> {
+        Some(Arc::new(WriterConfigStorePreparationFactory))
     }
 
     semio_framework_plugin::bounded_first_step_tool_proofs! {
-        owner: semio_framework_plugin::EditorApp<WriterPlayApp>,
+        owner: EditorApp<WriterPlayApp>,
         owner_file: "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
         controller: "s.writer.writer@1/*#editor",
         document_schema: "writer.document",
         factory: "WriterCommandJobFactory",
         factory_type: WriterCommandJobFactory,
-        contract: semio_framework::ToolExecutionContract::resumable(4_096, 4_096, 1, 64, 2_000, 1, 1),
+        contract: ToolExecutionContract::resumable(4_096, 4_096, 1, 64, 2_000, 1, 1),
         tools: [
             "textEdit",
             "setText",
@@ -1452,7 +1457,7 @@ pub fn create_writer_app() -> semio_framework_plugin::AppDefinition {
 #[cfg(test)]
 pub(crate) mod testkit {
     use super::*;
-    use semio_framework_plugin::testkit::{meta, new_app as framework_new_app, new_app_with_registry as framework_new_app_with_registry};
+    use semio_framework_plugin::testkit::{meta, new_app_with_registry as framework_new_app_with_registry};
     use semio_framework_plugin::{EditorApp, InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
 
     /// WriterPlayApp implements the AUTHORING trait ArtifactEditor, not the runtime ArtifactApp --
@@ -1460,9 +1465,9 @@ pub(crate) mod testkit {
     /// VcsArtifactApp wraps, the same way PluginBuilder::editor::<WriterPlayApp> builds it.
     pub type WriterApp = VcsArtifactApp<EditorApp<WriterPlayApp>>;
 
-    /// 🧪️ A bare app instance — no `AppActionRegistry`, so undeclared internal commands dispatch freely.
-    pub fn new_app() -> WriterApp {
-        framework_new_app::<EditorApp<WriterPlayApp>>()
+    /// 🧪️ Constructs the Writer app with its declared command registry.
+    pub async fn new_app() -> WriterApp {
+        framework_new_app_with_registry::<EditorApp<WriterPlayApp>>(writer_app_manifest_for_testkit).await
     }
 
     /// Adapts create_writer_app's AppDefinition (contract 2.4) into the App { definition, examples }
@@ -1473,8 +1478,8 @@ pub(crate) mod testkit {
     }
 
     /// 🧪️ An app wired to the real manifest registry — enforces View/Shell kind discipline.
-    pub fn new_app_with_registry() -> WriterApp {
-        framework_new_app_with_registry::<EditorApp<WriterPlayApp>>(writer_app_manifest_for_testkit)
+    pub async fn new_app_with_registry() -> WriterApp {
+        framework_new_app_with_registry::<EditorApp<WriterPlayApp>>(writer_app_manifest_for_testkit).await
     }
 
     /// ✍️ Loads the canonical jack fixture into the store, returning the app ready to exercise.
@@ -1483,26 +1488,26 @@ pub(crate) mod testkit {
     /// `dispatch_typed` alone; this loads the same document pack a real host would apply from that
     /// command's `Effect::LoadDocument`, via `PluginApp::load_document_pack` directly — the same
     /// technique `📐️cad`'s own `two_instances_converge_disjoint_edits_via_backbone` test uses.
-    pub fn app_with_jack() -> WriterApp {
-        let mut app = new_app();
+    pub async fn app_with_jack() -> WriterApp {
+        let mut app = new_app().await;
         let document = crate::artifacts::writer::dsl::jack_example_document();
         let (schema, id) = (document.schema.clone(), document.id.clone());
         let envelope = store::create_document_envelope::<WriterSnapshot, WriterMutation>(&schema, &id, document, None);
-        let files = store::print_document_pack(&envelope).expect("print jack document pack");
-        app.load_document_pack(&files).expect("load jack");
+        let files = store::print_document_pack(&envelope).await.expect("print jack document pack");
+        app.load_document_pack(&files).await.expect("load jack");
         app
     }
 
-    pub fn dispatch(app: &mut WriterApp, command: WriterCommand) -> InvocationResult {
-        app.dispatch_typed(command, &meta("local")).expect("dispatch")
+    pub async fn dispatch(app: &mut WriterApp, command: WriterCommand) -> InvocationResult {
+        app.dispatch_typed(command, &meta("local")).await.expect("dispatch")
     }
 
-    pub fn render(app: &mut WriterApp, body_key: &str) -> String {
-        serde_json::to_string(&app.render(body_key, None, &ViewModel::default()).expect("render")).expect("render json")
+    pub async fn render(app: &mut WriterApp, body_key: &str) -> String {
+        semio_framework_plugin::testkit::project_and_retire_fixture_tree(app.render(body_key, None, &ViewModel::default()).await.expect("render")).expect("render json")
     }
 
-    pub fn main_window_measures(app: &mut WriterApp) -> Vec<WindowMeasure> {
-        app.window_measures().get(WRITER_PLAY_WINDOW_KIND).cloned().expect("main window measures")
+    pub async fn main_window_measures(app: &mut WriterApp) -> Vec<WindowMeasure> {
+        app.window_measures().await.get(WRITER_PLAY_WINDOW_KIND).cloned().expect("main window measures")
     }
 }
 //#endregion 🧪️Testkit
@@ -1514,14 +1519,14 @@ mod tests {
     use crate::editor::writer::testkit::{new_app_with_registry, WriterApp};
     use semio_framework_plugin::PluginApp;
 
-    fn context_menu_items(app: &mut WriterApp, surface: Option<semio_framework_plugin::ContextMenuSurfaceTarget>) -> Value {
+    async fn context_menu_items(app: &mut WriterApp, surface: Option<semio_framework_plugin::ContextMenuSurfaceTarget>) -> Value {
         let request = ContextMenuRequest { menu: semio_framework_plugin::UiMenuRef { id: "writer.play".into(), args: None }, surface, window_instance_id: None, point: None };
-        serde_json::to_value(app.context_menu(&request)).unwrap_or(Value::Null)
+        serde_json::to_value(app.context_menu(&request).await).unwrap_or(Value::Null)
     }
 
     fn writer_envelope_wire() -> Vec<u8> {
         let envelope = store::create_document_envelope(WRITER_DOCUMENT_SCHEMA, "writer-live-load", crate::artifacts::writer::schema::empty_writer_snapshot(), None);
-        let wire = serde_json::to_vec(&envelope).expect("outgoing Writer fixture envelope");
+        let wire = dsl::os_pack::json::to_json_string(&envelope.capture_read().expect("Writer fixture envelope read")).into_bytes();
         let mut retirement = crate::artifacts::writer::spr::writer_envelope_decode_owner_bundle().retire_envelope(envelope);
         for _ in 0..10_000 {
             match retirement.close_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("Writer fixture envelope retirement") {
@@ -1568,7 +1573,7 @@ mod tests {
     #[test]
     fn writer_config_store_preparation_is_exact_bounded_and_reversible() {
         let base = WriterConfig { engagement_input: "format".into(), locale: "en-US".into(), revision: 7, ..WriterConfig::default() };
-        let mutation = WriterConfigMutation::SetLocale { value: "de-DE".into() };
+        let mutation = WriterConfigMutation::SetLocale(crate::editor::writer::config::SetLocale { value: "de-DE".into() });
         let footprint = admit_writer_config_mutation(&mutation).expect("bounded config mutation");
         assert_eq!(footprint.work_items, 1);
         assert_eq!(footprint.retained_bytes, 5);
@@ -1576,8 +1581,8 @@ mod tests {
         assert_eq!(post.locale, "de-DE");
         assert_eq!(post.engagement_input, base.engagement_input);
         assert_eq!(forward, mutation);
-        assert_eq!(inverse, vec![WriterConfigMutation::Snapshot { config: base.clone() }]);
-        assert!(admit_writer_config_mutation(&WriterConfigMutation::SetEngagementInput { value: "x".repeat(WRITER_CONFIG_STORE_MAXIMUM_BYTES + 1) }).is_err());
+        assert_eq!(inverse, vec![WriterConfigMutation::ReplaceConfig(crate::editor::writer::config::ReplaceConfig { config: base.clone() })]);
+        assert!(admit_writer_config_mutation(&WriterConfigMutation::SetEngagementInput(crate::editor::writer::config::SetEngagementInput { value: "x".repeat(WRITER_CONFIG_STORE_MAXIMUM_BYTES + 1) })).is_err());
     }
 
     #[test]
@@ -1597,7 +1602,7 @@ mod tests {
 
     #[test]
     fn retained_wire_decoder_and_third_party_serde_have_command_parity() {
-        let snapshot_json = serde_json::to_string(&crate::artifacts::writer::schema::empty_writer_snapshot()).expect("bounded snapshot fixture");
+        let snapshot_json = dsl::os_pack::json::to_json_string(&crate::artifacts::writer::schema::empty_writer_snapshot());
         let commands = vec![
             WriterCommand::TextEdit(text_edit::TextEdit { text: "ä".into() }),
             WriterCommand::SetText(set_text::SetText { text: "bounded".into() }),
@@ -1624,8 +1629,10 @@ mod tests {
             let wire = <WriterCommand as protocol::OpBinary>::encode_op(&command).expect("owned protocol wire");
             assert!(wire.len() <= MAX_WRITER_COMMAND_RAW_BYTES);
             assert_eq!(<WriterCommand as protocol::OpBinary>::decode_op(&wire).expect("owned retained decoder"), command);
-            let serde_wire = serde_json::to_vec(&command).expect("third-party serde wire");
-            assert_eq!(serde_json::from_slice::<WriterCommand>(&serde_wire).expect("third-party serde decoder"), command);
+            let owned_wire = dsl::os_pack::json::to_json_string(&command);
+            let oracle: serde_json::Value = serde_json::from_str(&owned_wire).expect("third-party JSON decoder");
+            let serde_wire = serde_json::to_string(&oracle).expect("third-party JSON encoder");
+            assert_eq!(dsl::os_pack::json::from_json_str::<WriterCommand>(&serde_wire).expect("owned command decoder"), command);
         }
     }
 
@@ -1731,7 +1738,7 @@ mod tests {
         assert_eq!((accepted.raw_page_cursor, accepted.raw_scan_cursor, accepted.raw_bytes.clone()), accepted_cursor);
         assert_eq!(Arc::strong_count(&current), 2);
         let accepted_emit = accepted.emit().expect("bounded locale emission");
-        assert_eq!(accepted_emit.config_mutations, vec![WriterConfigMutation::SetLocale { value: "x".repeat(MAX_WRITER_LOCALE_BYTES) }]);
+        assert_eq!(accepted_emit.config_mutations, vec![WriterConfigMutation::SetLocale(crate::editor::writer::config::SetLocale { value: "x".repeat(MAX_WRITER_LOCALE_BYTES) })]);
 
         let mut rejected = writer_command_job(WriterCommand::SetLocale(set_locale::SetLocale { value: "x".repeat(MAX_WRITER_LOCALE_BYTES + 1) }), current.clone());
         let rejected_cursor = (rejected.raw_page_cursor, rejected.raw_scan_cursor, rejected.raw_bytes.clone());
@@ -1820,7 +1827,7 @@ mod tests {
             let mut bytes = [0; store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES];
             bytes[..chunk.len()].copy_from_slice(chunk);
             let page = store::ArtifactEnvelopeDecodePage::try_from_array(bytes, chunk.len()).expect("bounded Writer live envelope page");
-            app.admit_artifact_envelope_ingress_page(handle, page).unwrap_or_else(|(fault, _page)| panic!("Writer live envelope page admission failed: {fault}"));
+            app.admit_artifact_envelope_ingress_page(handle, page).unwrap_or_else(|(fault, _page)| panic!("Writer live envelope page admission failed: {fault:?}"));
         }
         assert!(app.seal_artifact_envelope_ingress(handle).expect("Writer live envelope seal/submit"));
         handle
@@ -1840,7 +1847,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn writer_live_envelope_submit_pump_swap_displaced_store_and_exact_ack_succeed() {
-        let mut app = crate::editor::writer::testkit::new_app();
+        let mut app = crate::editor::writer::testkit::new_app().await;
         let base_generation = app.artifact_generation_now();
         let handle = admit_writer_envelope(&mut app, &writer_envelope_wire());
         assert_eq!(handle.generation, base_generation);
@@ -1852,7 +1859,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn writer_live_envelope_cancel_closes_retained_pages_without_publication() {
-        let mut app = crate::editor::writer::testkit::new_app();
+        let mut app = crate::editor::writer::testkit::new_app().await;
         let base_generation = app.artifact_generation_now();
         let wire = writer_envelope_wire();
         let pages = wire.len().div_ceil(store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).max(1);
@@ -1861,7 +1868,7 @@ mod tests {
         let mut bytes = [0; store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES];
         bytes[..first.len()].copy_from_slice(first);
         let page = store::ArtifactEnvelopeDecodePage::try_from_array(bytes, first.len()).expect("cancelled Writer first page");
-        app.admit_artifact_envelope_ingress_page(handle, page).unwrap_or_else(|(fault, _page)| panic!("cancelled Writer page admission failed: {fault}"));
+        app.admit_artifact_envelope_ingress_page(handle, page).unwrap_or_else(|(fault, _page)| panic!("cancelled Writer page admission failed: {fault:?}"));
         app.cancel_artifact_envelope_load(handle).expect("cancel exact Writer ingress");
         assert_eq!(drive_writer_live_load(&mut app, handle), semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Fault);
         assert_eq!(app.artifact_generation_now(), base_generation);
@@ -2044,7 +2051,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn writer_io_declares_the_extra_text_out_port() {
         let io = writer_io();
-        let ports = io.all_ports();
+        let ports = io.all_ports().await;
         assert!(ports.iter().any(|port| port.id == "document:in"));
         assert!(ports.iter().any(|port| port.id == "document:out"));
         let text_out = ports.iter().find(|port| port.id == "text:out").expect("text:out port declared");
@@ -2054,11 +2061,10 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn export_media_text_out_projects_the_document_as_a_chapter() {
-        let app = WriterPlayApp;
         let document = crate::artifacts::writer::dsl::jack_example_document();
         let history = semio_framework_plugin::HistoryView::empty();
         let doc_view = ArtifactView::new(&document, &history);
-        let media = semio_framework_plugin::resolve_ready(WriterPlayApp::export_media("text:out", &doc_view)).expect("export text:out");
+        let media = WriterPlayApp::export_media("text:out", &doc_view).expect("export text:out");
         let MediaPayload::Structured { schema, json } = media.payload else { panic!("expected structured payload") };
         assert_eq!(schema, "text.document");
         let payload: WriterChapterPayload = serde_json::from_str(&json).expect("decode chapter payload");
@@ -2068,11 +2074,10 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn export_media_rejects_unknown_ports() {
-        let app = WriterPlayApp;
         let document = crate::artifacts::writer::schema::empty_writer_snapshot();
         let history = semio_framework_plugin::HistoryView::empty();
         let doc_view = ArtifactView::new(&document, &history);
-        assert!(matches!(semio_framework_plugin::resolve_ready(WriterPlayApp::export_media("nonsense:out", &doc_view)), Err(MediaError::NotImplemented)));
+        assert!(matches!(WriterPlayApp::export_media("nonsense:out", &doc_view), Err(MediaError::NotImplemented)));
     }
     //#endregion 🔖️PortTests
 
@@ -2082,7 +2087,6 @@ mod tests {
     /// of rows, and the destructive `cut` row stays the trailing item.
     #[semio_framework_async_macros::async_test]
     async fn context_menu_is_grouped_and_keeps_cut_last_and_destructive() {
-        let app = WriterPlayApp;
         let document = crate::artifacts::writer::dsl::jack_example_document();
         let config = WriterConfig::default();
         let history = semio_framework_plugin::HistoryView::empty();
@@ -2109,8 +2113,8 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn context_menu_via_the_registry_still_starts_with_select_token() {
-        let mut app = new_app_with_registry();
-        let menu = context_menu_items(&mut app, Some(semio_framework_plugin::ContextMenuSurfaceTarget { surface_id: "writer.play".into(), kind: "textEditor".into(), hits: vec![], selection: vec![], text: None }));
+        let mut app = new_app_with_registry().await;
+        let menu = context_menu_items(&mut app, Some(semio_framework_plugin::ContextMenuSurfaceTarget { surface_id: "writer.play".into(), kind: "textEditor".into(), hits: vec![], selection: vec![], text: None })).await;
         assert!(menu.to_string().contains("writer-select-token"), "menu should be {menu}");
     }
     //#endregion 🔖️ContextMenu
@@ -2119,8 +2123,8 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn an_unknown_body_key_renders_a_diagnostic_instead_of_panicking() {
         use crate::editor::writer::testkit::{new_app, render};
-        let mut app = new_app();
-        assert!(render(&mut app, "writer.play.nope").contains("Unknown body"));
+        let mut app = new_app().await;
+        assert!(render(&mut app, "writer.play.nope").await.contains("Unknown body"));
     }
 
     /// 🌱️ `SetSnapshot` is banned outright (see `whole_document_operation`'s doc comment) — the
@@ -2135,8 +2139,8 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn window_engagements_expose_format_lint_placeholder() {
-        let mut app = testkit::new_app();
-        let engagements = app.window_engagements();
+        let mut app = testkit::new_app().await;
+        let engagements = app.window_engagements().await;
         let main = engagements.get(WRITER_PLAY_WINDOW_KIND).expect("main engagement");
         let placeholder = main.input.as_ref().and_then(|i| i.placeholder.as_ref()).expect("placeholder");
         assert!(placeholder.contains("Format"));
@@ -2145,8 +2149,8 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn window_engagements_include_format_and_lint_possible_engagements() {
-        let mut app = testkit::new_app();
-        let engagements = app.window_engagements();
+        let mut app = testkit::new_app().await;
+        let engagements = app.window_engagements().await;
         let engagement = engagements.get(WRITER_PLAY_WINDOW_KIND).expect("writer window engagement");
         let ids: Vec<&str> = engagement.possible_engagements.as_ref().expect("possible engagements").iter().map(|possible| possible.id.as_str()).collect();
         assert!(ids.contains(&"writer-format"));
@@ -2158,20 +2162,20 @@ mod tests {
     /// is the integration-level guarantee that locale threads through the whole app consistently.
     #[semio_framework_async_macros::async_test]
     async fn writer_labels_resolve_native_english_by_default_across_every_surface() {
-        let mut app = testkit::new_app();
-        let inspection = app.render(WRITER_PLAY_BODY_INSPECTION, None, &semio_framework_plugin::ViewModel::default()).expect("render");
-        let inspection_json = serde_json::to_string(&inspection).unwrap();
+        let mut app = testkit::new_app().await;
+        let inspection = app.render(WRITER_PLAY_BODY_INSPECTION, None, &semio_framework_plugin::ViewModel::default()).await.expect("render");
+        let inspection_json = semio_framework_plugin::testkit::project_and_retire_fixture_tree(inspection).expect("render JSON");
         assert!(inspection_json.contains("\"Document\""));
         assert!(inspection_json.contains("\"Camera\""));
-        let catalogue = app.render(WRITER_PLAY_BODY_CATALOGUE, None, &semio_framework_plugin::ViewModel::default()).expect("render");
-        let catalogue_json = serde_json::to_string(&catalogue).unwrap();
+        let catalogue = app.render(WRITER_PLAY_BODY_CATALOGUE, None, &semio_framework_plugin::ViewModel::default()).await.expect("render");
+        let catalogue_json = semio_framework_plugin::testkit::project_and_retire_fixture_tree(catalogue).expect("render JSON");
         assert!(catalogue_json.contains("\"Language\""));
         assert!(catalogue_json.contains("Cypher-inspired"));
-        let engagements = app.window_engagements();
+        let engagements = app.window_engagements().await;
         let engagements_json = serde_json::to_string(&engagements).unwrap();
         assert!(engagements_json.contains("\"Format\""));
         assert!(engagements_json.contains("\"Lint\""));
-        let measures = app.window_measures();
+        let measures = app.window_measures().await;
         let measures_json = serde_json::to_string(&measures).unwrap();
         assert!(measures_json.contains("Font size"));
         assert!(measures_json.contains("Line numbers"));
@@ -2180,21 +2184,21 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn writer_labels_resolve_german_locale_across_every_surface() {
-        let mut app = testkit::new_app();
-        app.dispatch_typed(WriterCommand::SetLocale(set_locale::SetLocale { value: "de".into() }), &semio_framework_plugin::testkit::meta("local")).expect("set locale");
-        let inspection = app.render(WRITER_PLAY_BODY_INSPECTION, None, &semio_framework_plugin::ViewModel::default()).expect("render");
-        let inspection_json = serde_json::to_string(&inspection).unwrap();
+        let mut app = testkit::new_app().await;
+        app.dispatch_typed(WriterCommand::SetLocale(set_locale::SetLocale { value: "de".into() }), &semio_framework_plugin::testkit::meta("local")).await.expect("set locale");
+        let inspection = app.render(WRITER_PLAY_BODY_INSPECTION, None, &semio_framework_plugin::ViewModel::default()).await.expect("render");
+        let inspection_json = semio_framework_plugin::testkit::project_and_retire_fixture_tree(inspection).expect("render JSON");
         assert!(inspection_json.contains("Dokument"));
         assert!(inspection_json.contains("Kamera"));
         assert!(!inspection_json.contains("\"Camera\""));
-        let catalogue = app.render(WRITER_PLAY_BODY_CATALOGUE, None, &semio_framework_plugin::ViewModel::default()).expect("render");
-        let catalogue_json = serde_json::to_string(&catalogue).unwrap();
+        let catalogue = app.render(WRITER_PLAY_BODY_CATALOGUE, None, &semio_framework_plugin::ViewModel::default()).await.expect("render");
+        let catalogue_json = semio_framework_plugin::testkit::project_and_retire_fixture_tree(catalogue).expect("render JSON");
         assert!(catalogue_json.contains("Sprache"));
-        let measures = app.window_measures();
+        let measures = app.window_measures().await;
         let measures_json = serde_json::to_string(&measures).unwrap();
         assert!(measures_json.contains("Schriftgröße"));
         assert!(measures_json.contains("Zeilennummern"));
-        let engagements = app.window_engagements();
+        let engagements = app.window_engagements().await;
         let engagements_json = serde_json::to_string(&engagements).unwrap();
         assert!(engagements_json.contains("Texteditor"));
         assert!(engagements_json.contains("Formatieren"));

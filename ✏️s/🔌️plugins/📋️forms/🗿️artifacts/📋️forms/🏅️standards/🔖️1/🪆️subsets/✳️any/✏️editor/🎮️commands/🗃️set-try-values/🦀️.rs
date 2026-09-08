@@ -14,7 +14,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 //#region 🔖️BulkSession
 const MAX_BULK_KEY_BYTES: usize = 4_096;
 const MAX_LIVE_BULK_SESSIONS: usize = 64;
-static ACTIVE_BULK_GENERATIONS: OnceLock<Mutex<BTreeMap<(String, String, String), u64>>> = OnceLock::new();
+static ACTIVE_BULK_GENERATIONS: OnceLock<Mutex<BTreeMap<(String, String, String), (u64, String)>>> = OnceLock::new();
 static NEXT_BULK_REQUEST: AtomicU64 = AtomicU64::new(40_000);
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
 struct BulkJobKey {
@@ -40,6 +40,7 @@ enum BulkPhase {
 
 #[derive(Debug)]
 struct BulkSession {
+    base_revision: String,
     app_id: String,
     document_id: String,
     operation_id: String,
@@ -71,14 +72,14 @@ fn bulk_sessions() -> &'static Mutex<BTreeMap<BulkJobKey, BulkSession>> {
     BULK_SESSIONS.get_or_init(|| Mutex::new(BTreeMap::new()))
 }
 
-fn active_bulk_generations() -> &'static Mutex<BTreeMap<(String, String, String), u64>> {
+fn active_bulk_generations() -> &'static Mutex<BTreeMap<(String, String, String), (u64, String)>> {
     ACTIVE_BULK_GENERATIONS.get_or_init(|| Mutex::new(BTreeMap::new()))
 }
 
 fn clear_active_bulk(session: &BulkSession, generation: u64) {
     let scope = (session.app_id.clone(), session.document_id.clone(), session.operation_id.clone());
     let mut active = active_bulk_generations().lock().expect("forms bulk active lock");
-    if active.get(&scope) == Some(&generation) {
+    if active.get(&scope).is_some_and(|(active_generation, revision)| *active_generation == generation && *revision == session.base_revision) {
         active.remove(&scope);
     }
 }
@@ -88,12 +89,12 @@ pub(crate) fn cancel_pending_bulk(app_instance_id: u32, document_id: &str) -> Ve
     let mut mutations = Vec::new();
     for scope in scopes {
         let generation = active_bulk_generations().lock().expect("forms bulk active lock").remove(&scope);
-        let Some(generation) = generation else { continue };
-        let key = BulkJobKey { app_id: scope.0, document_id: scope.1, operation_id: scope.2, generation };
+        let Some((generation, base_revision)) = generation else { continue };
+        let key = BulkJobKey { app_id: scope.0, document_id: scope.1, operation_id: scope.2, base_revision, generation };
         let Some(session) = bulk_sessions().lock().expect("forms bulk sessions lock").remove(&key) else { continue };
         discard_staged_try_value(&session.value_staging_id);
         discard_staged_try_values_batch(&session.batch_id);
-        mutations.extend([FormsConfigMutation::DiscardTryValueStaging { staging_id: session.value_staging_id }, FormsConfigMutation::DiscardTryValuesBatch { staging_id: session.batch_id }]);
+        mutations.extend([FormsConfigMutation::DiscardTryValueStaging(crate::editor::forms::config::DiscardTryValueStaging { staging_id: session.value_staging_id }), FormsConfigMutation::DiscardTryValuesBatch(crate::editor::forms::config::DiscardTryValuesBatch { staging_id: session.batch_id })]);
     }
     mutations
 }
@@ -112,7 +113,7 @@ fn bulk_queue(generation: u64, cursor: usize, session: &BulkSession) -> Effect {
 
 fn bulk_emit(generation: u64, session: BulkSession, mutations: Vec<FormsConfigMutation>) -> Emit<FormMutation, FormsConfigMutation> {
     let cursor = session.cursor;
-    let key = BulkJobKey { app_id: session.app_id.clone(), document_id: session.document_id.clone(), operation_id: session.operation_id.clone(), generation };
+    let key = BulkJobKey { app_id: session.app_id.clone(), document_id: session.document_id.clone(), operation_id: session.operation_id.clone(), base_revision: session.base_revision.clone(), generation };
     let effect = bulk_queue(generation, cursor, &session);
     bulk_sessions().lock().expect("forms bulk sessions lock").insert(key, session);
     Emit { config_mutations: mutations, effects: vec![effect], coalesce_key: Some(format!("setTryValues:{generation}")), ui_scope: UiDirtyScope::None, ..Default::default() }
@@ -148,7 +149,6 @@ fn reset_entry(session: &mut BulkSession) {
     session.digest = [0x6c62272e07bb0142, 0x62b821756295c58d, 0x9e3779b185ebca87, 0xc2b2ae3d27d4eb4f];
     session.digest_len = 0;
     session.content_id.clear();
-    session.verification_cursor = 0;
 }
 
 fn scan_bulk(session: &mut BulkSession) -> Result<(), Fault> {
@@ -309,7 +309,7 @@ pub fn handle(payload: &SetTryValues, doc: &ArtifactView<'_, FormsSnapshot>, cfg
     let cleanup = cancel_pending_generations(&input.operation);
     let generation = input.operation.generation;
     let scope = (input.operation.app_instance_id.to_string(), input.operation.parent_document_id.clone(), input.operation.operation_id.to_string());
-    active_bulk_generations().lock().expect("forms bulk active lock").insert(scope, generation);
+    active_bulk_generations().lock().expect("forms bulk active lock").insert(scope, (generation, input.operation.canonical_base_revision_hex()));
     let session = new_bulk_session(input.source, &input.operation, cfg.snapshot.try_values.root_token(), cfg.snapshot.try_values.revision());
     Ok(bulk_emit(generation, session, cleanup))
 }
@@ -319,10 +319,10 @@ pub(crate) fn advance_if_bulk(payload: &SetTryValueStep, config: &FormsConfig) -
     if payload.target_index != u64::MAX {
         return None;
     }
-    let key = BulkJobKey { app_id: payload.app_id.clone(), document_id: payload.document_id.clone(), operation_id: payload.operation_id.clone(), generation: payload.generation };
+    let key = BulkJobKey { app_id: payload.app_id.clone(), document_id: payload.document_id.clone(), operation_id: payload.operation_id.clone(), base_revision: payload.base_revision.clone(), generation: payload.generation };
     let Some(mut session) = bulk_sessions().lock().expect("forms bulk sessions lock").remove(&key) else { return Some(Ok(Emit::default())) };
-    let active = active_bulk_generations().lock().expect("forms bulk active lock").get(&(payload.app_id.clone(), payload.document_id.clone(), payload.operation_id.clone())).copied();
-    if active != Some(payload.generation) || session.baseline_root_token != config.try_values.root_token() || session.baseline_revision != config.try_values.revision() || payload.cursor != session.cursor as u64 {
+    let active = active_bulk_generations().lock().expect("forms bulk active lock").get(&(payload.app_id.clone(), payload.document_id.clone(), payload.operation_id.clone())).cloned();
+    if active.as_ref().is_none_or(|(generation, revision)| *generation != payload.generation || *revision != payload.base_revision) || session.baseline_root_token != config.try_values.root_token() || session.baseline_revision != config.try_values.revision() || payload.cursor != session.cursor as u64 {
         discard_staged_try_value(&session.value_staging_id);
         discard_staged_try_values_batch(&session.batch_id);
         clear_active_bulk(&session, payload.generation);
@@ -349,7 +349,7 @@ pub(crate) fn advance_if_bulk(payload: &SetTryValueStep, config: &FormsConfig) -
                 output
             });
             update_digest(&mut session, chunk.as_bytes());
-            let mutation = FormsConfigMutation::StageTryValueChunk { staging_id: session.value_staging_id.clone(), index: session.staged_chunks, chunk };
+            let mutation = FormsConfigMutation::StageTryValueChunk(crate::editor::forms::config::StageTryValueChunk { staging_id: session.value_staging_id.clone(), index: session.staged_chunks, chunk });
             session.staged_chunks += 1;
             session.staged_cursor = end;
             if end == session.value_end - session.value_start {
@@ -359,13 +359,13 @@ pub(crate) fn advance_if_bulk(payload: &SetTryValueStep, config: &FormsConfig) -
             Ok(bulk_emit(payload.generation, session, vec![mutation]))
         }
         BulkPhase::Entry => {
-            let mutation = FormsConfigMutation::StageTryValuesEntry {
+            let mutation = FormsConfigMutation::StageTryValuesEntry(crate::editor::forms::config::StageTryValuesEntry {
                 staging_id: session.batch_id.clone(),
                 key: session.key.clone(),
                 value_staging_id: session.value_staging_id.clone(),
                 content_id: session.content_id.clone(),
                 chunk_count: session.staged_chunks,
-            };
+            });
             session.entry_count += 1;
             reset_entry(&mut session);
             Ok(bulk_emit(payload.generation, session, vec![mutation]))
@@ -382,7 +382,7 @@ pub(crate) fn advance_if_bulk(payload: &SetTryValueStep, config: &FormsConfig) -
         BulkPhase::Commit => {
             clear_active_bulk(&session, payload.generation);
             Ok(Emit {
-                config_mutations: vec![FormsConfigMutation::CommitTryValuesBatch { staging_id: session.batch_id, entry_count: session.entry_count }],
+                config_mutations: vec![FormsConfigMutation::CommitTryValuesBatch(crate::editor::forms::config::CommitTryValuesBatch { staging_id: session.batch_id, entry_count: session.entry_count })],
                 coalesce_key: Some(format!("setTryValues:{}", payload.generation)),
                 ui_scope: UiDirtyScope::Full,
                 ..Default::default()
@@ -427,7 +427,8 @@ mod tests {
 
     #[test]
     fn bulk_scanner_crosses_chunk_boundaries_with_a_bounded_key_copy() {
-        let mut session = new_bulk_session(rope(&[r#"{"na"#, r#"me":{"nested":[1,2,3]}}"#]), 1, "doc-a", 1, 0);
+        let operation = semio_framework_plugin::AppOperationContext { app_instance_id: 1, parent_document_id: "doc-a".into(), operation_id: 1, generation: 1, canonical_base_revision: [0; 32] };
+        let mut session = new_bulk_session(rope(&[r#"{"na"#, r#"me":{"nested":[1,2,3]}}"#]), &operation, 1, 0);
         while matches!(session.phase, BulkPhase::Object | BulkPhase::Key | BulkPhase::Colon | BulkPhase::Value) {
             let started = std::time::Instant::now();
             scan_bulk(&mut session).expect("bulk scan");
@@ -439,9 +440,27 @@ mod tests {
 
     #[test]
     fn bulk_sessions_are_document_and_operation_scoped() {
-        let a = BulkJobKey { app_id: "1".into(), document_id: "a".into(), operation_id: "11".into(), generation: 7 };
-        let b = BulkJobKey { app_id: "1".into(), document_id: "b".into(), operation_id: "12".into(), generation: 7 };
+        let a = BulkJobKey { app_id: "1".into(), document_id: "a".into(), operation_id: "11".into(), base_revision: "0".repeat(64), generation: 7 };
+        let b = BulkJobKey { app_id: "1".into(), document_id: "b".into(), operation_id: "12".into(), base_revision: "0".repeat(64), generation: 7 };
         assert_ne!(a, b);
+    }
+
+    #[test]
+    fn bulk_continuation_identity_matches_the_json_oracle() {
+        let vectors: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🔑️continuations.json")).unwrap();
+        let key = |value: &serde_json::Value| BulkJobKey {
+            app_id: value["appId"].as_str().unwrap().into(),
+            document_id: value["documentId"].as_str().unwrap().into(),
+            operation_id: value["operationId"].as_str().unwrap().into(),
+            base_revision: value["baseRevision"].as_str().unwrap().into(),
+            generation: value["generation"].as_u64().unwrap(),
+        };
+        for vector in vectors.as_array().unwrap() {
+            let expected = vector["same"].as_bool().unwrap();
+            assert_eq!(vector["left"] == vector["right"], expected);
+            let sessions = BTreeMap::from([(key(&vector["left"]), ())]);
+            assert_eq!(sessions.contains_key(&key(&vector["right"])), expected);
+        }
     }
 
     #[semio_framework_async_macros::async_test]
@@ -461,7 +480,7 @@ mod tests {
             })
         };
         let before_restart = args("bulk-before-restart", 0);
-        app.handle_action("setTryValues", Some(&before_restart), &meta("bulk")).await.expect("initial bulk action log entry");
+        app.handle_action("setTryValues", Some(&crate::editor::forms::testkit::action_args(&before_restart)), &meta("bulk")).await.expect("initial bulk action log entry");
 
         bulk_sessions().lock().expect("forms bulk sessions lock").clear();
         active_bulk_generations().lock().expect("forms bulk active lock").clear();
@@ -475,19 +494,19 @@ mod tests {
             assert_eq!(<FormsCommand as protocol::OpBinary>::decode_op(&wire).expect("bulk Forms command decode"), command);
             assert!(started.elapsed() < std::time::Duration::from_millis(8), "bulk Forms public command codec exceeded 8 ms");
             let started = std::time::Instant::now();
-            result = Some(app.handle_action("setTryValues", Some(&args("bulk-after-restart", index)), &meta("bulk")).await.expect("replayed bulk Forms action"));
+            result = Some(app.handle_action("setTryValues", Some(&crate::editor::forms::testkit::action_args(&args("bulk-after-restart", index))), &meta("bulk")).await.expect("replayed bulk Forms action"));
             assert!(started.elapsed() < std::time::Duration::from_millis(8), "bulk Forms public action envelope exceeded 8 ms");
         }
         let mut next = result.and_then(continuation);
         for _ in 0..128 {
             let Some(checkpoint) = next.take() else { break };
             let started = std::time::Instant::now();
-            let result = app.handle_action(SET_TRY_VALUE_STEP_ACTION_ID, Some(&checkpoint), &meta("bulk")).await.expect("bulk Forms continuation");
+            let result = app.handle_action(SET_TRY_VALUE_STEP_ACTION_ID, Some(&crate::editor::forms::testkit::action_args(&checkpoint)), &meta("bulk")).await.expect("bulk Forms continuation");
             assert!(started.elapsed() < std::time::Duration::from_millis(8), "bulk Forms handler/op-codec/diff/apply envelope exceeded 8 ms");
             next = continuation(result);
         }
         assert!(next.is_none(), "bulk Forms job must complete inside the bounded continuation budget");
-        let config = app.test_config().await;
+        let config = crate::editor::forms::testkit::config(&app).await;
         let a_content_id = config.try_values.get_json("a").expect("committed bulk a content id").to_string();
         let b_content_id = config.try_values.get_json("b").expect("committed bulk b content id").to_string();
         assert_eq!(a_content_id.len(), 85);
@@ -497,12 +516,12 @@ mod tests {
         assert_eq!(materialize_owned_try_value(&config.try_values, "b"), Some("1".into()));
         assert!(bulk_sessions().lock().expect("forms bulk sessions lock").is_empty());
         assert!(active_bulk_generations().lock().expect("forms bulk active lock").is_empty());
-        let serialized = serde_json::to_vec(&config).expect("serialize completed public bulk config");
+        let serialized = dsl::os_pack::json::to_json_string(&config).into_bytes();
         crate::editor::forms::config::clear_try_value_staging_for_replay();
         bulk_sessions().lock().expect("forms bulk sessions lock").clear();
         active_bulk_generations().lock().expect("forms bulk active lock").clear();
         *crate::editor::forms::commands::set_try_value::input_registry().lock().expect("forms input registry lock") = crate::editor::forms::commands::set_try_value::FormsInputRegistry::default();
-        let reopened: FormsConfig = serde_json::from_slice(&serialized).expect("cold reopen completed public bulk config");
+        let reopened: FormsConfig = dsl::os_pack::json::from_json_str(std::str::from_utf8(&serialized).expect("config UTF-8")).expect("cold reopen completed public bulk config");
         assert_eq!(reopened.try_values.get_json("a"), Some(a_content_id.as_str()));
         assert_eq!(reopened.try_values.get_json("b"), Some(b_content_id.as_str()));
         assert_eq!(materialize_owned_try_value(&reopened.try_values, "a").and_then(|raw| serde_json::from_str::<serde_json::Value>(&raw).ok()), Some(expected["a"].clone()));

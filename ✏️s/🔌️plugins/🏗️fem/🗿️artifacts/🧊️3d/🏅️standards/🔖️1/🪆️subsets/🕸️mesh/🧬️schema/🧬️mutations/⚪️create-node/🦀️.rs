@@ -1,7 +1,6 @@
 //! 🌱️ Fem3d mutation — `CreateNode` payload + `MutationKind` impl.
 
 use crate::artifacts::fem3d::{Fem3dSnapshot, FemNode};
-use crate::artifacts::fem3d::diff::{Fem3dDiff, Fem3dNodesDelta};
 use crate::artifacts::fem3d::mutations::Fem3dMutation;
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};

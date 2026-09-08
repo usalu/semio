@@ -23,6 +23,7 @@ semio_framework_plugin::app_labels! {
         kind_rect: native_en "Rectangle", native_de "Rechteck", reuse_en "Rectangle", reuse_de "Rechteck";
         kind_text: native_en "Text Frame", native_de "Textrahmen", reuse_en "Text Frame", reuse_de "Textrahmen";
         kind_image: native_en "Image Frame", native_de "Bildrahmen", reuse_en "Image Frame", reuse_de "Bildrahmen";
+        inspection: native_en "Inspection", native_de "Inspektion", reuse_en "Inspection", reuse_de "Inspektion";
         schema: native_en "Schema", native_de "Schema", reuse_en "Schema", reuse_de "Schema";
         name: native_en "Name", native_de "Name", reuse_en "Name", reuse_de "Name";
         pages: native_en "Pages", native_de "Seiten", reuse_en "Pages", reuse_de "Seiten";

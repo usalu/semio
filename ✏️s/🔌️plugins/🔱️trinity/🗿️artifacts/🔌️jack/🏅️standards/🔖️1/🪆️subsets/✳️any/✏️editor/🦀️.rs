@@ -68,7 +68,7 @@ fn seeded_jack_config(fixture: &JackSnapshot) -> JackConfig {
 pub(crate) fn reset_document_effect(fixture: &JackSnapshot) -> Effect {
     let pack = <JackSnapshot as ArtifactPack>::encode_pack(fixture);
     let envelope = store::create_document_envelope::<JackSnapshot, TrinityGraphMutation>(TRINITY_GRAPH_SCHEMA, "jack", fixture.clone(), None);
-    let spr = store::print_document_spr(&envelope).expect("jack document spr encode is infallible for a fresh, edit-free envelope");
+    let spr = semio_framework_plugin::resolve_ready(store::print_document_spr(&envelope)).expect("jack document spr encode is infallible for a fresh, edit-free envelope");
     Effect::LoadDocument { pack, spr }
 }
 
@@ -447,7 +447,7 @@ impl store::ArtifactStoreOneItemPreparation<JackConfig, JackConfigMutation> for 
                 let post = protocol::MutationDiff::apply(mutation.diff(base.get()).diff(), base.get()).map_err(|error| error.to_string())?;
                 self.candidate = Some((post, inverse, mutation, retained_bytes));
                 self.phase = 1;
-                self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: retained_bytes, digest: [0; 32] };
+                self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: retained_bytes as u64, digest: [0; 32] };
                 Ok(store::ArtifactStoreOneItemPreparationStep::Progress(self.checkpoint))
             }
             1 => {
@@ -461,7 +461,7 @@ impl store::ArtifactStoreOneItemPreparation<JackConfig, JackConfigMutation> for 
                 };
                 let prepared = authority.prepare_one_item(edit, std::sync::Arc::new(post))?;
                 self.phase = 2;
-                self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 2, completed_items: 2, completed_bytes: retained_bytes, digest: prepared.edit_digest() };
+                self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 2, completed_items: 2, completed_bytes: retained_bytes as u64, digest: prepared.edit_digest() };
                 self.prepared = Some(prepared);
                 Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint))
             }
@@ -523,8 +523,8 @@ impl ArtifactEditor for TrinityJackPlayApp {
 
     fn build_tool_job(request: ArtifactOwnedToolJobRequest<EditorApp<Self>>) -> Result<Option<semio_framework::ToolOperationSpec>, Fault> {
         if !JACK_RETAINED_CONFIG_TOOL_IDS.contains(&request.tool_id.as_str()) { return Ok(None); }
-        if request.command.command_id() != request.tool_id || jack_retained_config_extent(&request.command, &request.snapshot, &request.interaction_state) != Some(1) { return Err(Fault::from("jack-retained-config-tool-mismatch-or-capacity")); }
-        let tool_id = request.command.command_id();
+        if Self::command_id(&request.command) != request.tool_id || jack_retained_config_extent(&request.command, &request.snapshot, &request.interaction_state) != Some(1) { return Err(Fault::from("jack-retained-config-tool-mismatch-or-capacity")); }
+        let tool_id = Self::command_id(&request.command);
         let work: Box<dyn ArtifactCommandWork<EditorApp<Self>>> = Box::new(BoundedArtifactCommandWork::new(tool_id, jack_retained_config_reduce, jack_retained_config_extent));
         let operation = AppOperationContext { app_instance_id: request.app_instance_id, parent_document_id: request.parent_document_id.clone(), operation_id: request.operation.operation.0, generation: request.operation.generation.0, canonical_base_revision: request.canonical_base_revision };
         let payload = ArtifactRetainedCommandPayload::try_new_with_context(*request.command, request.snapshot, request.config, request.history, request.interaction_state, request.interaction_hover, request.context, operation, request.completion, TrinityJackPlayApp::command_id, JACK_RETAINED_RAW_BYTES, JACK_RETAINED_WORK_ITEMS, work)?;
@@ -859,14 +859,14 @@ mod tests {
     /// 🕹️ Registry-backed (not the bare `testkit::new_app`): `interactionSelect`/`interactionHover`
     /// resolve the dispatching app's declared `AppActionRegistry.interactions`, so any test exercising
     /// domain "ast" selection needs the real manifest's `.interaction(...)` declaration present.
-    fn new_app() -> VcsArtifactApp<EditorApp<TrinityJackPlayApp>> {
-        testkit::new_app_with_registry::<EditorApp<TrinityJackPlayApp>>(trinity_jack_manifest_for_testkit)
+    async fn new_app() -> VcsArtifactApp<EditorApp<TrinityJackPlayApp>> {
+        testkit::new_app_with_registry::<EditorApp<TrinityJackPlayApp>>(trinity_jack_manifest_for_testkit).await
     }
 
     fn jack_envelope_wire() -> Vec<u8> {
         use store::ArtifactPack;
 
-        let snapshot = empty_trinity_graph_fixture();
+        let snapshot = crate::artifacts::jack::empty_trinity_graph_fixture();
         let snapshot_pack = snapshot.encode_pack();
         let snapshot_hex = snapshot_pack.iter().map(|byte| format!("{byte:02x}")).collect::<String>();
         let wire = pack::json_to_string(&pack::json!({
@@ -909,7 +909,7 @@ mod tests {
             let mut bytes = [0; store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES];
             bytes[..chunk.len()].copy_from_slice(chunk);
             let page = store::ArtifactEnvelopeDecodePage::try_from_array(bytes, chunk.len()).expect("bounded Jack live envelope page");
-            app.admit_artifact_envelope_ingress_page(handle, page).unwrap_or_else(|(fault, _page)| panic!("Jack live envelope page admission failed: {fault}"));
+            app.admit_artifact_envelope_ingress_page(handle, page).unwrap_or_else(|(fault, _page)| panic!("Jack live envelope page admission failed: {fault:?}"));
         }
         assert!(app.seal_artifact_envelope_ingress(handle).expect("Jack live envelope seal/submit"));
         handle
@@ -929,7 +929,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn jack_live_envelope_submit_pump_swap_displaced_store_and_exact_ack_succeed() {
-        let mut app = new_app();
+        let mut app = new_app().await;
         let base_generation = app.artifact_generation_now();
         let handle = admit_jack_envelope(&mut app, &jack_envelope_wire());
         assert_eq!(handle.generation, base_generation);
@@ -941,7 +941,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn jack_live_envelope_cancel_closes_retained_pages_without_publication() {
-        let mut app = new_app();
+        let mut app = new_app().await;
         let base_generation = app.artifact_generation_now();
         let wire = jack_envelope_wire();
         let pages = wire.len().div_ceil(store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).max(1);
@@ -950,7 +950,7 @@ mod tests {
         let mut bytes = [0; store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES];
         bytes[..first.len()].copy_from_slice(first);
         let page = store::ArtifactEnvelopeDecodePage::try_from_array(bytes, first.len()).expect("cancelled Jack first page");
-        app.admit_artifact_envelope_ingress_page(handle, page).unwrap_or_else(|(fault, _page)| panic!("cancelled Jack page admission failed: {fault}"));
+        app.admit_artifact_envelope_ingress_page(handle, page).unwrap_or_else(|(fault, _page)| panic!("cancelled Jack page admission failed: {fault:?}"));
         app.cancel_artifact_envelope_load(handle).expect("cancel exact Jack ingress");
         assert_eq!(drive_jack_live_load(&mut app, handle), semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Fault);
         assert_eq!(app.artifact_generation_now(), base_generation);
@@ -962,33 +962,33 @@ mod tests {
 
     /// 🕹️ Dispatches the framework-injected `interactionSelect` verb against domain "ast" — the
     /// replacement for the deleted `TrinityJackCommand::SetSelection`.
-    fn select_ast(app: &mut VcsArtifactApp<EditorApp<TrinityJackPlayApp>>, ids: &[&str]) {
+    async fn select_ast(app: &mut VcsArtifactApp<EditorApp<TrinityJackPlayApp>>, ids: &[&str]) {
         let targets: Vec<pack::JsonValue> = ids.iter().map(|id| pack::json!({ "granularity": "node", "id": id })).collect();
-        let args = pack::json!({ "domainId": "ast", "targets": pack::to_json_string(&targets) });
-        app.handle_action("interactionSelect", Some(&args), &meta("local")).expect("interactionSelect");
+        let args = pack::json_to_dsl_value(&pack::json!({ "domainId": "ast", "targets": pack::to_json_string(&targets) }));
+        app.handle_action("interactionSelect", Some(&args), &meta("local")).await.expect("interactionSelect");
     }
 
     #[semio_framework_async_macros::async_test]
     async fn renders_node_graph_scene() {
-        let mut app = new_app();
-        let node = app.render(TRINITY_JACK_PLAY_BODY_GRAPH, None, &ViewModel::default()).expect("render");
-        assert!(pack::to_json_string(&node).contains("node-graph"));
+        let mut app = new_app().await;
+        let node = app.render(TRINITY_JACK_PLAY_BODY_GRAPH, None, &ViewModel::default()).await.expect("render");
+        assert!(serde_json::to_string(&node.root).expect("serialize semantic UI test tree").contains("node-graph"));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn renders_jack_editor() {
-        let mut app = new_app();
-        let node = app.render(TRINITY_JACK_PLAY_BODY_EDITOR, None, &ViewModel::default()).expect("render");
-        let json = pack::to_json_string(&node);
+        let mut app = new_app().await;
+        let node = app.render(TRINITY_JACK_PLAY_BODY_EDITOR, None, &ViewModel::default()).await.expect("render");
+        let json = serde_json::to_string(&node.root).expect("serialize semantic UI test tree");
         assert!(json.contains("text-editor"));
         assert!(json.contains(TRINITY_JACK_DEFAULT_QUERY));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn run_query_populates_results_and_a_set_query_mutates_projection() {
-        let mut app = new_app();
-        app.render(TRINITY_JACK_PLAY_BODY_RESULTS, None, &ViewModel::default()).expect("render");
-        let result = app.dispatch_typed(TrinityJackCommand::RunQuery { query: Some("MATCH (a:Piece) WHERE a.name = 'b' SET a.label = 'ran-label'".into()) }, &meta("local")).expect("run");
+        let mut app = new_app().await;
+        app.render(TRINITY_JACK_PLAY_BODY_RESULTS, None, &ViewModel::default()).await.expect("render");
+        let result = app.dispatch_typed(TrinityJackCommand::RunQuery { query: Some("MATCH (a:Piece) WHERE a.name = 'b' SET a.label = 'ran-label'".into()) }, &meta("local")).await.expect("run");
         assert!(!result.mutations.is_empty(), "a SET query emits operations");
         let projection = app.snapshot().expect("projection");
         // 🔬 `content` is now an opaque composed-child handle — `pack::to_json_string(&projection)`
@@ -1000,11 +1000,11 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn node_graph_select_updates_selection_and_document_tree() {
-        let mut app = new_app();
+        let mut app = new_app().await;
         let node_id = node_id_at(&app, 0);
-        select_ast(&mut app, &[&node_id]);
-        let tree = app.render(TRINITY_JACK_PLAY_BODY_DOCUMENT, None, &ViewModel::default()).expect("render");
-        let json = pack::to_json_string(&tree);
+        select_ast(&mut app, &[&node_id]).await;
+        let tree = app.render(TRINITY_JACK_PLAY_BODY_DOCUMENT, None, &ViewModel::default()).await.expect("render");
+        let json = serde_json::to_string(&tree.root).expect("serialize semantic UI test tree");
         assert!(json.contains(&node_id));
         assert!(json.contains("\"selected\":true"));
     }
@@ -1016,9 +1016,9 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn editor_scene_has_tokens_and_diagnostics() {
-        let mut app = new_app();
-        let node = app.render(TRINITY_JACK_PLAY_BODY_EDITOR, None, &ViewModel::default()).expect("render");
-        let json = pack::to_json_string(&node);
+        let mut app = new_app().await;
+        let node = app.render(TRINITY_JACK_PLAY_BODY_EDITOR, None, &ViewModel::default()).await.expect("render");
+        let json = serde_json::to_string(&node.root).expect("serialize semantic UI test tree");
         assert!(json.contains("tokensJson"));
         assert!(json.contains("diagnosticsJson"));
         assert!(json.contains("completionsJson"));
@@ -1026,60 +1026,60 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn text_edit_updates_query_without_operations() {
-        let mut app = new_app();
-        let result = app.dispatch_typed(TrinityJackCommand::TextEdit { text: "MATCH (a:Piece) RETURN a.name".into() }, &meta("local")).expect("edit");
+        let mut app = new_app().await;
+        let result = app.dispatch_typed(TrinityJackCommand::TextEdit { text: "MATCH (a:Piece) RETURN a.name".into() }, &meta("local")).await.expect("edit");
         assert!(result.mutations.is_empty());
-        let node = app.render(TRINITY_JACK_PLAY_BODY_EDITOR, None, &ViewModel::default()).expect("render");
-        assert!(pack::to_json_string(&node).contains("MATCH (a:Piece) RETURN a.name"));
+        let node = app.render(TRINITY_JACK_PLAY_BODY_EDITOR, None, &ViewModel::default()).await.expect("render");
+        assert!(serde_json::to_string(&node.root).expect("serialize semantic UI test tree").contains("MATCH (a:Piece) RETURN a.name"));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn graph_scene_has_lod_json() {
-        let mut app = new_app();
-        let node = app.render(TRINITY_JACK_PLAY_BODY_GRAPH, None, &ViewModel::default()).expect("render");
-        let json = pack::to_json_string(&node);
+        let mut app = new_app().await;
+        let node = app.render(TRINITY_JACK_PLAY_BODY_GRAPH, None, &ViewModel::default()).await.expect("render");
+        let json = serde_json::to_string(&node.root).expect("serialize semantic UI test tree");
         assert!(json.contains("lodJson"));
         assert!(json.contains("automatic"));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn set_lod_mode_reflects_in_window_measures() {
-        let mut app = new_app();
-        app.dispatch_typed(TrinityJackCommand::SetLodMode { window_id: TRINITY_JACK_PLAY_WINDOW_GRAPH.into(), value: "compact".into() }, &meta("local")).expect("lod");
-        let measures = app.window_measures();
+        let mut app = new_app().await;
+        app.dispatch_typed(TrinityJackCommand::SetLodMode { window_id: TRINITY_JACK_PLAY_WINDOW_GRAPH.into(), value: "compact".into() }, &meta("local")).await.expect("lod");
+        let measures = app.window_measures().await;
         assert!(measures[TRINITY_JACK_PLAY_WINDOW_GRAPH].iter().any(|measure| matches!(measure, WindowMeasure::Select { value, .. } if value == "compact")));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn catalogue_tree_renders() {
-        let mut app = new_app();
-        let node = app.render(TRINITY_JACK_PLAY_BODY_CATALOGUE, None, &ViewModel::default()).expect("render");
-        assert!(pack::to_json_string(&node).contains("trinity-jack-catalogue"));
+        let mut app = new_app().await;
+        let node = app.render(TRINITY_JACK_PLAY_BODY_CATALOGUE, None, &ViewModel::default()).await.expect("render");
+        assert!(serde_json::to_string(&node.root).expect("serialize semantic UI test tree").contains("trinity-jack-catalogue"));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn inspection_panel_renders_the_selection_prompt() {
-        let mut app = new_app();
+        let mut app = new_app().await;
         let node_id = node_id_at(&app, 0);
-        select_ast(&mut app, &[&node_id]);
-        let node = app.render(TRINITY_JACK_PLAY_BODY_INSPECTION, None, &ViewModel::default()).expect("render");
+        select_ast(&mut app, &[&node_id]).await;
+        let node = app.render(TRINITY_JACK_PLAY_BODY_INSPECTION, None, &ViewModel::default()).await.expect("render");
         // 🕹️ `render` has no `InteractionView` (see the panel's own doc comment) — it can no longer
         // build per-selection fields, so it always renders the static prompt.
-        assert!(pack::to_json_string(&node).contains("trinity-inspector.empty"));
+        assert!(serde_json::to_string(&node.root).expect("serialize semantic UI test tree").contains("trinity-inspector.empty"));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn document_tree_de_locale_translates_labels() {
-        let mut app = new_app();
-        app.dispatch_typed(TrinityJackCommand::SetLocale { value: "de-DE".into() }, &meta("local")).expect("set locale");
-        let node = app.render(TRINITY_JACK_PLAY_BODY_DOCUMENT, None, &ViewModel::default()).expect("render");
-        assert!(pack::to_json_string(&node).contains("Stücke"));
+        let mut app = new_app().await;
+        app.dispatch_typed(TrinityJackCommand::SetLocale { value: "de-DE".into() }, &meta("local")).await.expect("set locale");
+        let node = app.render(TRINITY_JACK_PLAY_BODY_DOCUMENT, None, &ViewModel::default()).await.expect("render");
+        assert!(serde_json::to_string(&node.root).expect("serialize semantic UI test tree").contains("Stücke"));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn set_active_example_swaps_fixture_and_seeds_query() {
-        let mut app = new_app();
-        let result = app.dispatch_typed(TrinityJackCommand::SetActiveExample { example_id: "branch-chain".into() }, &meta("local")).expect("set active example");
+        let mut app = new_app().await;
+        let result = app.dispatch_typed(TrinityJackCommand::SetActiveExample { example_id: "branch-chain".into() }, &meta("local")).await.expect("set active example");
         // 🩹 Pre-existing test/implementation mismatch (traced to commit `a445617c`, 2026-08-12
         // 15:50:51 +0200 — predates this migration, not introduced by it): `set_active_example`
         // routes the fixture swap through `Effect::LoadDocument` (whole-document replace is
@@ -1087,16 +1087,16 @@ mod tests {
         // `InvocationResult.mutations` is always empty for this command — `requested_effects` is
         // the field that actually carries the swap.
         assert!(!result.requested_effects.is_empty());
-        let node = app.render(TRINITY_JACK_PLAY_BODY_EDITOR, None, &ViewModel::default()).expect("render");
-        assert!(pack::to_json_string(&node).contains("RETURN a, r, b"));
+        let node = app.render(TRINITY_JACK_PLAY_BODY_EDITOR, None, &ViewModel::default()).await.expect("render");
+        assert!(serde_json::to_string(&node.root).expect("serialize semantic UI test tree").contains("RETURN a, r, b"));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn delete_selection_removes_selected_node() {
-        let mut app = new_app();
+        let mut app = new_app().await;
         let node_id = node_id_at(&app, 0);
-        select_ast(&mut app, &[&node_id]);
-        let result = app.dispatch_typed(TrinityJackCommand::DeleteSelection, &meta("local")).expect("delete");
+        select_ast(&mut app, &[&node_id]).await;
+        let result = app.dispatch_typed(TrinityJackCommand::DeleteSelection, &meta("local")).await.expect("delete");
         assert!(!result.mutations.is_empty());
         let projection = app.snapshot().expect("projection");
         assert!(!projection.nodes().iter().any(|node| node.id == node_id));
@@ -1104,7 +1104,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn context_menu_stays_within_row_budget_and_ends_with_delete_selection() {
-        let mut app = testkit::new_app_with_registry::<EditorApp<TrinityJackPlayApp>>(trinity_jack_manifest_for_testkit);
+        let mut app = testkit::new_app_with_registry::<EditorApp<TrinityJackPlayApp>>(trinity_jack_manifest_for_testkit).await;
         let node_id = node_id_at(&app, 0);
         let request = ContextMenuRequest {
             menu: semio_framework_plugin::UiMenuRef { id: "nodeGraph".into(), args: None },
@@ -1118,7 +1118,7 @@ mod tests {
             window_instance_id: None,
             point: None,
         };
-        let menu = app.context_menu(&request);
+        let menu = app.context_menu(&request).await;
         assert!(menu.len() <= 9, "top-level menu (leaves+groups+separator) should stay within the row budget: {menu:?}");
         let last = menu.last().expect("grouped disclosure menu should not be empty");
         let last_is_destructive_leaf = last.id == "delete-selection" && last.destructive == Some(true) && last.action.as_deref() == Some("deleteSelection");
@@ -1129,9 +1129,9 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn export_media_graph_out_matches_document_pack() {
         use semio_framework_plugin::PluginApp as _;
-        let mut app = new_app();
-        let document_out = semio_framework_plugin::resolve_ready(app.export_media("document:out")).expect("document:out export");
-        let graph_out = semio_framework_plugin::resolve_ready(app.export_media("graph:out")).expect("graph:out export");
+        let mut app = new_app().await;
+        let document_out = app.export_media("document:out").await.expect("document:out export");
+        let graph_out = app.export_media("graph:out").await.expect("graph:out export");
         assert_eq!(document_out.payload, graph_out.payload);
     }
 

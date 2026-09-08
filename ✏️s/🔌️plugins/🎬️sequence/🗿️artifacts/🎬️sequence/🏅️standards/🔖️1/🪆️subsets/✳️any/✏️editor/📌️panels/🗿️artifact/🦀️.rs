@@ -1,11 +1,11 @@
 //! 📄️ Sequence play app panel — the document tree: steps (with control-flow slot nesting) and edges.
 
 use crate::artifacts::sequence::{SequenceFixture, SequenceStep};
-use crate::editor::sequence::{sequence_action, ui_node_list, ui_value_map, ui_value_text};
+use crate::editor::sequence::{sequence_action, ui_label, ui_node_list, ui_value_map, ui_value_text};
 use crate::editor::sequence::terminology::SequenceLabels;
 use crate::editor::sequence::{control_slots, is_control_kind, SEQUENCE_INTERACTION_STEPS};
 use semio_framework_plugin::plugin_app_close_prelude::{Buildable, HasBase, HasChildren, Trigger};
-use semio_framework_plugin::{tree_item_desc, BuiltNode, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, UiFixedList, UiText, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL};
+use semio_framework_plugin::{tree_item_desc, BuiltNode, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, UiFixedList, UiText, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL};
 use semio_framework_ui_contract as ui;
 
 //#region 🔖️Constants
@@ -27,12 +27,12 @@ pub fn definition() -> PanelTabDefinition {
 //#region 🔖️Helpers
 /// 🗣️ Localizes a control-flow slot name ("then"/"else"/"body") for tree display; unknown slot names
 /// fall back to the raw id as genuine runtime data (never authored UI copy).
-fn slot_label(slot_name: &str, labels: &SequenceLabels) -> Label {
+fn slot_label<'a>(slot_name: &'a str, labels: &SequenceLabels) -> &'a str {
     match slot_name {
-        "then" => labels.slot_then.into(),
-        "else" => labels.slot_else.into(),
-        "body" => labels.slot_body.into(),
-        other => Label::data(other),
+        "then" => labels.slot_then.as_str(),
+        "else" => labels.slot_else.as_str(),
+        "body" => labels.slot_body.as_str(),
+        other => other,
     }
 }
 
@@ -43,7 +43,7 @@ fn slot_label(slot_name: &str, labels: &SequenceLabels) -> Label {
 /// that same topology, so no per-item click action is declared here anymore (clicks are translated
 /// into `interactionSelect` generically)?.
 fn build_step_tree_item(step: &SequenceStep, fixture: &SequenceFixture, labels: &SequenceLabels) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
-    let mut builder = ui::tree_item(Label::data(format!("{} ({})", step.id, step.kind)))
+    let mut builder = ui::tree_item(ui_label(format!("{} ({})", step.id, step.kind))?)
         .try_id(&step.id)
         .map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "sequence step id admission failed"))?
         .description(UiText::try_from_str(&step.kind).ok_or_else(|| PluginAssemblyError::new("ui.fixed-capacity", "sequence step kind admission failed"))?);
@@ -65,10 +65,10 @@ fn build_step_tree_item(step: &SequenceStep, fixture: &SequenceFixture, labels: 
         children.try_push(toggle).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "sequence collapse child admission failed"))?;
         for slot_name in control_slots(&step.kind) {
             let nested = ui_node_list(fixture.steps.iter().filter(|entry| entry.slot.as_ref().is_some_and(|slot| slot.owner == step.id && slot.name == *slot_name)).map(|entry| build_step_tree_item(entry, fixture, labels)))?;
-            let slot = ui::tree_item(slot_label(slot_name, labels))
+            let slot = ui::tree_item(ui_label(slot_label(slot_name, labels))?)
                 .try_id(format!("sequence-play-document.slot.{}.{}", step.id, slot_name))
                 .map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "sequence slot id admission failed"))?
-                .description(UiText::try_from_string(format!("{} {}", step.id, labels.slot.as_str())).ok_or_else(|| PluginAssemblyError::new("ui.fixed-capacity", "sequence slot description admission failed"))?)
+                .description(UiText::try_from_string(format!("{} {}", step.id, labels.slot.as_str())).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "sequence slot description admission failed"))?)
                 .icon(UiText::try_from_str("folder").ok_or_else(|| PluginAssemblyError::new("ui.fixed-capacity", "sequence slot icon admission failed"))?)
                 .default_open(true)
                 .dimmed(step.collapsed)
@@ -87,10 +87,10 @@ fn build_step_tree_item(step: &SequenceStep, fixture: &SequenceFixture, labels: 
 //#region 🔖️Render
 pub fn render(fixture: &SequenceFixture, labels: &SequenceLabels) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let step_items = ui_node_list(fixture.steps.iter().filter(|step| step.slot.is_none()).map(|step| build_step_tree_item(step, fixture, labels)))?;
-    let edge_items = ui_node_list(fixture.edges.iter().map(|edge| tree_item_desc(format!("sequence-play-document.edge.{}", edge.id), Label::data(format!("{} → {}", edge.from, edge.to)), Some(edge.id.clone()))))?;
+    let edge_items = ui_node_list(fixture.edges.iter().map(|edge| tree_item_desc(format!("sequence-play-document.edge.{}", edge.id), format!("{} → {}", edge.from, edge.to), Some(edge.id.clone()))))?;
     PanelTreeBuilder::new("sequence-play-document")?
-        .section_or_placeholder("sequence-play-document.steps", Some(labels.steps.into()), true, step_items, labels.none)?
-        .section_or_placeholder("sequence-play-document.edges", Some(labels.flow_edges.into()), false, edge_items, labels.none)?
+        .section_or_placeholder("sequence-play-document.steps", Some(ui_label(labels.steps.as_str())?), true, step_items, labels.none.as_str())?
+        .section_or_placeholder("sequence-play-document.edges", Some(ui_label(labels.flow_edges.as_str())?), false, edge_items, labels.none.as_str())?
         .interaction_domain(SEQUENCE_INTERACTION_STEPS)?
         .build()
 }
@@ -104,8 +104,8 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn document_lists_steps() {
-        let mut app = new_app();
-        assert!(render_body(&mut app, SEQUENCE_PLAY_BODY_DOCUMENT).contains("sequence-play-document.steps"));
+        let mut app = new_app().await;
+        assert!(render_body(&mut app, SEQUENCE_PLAY_BODY_DOCUMENT).await.contains("sequence-play-document.steps"));
     }
 
     #[semio_framework_async_macros::async_test]

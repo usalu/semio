@@ -6,6 +6,5 @@ pub fn register() {}
 
 pub fn deserialize(from: &PngSnapshot) -> Result<LayoutSnapshot, store::TextError> {
     let _ = STDIO_PNG_DOCUMENT_SCHEMA;
-    let value = serde_json::to_value(from).map_err(|e| store::TextError::new(e.to_string(), dsl::TextSpan::at(1, 1)))?;
-    serde_json::from_value(value).map_err(|e| store::TextError::new(format!("layout<-png: {e}"), dsl::TextSpan::at(1, 1)))
+    <LayoutSnapshot as dsl::FromValue>::from_value(dsl::ToValue::to_value(from)).map_err(|error| store::TextError::new(format!("layout<-png: {error}"), dsl::TextSpan::at(1, 1)))
 }

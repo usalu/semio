@@ -12,5 +12,5 @@ pub struct RequestCompletions {}
 
 pub fn handle(_payload: &RequestCompletions, _doc: &ArtifactView<'_, WriterSnapshot>, cfg: &ConfigView<'_, WriterConfig>) -> Result<Emit<WriterMutation, WriterConfigMutation>, Fault> {
     let config = cfg.snapshot;
-    Ok(Emit::config(vec![WriterConfigMutation::SetRevision { value: config.revision + 1 }]))
+    Ok(Emit::config(vec![WriterConfigMutation::SetRevision(crate::editor::writer::config::SetRevision { value: config.revision + 1 })]))
 }

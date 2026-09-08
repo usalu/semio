@@ -19,8 +19,7 @@ pub fn pack_err_as_text(err: store::PackError) -> store::TextError {
 pub mod derived_composition {
     use crate::artifacts::layout::standards::v1::subsets::any::schema::LayoutAnalyzer;
     use crate::artifacts::layout::LayoutSnapshot;
-    use semio_framework_plugin::ArtifactAnalyzer as _;
-    use semio_framework_plugin::{AnalyzeSource, ArtifactBuilder, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, StandardId, SubsetId};
+    use semio_framework_plugin::{AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, StandardId, SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.layout.layout", standard: StandardId("1"), subset: SubsetId("*") };
     const DEP_DWG: Dialect = Dialect { artifact_kind: "s.stdio.dwg", standard: StandardId("ac1018"), subset: SubsetId("*") };
@@ -38,7 +37,7 @@ pub mod derived_composition {
             &[DIALECT, DEP_DWG, DEP_DXF, DEP_JSON, DEP_SVG]
         }
 
-        fn compose(sources: &[ComposeSource]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+        fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
             for source in sources {
                 if source.dialect == DIALECT {
                     let native = match &source.payload {
@@ -108,7 +107,7 @@ pub use derived_composition::*;
 /// direction, not a layering violation.
 #[derive(Debug)]
 pub enum LayoutError {
-    Json(serde_json::Error),
+    Json(dsl::ValueError),
     UnexpectedSchema(String),
     PageNotFound(String),
     Io(std::io::Error),
@@ -137,8 +136,8 @@ impl std::error::Error for LayoutError {
     }
 }
 
-impl From<serde_json::Error> for LayoutError {
-    fn from(error: serde_json::Error) -> Self {
+impl From<dsl::ValueError> for LayoutError {
+    fn from(error: dsl::ValueError) -> Self {
         Self::Json(error)
     }
 }
@@ -164,11 +163,13 @@ impl From<std::io::Error> for LayoutError {
 /// region's own header on the "more than one consumer" rule).
 use crate::artifacts::layout::{Frame, GridSettings, Layer, LayoutSnapshot, Page, PageColumns, PageMargins, Spread, LAYOUT_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{io_dispatch, resolve_ready, Dialect, ErasedComposeSource, IoDirection, IoKey, IoPayload, StandardId, SubsetId};
-use semio_s_plugin_stdio::artifacts::dwg::{DwgColor, DwgDrawing, DwgEntity, DwgGeometry};
+use semio_s_plugin_stdio::artifacts::dwg::{DwgDrawing, DwgGeometry};
+#[cfg(test)]
+use semio_s_plugin_stdio::artifacts::dwg::{DwgColor, DwgEntity};
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::base::schema::geometry::{SemioPoint3, SemioRgba, SemioTransform};
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::drawing::schema::snapshot::{DrawCanvas, DrawLayer, DrawNode, DrawStyle, PathSegment, SemioDrawingSnapshot, STDIO_SEMIODRAWING_DOCUMENT_SCHEMA};
 use semio_s_plugin_stdio::artifacts::svg::schema::snapshot::{write_svg_xml, SvgSnapshot};
-use serde_json::Value;
+use dsl::{DslValue as Value, FromValue, ToValue};
 
 const DRAWING_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("drawing") };
 const SVG_FORMAT_KIND: &str = "s.stdio.svg";
@@ -252,7 +253,7 @@ pub fn compose_svg_from_drawing(drawing: &SemioDrawingSnapshot) -> Result<String
 /// its layers are merged in first (behind every page layer), so an
 /// imported DWG/DXF/SVG trace an author draws pages on top of actually reaches SVG export instead of
 /// only ever informing page-boundary framing at import time.
-fn layout_snapshot_to_semio_drawing(doc: &LayoutSnapshot) -> SemioDrawingSnapshot {
+pub(crate) fn layout_snapshot_to_semio_drawing(doc: &LayoutSnapshot) -> SemioDrawingSnapshot {
     const PAGE_GAP: f64 = 24.0;
     let mut styles = vec![DrawStyle { name: "page".into(), fill: None, stroke: Some(SemioRgba { r: 0.58, g: 0.65, b: 0.72, a: 1.0 }), stroke_width: Some(2.0), opacity: None }];
     let mut layers = Vec::with_capacity(doc.pages.len());
@@ -300,7 +301,7 @@ fn layout_snapshot_to_semio_drawing(doc: &LayoutSnapshot) -> SemioDrawingSnapsho
 }
 
 pub fn layout_document_json_to_svg(value: &Value) -> Result<(String, u32, u32), String> {
-    let doc: LayoutSnapshot = serde_json::from_value(value.clone()).map_err(|e| format!("layout document: {e}"))?;
+    let doc: LayoutSnapshot = LayoutSnapshot::from_value(value.clone()).map_err(|e| format!("layout document: {e}"))?;
     let drawing = layout_snapshot_to_semio_drawing(&doc);
     let width = drawing.canvas.width.round() as u32;
     let height = drawing.canvas.height.round() as u32;
@@ -405,7 +406,7 @@ pub fn layout_document_json_from_dwg(drawing: &DwgDrawing) -> Result<Value, Stri
         background_drawing: Some(background_child),
         referenced_model: None,
     };
-    serde_json::to_value(document).map_err(|e| e.to_string())
+    Ok(document.to_value())
 }
 //#endregion 🔖️MediaImportExport
 
@@ -432,7 +433,7 @@ mod media_import_export_tests {
         let mut drawing = DwgDrawing::default();
         drawing.entities.push(DwgEntity { layer: 0, color: DwgColor::ByLayer, geometry: DwgGeometry::LwPolyline { closed: true, elevation: 0.0, vertices: vec![[10.0, 20.0], [110.0, 20.0], [110.0, 70.0], [10.0, 70.0]], bulges: vec![0.0; 4] } });
         let value = layout_document_json_from_dwg(&drawing).expect("import dwg");
-        let document: LayoutSnapshot = serde_json::from_value(value).expect("valid layout document");
+        let document: LayoutSnapshot = LayoutSnapshot::from_value(value).expect("valid layout document");
         assert_eq!(document.pages.len(), 1);
         assert_eq!(document.pages[0].width, 100.0);
         assert_eq!(document.pages[0].height, 50.0);
@@ -445,7 +446,7 @@ mod media_import_export_tests {
         drawing.extmin = [0.0, 0.0, 0.0];
         drawing.extmax = [200.0, 150.0, 0.0];
         let value = layout_document_json_from_dwg(&drawing).expect("import dwg");
-        let document: LayoutSnapshot = serde_json::from_value(value).expect("valid layout document");
+        let document: LayoutSnapshot = LayoutSnapshot::from_value(value).expect("valid layout document");
         assert_eq!(document.pages.len(), 1);
         assert_eq!(document.pages[0].width, 200.0);
         assert_eq!(document.pages[0].height, 150.0);
@@ -460,9 +461,9 @@ mod media_import_export_tests {
         let mut drawing = DwgDrawing::default();
         drawing.entities.push(DwgEntity { layer: 0, color: DwgColor::ByLayer, geometry: DwgGeometry::LwPolyline { closed: true, elevation: 0.0, vertices: vec![[0.0, 0.0], [50.0, 0.0], [50.0, 30.0], [0.0, 30.0]], bulges: vec![0.0; 4] } });
         let value = layout_document_json_from_dwg(&drawing).expect("import dwg");
-        let document: LayoutSnapshot = serde_json::from_value(value).expect("valid layout document");
+        let document: LayoutSnapshot = LayoutSnapshot::from_value(value).expect("valid layout document");
         let child = document.background_drawing.as_ref().expect("dwg import mints a background_drawing child");
-        assert_eq!(child.target.dialect.subset, "drawing");
+        assert_eq!(child.handle.target.dialect.subset, "drawing");
         let content = crate::artifacts::layout::background_drawing_content(&document).expect("mint call retained real content");
         assert_eq!(content.layers.len(), 1, "one imported layer, matching dwg_drawing_to_semio_drawing's single 'imported' layer");
     }
@@ -476,9 +477,9 @@ mod media_import_export_tests {
         let mut drawing = DwgDrawing::default();
         drawing.entities.push(DwgEntity { layer: 0, color: DwgColor::ByLayer, geometry: DwgGeometry::LwPolyline { closed: true, elevation: 0.0, vertices: vec![[0.0, 0.0], [50.0, 0.0], [50.0, 30.0], [0.0, 30.0]], bulges: vec![0.0; 4] } });
         let value = layout_document_json_from_dwg(&drawing).expect("import dwg");
-        let document: LayoutSnapshot = serde_json::from_value(value).expect("valid layout document");
+        let document: LayoutSnapshot = LayoutSnapshot::from_value(value).expect("valid layout document");
         assert!(document.background_drawing.is_some());
-        let (svg, _width, _height) = layout_document_json_to_svg(&serde_json::to_value(&document).expect("doc to json")).expect("svg export succeeds");
+        let (svg, _width, _height) = layout_document_json_to_svg(&document.to_value()).expect("svg export succeeds");
         assert!(svg.starts_with("<svg"));
         assert!(svg.contains("<path"));
     }
@@ -491,7 +492,7 @@ mod media_import_export_tests {
     async fn svg_export_composes_through_semio_drawing_bridge() {
         ensure_stdio_semio_drawing_registered();
         let doc = crate::artifacts::layout::schema::default_document();
-        let value = serde_json::to_value(&doc).expect("doc to json");
+        let value = doc.to_value();
         let (svg, width, height) = layout_document_json_to_svg(&value).expect("svg export succeeds");
         assert!(svg.starts_with("<svg"), "{svg}");
         assert!(svg.contains("<path"), "{svg}");
@@ -502,7 +503,7 @@ mod media_import_export_tests {
 
     #[semio_framework_async_macros::async_test]
     async fn svg_export_rejects_invalid_document_json() {
-        let value = serde_json::json!({ "not": "a layout document" });
+        let value = Value::object([("not".into(), Value::String("a layout document".into()))]);
         assert!(layout_document_json_to_svg(&value).is_err());
     }
 }
@@ -587,3 +588,27 @@ pub mod io_registry {
     }
 }
 //#endregion 🚪️DerivedIoRegistry
+
+#[cfg(test)]
+mod pdf_contract_vectors {
+    use super::*;
+    use store::ArtifactDsl;
+    use semio_s_plugin_stdio::artifacts::pdf::standards::v1_4::subsets::base::schema::snapshot::{PageDoc, PdfSnapshot};
+
+    #[test]
+    fn layout_pdf_page_collection_matches_the_json_oracle() {
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/📖️pdf-page-text.json")).expect("neutral PDF fixture");
+        let snapshot: LayoutSnapshot = dsl::os_pack::from_json_str(&fixture["snapshot"].to_string()).expect("owned layout fixture");
+        let exported = crate::artifacts::layout::io::export::serializers::artifacts::pdf::v1_4::base::serialize(&snapshot).expect("PDF export");
+        let actual: serde_json::Value = serde_json::from_str(&dsl::os_pack::to_json_string(&exported)).expect("independent PDF JSON oracle");
+        assert_eq!(actual["pages"].as_array().expect("pages").len(), fixture["exportPages"].as_u64().expect("count") as usize);
+        assert_eq!(actual["pages"][0]["width"], fixture["width"]);
+        assert_eq!(actual["pages"][0]["height"], fixture["height"]);
+        assert_eq!(actual["pages"][0]["text"], snapshot.print_dsl());
+        assert_eq!(crate::artifacts::layout::io::import::deserializers::artifacts::pdf::v1_4::base::deserialize(&exported).expect("single-page import"), snapshot);
+        let text = snapshot.print_dsl();
+        let (first, second) = text.split_once('\n').expect("multiline document");
+        let split = PdfSnapshot { schema: exported.schema, pages: [first, second].into_iter().map(|text| PageDoc { width: 612.0, height: 792.0, text: text.into() }).collect() };
+        assert_eq!(crate::artifacts::layout::io::import::deserializers::artifacts::pdf::v1_4::base::deserialize(&split).expect("all-page import"), snapshot);
+    }
+}

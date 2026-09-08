@@ -3477,9 +3477,7 @@ fn sync_board_host(host: &mut puzzle::editor::puzzle2d::engine::BoardHost, scene
     }
     let deferred = host.defers_descriptor_sync_from_js();
     if !deferred && sync_field(&mut cache.fixture_json, &scene.fixture_json) {
-        if let Ok(raw) = serde_json::from_str::<Value>(&scene.fixture_json) {
-            host.parse_fixture_v1(&raw);
-        }
+        host.parse_fixture_json(&scene.fixture_json);
         host.set_selection_options(&scene.selection_method, "replace", true, true, true);
         host.set_selection_ids_silent(&parse_board_selection_ids(&scene.selection_json));
         cache.selection_json = Some(scene.selection_json.clone());

@@ -1,0 +1,65 @@
+{
+  "base": {
+    "runOutputJson": "",
+    "locale": "en-US",
+    "contributionsJson": "[{\"id\":\"base\"}]"
+  },
+  "cases": [
+    {
+      "kind": "replace-config",
+      "mutation": {
+        "ReplaceConfig": {
+          "config": {
+            "runOutputJson": "{\"done\":true}",
+            "locale": "de-DE",
+            "contributionsJson": "[]"
+          }
+        }
+      },
+      "expected": {
+        "runOutputJson": "{\"done\":true}",
+        "locale": "de-DE",
+        "contributionsJson": "[]"
+      }
+    },
+    {
+      "kind": "set-run-output",
+      "mutation": {
+        "SetRunOutput": {
+          "json": "{\"Grüße\":2}"
+        }
+      },
+      "expected": {
+        "runOutputJson": "{\"Grüße\":2}",
+        "locale": "en-US",
+        "contributionsJson": "[{\"id\":\"base\"}]"
+      }
+    },
+    {
+      "kind": "set-locale",
+      "mutation": {
+        "SetLocale": {
+          "value": "de-DE"
+        }
+      },
+      "expected": {
+        "runOutputJson": "",
+        "locale": "de-DE",
+        "contributionsJson": "[{\"id\":\"base\"}]"
+      }
+    },
+    {
+      "kind": "set-contributions",
+      "mutation": {
+        "SetContributions": {
+          "json": "[]"
+        }
+      },
+      "expected": {
+        "runOutputJson": "",
+        "locale": "en-US",
+        "contributionsJson": "[]"
+      }
+    }
+  ]
+}

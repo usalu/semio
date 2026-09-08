@@ -517,7 +517,7 @@ impl dsl::FromValue for IconName {
             "x" => IconName::X,
             "zoom-in" => IconName::ZoomIn,
             "zoom-out" => IconName::ZoomOut,
-            other => return Err(dsl::ValueError::new(format!("unknown IconName `{{other}}`"))),
+            other => return Err(dsl::ValueError::new(format!("unknown IconName `{other}`"))),
         })
     }
 }
@@ -592,7 +592,7 @@ impl dsl::FromValue for MetabolismIconName {
             "tambour_first-storey" => MetabolismIconName::TambourFirstStorey,
             "tambour_last-storey" => MetabolismIconName::TambourLastStorey,
             "tambour_single-storey" => MetabolismIconName::TambourSingleStorey,
-            other => return Err(dsl::ValueError::new(format!("unknown MetabolismIconName `{{other}}`"))),
+            other => return Err(dsl::ValueError::new(format!("unknown MetabolismIconName `{other}`"))),
         })
     }
 }

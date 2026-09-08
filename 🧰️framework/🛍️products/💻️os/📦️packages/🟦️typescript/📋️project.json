@@ -31,6 +31,10 @@
       "executor": "nx:run-commands",
       "options": { "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript", "command": "bun ./📜️script.ts gis-map-inference-port-check long --browser" }
     },
+    "document-opening-attempt-check": {
+      "executor": "nx:run-commands",
+      "options": { "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript", "command": "bun ./📜️script.ts document-opening-attempt-check" }
+    },
     "cold-document-pair-browser-check": {
       "executor": "nx:run-commands",
       "options": { "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript", "command": "bun ./📜️script.ts cold-document-pair-browser-check long" }

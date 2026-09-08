@@ -2,7 +2,7 @@
 //! once turned into a headless engine driven by bidirectional streaming of typed binary commands,
 //! exchanges with its client (a UI or a headless runner) — every UI interaction becomes a
 //! forwarded `AppCommand`, every engine reaction a returned `AppFrame`. Ticket:
-//! `.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️01/HEADLESS-APP-ENGINE-BINARY-COMMAND-PROTOCOL-FOUNDATIONS/`.
+//! `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️01/HEADLESS-APP-ENGINE-BINARY-COMMAND-PROTOCOL-FOUNDATIONS/`.
 //!
 //! 🎯️ Mirrors `protocol_wire`'s W5 hand-rolled binary layout exactly: `tag: u8` (assigned
 //! sequentially in match-arm declaration order below, NOT the enum's own discriminant) followed by
@@ -21,7 +21,7 @@
 /// `AppFrame::Welcome` handshake entirely — lifecycle now arrives through the reactor ABI's
 /// `Event::InstanceOpen`/`InstanceClose`, so this constant is no longer carried on the wire by any
 /// frame; it exists purely as the drift guard the tests below assert against.
-pub const CHANNEL_VERSION: u32 = 13;
+pub const CHANNEL_VERSION: u32 = 14;
 //#endregion 🔖️Version
 
 //#region 🔖️ChildPackEntry
@@ -47,6 +47,7 @@ pub const COMMAND_PAGE_MAXIMUM_BYTES: usize = 4_096;
 pub const COMMAND_MAXIMUM_PAGES: usize = 64;
 pub const COMMAND_MAXIMUM_BYTES: usize = COMMAND_PAGE_MAXIMUM_BYTES * COMMAND_MAXIMUM_PAGES;
 pub const COMMAND_BATCH_MAXIMUM_ITEMS: usize = 64;
+pub const INVOCATION_RESULT_PACK_MAXIMUM_BYTES: usize = COMMAND_MAXIMUM_BYTES;
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct FixedCommandPage {
@@ -1535,7 +1536,7 @@ pub enum AppCommand {
     /// 🤝️ Phase-1 prepare for one transaction member — flat fields carry EITHER the owner-mutation
     /// form (`mutation_id`+`payload` set, `prepared_ops` empty) OR the pre-planned form
     /// (`prepared_ops`+`label`+`origin` set, `mutation_id` empty); see contract-freeze.md §2 of
-    /// `.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️16/PLUGIN-DEPENDENCIES-ARTIFACT-CONTRIBUTIONS-AND-COMPOSITE-MUTATIONS/`.
+    /// `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️16/PLUGIN-DEPENDENCIES-ARTIFACT-CONTRIBUTIONS-AND-COMPOSITE-MUTATIONS/`.
     /// CHANNEL_VERSION 9 wire addition.
     TransactionPrepare {
         seq: u64,
@@ -1567,7 +1568,7 @@ pub enum AppCommand {
         group_id: String,
     },
     /// 📂️ Opens an artifact in its resolved (or explicitly named) viewer/editor surface — see
-    /// contract-freeze.md §3 of `.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET/`.
+    /// contract-freeze.md §3 of `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET/`.
     /// Empty `plugin_id`/`app_id` means "resolve via `OpeningResolver`". CHANNEL_VERSION 10 wire addition.
     OpenArtifact {
         seq: u64,
@@ -1598,7 +1599,7 @@ pub enum AppCommand {
     },
     /// ⚖️ Pins this connection's local/authority `MergePolicy` (`0`=`LaissezFaire`, `1`=`Normal`,
     /// `2`=`Vigilant`) — never carried on a `MutationEnvelope`/`BackboneMessage`, see
-    /// contract-freeze.md §C3/C8 of `.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS/`.
+    /// contract-freeze.md §C3/C8 of `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS/`.
     /// CHANNEL_VERSION 11 wire addition.
     SetMergePolicy {
         seq: u64,
@@ -1617,7 +1618,7 @@ pub enum AppCommand {
     },
     /// 👥️ Pushes the document-wide presence roster into this app instance — the ONLY plugin ingress
     /// for peers (contract-freeze §C7.6 of ticket
-    /// `.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/SHARED-PRESENCE-SESSION-COLORS-AND-UNIVERSAL-ARTIFACT-CREATION`).
+    /// `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/SHARED-PRESENCE-SESSION-COLORS-AND-UNIVERSAL-ARTIFACT-CREATION`).
     /// `own_color` is this actor's hub-assigned palette index (`None` for a folder-only session with
     /// no hub); `peers` are `encode_presence_peer` blobs, the whole roster with the wrapper's own
     /// actor already dropped. Reply is a plain `AppFrame::Done`. CHANNEL_VERSION 12 wire addition.
@@ -1641,8 +1642,9 @@ pub enum AppFrame {
     Done {
         in_reply_to: u64,
     },
-    /// 🧾 `messages` (CHANNEL_VERSION 11 trailing addition) is one packed `DispatchReport` for this
-    /// dispatch — see contract-freeze.md §C8.
+    /// 🧾 `messages` is one packed `DispatchReport` for this dispatch — see contract-freeze.md
+    /// §C8. `mutations` and `inverse_group` (CHANNEL_VERSION 14 trailing additions) retain the
+    /// exact packed invocation result needed by the ordinary mutation/undo transport.
     Invocation {
         in_reply_to: u64,
         output: Vec<u8>,
@@ -1650,6 +1652,8 @@ pub enum AppFrame {
         ui_scope: Vec<u8>,
         history_patch: Vec<u8>,
         messages: Vec<u8>,
+        mutations: Vec<u8>,
+        inverse_group: Vec<u8>,
     },
     DocumentChanged {
         envelopes: Vec<crate::os_spr::causal::MutationEnvelope>,
@@ -1831,6 +1835,18 @@ async fn read_opt_u64(bytes: &[u8], pos: &mut usize) -> Result<Option<u64>, crat
     } else {
         Ok(None)
     }
+}
+
+fn read_invocation_result_pack(bytes: &[u8], pos: &mut usize) -> Result<Vec<u8>, crate::os_spr::ProtocolError> {
+    let start = *pos;
+    let length = usize::try_from(crate::os_spr::read_varint_u64(bytes, pos)?).map_err(|_| malformed("channel invocation result pack", start as u64, "packed mutations or inverse group length does not fit this host"))?;
+    if length > INVOCATION_RESULT_PACK_MAXIMUM_BYTES {
+        return Err(malformed("channel invocation result pack", start as u64, "packed mutations or inverse group exceed command transport authority"));
+    }
+    let end = pos.checked_add(length).ok_or_else(|| malformed("channel invocation result pack", start as u64, "packed mutations or inverse group length overflow"))?;
+    let value = bytes.get(*pos..end).ok_or_else(|| malformed("channel invocation result pack", start as u64, "packed mutations or inverse group are truncated"))?.to_vec();
+    *pos = end;
+    Ok(value)
 }
 
 /// 🎞️ `presence u8 | byte` — an `Option<u8>` (`AppCommand::Presence.own_color`), the same
@@ -2329,7 +2345,8 @@ pub async fn encode_app_frame(frame: &AppFrame) -> Vec<u8> {
             out.push(0);
             crate::os_spr::write_varint_u64(&mut out, *in_reply_to);
         }
-        AppFrame::Invocation { in_reply_to, output, diagnostics, ui_scope, history_patch, messages } => {
+        AppFrame::Invocation { in_reply_to, output, diagnostics, ui_scope, history_patch, messages, mutations, inverse_group } => {
+            assert!(mutations.len() <= INVOCATION_RESULT_PACK_MAXIMUM_BYTES && inverse_group.len() <= INVOCATION_RESULT_PACK_MAXIMUM_BYTES, "invocation result pack exceeds command transport authority");
             out.push(1);
             crate::os_spr::write_varint_u64(&mut out, *in_reply_to);
             crate::os_spr::write_bytes(&mut out, output);
@@ -2337,6 +2354,8 @@ pub async fn encode_app_frame(frame: &AppFrame) -> Vec<u8> {
             crate::os_spr::write_bytes(&mut out, ui_scope);
             crate::os_spr::write_bytes(&mut out, history_patch);
             crate::os_spr::write_bytes(&mut out, messages);
+            crate::os_spr::write_bytes(&mut out, mutations);
+            crate::os_spr::write_bytes(&mut out, inverse_group);
         }
         AppFrame::DocumentChanged { envelopes, origin } => {
             out.push(2);
@@ -2483,6 +2502,8 @@ pub async fn decode_app_frame(bytes: &[u8]) -> Result<AppFrame, crate::os_spr::P
             ui_scope: crate::os_spr::read_bytes(bytes, &mut pos)?,
             history_patch: crate::os_spr::read_bytes(bytes, &mut pos)?,
             messages: crate::os_spr::read_bytes(bytes, &mut pos)?,
+            mutations: read_invocation_result_pack(bytes, &mut pos)?,
+            inverse_group: read_invocation_result_pack(bytes, &mut pos)?,
         },
         2 => AppFrame::DocumentChanged { envelopes: read_vec_envelope(bytes, &mut pos).await?, origin: crate::os_spr::read_str(bytes, &mut pos)? },
         3 => AppFrame::Document { in_reply_to: crate::os_spr::read_varint_u64(bytes, &mut pos)?, pack: crate::os_spr::read_bytes(bytes, &mut pos)?, spr: crate::os_spr::read_bytes(bytes, &mut pos)?, ops: crate::os_spr::read_str(bytes, &mut pos)? },
@@ -2761,8 +2782,21 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn app_frame_invocation_round_trips() {
-        assert_frame_round_trips(&AppFrame::Invocation { in_reply_to: 2, output: vec![1], diagnostics: vec![2], ui_scope: vec![3], history_patch: vec![4], messages: vec![5] }).await;
-        assert_frame_round_trips(&AppFrame::Invocation { in_reply_to: 2, output: vec![1], diagnostics: vec![2], ui_scope: vec![3], history_patch: vec![4], messages: Vec::new() }).await;
+        assert_frame_round_trips(&AppFrame::Invocation { in_reply_to: 2, output: vec![1], diagnostics: vec![2], ui_scope: vec![3], history_patch: vec![4], messages: vec![5], mutations: vec![6], inverse_group: vec![7] }).await;
+        assert_frame_round_trips(&AppFrame::Invocation { in_reply_to: 2, output: vec![1], diagnostics: vec![2], ui_scope: vec![3], history_patch: vec![4], messages: Vec::new(), mutations: Vec::new(), inverse_group: Vec::new() }).await;
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn app_frame_invocation_rejects_result_pack_outside_command_transport_authority() {
+        let mut encoded = vec![1];
+        crate::os_spr::write_varint_u64(&mut encoded, 2);
+        for _ in 0..5 {
+            crate::os_spr::write_bytes(&mut encoded, &[]);
+        }
+        crate::os_spr::write_bytes(&mut encoded, &vec![0; INVOCATION_RESULT_PACK_MAXIMUM_BYTES + 1]);
+        crate::os_spr::write_bytes(&mut encoded, &[]);
+        let error = decode_app_frame(&encoded).await.expect_err("oversized packed mutation authority must fail closed");
+        assert!(format!("{error:?}").contains("packed mutations or inverse group exceed command transport authority"));
     }
 
     #[semio_framework_async_macros::async_test]
@@ -3130,7 +3164,7 @@ mod tests {
     async fn channel_frame_fixture_corpus() -> Vec<(&'static str, AppFrame)> {
         vec![
             ("Done", AppFrame::Done { in_reply_to: 1 }),
-            ("Invocation", AppFrame::Invocation { in_reply_to: 1, output: vec![1], diagnostics: vec![], ui_scope: vec![], history_patch: vec![], messages: vec![9] }),
+            ("Invocation", AppFrame::Invocation { in_reply_to: 1, output: vec![1], diagnostics: vec![], ui_scope: vec![], history_patch: vec![], messages: vec![9], mutations: vec![10], inverse_group: vec![11] }),
             ("DocumentChanged", AppFrame::DocumentChanged { envelopes: vec![], origin: "o".to_string() }),
             ("Document", AppFrame::Document { in_reply_to: 1, pack: vec![1], spr: vec![2], ops: "o".to_string() }),
             ("Config", AppFrame::Config { in_reply_to: 1, pack: vec![1], spr: vec![2], ops: "c".to_string() }),
@@ -3201,7 +3235,7 @@ mod tests {
     async fn channel_frame_fixture_hex(label: &str) -> &'static str {
         match label {
             "Done" => "0001",
-            "Invocation" => "010101010000000109",
+            "Invocation" => "010101010000000109010a010b",
             "DocumentChanged" => "0200016f",
             "Document" => "030101010102016f",
             "Config" => "0401010101020163",
@@ -3337,7 +3371,7 @@ mod tests {
     /// `🧫️fixtures/📡️channel/` are the single source of truth this codec's TS twin
     /// (`🟦️.ts`'s `AppChannelCodec` `🧪️Tests` region) loads and asserts against too — see
     /// contract-freeze.md §C8 of
-    /// `.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS/`.
+    /// `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS/`.
     #[semio_framework_async_macros::async_test]
     async fn channel_merge_fixtures_match_shared_cross_language_json_vectors() {
         let command_json = include_str!("../../../🧫️fixtures/📡️channel/🔀️app-command-merge.json");

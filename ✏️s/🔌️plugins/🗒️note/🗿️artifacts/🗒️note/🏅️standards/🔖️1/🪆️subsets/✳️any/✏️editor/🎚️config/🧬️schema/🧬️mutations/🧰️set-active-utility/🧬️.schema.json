@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Set Active Utility",
+  "type": "object",
+  "properties": {
+    "utilityId": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "utilityId"
+  ],
+  "additionalProperties": false
+}

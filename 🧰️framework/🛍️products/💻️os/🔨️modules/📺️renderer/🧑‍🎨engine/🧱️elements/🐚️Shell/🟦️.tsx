@@ -64,6 +64,7 @@ import {
   type WindowMeasure,
 } from "@semio-tech/framework";
 import { idleGisMapInferencePortStatusV1, type ArtifactSyncStatus, type GisMapInferencePortStatusV1 } from "@semio-tech/framework-os";
+import { EMPTY_INTERACTION_STATE, type InteractionState } from "../../../../../../../🔨️modules/🕹️interaction/🟦️.ts";
 // 🧱️core: shellLabel imported directly from ShellHelpers (its real implementation, not via the barrel) —
 // this module calls shellLabel(...) at module top level (UI_INSPECTOR_MIXED_PLACEHOLDER), which requires
 // a non-circular import; routing through the barrel indirection (cleared) hit the same
@@ -633,6 +634,7 @@ export type ShellState = {
   readonly layout: ShellLayoutState;
   readonly overlays: OverlayState;
   readonly tutorial: TutorialState;
+  readonly interaction: InteractionState;
   readonly uiPrefs: UiPrefsState;
   readonly sync: SyncState;
   readonly inference: InferenceState;
@@ -704,6 +706,7 @@ export type ShellAction =
   | { readonly type: "SET_TUTORIAL_RECORDING"; readonly value: boolean }
   | { readonly type: "SET_TUTORIAL_DEVIATED"; readonly value: boolean }
   | { readonly type: "APPLY_TUTORIAL_UI_SNAPSHOT"; readonly snapshot: TutorialShellUiSnapshot }
+  | { readonly type: "INTERACTION_STATE_OBSERVED"; readonly state: InteractionState }
   | { readonly type: "SET_UI_APPEARANCE"; readonly value: Updatable<ElementsSurfaceAppearance> }
   | { readonly type: "SET_UI_LAYOUT"; readonly value: Updatable<UiChromeLayout> }
   | { readonly type: "SET_UI_DRIVER_ID"; readonly value: Updatable<string> }
@@ -1066,6 +1069,16 @@ function tutorialReducer(state: TutorialState, action: ShellAction): TutorialSta
       return state;
   }
 }
+
+/** 🕹️ Own local interaction state used by renderer surfaces and typed tutorial capture/replay. */
+function interactionReducer(state: InteractionState, action: ShellAction): InteractionState {
+  switch (action.type) {
+    case "INTERACTION_STATE_OBSERVED":
+      return action.state;
+    default:
+      return state;
+  }
+}
 //#endregion slice reducers
 
 /** 🧵️ Root reducer for `FrameworkOsShell` — fans every action out to its owning slice reducer; slices that ignore an action's type return their input unchanged, so unrelated slices keep referential identity. */
@@ -1079,6 +1092,7 @@ export function shellReducer(state: ShellState, action: ShellAction): ShellState
     layout: shellLayoutReducer(state.layout, action),
     overlays: overlayReducer(state.overlays, action),
     tutorial: tutorialReducer(state.tutorial, action),
+    interaction: interactionReducer(state.interaction, action),
     uiPrefs: uiPrefsReducer(state.uiPrefs, action),
     sync: syncReducer(state.sync, action),
     inference: inferenceReducer(state.inference, action),
@@ -1131,6 +1145,7 @@ export function initialShellState(_props: {
     },
     overlays: { searchOpen: false, findOpen: false, introductionStepIndex: null, introductionAutoStartedKeys: [], introductionCompletedInteractions: [], dialog: null, transientNotice: null, openWithFocusRole: null },
     tutorial: { activeTutorialId: null, playing: false, rate: 1, muted: false, captionsOn: true, recording: false, deviated: false },
+    interaction: EMPTY_INTERACTION_STATE,
     uiPrefs: {
       // 🐚️ No more `ephemeral ? default : readStored...()` branching here — `storage` already resolves
       // to an empty, this-shell-only memory store for an ephemeral shell (see `resolveShellScopeStorage`),

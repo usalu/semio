@@ -15,7 +15,7 @@ fn expected_clock_cause(samples: &[Option<u64>]) -> super::super::RuntimeCleanup
 
 fn terminal_close_state(complete: bool, faulted: bool, blocked: bool) -> std::sync::Arc<super::super::RuntimeCloseWorkerState<TestRuntimeApps>> {
     use super::super::*;
-    let job = RuntimeCloseCleanupJob { instance_id: 7, state: None, progress: None, contended: false, closing: true };
+    let job = RuntimeCloseCleanupJob { state: None, progress: None, contended: false, closing: true };
     let params = semio_framework_job::BatchJobParams {
         operation: semio_framework_job::OperationId(711), generation: semio_framework_job::Generation(1),
         cancel: semio_framework_job::CancelToken::root_now(),
@@ -32,7 +32,7 @@ fn terminal_close_state(complete: bool, faulted: bool, blocked: bool) -> std::sy
         instance_id: 7, generation: semio_framework_job::Generation(1),
         cell: std::sync::Mutex::new(std::mem::ManuallyDrop::new(None)), pump: std::sync::Mutex::new(pump),
         status: AtomicU8::new(RuntimeCloseStatus::Queued.repr()), deadline_resume: AtomicU8::new(u8::MAX), deadline_elapsed_us: AtomicU64::new(0), stalled_steps: AtomicU8::new(0),
-        preview_sequence: AtomicU64::new(0), last_callback_elapsed_us: AtomicU64::new(0),
+        last_callback_elapsed_us: AtomicU64::new(0),
         last_fault: std::sync::Mutex::new([0; 256]), last_fault_origin: AtomicU8::new(0), physical_close_calls: AtomicU64::new(0),
         callback_phase_started_us: AtomicU64::new(0), callback_phase_us: std::array::from_fn(|_| AtomicU64::new(0)),
     })
@@ -206,7 +206,7 @@ fn instance_lifetime_close_contended_pump_keeps_exact_outcome_source() {
     use super::super::*;
     let fixture: Value = serde_json::from_str(include_str!("../../../../../../../../🔨️modules/🎭️actor/🚪️lifetime/🚨️fault.fixture.json")).unwrap();
     let state = terminal_close_state(true, false, false);
-    let job = RuntimeCloseCleanupJob { instance_id: 7, state: Some(std::sync::Arc::downgrade(&state)), progress: None, contended: false, closing: false };
+    let job = RuntimeCloseCleanupJob { state: Some(std::sync::Arc::downgrade(&state)), progress: None, contended: false, closing: false };
     let params = semio_framework_job::BatchJobParams {
         operation: semio_framework_job::OperationId(719), generation: semio_framework_job::Generation(1), cancel: semio_framework_job::CancelToken::root_now(),
         config: semio_framework_job::BatchDriveConfig { site: "exact-close-source-law", stage: semio_framework_job::InteractiveStage::InteractiveStep, fuel_per_step: 1, step_budget_us: 500 },

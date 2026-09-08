@@ -16,5 +16,5 @@ pub struct EngagementInput {
 }
 
 pub fn handle(payload: &EngagementInput, _doc: &ArtifactView<'_, PresentationSnapshot>, _cfg: &ConfigView<'_, PresentationConfig>, _ctx: &mut PresentationDispatchCtx) -> Result<Emit<PresentationMutation, PresentationConfigMutation>, Fault> {
-    Ok(Emit::config(vec![PresentationConfigMutation::SetEngagementInput { value: payload.value.clone() }]))
+    Ok(Emit::config(vec![PresentationConfigMutation::SetEngagementInput(crate::editor::animate::config::SetEngagementInput { value: payload.value.clone() })]))
 }

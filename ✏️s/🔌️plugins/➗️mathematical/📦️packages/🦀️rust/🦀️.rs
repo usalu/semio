@@ -651,7 +651,7 @@ pub mod viewer {
 #[path = "../../🦀️.rs"]
 mod plugin;
 pub use plugin::MathematicalApps;
-semio_framework_plugin::plugin_exports!(plugin::plugin, plugin::MathematicalApps);
+semio_framework_plugin::plugin_exports!(plugin::plugin, MathematicalApps);
 
 //#region 📚️Examples
 #[path = "."]

@@ -44,12 +44,12 @@ mod tests {
     async fn set_source_replaces_source_and_clears_tiles_when_src_changes() {
         let mut app = presentation_app().await;
         dispatch(&mut app, PresentationCommand::SeedGrid(crate::editor::animate::commands::seed_grid::SeedGrid { rows: 2, columns: 2 })).await;
-        assert_eq!(crate::artifacts::presentation::presentation_working_scene(&app.snapshot().await.expect("projection")).1.len(), 4);
+        assert_eq!(crate::artifacts::presentation::presentation_working_scene(&app.snapshot().expect("projection")).1.len(), 4);
         let mut source = crate::artifacts::presentation::default_figure_tile_source();
         source.src = "/new-figure.png".into();
         source.kind = "image".into();
         dispatch(&mut app, PresentationCommand::SetSource(SetSource { source })).await;
-        let deck = app.snapshot().await.expect("projection");
+        let deck = app.snapshot().expect("projection");
         let (deck_source, deck_tiles) = crate::artifacts::presentation::presentation_working_scene(&deck);
         assert_eq!(deck_source.src, "/new-figure.png");
         assert_eq!(deck_source.kind, "image");
@@ -60,17 +60,17 @@ mod tests {
     async fn set_source_with_same_src_keeps_existing_tiles() {
         let mut app = presentation_app().await;
         dispatch(&mut app, PresentationCommand::SeedGrid(crate::editor::animate::commands::seed_grid::SeedGrid { rows: 2, columns: 2 })).await;
-        let (mut source, _) = crate::artifacts::presentation::presentation_working_scene(&app.snapshot().await.expect("projection"));
+        let (mut source, _) = crate::artifacts::presentation::presentation_working_scene(&app.snapshot().expect("projection"));
         source.kind = "figure".into();
         dispatch(&mut app, PresentationCommand::SetSource(SetSource { source })).await;
-        assert_eq!(crate::artifacts::presentation::presentation_working_scene(&app.snapshot().await.expect("projection")).1.len(), 4, "unchanged src does not clear tiles");
+        assert_eq!(crate::artifacts::presentation::presentation_working_scene(&app.snapshot().expect("projection")).1.len(), 4, "unchanged src does not clear tiles");
     }
 
     #[semio_framework_async_macros::async_test]
     async fn set_frame_updates_source_frame() {
         let mut app = presentation_app().await;
         dispatch(&mut app, PresentationCommand::SetFrame(set_frame::SetFrame { frame: FigureTileFrame { x: 0.1, y: 0.2, width: 0.3, height: 0.4 } })).await;
-        let frame = crate::artifacts::presentation::presentation_working_scene(&app.snapshot().await.expect("projection")).0.frame;
+        let frame = crate::artifacts::presentation::presentation_working_scene(&app.snapshot().expect("projection")).0.frame;
         assert_eq!(frame.x, 0.1);
         assert_eq!(frame.y, 0.2);
         assert_eq!(frame.width, 0.3);
@@ -87,9 +87,9 @@ mod tests {
         use semio_framework_plugin::Effect;
         let mut app = presentation_app().await;
         dispatch(&mut app, PresentationCommand::SeedGrid(crate::editor::animate::commands::seed_grid::SeedGrid { rows: 2, columns: 2 })).await;
-        let deck = app.snapshot().await.expect("projection");
-        let history = semio_framework_plugin::HistoryView::empty().await;
-        let doc = ArtifactView::new(&deck, &history).await;
+        let deck = app.snapshot().expect("projection");
+        let history = semio_framework_plugin::HistoryView::empty();
+        let doc = ArtifactView::new(&deck, &history);
         let cfg_snapshot = PresentationConfig::default();
         let cfg = ConfigView { snapshot: &cfg_snapshot };
         let mut ctx = PresentationDispatchCtx { selected_ids: Vec::new() };
@@ -104,8 +104,8 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn set_active_example_unknown_id_is_a_no_op() {
         let deck = default_presentation_snapshot();
-        let history = semio_framework_plugin::HistoryView::empty().await;
-        let doc = ArtifactView::new(&deck, &history).await;
+        let history = semio_framework_plugin::HistoryView::empty();
+        let doc = ArtifactView::new(&deck, &history);
         let cfg_snapshot = PresentationConfig::default();
         let cfg = ConfigView { snapshot: &cfg_snapshot };
         let mut ctx = PresentationDispatchCtx { selected_ids: Vec::new() };

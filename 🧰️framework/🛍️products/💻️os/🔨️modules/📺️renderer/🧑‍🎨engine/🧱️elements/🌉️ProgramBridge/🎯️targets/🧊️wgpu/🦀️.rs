@@ -122,6 +122,8 @@ mod wasm_program_exchange {
         let mut output = DslValue::Null;
         let mut diagnostics = Vec::new();
         let events: Vec<AppEvent> = Vec::new();
+        let mut mutations = Vec::new();
+        let mut inverse_group = UndoGroup { invocation_id: InvocationId(String::new()), mutations: Vec::new(), inverse_mutations: Vec::new(), member_edits: Vec::new() };
         let mut saw_invocation = false;
         // 🧾️ ticket 26/08/17/FINISH-HUB-SPACES-COLLABORATION-END-TO-END §C5 — `history_patch` used to
         // be silently discarded here (the native wgpu shell tracked no history/uncommitted-edit
@@ -131,11 +133,19 @@ mod wasm_program_exchange {
         let mut history_patch: Option<semio_framework::kernel::HistoryPatch> = None;
         for frame in &outcome.frames {
             match frame {
-                AppFrame::Invocation { in_reply_to, output: out_bytes, diagnostics: diag_bytes, history_patch: history_patch_bytes, .. } if *in_reply_to == seq => {
+                AppFrame::Invocation { in_reply_to, output: out_bytes, diagnostics: diag_bytes, history_patch: history_patch_bytes, mutations: mutation_bytes, inverse_group: inverse_group_bytes, .. } if *in_reply_to == seq => {
                     output = decode_wire::<DslValue>(out_bytes)?;
                     diagnostics = decode_wire(diag_bytes).unwrap_or_default();
                     if !history_patch_bytes.is_empty() {
                         history_patch = decode_wire::<semio_framework::kernel::HistoryPatch>(history_patch_bytes).ok();
+                    }
+                    match (mutation_bytes.is_empty(), inverse_group_bytes.is_empty()) {
+                        (true, true) => {}
+                        (false, false) => {
+                            mutations = decode_wire(mutation_bytes)?;
+                            inverse_group = decode_wire(inverse_group_bytes)?;
+                        }
+                        _ => return Err("plugin invocation published mutations and inverse group asymmetrically".to_string()),
                     }
                     saw_invocation = true;
                 }
@@ -150,8 +160,8 @@ mod wasm_program_exchange {
         }
         Ok(InvocationResult {
             output,
-            mutations: Vec::new(),
-            inverse_group: UndoGroup { invocation_id: InvocationId(String::new()), mutations: Vec::new(), inverse_mutations: Vec::new(), member_edits: Vec::new() },
+            mutations,
+            inverse_group,
             diagnostics,
             requested_effects: std::mem::take(&mut outcome.effects),
             events,
@@ -252,7 +262,7 @@ mod wasm_program_exchange {
     }
 
     /// 👥️ Native twin of the browser host's `AppChannelClient.pushPresence` (contract-freeze §C7.6 of
-    /// ticket `.🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/SHARED-PRESENCE-SESSION-COLORS-AND-UNIVERSAL-ARTIFACT-
+    /// ticket `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/SHARED-PRESENCE-SESSION-COLORS-AND-UNIVERSAL-ARTIFACT-
     /// CREATION`): sends the document-wide presence roster (already own-actor-dropped by the caller)
     /// as a single `AppCommand::Presence`, one `encode_presence_peer` blob per peer. A plain `Done`
     /// reply, never decoded further here.

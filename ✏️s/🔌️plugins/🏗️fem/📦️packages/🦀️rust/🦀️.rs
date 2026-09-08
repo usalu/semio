@@ -17,6 +17,9 @@ extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as store;
 extern crate semio_framework_os_kernel as vcs;
 extern crate semio_framework_schema as schema;
+#[cfg(test)]
+#[path = "../../../../../✏️s/🔨️modules/🏗️fem/⚙️engine/🧪️tests/🦀️.rs"]
+pub(crate) mod numerical_testkit;
 // 🧯️ `clippy::result_large_err` — every `🎮️commands/*` handler returns
 // `Result<Emit<FemXMutation, FemXConfigMutation>, Fault>`, the exact signature `ArtifactApp::handle`
 // and `app_commands!`'s generated `dispatch` require. `Fault` is a framework-owned error type; boxing

@@ -31,7 +31,7 @@ pub(crate) fn preset_query(preset_id: &str) -> &'static str {
 }
 
 fn error_result_json(message: &str) -> String {
-    json!({ "error": message }).to_string()
+    pack::json!({ "error": message }).to_string()
 }
 
 pub(crate) fn run_query(fixture: &JackSnapshot, query: &Option<String>, current_query: &str) -> Result<Emit<TrinityGraphMutation, JackConfigMutation>, Fault> {
@@ -39,7 +39,7 @@ pub(crate) fn run_query(fixture: &JackSnapshot, query: &Option<String>, current_
     let (result_json, operations) = run_jack_query(fixture, &resolved);
     Ok(Emit {
         artifact_mutations: operations,
-        config_mutations: vec![JackConfigMutation::SetQuery { value: resolved }, JackConfigMutation::SetResult { value: result_json }, JackConfigMutation::SetResultsEngagementInput { value: String::new() }],
+        config_mutations: vec![JackConfigMutation::SetQuery(crate::editor::jack::config::SetQuery { value: resolved }), JackConfigMutation::SetResult(crate::editor::jack::config::SetResult { value: result_json }), JackConfigMutation::SetResultsEngagementInput(crate::editor::jack::config::SetResultsEngagementInput { value: String::new() })],
         ..Default::default()
     })
 }

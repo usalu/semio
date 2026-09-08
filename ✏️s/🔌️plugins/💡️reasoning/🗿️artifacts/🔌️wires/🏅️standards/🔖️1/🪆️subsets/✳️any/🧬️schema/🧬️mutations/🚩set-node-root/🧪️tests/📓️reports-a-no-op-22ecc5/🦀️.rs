@@ -34,16 +34,16 @@ fn board_entries(board: &DslValue, key: &str) -> Vec<DslValue> {
 /// 🌱 The committed `⬅️before` with its composed content child resolved into the working-scene
 /// the exact child owner from the snapshot's own persisted `wiresFixture.board` mirror — no node is invented here.
 fn before() -> WiresSnapshot {
-    let mut snapshot: WiresSnapshot = serde_json::from_str(BEFORE).expect("before snapshot decodes");
+    let mut snapshot: WiresSnapshot = dsl::os_pack::from_json_str(BEFORE).expect("before snapshot decodes");
     let board = snapshot.wires_fixture.get("board").cloned().unwrap_or(DslValue::Null);
     materialize_wires_content(&mut snapshot.content, board_entries(&board, "nodes"), board_entries(&board, "edges"));
     snapshot
 }
 fn expected_after() -> WiresSnapshot {
-    serde_json::from_str(AFTER).expect("after snapshot decodes")
+    dsl::os_pack::from_json_str(AFTER).expect("after snapshot decodes")
 }
 fn mutation() -> WiresMutation {
-    serde_json::from_str(MUTATION).expect("mutation decodes")
+    dsl::os_pack::from_json_str(MUTATION).expect("mutation decodes")
 }
 
 /// ▶️ Clearing a root flag `node-leaf` never had carries `before` to exactly the committed
@@ -75,12 +75,12 @@ async fn inverse_restores_before() {
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {
-        let decoded: WiresSnapshot = serde_json::from_str(text).expect("snapshot decodes");
-        let reencoded = serde_json::to_value(&decoded).expect("snapshot encodes");
+        let decoded: WiresSnapshot = dsl::os_pack::from_json_str(text).expect("snapshot decodes");
+        let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::os_pack::to_json_string(&decoded)).expect("snapshot encodes");
         let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
         assert_eq!(reencoded, original, "set-node-root/reports-a-no-op-when-an-unflagged-node-is-set-to-not-root: committed {label} JSON is not canonical");
     }
-    let reencoded = serde_json::to_value(mutation()).expect("mutation encodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::os_pack::to_json_string(&mutation())).expect("mutation encodes");
     let original: serde_json::Value = serde_json::from_str(MUTATION).expect("mutation reparses");
     assert_eq!(reencoded, original, "set-node-root/reports-a-no-op-when-an-unflagged-node-is-set-to-not-root: committed setNodeRoot JSON is not canonical");
     assert_eq!(original.get("newRoot").and_then(serde_json::Value::as_bool), Some(false), "the payload must state the flag explicitly — a bare bool has no skip_serializing_if");
@@ -107,7 +107,7 @@ async fn declared_outcome_holds() {
 async fn produces_committed_diff() {
     let outcome = <WiresMutation as protocol::Mutation<WiresSnapshot>>::diff(&mutation(), &before());
     assert_eq!(outcome.diff(), &WiresDiff::default(), "a redundant root set must carry the empty diff, never a re-minted content child");
-    let produced = serde_json::to_value(outcome.diff()).expect("produced diff encodes");
+    let produced = serde_json::from_str::<serde_json::Value>(&dsl::os_pack::to_json_string(outcome.diff())).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
     assert_eq!(produced, committed, "set-node-root/reports-a-no-op-when-an-unflagged-node-is-set-to-not-root: produced diff differs from the committed 🔺️diff/🔣️.json");
 }
@@ -116,8 +116,8 @@ async fn produces_committed_diff() {
 /// spelled out as `null`, including the `config`-lane `locale`.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical() {
-    let decoded: WiresDiff = serde_json::from_str(DIFF).expect("committed diff decodes");
-    let reencoded = serde_json::to_value(&decoded).expect("diff re-encodes");
+    let decoded: WiresDiff = dsl::os_pack::from_json_str(DIFF).expect("committed diff decodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::os_pack::to_json_string(&decoded)).expect("diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
     assert_eq!(reencoded, original, "set-node-root/reports-a-no-op-when-an-unflagged-node-is-set-to-not-root: committed diff JSON is not canonical");
     assert!(original.get("locale").is_some_and(serde_json::Value::is_null), "the config-lane slot must be present and null — a node-flag verb never touches the locale");
@@ -126,7 +126,7 @@ async fn committed_diff_is_canonical() {
 /// 🩹 Applying the committed diff straight to `before` yields the committed `after`.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
-    let decoded: WiresDiff = serde_json::from_str(DIFF).expect("committed diff decodes");
+    let decoded: WiresDiff = dsl::os_pack::from_json_str(DIFF).expect("committed diff decodes");
     let produced = <WiresDiff as protocol::MutationDiff<WiresSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "set-node-root/reports-a-no-op-when-an-unflagged-node-is-set-to-not-root: committed diff did not carry before to after");
 }

@@ -5,7 +5,7 @@
 //! a list item's content IS a `Vec<MdBlock>` -- identical to the top level and to a block quote's
 //! content). `MdInline` is treated as a WEAK entity throughout (recipe: weak entities are
 //! whole-value replaced) -- every `inlines`/`text` field below is `Option<Vec<MdInline>>` or
-//! `Option<String>`, never sub-diffed. Same xml/svg tree-diff pattern (`.🦑️repo/🎫️tickets/
+//! `Option<String>`, never sub-diffed. Same xml/svg tree-diff pattern (`.🧬semio/🦑️repo/🎫️tickets/
 //! 🎆️26/🌙️08/☀️10/ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION/🧬️schema-design.md`,
 //! xml's own diff module is the direct template this file follows arm-for-arm).
 

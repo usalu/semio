@@ -12,5 +12,5 @@ pub struct SetActivePage {
 }
 
 pub fn handle(payload: &SetActivePage, _doc: &ArtifactView<'_, LayoutSnapshot>, _cfg: &ConfigView<'_, LayoutConfig>) -> Result<Emit<LayoutMutation, LayoutConfigMutation>, Fault> {
-    Ok(Emit::config(vec![LayoutConfigMutation::SetActivePage { page_id: payload.page_id.clone() }]))
+    Ok(Emit::config(vec![LayoutConfigMutation::SetActivePage(crate::editor::layout::config::SetActivePage { page_id: payload.page_id.clone() })]))
 }

@@ -23,13 +23,13 @@ const DIFF: &str = include_str!("🔺️diff/🔣️.json");
 const OUTCOME: &str = include_str!("🎯️outcome/🔣️.json");
 
 fn before() -> FormsSnapshot {
-    serde_json::from_str(BEFORE).expect("before snapshot decodes")
+    dsl::os_pack::json::from_json_str(BEFORE).expect("before snapshot decodes")
 }
 fn expected_after() -> FormsSnapshot {
-    serde_json::from_str(AFTER).expect("after snapshot decodes")
+    dsl::os_pack::json::from_json_str(AFTER).expect("after snapshot decodes")
 }
 fn mutation() -> FormMutation {
-    serde_json::from_str(MUTATION).expect("mutation decodes")
+    dsl::os_pack::json::from_json_str(MUTATION).expect("mutation decodes")
 }
 
 /// ▶️ Titling the survey carries `before` to exactly the committed `after` — and touches nothing
@@ -41,7 +41,7 @@ async fn applies_to_committed_after() {
     let snapshot = apply_form_edit_mutation(&base, &mutation()).expect("change-form-title applies to its committed before-snapshot");
     assert_eq!(snapshot, expected_after(), "change-form-title/titles-an-untitled-survey: applied state differs from committed after-snapshot");
     assert_eq!(snapshot.title.as_deref(), Some("Site Survey"), "change-form-title must set the document title the payload carried");
-    assert_eq!((&mut snapshot.structure, &snapshot.results.child_id), (&base.structure.child_id, &base.results.child_id), "a title change must never re-mint the structure/results child handles");
+    assert_eq!((&snapshot.structure.child_id, &snapshot.results.child_id), (&base.structure.child_id, &base.results.child_id), "a title change must never re-mint the structure/results child handles");
 }
 
 /// ↩️ `change-form-title`'s inverse is BASE-derived, not payload-derived: it restores whatever the
@@ -71,12 +71,12 @@ async fn inverse_restores_before() {
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {
-        let decoded: FormsSnapshot = serde_json::from_str(text).expect("snapshot decodes");
-        let reencoded = serde_json::to_value(&decoded).expect("snapshot encodes");
+        let decoded: FormsSnapshot = dsl::os_pack::json::from_json_str(text).expect("snapshot decodes");
+        let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::os_pack::json::to_json_string(&decoded)).expect("snapshot encodes");
         let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
         assert_eq!(reencoded, original, "change-form-title/titles-an-untitled-survey: committed {label} JSON is not canonical");
     }
-    let reencoded = serde_json::to_value(mutation()).expect("mutation encodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::os_pack::json::to_json_string(&mutation())).expect("mutation encodes");
     let original: serde_json::Value = serde_json::from_str(MUTATION).expect("mutation reparses");
     assert_eq!(reencoded, original, "change-form-title/titles-an-untitled-survey: committed mutation JSON is not canonical");
 }
@@ -99,7 +99,7 @@ async fn declared_outcome_holds() {
 #[semio_framework_async_macros::async_test]
 async fn produces_committed_diff() {
     let outcome = <FormMutation as protocol::Mutation<FormsSnapshot>>::diff(&mutation(), &before());
-    let produced = serde_json::to_value(outcome.diff()).expect("produced diff encodes");
+    let produced = serde_json::from_str::<serde_json::Value>(&dsl::os_pack::json::to_json_string(outcome.diff())).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
     assert_eq!(produced, committed, "change-form-title/titles-an-untitled-survey: produced diff differs from the committed 🔺️diff/🔣️.json");
     assert_eq!(outcome.diff().title, Some(Some("Site Survey".to_string())), "the diff's double-Option title must be an explicit SET, never a clear");
@@ -112,8 +112,8 @@ async fn produces_committed_diff() {
 /// so every one of its eleven fields is emitted — `null` for the ten this verb never writes.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical() {
-    let decoded: FormsDiff = serde_json::from_str(DIFF).expect("committed diff decodes");
-    let reencoded = serde_json::to_value(&decoded).expect("diff re-encodes");
+    let decoded: FormsDiff = dsl::os_pack::json::from_json_str(DIFF).expect("committed diff decodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::os_pack::json::to_json_string(&decoded)).expect("diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
     assert_eq!(reencoded, original, "change-form-title/titles-an-untitled-survey: committed diff JSON is not canonical");
 }
@@ -122,7 +122,7 @@ async fn committed_diff_is_canonical() {
 /// complete description of the title change, not a summary of it.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
-    let decoded: FormsDiff = serde_json::from_str(DIFF).expect("committed diff decodes");
+    let decoded: FormsDiff = dsl::os_pack::json::from_json_str(DIFF).expect("committed diff decodes");
     let produced = <FormsDiff as protocol::MutationDiff<FormsSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "change-form-title/titles-an-untitled-survey: committed diff did not carry before to after");
 }

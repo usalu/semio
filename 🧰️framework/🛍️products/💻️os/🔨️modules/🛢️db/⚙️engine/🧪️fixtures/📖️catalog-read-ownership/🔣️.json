@@ -1,0 +1,183 @@
+{
+  "schema": "semio.db.catalog-read-ownership/v1",
+  "root": {
+    "bytes": [
+      3,
+      1,
+      4,
+      1,
+      5
+    ],
+    "epoch": 17,
+    "key": "root"
+  },
+  "transfers": [
+    {
+      "name": "paused-handoff",
+      "phase": "Handoff",
+      "closeBlocked": true,
+      "admissionRetained": true,
+      "storageRetained": true,
+      "submissionsWhileActive": 0,
+      "finalEmpty": true
+    },
+    {
+      "name": "paused-retainwork",
+      "phase": "RetainWork",
+      "closeBlocked": true,
+      "admissionRetained": true,
+      "storageRetained": true,
+      "submissionsWhileActive": 0,
+      "finalEmpty": true
+    },
+    {
+      "name": "paused-poll",
+      "phase": "Poll",
+      "closeBlocked": true,
+      "admissionRetained": true,
+      "storageRetained": true,
+      "submissionsWhileActive": 0,
+      "finalEmpty": true
+    }
+  ],
+  "completion": [
+    {
+      "name": "synchronous-pages",
+      "publication": "synchronous",
+      "outcome": "pages",
+      "admissionDuringPublication": false,
+      "retirementSubmissions": 0,
+      "lateSubmissions": 0,
+      "terminalEmpty": true
+    },
+    {
+      "name": "synchronous-backend-fault",
+      "publication": "synchronous",
+      "outcome": "backend-fault",
+      "admissionDuringPublication": false,
+      "retirementSubmissions": 0,
+      "lateSubmissions": 0,
+      "terminalEmpty": true
+    },
+    {
+      "name": "before-wake-pages",
+      "publication": "before-wake",
+      "outcome": "pages",
+      "admissionDuringPublication": true,
+      "retirementSubmissions": 0,
+      "lateSubmissions": 0,
+      "terminalEmpty": true
+    },
+    {
+      "name": "before-wake-backend-fault",
+      "publication": "before-wake",
+      "outcome": "backend-fault",
+      "admissionDuringPublication": true,
+      "retirementSubmissions": 0,
+      "lateSubmissions": 0,
+      "terminalEmpty": true
+    },
+    {
+      "name": "after-finalizer-check-pages",
+      "publication": "after-finalizer-check",
+      "outcome": "pages",
+      "admissionDuringPublication": true,
+      "retirementSubmissions": 1,
+      "lateSubmissions": 0,
+      "terminalEmpty": true
+    },
+    {
+      "name": "after-finalizer-check-backend-fault",
+      "publication": "after-finalizer-check",
+      "outcome": "backend-fault",
+      "admissionDuringPublication": true,
+      "retirementSubmissions": 1,
+      "lateSubmissions": 0,
+      "terminalEmpty": true
+    },
+    {
+      "name": "refused-finalizer-pages",
+      "publication": "refused-finalizer",
+      "outcome": "pages",
+      "admissionDuringPublication": true,
+      "retirementSubmissions": 1,
+      "lateSubmissions": 0,
+      "terminalEmpty": true
+    },
+    {
+      "name": "refused-finalizer-backend-fault",
+      "publication": "refused-finalizer",
+      "outcome": "backend-fault",
+      "admissionDuringPublication": true,
+      "retirementSubmissions": 1,
+      "lateSubmissions": 0,
+      "terminalEmpty": true
+    }
+  ],
+  "recovery": [
+    {
+      "name": "retry-pages",
+      "path": "retry",
+      "outcome": "pages",
+      "staleRetrySubmissions": 0,
+      "checkoutBlocksRetirement": false,
+      "terminalEmpty": true
+    },
+    {
+      "name": "retry-backend-fault",
+      "path": "retry",
+      "outcome": "backend-fault",
+      "staleRetrySubmissions": 0,
+      "checkoutBlocksRetirement": false,
+      "terminalEmpty": true
+    },
+    {
+      "name": "terminal-completion-pages",
+      "path": "terminal-completion",
+      "outcome": "pages",
+      "staleRetrySubmissions": 0,
+      "checkoutBlocksRetirement": false,
+      "terminalEmpty": true
+    },
+    {
+      "name": "terminal-completion-backend-fault",
+      "path": "terminal-completion",
+      "outcome": "backend-fault",
+      "staleRetrySubmissions": 0,
+      "checkoutBlocksRetirement": false,
+      "terminalEmpty": true
+    },
+    {
+      "name": "terminal-result-pages",
+      "path": "terminal-result",
+      "outcome": "pages",
+      "staleRetrySubmissions": 0,
+      "checkoutBlocksRetirement": true,
+      "terminalEmpty": true
+    },
+    {
+      "name": "terminal-result-backend-fault",
+      "path": "terminal-result",
+      "outcome": "backend-fault",
+      "staleRetrySubmissions": 0,
+      "checkoutBlocksRetirement": true,
+      "terminalEmpty": true
+    },
+    {
+      "name": "spent-work-pages",
+      "path": "spent-work",
+      "outcome": "pages",
+      "staleRetrySubmissions": 0,
+      "checkoutBlocksRetirement": true,
+      "terminalEmpty": true
+    },
+    {
+      "name": "spent-work-backend-fault",
+      "path": "spent-work",
+      "outcome": "backend-fault",
+      "staleRetrySubmissions": 0,
+      "checkoutBlocksRetirement": true,
+      "terminalEmpty": true
+    }
+  ]
+}

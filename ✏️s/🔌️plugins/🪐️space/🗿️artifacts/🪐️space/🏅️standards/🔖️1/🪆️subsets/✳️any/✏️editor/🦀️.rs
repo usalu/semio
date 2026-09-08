@@ -284,11 +284,6 @@ impl ArtifactEditor for SpaceIndexEditor {
     const DIALECT: Dialect = SPACE_INDEX_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = crate::artifacts::space::S_SPACE_INDEX_DOCUMENT_SCHEMA;
 
-    /// 🧾️ `controller:` is the runtime tool controller — the surface app id
-    /// `tool_job_registration` is called with, not the manifest's UI `controller_id`
-    /// (`s-space-index`); `contract:` reads the one `space_index_retained_contract()` the factory
-    /// publishes, because the proof/registration join is exact equality. Both are pinned by
-    /// `interactive_job_catalog_tests::tool_proof_catalogs_match_the_runtime_identity_they_are_joined_against`.
     semio_framework_plugin::bounded_first_step_tool_proofs! {
         owner: semio_framework_plugin::EditorApp<SpaceIndexEditor>,
         owner_file: "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",

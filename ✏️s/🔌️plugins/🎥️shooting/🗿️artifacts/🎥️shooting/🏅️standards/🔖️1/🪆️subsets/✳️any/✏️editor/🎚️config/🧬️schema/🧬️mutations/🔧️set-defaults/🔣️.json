@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🧬️mutations/🔧️set-defaults",
+  "semanticKind": "set-defaults",
+  "displayName": "Set Defaults",
+  "emoji": "🔧️",
+  "aggregateVariant": "SetDefaults",
+  "payloadSchema": "🧬️.schema.json",
+  "textOpcode": "set-defaults",
+  "binaryTag": 8,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "apply-only",
+  "outcomeClasses": [
+    "applied"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "text",
+    "binary",
+    "json-schema"
+  ]
+}

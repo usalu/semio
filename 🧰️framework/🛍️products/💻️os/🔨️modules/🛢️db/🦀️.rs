@@ -3,7 +3,7 @@
 //! db_projection, db_query, db_preview, db_security, db_artifact, db_compact, db_sync,
 //! db_cluster, db_observe, db_engine`, plus the optional `db_storage_sqlite`/`db_storage_postgres`/
 //! `db_storage_neo4j` backends) behind one crate. Frozen contract:
-//! `.🦑️repo/🎫️tickets/26/07/27/INTRODUCE-DB-PROTOCOL-COMMAND-LAYER-AND-VCS-SLIMMING/contract.md`
+//! `.🧬semio/🦑️repo/🎫️tickets/26/07/27/INTRODUCE-DB-PROTOCOL-COMMAND-LAYER-AND-VCS-SLIMMING/contract.md`
 //! (`## db crate family`, "Stable API" block).
 //!
 //! 🎯️ Design choice (layout): the frozen `Database`/`ArtifactHandle` API and its companion types
@@ -194,6 +194,7 @@ pub mod storage_neo4j {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::{DbError, DurabilityClass, Profile};
 
     async fn decode_query_json(mut stream: QueryStream) -> serde_json::Value {
         let mut bytes = Vec::new();

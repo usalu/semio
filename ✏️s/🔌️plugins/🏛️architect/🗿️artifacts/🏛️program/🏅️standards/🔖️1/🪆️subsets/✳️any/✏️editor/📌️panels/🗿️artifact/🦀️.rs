@@ -6,8 +6,9 @@ use crate::editor::architect::catalog::register_len;
 use crate::editor::architect::config::{active_register, ArchitectConfig};
 use crate::editor::architect::ARCHITECT_INTERACTION_PROGRAM;
 use crate::editor::architect::{architect_action, ui_value_map, ui_value_text};
+use crate::editor::architect::ui_label;
 use semio_framework_plugin::{
-    tree_item_desc, tree_item_with_action, Label, LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, UiFixedList, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL,
+    tree_item_desc, tree_item_with_action,  LocalizedLabel, PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, PluginAssemblyError, UiFixedList, FRAMEWORK_PANEL_TAB_ARTIFACT_ID, FRAMEWORK_PANEL_TAB_ARTIFACT_LABEL,
 };
 
 //#region 🔖️Constants
@@ -40,27 +41,32 @@ pub fn render(program: &ProgramSnapshot, cfg: &ArchitectConfig) -> semio_framewo
     let summary = status_summary(program);
     let mut element_items = UiFixedList::default();
     for element in &program.elements {
-        let item = tree_item_desc(element.header.id.to_string(), Label::data(format!("{} ({:?})", element.header.name, element.kind)), Some(element.header.id.to_string()))?;
+        let item = tree_item_desc(element.header.id.to_string(), ui_label(format!("{} ({:?})", element.header.name, element.kind))?, Some(element.header.id.to_string()))?;
         element_items.try_push(item).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "architect element row admission failed"))?;
-    }
-    let mut register_items = UiFixedList::default();
-    for row in &summary.by_register {
-        let args = ui_value_map([("registerId", ui_value_text(&row.register)?)])?;
-        let item = tree_item_with_action(format!("architect-document.register.{}", row.register), Label::data(format!("{} ({})", row.register, row.count)), None, architect_action("selectRegister", Some(args))?)?;
-        register_items.try_push(item).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "architect register row admission failed"))?;
     }
     let mut meta = UiFixedList::default();
     for item in [
-        tree_item_desc("architect-document.meta.title", Label::data(format!("Title: {}", program.meta.title)), None)?,
-        tree_item_desc("architect-document.meta.project", Label::data(format!("Project: {} ({})", program.project.client_name, program.project.code)), None)?,
-        tree_item_desc("architect-document.meta.entities", Label::data(format!("Entities tracked: {} (active register: {} / {})", summary.total_entities, active_register(cfg), register_len(program, active_register(cfg)))), None)?,
+        tree_item_desc("architect-document.meta.title", ui_label(format!("Title: {}", program.meta.title))?, None)?,
+        tree_item_desc("architect-document.meta.project", ui_label(format!("Project: {} ({})", program.project.client_name, program.project.code))?, None)?,
+        tree_item_desc("architect-document.meta.entities", ui_label(format!("Entities tracked: {} (active register: {} / {})", summary.total_entities, active_register(cfg), register_len(program, active_register(cfg))))?, None)?,
     ] {
         meta.try_push(item).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "architect metadata row admission failed"))?;
     }
-    PanelTreeBuilder::new("architect-document")?
-        .section("architect-document.meta", Some(Label::data("ProgramSnapshot")), true, meta)?
-        .section("architect-document.registers", Some(Label::data("Registers")), true, register_items)?
-        .section_or_placeholder("architect-document.elements", Some(Label::data("Elements")), true, element_items, Label::data("(none)"))?
+    let mut tree = PanelTreeBuilder::new("architect-document")?
+        .section("architect-document.meta", Some(ui_label("ProgramSnapshot")?), true, meta)?;
+    for (page, registers) in summary.by_register.chunks(semio_framework_ui_contract::UI_FIXED_LIST_ITEMS).enumerate() {
+        let mut items = UiFixedList::default();
+        for row in registers {
+            let args = ui_value_map([("registerId", ui_value_text(&row.register)?)])?;
+            let item = tree_item_with_action(format!("architect-document.register.{}", row.register), ui_label(format!("{} ({})", row.register, row.count))?, None, architect_action("selectRegister", Some(args))?)?;
+            items.try_push(item).map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "architect register row admission failed"))?;
+        }
+        let start = page * semio_framework_ui_contract::UI_FIXED_LIST_ITEMS + 1;
+        let end = start + registers.len() - 1;
+        tree = tree.section(format!("architect-document.registers.{page}"), Some(ui_label(format!("Registers {start}–{end}"))?), true, items)?;
+    }
+    tree
+        .section_or_placeholder("architect-document.elements", Some(ui_label("Elements")?), true, element_items, ui_label("(none)")?)?
         .interaction_domain(ARCHITECT_INTERACTION_PROGRAM)?
         .build()
 }
@@ -82,7 +88,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn the_tree_lists_program_meta_and_the_elements() {
         let program = sample_plugin();
-        let json = serde_json::to_string(&render(&program, &ArchitectConfig::default())).expect("json");
+        let json = crate::editor::architect::testkit::project_render(render(&program, &ArchitectConfig::default()));
         assert!(json.contains("Sample Clinic"));
         assert!(json.contains(&program.elements[0].header.id.to_string()));
     }
@@ -92,13 +98,13 @@ mod tests {
     /// element rows (see `render`'s own doc comment).
     #[semio_framework_async_macros::async_test]
     async fn the_tree_binds_the_program_interaction_domain() {
-        let json = serde_json::to_string(&render(&sample_plugin(), &ArchitectConfig::default())).expect("json");
+        let json = crate::editor::architect::testkit::project_render(render(&sample_plugin(), &ArchitectConfig::default()));
         assert!(json.contains("\"interactionDomain\":\"program\""));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn an_empty_program_renders_the_none_placeholder_row() {
-        let json = serde_json::to_string(&render(&empty_plugin(), &ArchitectConfig::default())).expect("json");
+        let json = crate::editor::architect::testkit::project_render(render(&empty_plugin(), &ArchitectConfig::default()));
         assert!(json.contains("architect-document.elements.empty"));
     }
 }

@@ -11,11 +11,16 @@ pub enum ModelError {
     /// 🚨️ A model was compiled with zero patterns.
     EmptyPatternUniverse,
     /// 🚨️ A `PatternId`/`TileId`/`RelationId`/`PortId` referenced during building was never added.
+    #[cfg(test)]
     UnknownPattern(crate::wfc_engine::ids::PatternId),
+    #[cfg(test)]
     UnknownTile(crate::wfc_engine::ids::TileId),
+    #[cfg(test)]
     UnknownRelation(crate::wfc_engine::ids::RelationId),
+    #[cfg(test)]
     UnknownPort(crate::wfc_engine::ids::PortId),
     /// 🚨️ The same relation name/id was registered twice.
+    #[cfg(test)]
     DuplicateRelation(crate::wfc_engine::ids::RelationId),
     /// 🚨️ A weight failed validation (`NaN`, infinite, or negative).
     InvalidWeight {
@@ -24,23 +29,28 @@ pub enum ModelError {
     },
     /// 🚨️ `allowed[r][a].get(b) != allowed[inv(r)][b].get(a)` — the declared inverse relation is
     /// not actually the transpose of the forward relation's compatibility table.
+    #[cfg(test)]
     AsymmetricInverse {
         relation: crate::wfc_engine::ids::RelationId,
     },
     /// 🚨️ A checked multiplication/addition needed to size an internal table overflowed.
+    #[cfg(test)]
     CapacityOverflow {
         what: &'static str,
     },
     /// 🚨️ A symmetry transform did not close under composition/inverse (generator set is broken).
+    #[cfg(test)]
     InvalidSymmetryGroup {
         reason: &'static str,
     },
     /// 🚨️ A socket rule referenced a socket label that was never declared compatible with anything.
+    #[cfg(test)]
     IncompatibleSocketRule {
         reason: &'static str,
     },
     /// 🚨️ A `SourceModelDoc`'s schema version does not match this build's. No
     /// migration — this crate has no users yet, so an unrecognized version is simply rejected.
+    #[cfg(test)]
     SchemaVersionMismatch {
         expected: u32,
         actual: u32,
@@ -51,20 +61,30 @@ impl core::fmt::Display for ModelError {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         match self {
             Self::EmptyPatternUniverse => write!(f, "model has zero patterns"),
+            #[cfg(test)]
             Self::UnknownPattern(p) => write!(f, "unknown pattern id {p}"),
+            #[cfg(test)]
             Self::UnknownTile(t) => write!(f, "unknown tile id {t}"),
+            #[cfg(test)]
             Self::UnknownRelation(r) => write!(f, "unknown relation id {r}"),
+            #[cfg(test)]
             Self::UnknownPort(p) => write!(f, "unknown port id {p}"),
+            #[cfg(test)]
             Self::DuplicateRelation(r) => write!(f, "relation {r} registered twice"),
             Self::InvalidWeight { pattern_index, value } => {
                 write!(f, "invalid weight at pattern index {pattern_index}: {value}")
             }
+            #[cfg(test)]
             Self::AsymmetricInverse { relation } => {
                 write!(f, "relation {relation} and its declared inverse disagree on compatibility (not a true transpose)")
             }
+            #[cfg(test)]
             Self::CapacityOverflow { what } => write!(f, "capacity overflow computing {what}"),
+            #[cfg(test)]
             Self::InvalidSymmetryGroup { reason } => write!(f, "invalid symmetry group: {reason}"),
+            #[cfg(test)]
             Self::IncompatibleSocketRule { reason } => write!(f, "incompatible socket rule: {reason}"),
+            #[cfg(test)]
             Self::SchemaVersionMismatch { expected, actual } => {
                 write!(f, "source model schema version mismatch: expected {expected}, found {actual}")
             }
@@ -80,36 +100,50 @@ impl std::error::Error for ModelError {}
 #[derive(Clone, PartialEq, Debug)]
 pub enum TopologyError {
     /// 🚨️ A grid dimension was zero where the topology forbids it.
+    #[cfg(test)]
     ZeroDimension { axis: &'static str },
     /// 🚨️ `width * height` (or `* depth`) overflowed its checked integer type.
+    #[cfg(test)]
     SizeOverflow,
     /// 🚨️ A mask's length did not match `width * height` (`* depth`).
+    #[cfg(test)]
     MaskShapeMismatch { expected: usize, actual: usize },
     /// 🚨️ A referenced `NodeId` is out of range for this topology.
+    #[cfg(test)]
     UnknownNode(crate::wfc_engine::ids::NodeId),
     /// 🚨️ An arc referenced a node that does not exist (e.g. after `from_graph_view` truncation).
     DanglingArc { from: crate::wfc_engine::ids::NodeId },
     /// 🚨️ A custom stencil declared the same offset twice, or a self-offset without opting in.
+    #[cfg(test)]
     InvalidStencil { reason: &'static str },
     /// 🚨️ A boundary mode is incompatible with the requested grid size (e.g. `Mirror` on a
     /// size-0 axis) or with another configured boundary on the same axis.
+    #[cfg(test)]
     BoundaryIncompatible { reason: &'static str },
     /// 🚨️ A node count exceeded `u32::MAX`, the limit `crate::wfc_engine::ids::NodeId` can address.
+    #[cfg(test)]
     TooManyNodes { count: u64 },
 }
 
 impl core::fmt::Display for TopologyError {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         match self {
+            #[cfg(test)]
             Self::ZeroDimension { axis } => write!(f, "grid dimension `{axis}` must be nonzero"),
+            #[cfg(test)]
             Self::SizeOverflow => write!(f, "grid size computation overflowed"),
+            #[cfg(test)]
             Self::MaskShapeMismatch { expected, actual } => {
                 write!(f, "mask length mismatch: expected {expected}, found {actual}")
             }
+            #[cfg(test)]
             Self::UnknownNode(n) => write!(f, "unknown node id {n}"),
             Self::DanglingArc { from } => write!(f, "arc references a nonexistent node from {from}"),
+            #[cfg(test)]
             Self::InvalidStencil { reason } => write!(f, "invalid stencil: {reason}"),
+            #[cfg(test)]
             Self::BoundaryIncompatible { reason } => write!(f, "incompatible boundary configuration: {reason}"),
+            #[cfg(test)]
             Self::TooManyNodes { count } => write!(f, "{count} nodes exceeds the u32 node-id capacity"),
         }
     }
@@ -121,6 +155,7 @@ impl std::error::Error for TopologyError {}
 // #region 🔖️ConstraintError
 /// 🚨️ Everything that can go wrong while configuring a global/soft constraint.
 #[derive(Clone, PartialEq, Debug)]
+#[cfg(test)]
 pub enum ConstraintError {
     /// 🚨️ A cardinality/distance bound was internally inconsistent (e.g. `min > max`).
     InvalidBounds {
@@ -140,6 +175,7 @@ pub enum ConstraintError {
     UnknownNode(crate::wfc_engine::ids::NodeId),
 }
 
+#[cfg(test)]
 impl core::fmt::Display for ConstraintError {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         match self {
@@ -155,6 +191,7 @@ impl core::fmt::Display for ConstraintError {
     }
 }
 
+#[cfg(test)]
 impl std::error::Error for ConstraintError {}
 // #endregion 🔖️ConstraintError
 
@@ -162,6 +199,7 @@ impl std::error::Error for ConstraintError {}
 /// 🚨️ Everything that can go wrong configuring or resuming a solve (as opposed to the solve
 /// itself finding no solution, which is a `SolveOutcome`).
 #[derive(Clone, PartialEq, Debug)]
+#[cfg(test)]
 pub enum SolveError {
     /// 🚨️ A solver was built from a model and topology whose relation universes disagree.
     ModelTopologyMismatch { reason: &'static str },
@@ -175,6 +213,7 @@ pub enum SolveError {
     UnknownNode(crate::wfc_engine::ids::NodeId),
 }
 
+#[cfg(test)]
 impl core::fmt::Display for SolveError {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         match self {
@@ -189,6 +228,7 @@ impl core::fmt::Display for SolveError {
     }
 }
 
+#[cfg(test)]
 impl std::error::Error for SolveError {}
 // #endregion 🔖️SolveError
 

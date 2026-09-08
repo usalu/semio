@@ -1,16 +1,18 @@
 //! 🧩️ Playbook procedural block-kind module — flow-backed building component params + live 3D preview.
 
+use semio_framework_ui_contract::{ActionId as UiActionId, Buildable, HasBase, HasChildren};
+use semio_framework_plugin::UiAssemblyResult;
+
 use flow::playbook::{visible_blocks, PlaybookBlock};
 use flow::{export_solid_json, import_solid_json, tessellate_geometry};
 use flow::{flow_neuron_kind_infos_json, forms_bridge::flow_fixture_to_form_spec, FlowFixture, FlowHost, Widget};
-use protocol::{Mutation, MutationDiff};
+use protocol::MutationDiff;
 use semio_framework_plugin::__semio_dispatch_PluginApp;
 use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::plugin_app_close_prelude::*;
 use semio_framework_plugin::{
-    app_labels, build_world_3d_scene, create_default_layout, mesh_from_kind, ui_stack_vertical, ui_text, world3d_default_camera, world3d_scene, world3d_selection_json, ActionArgDef, ActionArgOption, ActionDescriptor, App, AppLabels, ArtifactApp,
-    ArtifactView, ConfigView, DraftView, Emit, ExecutionMode, ExtensionBundle, Fault, Label, Locale, LocalizedLabel, NoDraft, NoDraftMutation, Plugin, PluginApp, SurfaceKind, Terminology, UiButtonNode, UiFieldNode, UiInputNode, UiNode, UiPresence,
-    UiSliderNode, UiToggleNode, WorldSunConfig,
+    app_labels, create_default_layout, mesh_from_kind, world3d_default_camera, world3d_scene, world3d_selection_json, ActionArgDef, ActionArgOption, App, AppLabels, ArtifactApp,
+    ArtifactView, ConfigView, DraftView, Emit, ExecutionMode, ExtensionBundle, Fault, Locale, LocalizedLabel, NoDraft, NoDraftMutation, Plugin, PluginApp, Terminology, WorldSunConfig,
 };
 // 🌱️ `Value`/`Map` alias `pack::json`'s first-party JSON tree (the `serde_json::Value`
 // replacement, `🧰️framework/🔨️modules/🎒️pack/🔤️json/🦀️.rs`), keeping this file's shape
@@ -20,7 +22,9 @@ use semio_framework_plugin::{
 // itself now derives `ToValue`/`FromValue` alongside `Serialize`/`Deserialize`, so its own parse
 // goes through `pack::json::from_json_str` below instead. Every other JSON value in this file is
 // arbitrary-shaped and goes through `pack::json` instead.
-use pack::{json_from_dsl_value, json_to_dsl_value, json_to_string, parse_json, to_json_string, JsonObject as Map, JsonValue as Value};
+use pack::{json_from_dsl_value, json_to_dsl_value, json_to_string, parse_json, JsonObject as Map, JsonValue as Value};
+#[cfg(test)]
+use pack::to_json_string;
 use store::EngineHandles;
 
 //#region 🔖️Constants
@@ -43,8 +47,8 @@ const SOLID_EXPORT_DEFLECTION: f64 = 0.1;
 const SOLID_IMPORT_TOLERANCE: f64 = 0.1;
 
 //#region 🗃️Apps
-/// 🗃️ Closed runtime app fleet for the procedural playbook module surface.
 semio_framework_dispatch_macros::dyn_enum_close! {
+    /// 🗃️ Closed runtime app fleet for the procedural playbook module surface.
     pub enum ProceduralModuleApps: PluginApp {
         Module(VcsArtifactApp<ModuleApp>),
     }
@@ -110,7 +114,7 @@ fn resolve_labels<L: AppLabels>() -> &'static L {
 #[derive(Clone, Debug, PartialEq, dsl::DslArtifact, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
 #[value(rename_all = "camelCase", default)]
 #[dsl(extension = "procmodule")]
-struct ModuleRenderPayload {
+pub struct ModuleRenderPayload {
     fixture_slug: String,
     /// 🧬️ Deliberately untyped: binds through the engine's `Shape::Value` escape hatch because the key
     /// set is driven entirely by whichever `Widget::InputSlider`/`Widget::Neuron` ids the referenced
@@ -118,6 +122,7 @@ struct ModuleRenderPayload {
     /// an arbitrary `key -> f64` map and forwards every entry to `FlowHost::set_slider_value`) — no
     /// fixed schema spans all fixtures, so a typed `dsl::DslArtifact` derive doesn't apply here.
     #[dsl(value)]
+    #[value(default = "default_params_field")]
     params: DslValue,
     question_id: String,
     controller_id: String,
@@ -195,79 +200,19 @@ fn params_as_json(params: &DslValue) -> Value {
 /// transient render/params payload (not a collaboratively-edited structure), so its single operation
 /// swaps the payload wholesale — export/import stash their results on `params` and re-emit it. The VCS
 /// store still records the pre-operation payload as a true inverse, so undo works.
-#[derive(Clone, Debug, PartialEq, dsl::DslOps, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
-#[value(tag = "mutation", rename_all = "camelCase")]
-enum ModulePayloadMutation {
-    SetPayload {
-        #[dsl(block)]
-        payload: ModuleRenderPayload,
-    },
-}
-
-//#region 🔖️OpCodec
-impl protocol::OpText for ModulePayloadMutation {
-    fn parse_op(line: &str) -> Result<Self, TextError> {
-        let variants = <Self as dsl::DslVariants>::variants();
-        for (keyword, spec_fn) in &variants {
-            let probe = format!("{} ", keyword);
-            if line == keyword.as_str() || line.starts_with(&probe) {
-                let record = dsl::parse(line, &spec_fn(), &dsl::ParseOptions { limits: dsl::Limits::default(), mode: dsl::SourceMode::Inline })?;
-                return <Self as dsl::DslVariants>::from_named_record(keyword, &record);
-            }
-        }
-        Err(dsl::__rt::field_error(format!("unknown mutation line '{line}'")))
-    }
-    fn print_op(&self) -> String {
-        let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
-        let variants = <Self as dsl::DslVariants>::variants();
-        let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
-        dsl::print(&record, &spec_fn(), dsl::JoinMode::Inline)
-    }
-}
-
-/// 🎯️ Handcrafted OpBinary (P6).
-impl protocol::OpBinary for ModulePayloadMutation {
-    fn encode_op(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-        const OP_BINARY_FORMAT: u8 = 1;
-        let (keyword, record) = <Self as dsl::DslVariants>::to_named_record(self);
-        let variants = <Self as dsl::DslVariants>::variants();
-        let ordinal = variants.iter().position(|(k, _)| *k == keyword).ok_or(protocol::ProtocolError::Malformed { what: "op variant", offset: 0, detail: format!("keyword {keyword:?} is not a declared variant") })?;
-        let spec = (variants[ordinal].1)();
-        let body = store::pack_rt::encode_record_body(&spec, &record, &store::PackEncodeOptions::default()).map_err(protocol::ProtocolError::from)?;
-        let mut out = Vec::with_capacity(body.len() + 3);
-        out.push(OP_BINARY_FORMAT);
-        store::pack_rt::write_varint_u64(&mut out, ordinal as u64);
-        out.extend_from_slice(&body);
-        Ok(out)
-    }
-    fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-        const OP_BINARY_FORMAT: u8 = 1;
-        let mut reader = store::pack_rt::ByteReader::new(bytes);
-        let format = reader.read_u8()?;
-        if format != OP_BINARY_FORMAT {
-            return Err(protocol::ProtocolError::Malformed { what: "op format", offset: 0, detail: format!("unsupported op format {format}") });
-        }
-        let ordinal = reader.read_varint_u64()?;
-        let variants = <Self as dsl::DslVariants>::variants();
-        let (keyword, spec_fn) = variants.get(ordinal as usize).ok_or(protocol::ProtocolError::Malformed { what: "op variant", offset: 1, detail: format!("ordinal {ordinal} out of range for {} declared variants", variants.len()) })?;
-        let spec = spec_fn();
-        let body = &bytes[reader.position()..];
-        let (record, _report) = store::pack_rt::decode_record_body(body, &spec, &store::PackDecodeOptions::default()).map_err(protocol::ProtocolError::from)?;
-        <Self as dsl::DslVariants>::from_named_record(keyword, &record).map_err(|error| protocol::ProtocolError::Malformed { what: "op record", offset: reader.position() as u64, detail: error.to_string() })
-    }
-}
-
-//#endregion 🔖️OpCodec
+#[path = "🧬️schema/🧬️mutations/🦀️.rs"]
+mod mutations;
+pub use mutations::{ModulePayloadMutation, SetPayload};
 
 #[derive(Clone, Debug, Default, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
 #[value(rename_all = "camelCase", default)]
-struct ModulePayloadDiff {
+pub struct ModulePayloadDiff {
     payload: Option<ModuleRenderPayload>,
 }
 
 impl MutationDiff<ModuleRenderPayload> for ModulePayloadDiff {
     fn apply(&self, projection: &ModuleRenderPayload) -> protocol::MutationApplyResult<ModuleRenderPayload> {
-        Ok({ self.payload.clone().unwrap_or_else(|| projection.clone()) })
+        Ok(self.payload.clone().unwrap_or_else(|| projection.clone()))
     }
     fn absorb(&mut self, other: Self) {
         if other.payload.is_some() {
@@ -276,19 +221,6 @@ impl MutationDiff<ModuleRenderPayload> for ModulePayloadDiff {
     }
 }
 
-impl Mutation<ModuleRenderPayload> for ModulePayloadMutation {
-    type Diff = ModulePayloadDiff;
-
-    fn diff(&self, _projection: &ModuleRenderPayload) -> protocol::MutationOutcome<ModulePayloadDiff> {
-        match self {
-            ModulePayloadMutation::SetPayload { payload } => protocol::MutationOutcome::new(ModulePayloadDiff { payload: Some(payload.clone()) }),
-        }
-    }
-
-    fn inverse(&self, projection: &ModuleRenderPayload) -> Vec<Self> {
-        vec![ModulePayloadMutation::SetPayload { payload: projection.clone() }]
-    }
-}
 //#endregion 🔖️DocumentMutation
 
 fn fixture_json_for_slug(slug: &str) -> Option<&'static str> {
@@ -312,8 +244,35 @@ fn json_string_value(value: &Value) -> String {
     }
 }
 
-fn module_action(payload: &ModuleRenderPayload, action: &str, args: Value) -> ActionDescriptor {
-    ActionDescriptor { controller_id: payload.controller_id.clone(), action: action.into(), args: Some(json_to_dsl_value(&args)) }
+fn ui_admit<T, E>(result: Result<T, E>) -> UiAssemblyResult<T> {
+    result.map_err(|_| PluginAssemblyError::new("ui.fixed-capacity", "procedural module UI admission failed"))
+}
+
+fn ui_label(value: impl AsRef<str>) -> UiAssemblyResult<Label> { ui_admit(Label::try_from(value.as_ref())) }
+
+fn ui_text(value: impl AsRef<str>) -> UiAssemblyResult<UiText> {
+    UiText::try_from_str(value.as_ref()).ok_or_else(|| PluginAssemblyError::new("ui.fixed-capacity", "procedural module text admission failed"))
+}
+
+fn text_node(value: impl AsRef<str>) -> UiAssemblyResult<BuiltNode> { ui_admit(text(ui_label(value)?).try_build()) }
+
+fn value_text(value: &str) -> UiAssemblyResult<UiValue> { Ok(UiValue::Text(ui_text(value)?)) }
+
+fn value_map<const N: usize>(mut entries: [(&'static str, UiValue); N]) -> UiAssemblyResult<UiValue> {
+    entries.sort_unstable_by(|left, right| left.0.cmp(right.0));
+    let mut map = UiMapBuilder::try_new().ok_or_else(|| PluginAssemblyError::new("ui.fixed-capacity", "procedural module action map admission failed"))?;
+    for (key, value) in entries { ui_admit(map.push(key.into(), value))?; }
+    Ok(UiValue::Map(map.finish()))
+}
+
+fn bind_control(builder: impl Into<BuiltNode>, id: &str, label: &str, payload: &ModuleRenderPayload, command: &str, args: UiValue, trigger: Trigger) -> UiAssemblyResult<BuiltNode> {
+    let mut node = builder.into();
+    node.key = ui_text(id)?;
+    node.accessibility.label = Some(ui_label(label)?);
+    node.disabled = !payload.interactive;
+    let action = UiActionId::try_v1(&payload.controller_id, command).ok_or_else(|| PluginAssemblyError::new("ui.fixed-capacity", "procedural module action admission failed"))?;
+    ui_admit(node.bindings.try_push(ActionBinding { trigger, action, args: Some(args), capability: None }))?;
+    Ok(node)
 }
 //#endregion 🔖️Payload
 
@@ -443,15 +402,15 @@ fn evaluated_preview_payload(fixture: &FlowFixture, params: &Value) -> (String, 
     (json_to_string(&Value::Array(meshes)), json_to_string(&Value::Array(instances)))
 }
 
-fn render_preview_body(payload: &ModuleRenderPayload) -> UiNode {
+fn render_preview_body(payload: &ModuleRenderPayload) -> UiAssemblyResult<BuiltNode> {
     let slug = if payload.fixture_slug.is_empty() { "hexagonal-mushroom-column" } else { payload.fixture_slug.as_str() };
     let Some(fixture_json) = fixture_json_for_slug(slug) else {
-        return ui_text(Label::data(format!("Unknown fixture slug: {slug}")));
+        return text_node(format!("Unknown fixture slug: {slug}"));
     };
     let fixture: FlowFixture = pack::json::from_json_str(fixture_json).unwrap_or_else(|_| FlowFixture::default());
     let params = params_as_json(&payload.params);
     let (meshes_json, instances_json) = evaluated_preview_payload(&fixture, &params);
-    build_world_3d_scene(PREVIEW_SURFACE, MODULE_APP_ID, world3d_scene(world3d_default_camera(), meshes_json, instances_json, world3d_selection_json("single", &[], None), &WorldSunConfig::default()))
+    scene_surface(PREVIEW_SURFACE, SurfaceKind::World3d, &world3d_scene(world3d_default_camera(), meshes_json, instances_json, world3d_selection_json("single", &[], None), &WorldSunConfig::default()))
 }
 //#endregion 🔖️Preview
 
@@ -492,7 +451,7 @@ fn handle_export_solid(payload: &mut ModuleRenderPayload, format: &str) {
     let Some(map) = object.as_object_mut() else {
         return;
     };
-    map.insert("__solidExport".into(), result_json);
+    map.insert("__solidExport", result_json);
     payload.params = json_to_dsl_value(&object);
 }
 
@@ -503,172 +462,64 @@ fn handle_import_solid(payload: &mut ModuleRenderPayload, format: &str, data: &s
     let Some(map) = object.as_object_mut() else {
         return;
     };
-    map.insert("__solidImport".into(), result_json);
+    map.insert("__solidImport", result_json);
     payload.params = json_to_dsl_value(&object);
 }
 
-fn export_solid_button(payload: &ModuleRenderPayload, format: &str) -> UiNode {
-    UiNode::Button(UiButtonNode {
-        id: Some(format!("playbook-module.export.{format}")),
-        icon_id: "export".into(),
-        label: Label::data(format!("Export {}", format.to_uppercase())),
-        action: module_action(payload, ACTION_EXPORT_SOLID, pack::json!({ "format": format })),
-        style: None,
-        presence: UiPresence::default(),
-        menu: None,
-    })
+fn media_button(payload: &ModuleRenderPayload, format: &str, import: bool) -> UiAssemblyResult<BuiltNode> {
+    let verb = if import { "Import" } else { "Export" };
+    let icon = if import { "import" } else { "export" };
+    let label = format!("{verb} {}", format.to_uppercase());
+    bind_control(button(ui_label(&label)?).icon(ui_text(icon)?), &format!("playbook-module.{icon}.{format}"), &label, payload, if import { ACTION_IMPORT_SOLID } else { ACTION_EXPORT_SOLID }, value_map([("format", value_text(format)?)])?, Trigger::Activate)
 }
 
-fn import_solid_button(payload: &ModuleRenderPayload, format: &str) -> UiNode {
-    UiNode::Button(UiButtonNode {
-        id: Some(format!("playbook-module.import.{format}")),
-        icon_id: "import".into(),
-        label: Label::data(format!("Import {}", format.to_uppercase())),
-        action: module_action(payload, ACTION_IMPORT_SOLID, pack::json!({ "format": format })),
-        style: None,
-        presence: UiPresence::default(),
-        menu: None,
-    })
-}
-
-/// 🎛️ One export + import button pair per solid interchange format, wired to `ACTION_EXPORT_SOLID`/`ACTION_IMPORT_SOLID` question-type actions.
-fn render_media_export_buttons(payload: &ModuleRenderPayload) -> Vec<UiNode> {
-    let mut buttons: Vec<UiNode> = Vec::new();
-    for format in SOLID_MEDIA_FORMATS {
-        buttons.push(export_solid_button(payload, format));
-        buttons.push(import_solid_button(payload, format));
-    }
-    buttons
-}
-//#endregion 🔖️MediaExport
-
-//#region 🔖️Params
-fn render_question_control(question: &PlaybookBlock, value: &Value, payload: &ModuleRenderPayload) -> UiNode {
-    let key = &question.id;
-    let patch_field = if payload.surface == "blueprint" { "param" } else { "tryParam" };
-    let patch_cmd = |param_key: &str| {
-        module_action(
-            payload,
-            if payload.surface == "blueprint" { "patchQuestions" } else { "setTryValue" },
-            pack::json!({
-                "questionIds": [payload.question_id],
-                "field": patch_field,
-                "paramKey": param_key,
-                "key": payload.question_id,
-            }),
-        )
+fn render_question_control(question: &PlaybookBlock, value: &Value, payload: &ModuleRenderPayload) -> UiAssemblyResult<BuiltNode> {
+    let key = question.id.as_str();
+    let mut ids = UiListBuilder::try_new().ok_or_else(|| PluginAssemblyError::new("ui.fixed-capacity", "procedural question ids admission failed"))?;
+    ui_admit(ids.push(value_text(&payload.question_id)?))?;
+    let blueprint = payload.surface == "blueprint";
+    let args = value_map([
+        ("questionIds", UiValue::List(ids.finish())),
+        ("field", value_text(if blueprint { "param" } else { "tryParam" })?),
+        ("paramKey", value_text(key)?),
+        ("key", value_text(&payload.question_id)?),
+    ])?;
+    let control: BuiltNode = match question.kind.as_str() {
+        "text" | "longText" | "number" => {
+            let kind = match question.kind.as_str() { "longText" => InputKind::LongText, "number" => InputKind::Number, _ => InputKind::Text };
+            let mut input = input(kind).value(ui_text(json_string_value(value))?);
+            if let Some(placeholder) = &question.placeholder { input = input.placeholder(ui_label(placeholder)?); }
+            input.into()
+        }
+        "slider" => slider(json_f64_value(value)).min(question.min.unwrap_or(0.0)).max(question.max.unwrap_or(100.0)).step(question.step.unwrap_or(1.0)).into(),
+        "boolean" => toggle(value.as_bool().unwrap_or(false)).icon(ui_text("check")?).into(),
+        _ => return text_node(format!("Unsupported param kind: {}", question.kind)),
     };
-    match question.kind.as_str() {
-        "text" | "longText" => UiNode::Field(UiFieldNode {
-            id: format!("playbook-module.{key}"),
-            label: Label::data(question.label.clone()),
-            child: Box::new(UiNode::Input(UiInputNode {
-                id: format!("playbook-module.{key}.input"),
-                input_kind: question.kind.clone(),
-                value: json_string_value(value),
-                placeholder: question.placeholder.clone().map(Label::data),
-                commit: None,
-                on_change: patch_cmd(key),
-                min: None,
-                max: None,
-                step: None,
-                accept: None,
-                presence: UiPresence::default(),
-                menu: None,
-            })),
-            description: None,
-            required: None,
-            error: None,
-            presence: UiPresence::default(),
-            menu: None,
-        }),
-        "number" => UiNode::Field(UiFieldNode {
-            id: format!("playbook-module.{key}"),
-            label: Label::data(question.label.clone()),
-            child: Box::new(UiNode::Input(UiInputNode {
-                id: format!("playbook-module.{key}.input"),
-                input_kind: "number".into(),
-                value: json_string_value(value),
-                placeholder: question.placeholder.clone().map(Label::data),
-                commit: None,
-                on_change: patch_cmd(key),
-                min: None,
-                max: None,
-                step: None,
-                accept: None,
-                presence: UiPresence::default(),
-                menu: None,
-            })),
-            description: None,
-            required: None,
-            error: None,
-            presence: UiPresence::default(),
-            menu: None,
-        }),
-        "slider" => UiNode::Field(UiFieldNode {
-            id: format!("playbook-module.{key}"),
-            label: Label::data(question.label.clone()),
-            child: Box::new(UiNode::Slider(UiSliderNode {
-                id: format!("playbook-module.{key}.slider"),
-                value: json_f64_value(value),
-                min: question.min.unwrap_or(0.0),
-                max: question.max.unwrap_or(100.0),
-                step: question.step.unwrap_or(1.0),
-                on_change: patch_cmd(key),
-                unit: None,
-                presence: UiPresence::default(),
-                menu: None,
-            })),
-            description: None,
-            required: None,
-            error: None,
-            presence: UiPresence::default(),
-            menu: None,
-        }),
-        "boolean" => UiNode::Field(UiFieldNode {
-            id: format!("playbook-module.{key}"),
-            label: Label::data(question.label.clone()),
-            child: Box::new(UiNode::Toggle(UiToggleNode { id: format!("playbook-module.{key}.toggle"), icon_id: "check".into(), text: None, on_change: patch_cmd(key), presence: UiPresence::selected(value.as_bool().unwrap_or(false)), menu: None })),
-            description: None,
-            required: None,
-            error: None,
-            presence: UiPresence::default(),
-            menu: None,
-        }),
-        _ => ui_text(Label::data(format!("Unsupported param kind: {}", question.kind))),
-    }
+    let control = bind_control(control, &format!("playbook-module.{key}.input"), &question.label, payload, if blueprint { "patchQuestions" } else { "setTryValue" }, args, Trigger::Change)?;
+    let field = ui_admit(field(ui_label(&question.label)?).try_id(format!("playbook-module.{key}")))?;
+    ui_admit(ui_admit(field.try_child(control))?.try_build())
 }
 
-fn render_params_body(payload: &ModuleRenderPayload, labels: &ModuleLabels) -> UiNode {
+fn render_params_body(payload: &ModuleRenderPayload, labels: &ModuleLabels) -> UiAssemblyResult<BuiltNode> {
     let slug = if payload.fixture_slug.is_empty() { "hexagonal-mushroom-column" } else { payload.fixture_slug.as_str() };
-    let Some(fixture_json) = fixture_json_for_slug(slug) else {
-        return ui_text(Label::data(format!("Unknown fixture slug: {slug}")));
-    };
-    let fixture: FlowFixture = pack::json::from_json_str(fixture_json).unwrap_or_else(|_| FlowFixture::default());
+    let Some(fixture_json) = fixture_json_for_slug(slug) else { return text_node(format!("Unknown fixture slug: {slug}")); };
+    let fixture: FlowFixture = pack::json::from_json_str(fixture_json).map_err(|error| PluginAssemblyError::new("procedural.fixture", error.to_string()))?;
     let spec = flow_fixture_to_form_spec(&fixture);
     let values: Map = params_as_json(&payload.params).as_object().cloned().unwrap_or_default();
-    let step = spec.steps.first();
-    let Some(step) = step else {
-        return ui_text(labels.no_flow_inputs);
-    };
-    // 🌉️ `playbook::visible_blocks` (`🧰️framework/🛍️products/💻️os/🔨️modules/📖️playbook/🦀️.rs`)
-    // takes `&PlaybookValues` (`HashMap<String, DslValue>`) — first-party already, no `serde_json`
-    // boundary here (the prior doc comment claiming a `serde_json::Map<String, serde_json::Value>`
-    // signature was stale). Converted field-by-field through `pack`'s own `json_to_dsl_value`.
+    let Some(step) = spec.steps.first() else { return text_node(labels.no_flow_inputs.as_str()); };
     let values_dsl: HashMap<String, DslValue> = values.iter().map(|(key, value)| (key.to_string(), json_to_dsl_value(value))).collect();
     let visible = visible_blocks(step, &values_dsl);
-    let mut children: Vec<UiNode> = visible
-        .iter()
-        .map(|question| {
-            let value = values.get(&question.id).cloned().unwrap_or_else(|| pack::json!(0));
-            render_question_control(question, &value, payload)
-        })
-        .collect();
-    if children.is_empty() {
-        children.push(ui_text(labels.no_procedural_parameters));
+    let mut column = column();
+    if visible.is_empty() { column = ui_admit(column.try_child(text_node(labels.no_procedural_parameters.as_str())?))?; }
+    for question in visible {
+        let value = values.get(&question.id).cloned().unwrap_or_else(|| pack::json!(0));
+        column = ui_admit(column.try_child(render_question_control(question, &value, payload)?))?;
     }
-    children.extend(render_media_export_buttons(payload));
-    ui_stack_vertical(children)
+    for format in SOLID_MEDIA_FORMATS {
+        column = ui_admit(column.try_child(media_button(payload, format, false)?))?;
+        column = ui_admit(column.try_child(media_button(payload, format, true)?))?;
+    }
+    ui_admit(column.try_build())
 }
 //#endregion 🔖️Params
 
@@ -676,7 +527,7 @@ fn render_params_body(payload: &ModuleRenderPayload, labels: &ModuleLabels) -> U
 /// 🎯️ B1: this module's `ArtifactApp::Command` — the SOLE dispatch surface for the solid
 /// import/export behavior previously routed through the deleted stringly-typed `handle_action`.
 #[derive(Clone, Debug, PartialEq, dsl::DslOps)]
-enum Command {
+pub enum Command {
     #[dsl(key = "export-solid")]
     ExportSolid { format: String },
     #[dsl(key = "import-solid")]
@@ -716,13 +567,13 @@ impl ArtifactApp for ModuleApp {
     const APP_ID: &'static str = MODULE_APP_ID;
     const DOCUMENT_SCHEMA: &'static str = MODULE_DOCUMENT_SCHEMA;
 
-    fn initial_snapshot() -> ModuleRenderPayload {
+    async fn initial_snapshot() -> ModuleRenderPayload {
         default_payload()
     }
 
     /// 🏷️ Maps each `Command` variant back to the action id it was declared under in
     /// `create_module_app` — command-log labeling and the registry's kind-discipline check.
-    fn command_id(command: &Command) -> &'static str {
+    async fn command_id(command: &Command) -> &'static str {
         match command {
             Command::ExportSolid { .. } => ACTION_EXPORT_SOLID,
             Command::ImportSolid { .. } => ACTION_IMPORT_SOLID,
@@ -732,7 +583,7 @@ impl ArtifactApp for ModuleApp {
     /// 🎯️ The bridge the React/wgpu shells still speak (`{action,args}`) — parses the two solid
     /// media actions this module dispatches into `Command`; `format` defaults to `"obj"` (matching
     /// the handlers' pre-B1 defaults) and `data` (import's file-callback payload) defaults to empty.
-    fn command_from_action(action: &str, args: Option<&DslValue>) -> Result<Command, Fault> {
+    async fn command_from_action(action: &str, args: Option<&DslValue>) -> Result<Command, Fault> {
         let format = args.and_then(|value| value.get("format")).and_then(DslValue::as_str).unwrap_or("obj").to_string();
         match action {
             ACTION_EXPORT_SOLID => Ok(Command::ExportSolid { format }),
@@ -744,7 +595,7 @@ impl ArtifactApp for ModuleApp {
         }
     }
 
-    fn handle(
+    async fn handle(
         command: &Command,
         doc: &ArtifactView<'_, ModuleRenderPayload>,
         _cfg: &ConfigView<'_, NoConfig>,
@@ -756,23 +607,23 @@ impl ArtifactApp for ModuleApp {
             Command::ExportSolid { format } => {
                 let mut payload = doc.snapshot.clone();
                 handle_export_solid(&mut payload, format);
-                Ok(Emit::mutations(vec![ModulePayloadMutation::SetPayload { payload }]))
+                Ok(Emit::mutations(vec![ModulePayloadMutation::SetPayload(SetPayload { payload })]))
             }
             Command::ImportSolid { format, data } => {
                 let mut payload = doc.snapshot.clone();
                 handle_import_solid(&mut payload, format, data);
-                Ok(Emit::mutations(vec![ModulePayloadMutation::SetPayload { payload }]))
+                Ok(Emit::mutations(vec![ModulePayloadMutation::SetPayload(SetPayload { payload })]))
             }
         }
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, ModuleRenderPayload>, _cfg: &ConfigView<'_, NoConfig>) -> UiNode {
+    async fn render(body_key: &str, doc: &ArtifactView<'_, ModuleRenderPayload>, _cfg: &ConfigView<'_, NoConfig>) -> UiAssemblyResult<ComponentTree> {
         let labels = resolve_labels::<ModuleLabels>();
         match body_key {
             BODY_PARAMS => render_params_body(doc.snapshot, labels),
             BODY_PREVIEW => render_preview_body(doc.snapshot),
-            _ => ui_text(Label::data(format!("Unknown body: {body_key}"))),
-        }
+            _ => text_node(format!("Unknown body: {body_key}")),
+        }.map(built_to_component_tree)
     }
 }
 
@@ -780,28 +631,28 @@ impl ArtifactApp for ModuleApp {
 /// definition-time mistake) as a `PluginAssemblyError` this crate's `plugin()` entry point can
 /// propagate, instead of a guest panic that would trap the wasm instance for good (a trapped
 /// `wasm32-wasip2` instance cannot unwind — see `AppBuilder::try_build_definition`'s docs).
-fn create_module_app() -> Result<App, PluginAssemblyError> {
+async fn create_module_app() -> Result<App, PluginAssemblyError> {
     App::try_from_builder(
-        App::builder(MODULE_APP_ID, LocalizedLabel::native("Playbook Module Procedural", "Playbook-Modul Prozedural"))
+        App::builder(MODULE_APP_ID, LocalizedLabel::native("Playbook Module Procedural", "Playbook-Modul Prozedural")).await
             .document(["semio", "forms"])
-            .mode("edit", LocalizedLabel::native("Edit", "Bearbeiten"), "pencil")
-            .window_kind(MODULE_WINDOW_PARAMS, LocalizedLabel::native("Params", "Parameter"), BODY_PARAMS, SurfaceKind::NodeGraph, "clipboard-list")
-            .window_kind(MODULE_WINDOW_PREVIEW, LocalizedLabel::native("Preview", "Vorschau"), BODY_PREVIEW, SurfaceKind::World3d, "preview")
+            .mode("edit", LocalizedLabel::native("Edit", "Bearbeiten"), "pencil").await
+            .window_kind(MODULE_WINDOW_PARAMS, LocalizedLabel::native("Params", "Parameter"), BODY_PARAMS, SurfaceKind::NodeGraph, "clipboard-list").await
+            .window_kind(MODULE_WINDOW_PREVIEW, LocalizedLabel::native("Preview", "Vorschau"), BODY_PREVIEW, SurfaceKind::World3d, "preview").await
             .default_layout(create_default_layout(
                 &[MODULE_WINDOW_PARAMS.into(), MODULE_WINDOW_PREVIEW.into()],
                 "row",
                 Some(&[50.0, 50.0]),
                 Some(&["Params".into(), "Preview".into()]),
-            ))
+            )).await
             // 🔧️ Whole-payload import/export of the block's solid geometry — legitimate coarse-grained
             // operations for this non-collaborative render slot (not the deleted framework `setDocument`).
-            .mutation(ACTION_EXPORT_SOLID, LocalizedLabel::native("Export Solid", "Volumenkörper exportieren"))
-            .mutation(ACTION_IMPORT_SOLID, LocalizedLabel::native("Import Solid", "Volumenkörper importieren"))
+            .mutation(ACTION_EXPORT_SOLID, LocalizedLabel::native("Export Solid", "Volumenkörper exportieren")).await
+            .mutation(ACTION_IMPORT_SOLID, LocalizedLabel::native("Import Solid", "Volumenkörper importieren")).await
             // 📝️ Only the interchange `format` is a user-facing panel choice; the import `data` payload
             // arrives through the host file-open callback, so it is deliberately not a declared arg.
-            .action_args(ACTION_EXPORT_SOLID, vec![solid_format_arg()])
-            .action_args(ACTION_IMPORT_SOLID, vec![solid_format_arg()]),
-    )
+            .action_args(ACTION_EXPORT_SOLID, vec![solid_format_arg()]).await
+            .action_args(ACTION_IMPORT_SOLID, vec![solid_format_arg()]).await,
+    ).await
 }
 
 /// 🎛️ The shared `format` Select over the solid interchange formats, defaulting to OBJ (the handlers' default).
@@ -810,14 +661,14 @@ fn solid_format_arg() -> ActionArgDef {
 }
 
 fn module_plugin_bundle() -> Result<Plugin<ProceduralModuleApps>, PluginAssemblyError> {
-    Plugin::<ProceduralModuleApps>::builder(MODULE_PLUGIN_ID).label("Playbook Module Procedural").version("0.1.0").foreign_document_codec::<ModuleApp>(MODULE_DOCUMENT_SCHEMA).document_app::<ModuleApp>(create_module_app()?).try_build()
+    Plugin::<ProceduralModuleApps>::builder(MODULE_PLUGIN_ID).label("Playbook Module Procedural").version("0.1.0").package_id("semio:playbook-module-procedural").foreign_document_codec::<ModuleApp>(MODULE_DOCUMENT_SCHEMA).document_app::<ModuleApp>(resolve_ready(create_module_app())?).try_build()
 }
 
 fn module_extension_bundle() -> ExtensionBundle {
-    ExtensionBundle::new(MODULE_PLUGIN_ID, "Playbook Module Procedural", "0.1.0").extends("playbook").mode(ExecutionMode::Declarative).contributes_topic(
+    ExtensionBundle::new(MODULE_PLUGIN_ID, "Playbook Module Procedural", "0.1.0").extends("playbook").depends_on("playbook", VersionReq::parse("^0.1.0").expect("declared playbook version")).mode(ExecutionMode::Isolated).contributes_topic(
         "playbook.blockKind",
         DslValue::object([
-            ("appId".to_string(), DslValue::String("playbook-play".to_string())),
+            ("appId".to_string(), DslValue::String(MODULE_APP_ID.to_string())),
             ("blockKind".to_string(), DslValue::String("buildingComponent".to_string())),
             ("label".to_string(), DslValue::String("Building Component".to_string())),
             ("iconId".to_string(), DslValue::String("building".to_string())),
@@ -828,22 +679,94 @@ fn module_extension_bundle() -> ExtensionBundle {
     )
 }
 
-semio_framework_plugin::plugin_exports!(module_plugin_bundle, ProceduralModuleApps);
-semio_framework_plugin::extension_exports!(module_extension_bundle);
+semio_framework_plugin::extension_exports!(module_extension_bundle, module_plugin_bundle, ProceduralModuleApps);
 //#endregion 🔖️App
 
 //#region 🧪️Tests
 #[cfg(test)]
 mod tests {
     use super::*;
-    use semio_framework_plugin::{ActionMeta, Plugin, PluginApp, VcsArtifactApp};
+    use semio_framework_plugin::{ActionMeta, PluginApp, VcsArtifactApp};
+
+
+    #[test]
+    fn procedural_payload_vectors_match_the_json_oracle() {
+        use protocol::{Mutation, MutationDiff, OpBinary, OpText};
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🔁️payload-mutations.json")).expect("independent JSON parser");
+        let base: ModuleRenderPayload = pack::json::from_json_str(&fixture["base"].to_string()).expect("owned base");
+        assert_eq!(ModulePayloadMutation::DESCRIPTORS.len(), 1);
+        for row in fixture["cases"].as_array().expect("mutation vectors") {
+            let mutation: ModulePayloadMutation = pack::json::from_json_str(&row["mutation"].to_string()).expect("owned operation");
+            assert_eq!(serde_json::from_str::<serde_json::Value>(&to_json_string(&mutation)).expect("independent operation oracle"), row["mutation"]);
+            let post = mutation.diff(&base).diff().apply(&base).expect("apply mutation");
+            assert_eq!(serde_json::from_str::<serde_json::Value>(&to_json_string(&post)).expect("independent state oracle"), row["expected"]);
+            assert_eq!(ModulePayloadMutation::parse_op(&mutation.print_op()).expect("operation text"), mutation);
+            assert_eq!(ModulePayloadMutation::decode_op(&mutation.encode_op().expect("operation binary")).expect("decode binary"), mutation);
+            let restored = mutation.inverse(&base).iter().fold(post, |current, inverse| inverse.diff(&current).diff().apply(&current).expect("inverse"));
+            assert_eq!(restored, base);
+        }
+    }
+
+
+    #[semio_framework_async_macros::async_test]
+    async fn procedural_actor_descriptor_matches_the_json_oracle() {
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🛂️actor.json")).expect("independent actor fixture");
+        __semio_install_plugin_bundle();
+        let manifest = __SEMIO_PLUGIN_RUNTIME.with(|runtime| resolve_ready(semio_framework_plugin::plugin_runtime::plugin_manifest(runtime)));
+        assert_eq!(manifest.plugin_id, MODULE_PLUGIN_ID, "bundle assembly: {}", manifest.label);
+        let bytes = __SEMIO_PLUGIN_RUNTIME.with(|runtime| semio_framework_plugin::app::resolve_ready(semio_framework_plugin::describe::describe_extension_with_apps(runtime)));
+        let value = store::pack_rt::decode_wire_value(&bytes).expect("first-party wire decoder");
+        let descriptor: serde_json::Value = value.into();
+        assert_eq!(descriptor["role"], fixture["role"]);
+        assert_eq!(descriptor["manifest"]["pluginId"], fixture["pluginId"]);
+        assert_eq!(descriptor["manifest"]["apps"][0]["id"], fixture["appId"]);
+        assert_eq!(descriptor["manifest"]["dependencies"][0]["pluginId"], fixture["host"]);
+        let topic = &descriptor["contributions"]["topicContributions"][0];
+        assert_eq!(topic["topic"], fixture["topic"]);
+        assert_eq!(topic["payload"]["appId"], fixture["appId"]);
+        assert_eq!(topic["payload"]["blockKind"], fixture["blockKind"]);
+        let bodies: Vec<&serde_json::Value> = descriptor["manifest"]["apps"][0]["windowKinds"].as_array().expect("window kinds").iter().map(|window| &window["bodyKey"]).collect();
+        assert_eq!(bodies, fixture["windowBodies"].as_array().expect("expected window bodies").iter().collect::<Vec<_>>());
+    }
+
+
+    #[test]
+    fn procedural_parameter_controls_match_the_json_oracle() {
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("🧪️fixtures/🎚️controls.json")).expect("independent control vectors");
+        for row in fixture["cases"].as_array().expect("controls") {
+            let question: PlaybookBlock = pack::json::from_json_str(&row["question"].to_string()).expect("owned block decoder");
+            let independent: PlaybookBlock = serde_json::from_value(row["question"].clone()).expect("independent block decoder");
+            assert_eq!(question, independent);
+            let value = parse_json(&row["value"].to_string()).expect("owned value");
+            let payload = ModuleRenderPayload {
+                question_id: "parent".into(), controller_id: "s.forms.forms@1/*#editor".into(),
+                surface: row["surface"].as_str().expect("surface").into(), interactive: row["interactive"].as_bool().expect("interactive"),
+                ..default_payload()
+            };
+            let node = render_question_control(&question, &value, &payload).expect("semantic control");
+            let control = node.children.get(0).expect("field control");
+            let actual = serde_json::to_value(control).expect("independent semantic JSON oracle");
+            assert_eq!(actual["component"]["type"], row["component"]);
+            assert_eq!(actual["accessibility"]["label"], row["question"]["label"]);
+            assert_eq!(control.disabled, !payload.interactive);
+            assert_eq!(actual["disabled"].as_bool().unwrap_or(false), !payload.interactive);
+            assert_eq!(actual["bindings"][0]["trigger"], "change");
+            assert_eq!(actual["bindings"][0]["action"]["scope"], payload.controller_id);
+            assert_eq!(actual["bindings"][0]["action"]["name"], if payload.surface == "blueprint" { "patchQuestions" } else { "setTryValue" });
+            assert_eq!(actual["bindings"][0]["args"]["questionIds"], serde_json::json!(["parent"]));
+            assert_eq!(actual["bindings"][0]["args"]["paramKey"], question.id);
+            if let Some(expected) = row.get("expectedValue") { assert_eq!(&actual["component"]["value"], expected); }
+            testkit::project_and_retire_fixture_tree(built_to_component_tree(node)).expect("retire control tree");
+        }
+    }
 
     fn meta() -> ActionMeta {
         ActionMeta { actor: "local".into(), instance_id: 1 }
     }
 
     async fn new_app() -> VcsArtifactApp<ModuleApp> {
-        VcsArtifactApp::new(ModuleApp).await
+        let definition = create_module_app().await.expect("module definition").definition;
+        VcsArtifactApp::with_registry(ModuleApp, semio_framework_plugin::app::AppActionRegistry::from_definition(&definition)).await
     }
 
     fn payload_json(params: Value) -> String {
@@ -859,7 +782,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn module_app_declares_window_kinds() {
-        let app = create_module_app().expect("MODULE_APP_ID must be a canonical surface id");
+        let app = create_module_app().await.expect("MODULE_APP_ID must be a canonical surface id");
         assert_eq!(app.definition.window_kinds.len(), 2);
         assert_eq!(app.definition.window_kinds[0].id, MODULE_WINDOW_PARAMS);
         assert_eq!(app.definition.window_kinds[0].body_key, BODY_PARAMS);
@@ -874,10 +797,10 @@ mod tests {
         assert_eq!(manifest.topic_contributions.len(), 1);
         let topic = &manifest.topic_contributions[0];
         assert_eq!(topic.topic, "playbook.blockKind");
-        let payload = topic.payload.as_object().expect("object payload");
-        assert_eq!(payload["blockKind"], "buildingComponent");
-        assert_eq!(payload["paramsBodyKey"], BODY_PARAMS);
-        assert_eq!(payload["previewBodyKey"], BODY_PREVIEW);
+        assert!(topic.payload.as_object().is_some());
+        assert_eq!(topic.payload.get("blockKind").and_then(DslValue::as_str), Some("buildingComponent"));
+        assert_eq!(topic.payload.get("paramsBodyKey").and_then(DslValue::as_str), Some(BODY_PARAMS));
+        assert_eq!(topic.payload.get("previewBodyKey").and_then(DslValue::as_str), Some(BODY_PREVIEW));
     }
 
     #[semio_framework_async_macros::async_test]
@@ -885,24 +808,25 @@ mod tests {
         let mut app = new_app().await;
         let document = payload_json(pack::json!({ "height": 6.0, "radius": 0.5, "sides": 6.0 }));
         let node = app.render(BODY_PREVIEW, Some(&document), &ViewModel::default()).await.expect("render");
-        assert!(matches!(node, UiNode::ComponentScene(_)));
+        let json = semio_framework_plugin::testkit::project_and_retire_fixture_tree(node).expect("preview projection");
+        assert!(json.contains("world-3d"));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn params_body_lists_flow_inputs() {
         let mut app = new_app().await;
         let node = app.render(BODY_PARAMS, None, &ViewModel::default()).await.expect("render");
-        assert!(matches!(node, UiNode::Stack(_)));
+        let json = semio_framework_plugin::testkit::project_and_retire_fixture_tree(node).expect("params projection");
+        assert!(json.contains("stack"));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn params_body_includes_media_export_buttons() {
         let mut app = new_app().await;
         let node = app.render(BODY_PARAMS, None, &ViewModel::default()).await.expect("render");
-        let UiNode::Stack(stack) = node else {
-            panic!("expected a stack node");
-        };
-        let button_count = stack.children.iter().filter(|child| matches!(child, UiNode::Button(_))).count();
+        let json = semio_framework_plugin::testkit::project_and_retire_fixture_tree(node).expect("params projection");
+        let tree: serde_json::Value = serde_json::from_str(&json).expect("independent JSON parser");
+        let button_count = tree["children"].as_array().expect("column children").iter().filter(|child| child["type"] == "button").count();
         assert_eq!(button_count, SOLID_MEDIA_FORMATS.len() * 2);
     }
 
@@ -941,13 +865,13 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn export_solid_declares_only_format_arg_and_materializes_default() {
         use semio_framework_plugin::app::AppActionRegistry;
-        let definition = create_module_app().expect("MODULE_APP_ID must be a canonical surface id").definition;
+        let definition = create_module_app().await.expect("MODULE_APP_ID must be a canonical surface id").definition;
         let import = definition.window_kinds.iter().flat_map(|window| window.actions.iter()).find(|action| action.id == ACTION_IMPORT_SOLID).expect("import declared");
         assert!(import.args.iter().all(|arg| arg.id == "format"), "only `format` is a user-facing arg; `data` is file-callback populated");
         let export = definition.window_kinds.iter().flat_map(|window| window.actions.iter()).find(|action| action.id == ACTION_EXPORT_SOLID).expect("export declared");
         assert_eq!(export.args.len(), 1, "export exposes exactly the format choice");
         let registry = AppActionRegistry::from_definition(&definition);
-        let mut app = VcsArtifactApp::with_registry(ModuleApp, registry).await;
+        let mut app: VcsArtifactApp<ModuleApp> = VcsArtifactApp::with_registry(ModuleApp, registry).await;
         // exportSolid fired with no args: the declared `format` default is materialized before dispatch,
         // so the whole-payload operation still applies and stashes a result.
         app.handle_action(ACTION_EXPORT_SOLID, None, &meta()).await.expect("export");
@@ -967,8 +891,8 @@ mod tests {
         let labels = ModuleLabels::labels(Locale::En, Terminology::Native);
         assert_eq!(labels.no_flow_inputs.as_str(), "No flow inputs.");
         assert_eq!(labels.no_procedural_parameters.as_str(), "No procedural parameters.");
-        let node = ui_text(labels.no_procedural_parameters);
-        let rendered = format!("{node:?}");
+        let node = text_node(labels.no_procedural_parameters.as_str()).expect("label node");
+        let rendered = semio_framework_plugin::testkit::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).expect("label projection");
         assert!(rendered.contains("No procedural parameters."));
     }
 
@@ -977,8 +901,8 @@ mod tests {
         let labels = ModuleLabels::labels(Locale::De, Terminology::Native);
         assert_eq!(labels.no_flow_inputs.as_str(), "Keine Flow-Eingaben.");
         assert_eq!(labels.no_procedural_parameters.as_str(), "Keine prozeduralen Parameter.");
-        let node = ui_text(labels.no_procedural_parameters);
-        let rendered = format!("{node:?}");
+        let node = text_node(labels.no_procedural_parameters.as_str()).expect("label node");
+        let rendered = semio_framework_plugin::testkit::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).expect("label projection");
         assert!(rendered.contains("Keine prozeduralen Parameter."));
         assert!(!rendered.contains("No procedural parameters."));
     }
@@ -1001,7 +925,7 @@ mod tests {
         use semio_framework_os_kernel::{FromValue, ToValue};
 
         let payload = default_payload();
-        let mutation = ModulePayloadMutation::SetPayload { payload: payload.clone() };
+        let mutation = ModulePayloadMutation::SetPayload(SetPayload { payload: payload.clone() });
         let diff = ModulePayloadDiff { payload: Some(payload.clone()) };
 
         assert_eq!(ModuleRenderPayload::from_value(payload.to_value()).expect("first-party payload"), payload);
@@ -1011,7 +935,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn module_payload_operation_op_text_round_trips() {
-        store::os_store::test_support::assert_op_line_round_trip(&ModulePayloadMutation::SetPayload { payload: default_payload() });
+        store::os_store::test_support::assert_op_line_round_trip(&ModulePayloadMutation::SetPayload(SetPayload { payload: default_payload() }));
     }
 
     //#region 🔖️CommandEnvelopeTests
@@ -1030,7 +954,7 @@ mod tests {
             ArtifactStore::new(create_document_envelope(MODULE_DOCUMENT_SCHEMA, "playbook-module-procedural-test", default_payload(), None)).await.expect("valid artifact store fixture");
         let mut payload = default_payload();
         payload.interactive = false;
-        store.dispatch(ArtifactCommand::Apply { mutations: vec![ModulePayloadMutation::SetPayload { payload }], description: None }).await.expect("apply");
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![ModulePayloadMutation::SetPayload(SetPayload { payload })], description: None }).await.expect("apply");
         let edit: &Edit<ModulePayloadMutation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
         store::os_store::test_support::assert_command_envelope_round_trip::<ModuleRenderPayload, ModulePayloadMutation>(edit, &ArtifactId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone()));
     }

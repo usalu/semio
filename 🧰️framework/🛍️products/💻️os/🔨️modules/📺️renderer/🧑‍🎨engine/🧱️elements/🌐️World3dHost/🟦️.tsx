@@ -3940,7 +3940,13 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
     const driver: TutorialCameraDriver = {
       get: () => {
         const live = cameraStateRef.current;
-        return { kind: "orbit", position: live.position, target: live.target, up: live.up ?? [0, 0, 1], fov: live.fov };
+        return {
+          kind: "orbit",
+          position: [live.position[0], live.position[1], live.position[2]],
+          target: [live.target[0], live.target[1], live.target[2]],
+          up: live.up ? [live.up[0], live.up[1], live.up[2]] : [0, 0, 1],
+          fov: live.fov,
+        };
       },
       set: (pose) => {
         if (pose.kind !== "orbit") return;

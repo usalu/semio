@@ -6,7 +6,7 @@
 
 use crate::artifacts::fem2d::{Fem2dSnapshot, FemElement};
 use crate::fem2d_engine::Fem2dError;
-use crate::model::{Bar2, BeamEb2, Dof, Element, Elements, NodalLoad, Node};
+use crate::model::{Bar2, BeamEb2, Dof, Elements, NodalLoad, Node};
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::base::schema::geometry::SemioPoint3;
 use semio_s_plugin_stdio::artifacts::semio::standards::v1::subsets::mesh::schema::snapshot::{SemioMesh, SemioMeshSnapshot, SemioPrimitive, SemioTopology};
 use std::collections::HashMap;

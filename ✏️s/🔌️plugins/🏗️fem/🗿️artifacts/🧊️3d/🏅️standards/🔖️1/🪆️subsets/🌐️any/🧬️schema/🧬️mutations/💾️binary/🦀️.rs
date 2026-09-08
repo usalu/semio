@@ -60,15 +60,15 @@ mod tests {
     async fn fem3d_document_text_round_trips_through_the_store() {
         let fixture = cantilever_fixture();
         let mut store =
-            semio_framework_plugin::resolve_ready(crate::artifacts::fem3d::schema::mutations::Fem3dStore::new(create_document_envelope(crate::artifacts::fem3d::FEM_3D_SCHEMA, "fem3d", schema::empty_fem3d_snapshot(), None))).expect("valid store");
+            semio_framework_plugin::resolve_ready(schema::mutations::Fem3dStore::new(create_document_envelope(crate::artifacts::fem3d::FEM_3D_SCHEMA, "fem3d", schema::empty_fem3d_snapshot(), None))).expect("valid store");
         let mutations = vec![
-            Fem3dMutation::CreateMaterial(crate::artifacts::fem3d::schema::mutations::create_material::CreateMaterial { material: fixture.materials[0].clone() }),
-            Fem3dMutation::CreateSection(crate::artifacts::fem3d::schema::mutations::create_section::CreateSection { section: fixture.sections[0].clone() }),
-            Fem3dMutation::CreateNode(crate::artifacts::fem3d::schema::mutations::create_node::CreateNode { node: fixture.nodes[0].clone() }),
-            Fem3dMutation::CreateNode(crate::artifacts::fem3d::schema::mutations::create_node::CreateNode { node: fixture.nodes[1].clone() }),
-            Fem3dMutation::CreateElement(crate::artifacts::fem3d::schema::mutations::create_element::CreateElement { element: Box::new(fixture.elements[0].clone()) }),
-            Fem3dMutation::CreateSupport(crate::artifacts::fem3d::schema::mutations::create_support::CreateSupport { support: fixture.supports[0].clone() }),
-            Fem3dMutation::CreateLoadCase(crate::artifacts::fem3d::schema::mutations::create_load_case::CreateLoadCase { load_case: fixture.load_cases[0].clone() }),
+            Fem3dMutation::CreateMaterial(schema::mutations::create_material::CreateMaterial { material: fixture.materials[0].clone() }),
+            Fem3dMutation::CreateSection(schema::mutations::create_section::CreateSection { section: fixture.sections[0].clone() }),
+            Fem3dMutation::CreateNode(schema::mutations::create_node::CreateNode { node: fixture.nodes[0].clone() }),
+            Fem3dMutation::CreateNode(schema::mutations::create_node::CreateNode { node: fixture.nodes[1].clone() }),
+            Fem3dMutation::CreateElement(schema::mutations::create_element::CreateElement { element: Box::new(fixture.elements[0].clone()) }),
+            Fem3dMutation::CreateSupport(schema::mutations::create_support::CreateSupport { support: fixture.supports[0].clone() }),
+            Fem3dMutation::CreateLoadCase(schema::mutations::create_load_case::CreateLoadCase { load_case: fixture.load_cases[0].clone() }),
         ];
         store.dispatch(ArtifactCommand::Apply { mutations, description: None }).await.expect("apply");
         assert_eq!(store.snapshot().expect("snapshot"), fixture);

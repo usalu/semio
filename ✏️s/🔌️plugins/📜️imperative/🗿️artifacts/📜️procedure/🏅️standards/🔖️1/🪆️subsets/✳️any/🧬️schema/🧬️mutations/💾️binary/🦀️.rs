@@ -148,8 +148,8 @@ mod tests {
         let step = Step { id: "step-x".into(), kind: "log.print".into(), params: Dictionary::new(), bodies: BTreeMap::new() };
         let operation = create_step(PathRef::default(), step);
         doc_store.dispatch(store::ArtifactCommand::Apply { mutations: vec![operation], description: None }).await.expect("apply");
-        store::os_store::test_support::assert_document_text_round_trip(&doc_store);
-        store::os_store::test_support::assert_document_pack_round_trip(&doc_store);
+        store::os_store::test_support::assert_document_text_round_trip(&doc_store).await;
+        store::os_store::test_support::assert_document_pack_round_trip(&doc_store).await;
     }
 
     #[semio_framework_async_macros::async_test]

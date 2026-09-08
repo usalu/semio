@@ -59,6 +59,70 @@ impl TrustedCatalogDataRoot {
         let path = TrustedCatalogRelativePath::parse(&format!("trusted-catalog/generations/{generation_id}"))?;
         Ok(TrustedCatalogGenerationRoot { directory: platform::open_directory_at(&self.directory, path.os_segments()).map_err(catalog_error)? })
     }
+
+    pub(super) async fn acquire_publication(&self, context: &OperationContext<'_>) -> Result<TrustedCatalogPublicationOwner, AuthorityError> {
+        context.checkpoint()?;
+        let directory = platform::open_directory_at(&self.directory, std::iter::once(OsStr::new("trusted-catalog"))).map_err(catalog_error)?;
+        loop {
+            context.checkpoint()?;
+            let attempt_root = directory.try_clone().map_err(catalog_error)?;
+            let acquired = tokio::task::spawn_blocking(move || super::super::file_fence::try_acquire(platform::open_lock(&attempt_root)?)).await.map_err(catalog_error)?.map_err(catalog_error)?;
+            if let Some(fence) = acquired {
+                context.checkpoint()?;
+                return Ok(TrustedCatalogPublicationOwner { directory, _fence: fence });
+            }
+            tokio::time::sleep(std::time::Duration::from_millis(5)).await;
+        }
+    }
+}
+
+/// 📤️ One exclusive publication window bound to the already-opened catalog directory.
+pub(super) struct TrustedCatalogPublicationOwner {
+    directory: File,
+    _fence: super::super::file_fence::FileFence,
+}
+
+/// 💾️ Separates visible replacement from confirmed directory synchronization.
+#[derive(Debug, PartialEq, Eq)]
+pub(super) enum TrustedPublicationSync {
+    Durable,
+    Unconfirmed,
+}
+
+impl TrustedCatalogPublicationOwner {
+    pub(super) fn open_current(&self) -> Result<Option<TrustedCatalogOpenedFile>, AuthorityError> {
+        match platform::open_regular_at(&self.directory, std::iter::once(OsStr::new("current.json"))) {
+            Ok(file) => TrustedCatalogOpenedFile::new(file).map(Some),
+            Err(error) if error.kind() == std::io::ErrorKind::NotFound => Ok(None),
+            Err(error) => Err(catalog_error(error)),
+        }
+    }
+
+    pub(super) fn open_generation(&self, generation_id: &str) -> Result<TrustedCatalogGenerationRoot, AuthorityError> {
+        let path = TrustedCatalogRelativePath::parse(&format!("generations/{generation_id}"))?;
+        Ok(TrustedCatalogGenerationRoot { directory: platform::open_directory_at(&self.directory, path.os_segments()).map_err(catalog_error)? })
+    }
+
+    pub(super) fn replace_current(&self, nonce: &str, bytes: &[u8], context: &OperationContext<'_>) -> Result<TrustedPublicationSync, AuthorityError> {
+        use std::io::Write;
+        context.checkpoint()?;
+        if nonce.len() != 32 || !nonce.bytes().all(|byte| byte.is_ascii_digit() || (b'a'..=b'f').contains(&byte)) || bytes.is_empty() || bytes.len() > 65_536 {
+            return Err(catalog("trusted publication pointer or nonce exceeds its exact boundary"));
+        }
+        let name = format!(".current-{nonce}.json");
+        let mut file = platform::create_new(&self.directory, OsStr::new(&name)).map_err(catalog_error)?;
+        let result = (|| {
+            file.write_all(bytes).map_err(catalog_error)?;
+            file.sync_all().map_err(catalog_error)?;
+            context.checkpoint()?;
+            platform::replace_current(&self.directory, &file, OsStr::new(&name)).map_err(catalog_error)?;
+            Ok(platform::sync_publication(&self.directory))
+        })();
+        if result.is_err() {
+            let _ = platform::remove_owned(&self.directory, &file, OsStr::new(&name));
+        }
+        result
+    }
 }
 
 /// 🗂️ Retained immutable generation directory descriptor.
@@ -139,6 +203,15 @@ mod platform {
     use std::os::unix::ffi::OsStrExt;
 
     const O_RDONLY: i32 = 0;
+    const O_RDWR: i32 = 2;
+    #[cfg(any(target_os = "macos", target_os = "ios"))]
+    const O_CREATE: i32 = 0x0200;
+    #[cfg(any(target_os = "macos", target_os = "ios"))]
+    const O_EXCL: i32 = 0x0800;
+    #[cfg(any(target_os = "linux", target_os = "android"))]
+    const O_CREATE: i32 = 0x0040;
+    #[cfg(any(target_os = "linux", target_os = "android"))]
+    const O_EXCL: i32 = 0x0080;
     #[cfg(any(target_os = "macos", target_os = "ios"))]
     const O_NOFOLLOW: i32 = 0x0000_0100;
     #[cfg(any(target_os = "macos", target_os = "ios"))]
@@ -157,7 +230,9 @@ mod platform {
     const O_CLOEXEC: i32 = 0x0008_0000;
 
     unsafe extern "C" {
-        fn openat(directory: i32, path: *const std::ffi::c_char, flags: i32, mode: u32) -> i32;
+        fn openat(directory: i32, path: *const std::ffi::c_char, flags: i32, ...) -> i32;
+        fn renameat(source: i32, source_path: *const std::ffi::c_char, destination: i32, destination_path: *const std::ffi::c_char) -> i32;
+        fn unlinkat(directory: i32, path: *const std::ffi::c_char, flags: i32) -> i32;
         #[cfg(test)]
         fn mkfifo(path: *const std::ffi::c_char, mode: ModeT) -> i32;
     }
@@ -217,6 +292,67 @@ mod platform {
         Ok(metadata.len())
     }
 
+    pub(super) fn open_lock(parent: &File) -> std::io::Result<File> {
+        let file = open_writable(parent, OsStr::new(".publication.lock"), false)?;
+        if fstat_regular_length(&file)? != 0 {
+            return Err(std::io::Error::new(std::io::ErrorKind::InvalidData, "publication lock is not empty"));
+        }
+        Ok(file)
+    }
+
+    pub(super) fn create_new(parent: &File, name: &OsStr) -> std::io::Result<File> {
+        open_writable(parent, name, true)
+    }
+
+    fn open_writable(parent: &File, name: &OsStr, exclusive: bool) -> std::io::Result<File> {
+        let name = CString::new(name.as_bytes()).map_err(|_| std::io::Error::new(std::io::ErrorKind::InvalidInput, "publication leaf contains NUL"))?;
+        let flags = O_RDWR | O_CREATE | O_NOFOLLOW | O_CLOEXEC | O_NONBLOCK | if exclusive { O_EXCL } else { 0 };
+        let descriptor = unsafe { openat(parent.as_raw_fd(), name.as_ptr(), flags, 0o600 as std::ffi::c_uint) };
+        if descriptor < 0 {
+            return Err(std::io::Error::last_os_error());
+        }
+        let file = unsafe { File::from_raw_fd(descriptor) };
+        fstat_regular_length(&file)?;
+        Ok(file)
+    }
+
+    fn same_file(left: &File, right: &File) -> std::io::Result<bool> {
+        use std::os::unix::fs::MetadataExt;
+        let left = left.metadata()?;
+        let right = right.metadata()?;
+        Ok(left.dev() == right.dev() && left.ino() == right.ino())
+    }
+
+    pub(super) fn replace_current(parent: &File, file: &File, name: &OsStr) -> std::io::Result<()> {
+        if !same_file(file, &open_one(parent, name, false)?)? {
+            return Err(std::io::Error::new(std::io::ErrorKind::InvalidData, "publication temporary leaf was replaced"));
+        }
+        let name = CString::new(name.as_bytes()).map_err(|_| std::io::Error::new(std::io::ErrorKind::InvalidInput, "publication leaf contains NUL"))?;
+        if unsafe { renameat(parent.as_raw_fd(), name.as_ptr(), parent.as_raw_fd(), c"current.json".as_ptr()) } != 0 {
+            return Err(std::io::Error::last_os_error());
+        }
+        Ok(())
+    }
+
+    pub(super) fn remove_owned(parent: &File, file: &File, name: &OsStr) -> std::io::Result<()> {
+        if !same_file(file, &open_one(parent, name, false)?)? {
+            return Ok(());
+        }
+        let name = CString::new(name.as_bytes()).map_err(|_| std::io::Error::new(std::io::ErrorKind::InvalidInput, "publication leaf contains NUL"))?;
+        if unsafe { unlinkat(parent.as_raw_fd(), name.as_ptr(), 0) } != 0 {
+            return Err(std::io::Error::last_os_error());
+        }
+        Ok(())
+    }
+
+    pub(super) fn sync_publication(parent: &File) -> TrustedPublicationSync {
+        if parent.sync_all().is_ok() {
+            TrustedPublicationSync::Durable
+        } else {
+            TrustedPublicationSync::Unconfirmed
+        }
+    }
+
     #[cfg(test)]
     pub(super) fn create_fifo(path: &Path) -> std::io::Result<()> {
         let path = CString::new(path.as_os_str().as_bytes()).map_err(|_| std::io::Error::new(std::io::ErrorKind::InvalidInput, "FIFO path contains NUL"))?;
@@ -241,6 +377,8 @@ mod platform {
     type Handle = isize;
     const INVALID_HANDLE_VALUE: Handle = -1;
     const GENERIC_READ: u32 = 0x8000_0000;
+    const GENERIC_WRITE: u32 = 0x4000_0000;
+    const DELETE: u32 = 0x0001_0000;
     const SYNCHRONIZE: u32 = 0x0010_0000;
     const FILE_READ_ATTRIBUTES: u32 = 0x0000_0080;
     const FILE_SHARE_READ: u32 = 0x0000_0001;
@@ -253,6 +391,8 @@ mod platform {
     const FILE_FLAG_BACKUP_SEMANTICS: u32 = 0x0200_0000;
     const FILE_FLAG_OPEN_REPARSE_POINT: u32 = 0x0020_0000;
     const FILE_OPEN: u32 = 1;
+    const FILE_CREATE: u32 = 2;
+    const FILE_OPEN_IF: u32 = 3;
     const FILE_DIRECTORY_FILE: u32 = 0x0000_0001;
     const FILE_NON_DIRECTORY_FILE: u32 = 0x0000_0040;
     const FILE_SYNCHRONOUS_IO_NONALERT: u32 = 0x0000_0020;
@@ -319,6 +459,7 @@ mod platform {
     #[link(name = "kernel32")]
     unsafe extern "system" {
         fn GetFileInformationByHandleEx(handle: Handle, class: i32, information: *mut c_void, size: u32) -> i32;
+        fn SetFileInformationByHandle(handle: Handle, class: i32, information: *const c_void, size: u32) -> i32;
     }
 
     pub(super) fn open_server_owned(path: &Path) -> std::io::Result<File> {
@@ -367,6 +508,10 @@ mod platform {
     }
 
     fn open_one(parent: &File, segment: &OsStr, directory: bool) -> std::io::Result<File> {
+        open_one_access(parent, segment, directory, false, FILE_OPEN)
+    }
+
+    fn open_one_access(parent: &File, segment: &OsStr, directory: bool, write: bool, disposition: u32) -> std::io::Result<File> {
         let mut name = segment.encode_wide().collect::<Vec<_>>();
         if name.is_empty() || name.iter().any(|unit| *unit == 0) || name.len().checked_mul(2).and_then(|bytes| u16::try_from(bytes).ok()).is_none() {
             return Err(std::io::Error::new(std::io::ErrorKind::InvalidInput, "invalid rooted Windows path segment"));
@@ -385,7 +530,19 @@ mod platform {
         let mut handle = INVALID_HANDLE_VALUE;
         let options = FILE_SYNCHRONOUS_IO_NONALERT | FILE_OPEN_REPARSE_POINT | if directory { FILE_DIRECTORY_FILE } else { FILE_NON_DIRECTORY_FILE };
         let status = unsafe {
-            NtCreateFile(&mut handle, GENERIC_READ | SYNCHRONIZE | FILE_READ_ATTRIBUTES, &mut attributes, &mut io_status, null_mut(), FILE_ATTRIBUTE_NORMAL, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE, FILE_OPEN, options, null_mut(), 0)
+            NtCreateFile(
+                &mut handle,
+                GENERIC_READ | SYNCHRONIZE | FILE_READ_ATTRIBUTES | if write { GENERIC_WRITE | DELETE } else { 0 },
+                &mut attributes,
+                &mut io_status,
+                null_mut(),
+                FILE_ATTRIBUTE_NORMAL,
+                FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+                disposition,
+                options,
+                null_mut(),
+                0,
+            )
         };
         if status != STATUS_SUCCESS {
             let kind = if status == STATUS_OBJECT_NAME_NOT_FOUND || status == STATUS_OBJECT_PATH_NOT_FOUND { std::io::ErrorKind::NotFound } else { std::io::ErrorKind::PermissionDenied };
@@ -408,6 +565,47 @@ mod platform {
         Ok(info)
     }
 
+    pub(super) fn open_lock(parent: &File) -> std::io::Result<File> {
+        let file = open_one_access(parent, OsStr::new(".publication.lock"), false, true, FILE_OPEN_IF)?;
+        if fstat_regular_length(&file)? != 0 {
+            return Err(std::io::Error::new(std::io::ErrorKind::InvalidData, "publication lock is not empty"));
+        }
+        Ok(file)
+    }
+
+    pub(super) fn create_new(parent: &File, name: &OsStr) -> std::io::Result<File> {
+        open_one_access(parent, name, false, true, FILE_CREATE)
+    }
+
+    pub(super) fn replace_current(parent: &File, file: &File, _: &OsStr) -> std::io::Result<()> {
+        #[repr(C)]
+        struct RenameInfo {
+            flags: u32,
+            root_directory: Handle,
+            name_length: u32,
+            name: [u16; 12],
+        }
+        let name: [u16; 12] = OsStr::new("current.json").encode_wide().collect::<Vec<_>>().try_into().expect("fixed current leaf");
+        let info = RenameInfo { flags: 1, root_directory: parent.as_raw_handle() as Handle, name_length: 24, name };
+        let length = std::mem::offset_of!(RenameInfo, name) + 24;
+        if unsafe { SetFileInformationByHandle(file.as_raw_handle() as Handle, 3, (&info as *const RenameInfo).cast(), length as u32) } == 0 {
+            return Err(std::io::Error::last_os_error());
+        }
+        Ok(())
+    }
+
+    pub(super) fn remove_owned(_: &File, file: &File, _: &OsStr) -> std::io::Result<()> {
+        let delete: u8 = 1;
+        if unsafe { SetFileInformationByHandle(file.as_raw_handle() as Handle, 4, (&delete as *const u8).cast(), 1) } == 0 {
+            return Err(std::io::Error::last_os_error());
+        }
+        Ok(())
+    }
+
+    pub(super) fn sync_publication(_: &File) -> TrustedPublicationSync {
+        TrustedPublicationSync::Unconfirmed
+    }
+
     pub(super) fn fstat_regular_length(file: &File) -> std::io::Result<u64> {
         require_attributes(file, false)?;
         let metadata = file.metadata()?;
@@ -420,3 +618,158 @@ mod platform {
 
 #[cfg(not(any(unix, windows)))]
 compile_error!("trusted catalog opened-root owner requires Unix or Windows descriptor support");
+
+#[cfg(test)]
+mod publication_tests {
+    use super::*;
+    use crate::artifact_authority::{AuthorityLimits, AuthorityOperationControl, AuthorityProgress};
+    use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
+
+    struct Control(AtomicBool);
+
+    impl AuthorityOperationControl for Control {
+        fn now_ms(&self) -> u64 {
+            0
+        }
+        fn is_cancelled(&self) -> bool {
+            self.0.load(Ordering::SeqCst)
+        }
+        fn report(&self, _: AuthorityProgress) {}
+    }
+
+    fn fixture_root() -> std::path::PathBuf {
+        static NEXT: AtomicU64 = AtomicU64::new(0);
+        let artifact = std::env::var_os("SEMIO_TEST_ARTIFACT_DIR").expect("ticket-owned artifact root");
+        let root = std::path::PathBuf::from(artifact).join(format!("publication-owner-{}-{}", std::process::id(), NEXT.fetch_add(1, Ordering::SeqCst)));
+        std::fs::create_dir_all(root.join("trusted-catalog")).unwrap();
+        root
+    }
+
+    #[tokio::test]
+    async fn trusted_publication_owner_process_crash_releases_exact_lock() {
+        const ROOT_ENV: &str = "SEMIO_TRUSTED_PUBLICATION_PROCESS_ROOT";
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧪️fixtures/📤️publication/🔒️owner.json")).unwrap();
+        let control = Control(AtomicBool::new(false));
+        let context = OperationContext::new(60_000, AuthorityLimits::maximum(), &control);
+        if let Some(root) = std::env::var_os(ROOT_ENV) {
+            let root = std::path::PathBuf::from(root);
+            let data = TrustedCatalogDataRoot::open_server_owned(&root).unwrap();
+            let _owner = data.acquire_publication(&context).await.unwrap();
+            std::fs::write(root.join("holder-ready.json"), fixture["process"]["holder"].as_str().unwrap()).unwrap();
+            std::future::pending::<()>().await;
+            return;
+        }
+        let root = fixture_root();
+        let pointer = root.join("trusted-catalog/current.json");
+        let before = fixture["before"].as_str().unwrap().as_bytes();
+        std::fs::write(&pointer, before).unwrap();
+        let mut child = tokio::process::Command::new(std::env::current_exe().unwrap())
+            .args(["--exact", "artifact_authority::trusted_catalog::opened_root::publication_tests::trusted_publication_owner_process_crash_releases_exact_lock", "--nocapture", "--test-threads=1"])
+            .env(ROOT_ENV, &root)
+            .stdin(std::process::Stdio::null())
+            .stdout(File::create(root.join("holder.stdout.txt")).unwrap())
+            .stderr(File::create(root.join("holder.stderr.txt")).unwrap())
+            .kill_on_drop(true)
+            .spawn()
+            .unwrap();
+        let held = tokio::time::timeout(std::time::Duration::from_secs(20), async {
+            while !root.join("holder-ready.json").exists() {
+                if let Some(status) = child.try_wait().unwrap() {
+                    return Err(format!("publication child exited before lock admission: {status}"));
+                }
+                tokio::time::sleep(std::time::Duration::from_millis(5)).await;
+            }
+            if std::fs::read_to_string(root.join("holder-ready.json")).unwrap() != fixture["process"]["holder"].as_str().unwrap() {
+                return Err("publication child did not acknowledge its exact lock".to_owned());
+            }
+            let directory = platform::open_server_owned(&root.join("trusted-catalog")).unwrap();
+            let competing = super::super::super::file_fence::try_acquire(platform::open_lock(&directory).unwrap()).unwrap();
+            if competing.is_some() {
+                return Err("competing process bypassed the owned publication fence".to_owned());
+            }
+            Ok(())
+        })
+        .await;
+        child.kill().await.unwrap();
+        assert!(!child.wait().await.unwrap().success());
+        held.expect("bounded child lock admission").unwrap();
+        let data = TrustedCatalogDataRoot::open_server_owned(&root).unwrap();
+        let owner = tokio::time::timeout(std::time::Duration::from_secs(5), data.acquire_publication(&context)).await.expect("crash releases the OS fence").unwrap();
+        assert_eq!(owner.open_current().unwrap().unwrap().read_bounded(65_536, &context).await.unwrap(), before);
+        assert_eq!(std::fs::read(pointer).unwrap(), before);
+        assert_eq!(fixture["process"]["competing"], "contended");
+        assert_eq!(fixture["process"]["afterCrash"], "acquired");
+        assert_eq!(fixture["process"]["current"], "unchanged");
+        println!("[DEBUG] publication cross-process fence: holder=acquired competing=contended crash=reaped next=acquired current=unchanged");
+    }
+
+    #[tokio::test]
+    async fn trusted_publication_owner_lock_drop_and_exact_replacement_match_fixture() {
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧪️fixtures/📤️publication/🔒️owner.json")).unwrap();
+        let root = fixture_root();
+        let control = Control(AtomicBool::new(false));
+        let context = OperationContext::new(60_000, AuthorityLimits::maximum(), &control);
+        let data = TrustedCatalogDataRoot::open_server_owned(&root).unwrap();
+        let owner = data.acquire_publication(&context).await.unwrap();
+        let competing = super::super::super::file_fence::try_acquire(platform::open_lock(&owner.directory).unwrap()).unwrap();
+        assert!(competing.is_none());
+        std::fs::write(root.join("trusted-catalog/current.json"), fixture["before"].as_str().unwrap()).unwrap();
+        let after = fixture["after"].as_str().unwrap().as_bytes();
+        let sync = owner.replace_current(fixture["nonce"].as_str().unwrap(), after, &context).unwrap();
+        #[cfg(unix)]
+        assert!(matches!(sync, TrustedPublicationSync::Durable));
+        #[cfg(windows)]
+        assert!(matches!(sync, TrustedPublicationSync::Unconfirmed));
+        assert_eq!(owner.open_current().unwrap().unwrap().read_bounded(65_536, &context).await.unwrap(), after);
+        control.0.store(true, Ordering::SeqCst);
+        assert!(owner.replace_current("1123456789abcdef0123456789abcdef", b"cancelled", &context).is_err());
+        assert_eq!(std::fs::read(root.join("trusted-catalog/current.json")).unwrap(), after);
+        drop(owner);
+        control.0.store(false, Ordering::SeqCst);
+        let next = data.acquire_publication(&context).await.unwrap();
+        let collision = root.join("trusted-catalog/.current-2123456789abcdef0123456789abcdef.json");
+        std::fs::write(&collision, b"other writer").unwrap();
+        assert!(next.replace_current("2123456789abcdef0123456789abcdef", b"collision", &context).is_err());
+        assert_eq!(std::fs::read(collision).unwrap(), b"other writer");
+        println!("[DEBUG] publication owner: competing=contended drop=reacquired replacement=exact cancellation=retained collision=retained");
+    }
+
+    #[tokio::test]
+    async fn trusted_publication_owner_remains_rooted_after_path_replacement() {
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧪️fixtures/📤️publication/🔒️owner.json")).unwrap();
+        let root = fixture_root();
+        let control = Control(AtomicBool::new(false));
+        let context = OperationContext::new(60_000, AuthorityLimits::maximum(), &control);
+        let data = TrustedCatalogDataRoot::open_server_owned(&root).unwrap();
+        let owner = data.acquire_publication(&context).await.unwrap();
+        std::fs::rename(root.join("trusted-catalog"), root.join("retained-catalog")).unwrap();
+        std::fs::create_dir(root.join("trusted-catalog")).unwrap();
+        let foreign = fixture["replacement"]["foreignRoot"].as_str().unwrap().as_bytes();
+        std::fs::write(root.join("trusted-catalog/current.json"), foreign).unwrap();
+        let selected = fixture["replacement"]["selected"].as_str().unwrap().as_bytes();
+        owner.replace_current(fixture["nonce"].as_str().unwrap(), selected, &context).unwrap();
+        assert_eq!(std::fs::read(root.join("retained-catalog/current.json")).unwrap(), selected);
+        assert_eq!(std::fs::read(root.join("trusted-catalog/current.json")).unwrap(), foreign);
+        println!("[DEBUG] publication rooted replace: retained=selected replacement-root=unchanged");
+    }
+
+    #[tokio::test]
+    async fn trusted_publication_owner_refuses_nonregular_lock_leaves() {
+        let root = fixture_root();
+        let control = Control(AtomicBool::new(false));
+        let context = OperationContext::new(60_000, AuthorityLimits::maximum(), &control);
+        std::fs::create_dir(root.join("trusted-catalog/.publication.lock")).unwrap();
+        let data = TrustedCatalogDataRoot::open_server_owned(&root).unwrap();
+        assert!(data.acquire_publication(&context).await.is_err());
+        #[cfg(unix)]
+        {
+            let root = fixture_root();
+            std::fs::write(root.join("foreign.lock"), b"foreign").unwrap();
+            std::os::unix::fs::symlink(root.join("foreign.lock"), root.join("trusted-catalog/.publication.lock")).unwrap();
+            let data = TrustedCatalogDataRoot::open_server_owned(&root).unwrap();
+            assert!(data.acquire_publication(&context).await.is_err());
+            assert_eq!(std::fs::read(root.join("foreign.lock")).unwrap(), b"foreign");
+        }
+        println!("[DEBUG] publication lock admission: directory=refused linked-leaf=refused-on-unix");
+    }
+}

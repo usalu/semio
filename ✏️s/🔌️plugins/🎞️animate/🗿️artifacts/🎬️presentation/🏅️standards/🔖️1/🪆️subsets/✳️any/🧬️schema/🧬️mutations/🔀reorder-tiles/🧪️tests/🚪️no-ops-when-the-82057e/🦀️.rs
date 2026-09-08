@@ -24,16 +24,16 @@ const DIFF: &str = include_str!("🔺️diff/🔣️.json");
 const OUTCOME: &str = include_str!("🎯️outcome/🔣️.json");
 
 fn mutation() -> PresentationMutation {
-    serde_json::from_str(MUTATION).expect("mutation decodes")
+    dsl::os_pack::from_json_str(MUTATION).expect("mutation decodes")
 }
 fn expected_after() -> PresentationSnapshot {
-    serde_json::from_str(AFTER).expect("after snapshot decodes")
+    dsl::os_pack::from_json_str(AFTER).expect("after snapshot decodes")
 }
 
 /// 🌱 The committed `⬅️before`, with its composed `presentation` child resolved to a single-tile
 /// deck whose only tile is the id the payload names. Only the id and the list length matter here.
 fn before() -> PresentationSnapshot {
-    let snapshot: PresentationSnapshot = serde_json::from_str(BEFORE).expect("before snapshot decodes");
+    let snapshot: PresentationSnapshot = dsl::os_pack::from_json_str(BEFORE).expect("before snapshot decodes");
     let PresentationMutation::ReorderTiles(payload) = mutation() else {
         panic!("no-ops-when-the-tile-is-already-at-that-index's committed mutation must be a reorder-tiles");
     };
@@ -57,7 +57,7 @@ fn applies_to_committed_after() {
 #[test]
 fn produces_committed_diff() {
     let outcome = <PresentationMutation as protocol::Mutation<PresentationSnapshot>>::diff(&mutation(), &before());
-    let produced = serde_json::to_value(outcome.diff()).expect("produced diff encodes");
+    let produced = serde_json::from_str::<serde_json::Value>(&dsl::os_pack::to_json_string(outcome.diff())).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
     assert_eq!(produced, committed, "reorder-tiles/no-ops-when-the-tile-is-already-at-that-index: produced diff differs from the committed 🔺️diff/🔣️.json");
     assert_eq!(outcome.diff(), &PresentationDiff::default(), "a positional no-op must carry the identity diff");
@@ -66,8 +66,8 @@ fn produces_committed_diff() {
 /// 🔣️ The committed diff is itself canonical and decodes to presentation's own diff type.
 #[test]
 fn committed_diff_is_canonical() {
-    let decoded: PresentationDiff = serde_json::from_str(DIFF).expect("committed diff decodes");
-    let reencoded = serde_json::to_value(&decoded).expect("diff re-encodes");
+    let decoded: PresentationDiff = dsl::os_pack::from_json_str(DIFF).expect("committed diff decodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::os_pack::to_json_string(&decoded)).expect("diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
     assert_eq!(reencoded, original, "reorder-tiles/no-ops-when-the-tile-is-already-at-that-index: committed diff JSON is not canonical");
 }
@@ -77,7 +77,7 @@ fn committed_diff_is_canonical() {
 /// verb specifically needs.
 #[test]
 fn committed_diff_applies_to_after() {
-    let decoded: PresentationDiff = serde_json::from_str(DIFF).expect("committed diff decodes");
+    let decoded: PresentationDiff = dsl::os_pack::from_json_str(DIFF).expect("committed diff decodes");
     assert!(decoded.presentation.is_none(), "a positional no-op must leave the order-bearing presentation slot unset");
     let produced = <PresentationDiff as protocol::MutationDiff<PresentationSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "reorder-tiles/no-ops-when-the-tile-is-already-at-that-index: committed diff did not carry before to after");
@@ -87,12 +87,12 @@ fn committed_diff_applies_to_after() {
 #[test]
 fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {
-        let decoded: PresentationSnapshot = serde_json::from_str(text).expect("snapshot decodes");
-        let reencoded = serde_json::to_value(&decoded).expect("snapshot encodes");
+        let decoded: PresentationSnapshot = dsl::os_pack::from_json_str(text).expect("snapshot decodes");
+        let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::os_pack::to_json_string(&decoded)).expect("snapshot encodes");
         let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
         assert_eq!(reencoded, original, "reorder-tiles/no-ops-when-the-tile-is-already-at-that-index: committed {label} JSON is not canonical");
     }
-    let reencoded = serde_json::to_value(mutation()).expect("mutation encodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::os_pack::to_json_string(&mutation())).expect("mutation encodes");
     let original: serde_json::Value = serde_json::from_str(MUTATION).expect("mutation reparses");
     assert_eq!(reencoded, original, "reorder-tiles/no-ops-when-the-tile-is-already-at-that-index: committed mutation JSON is not canonical");
     assert_eq!(original.get("ReorderTiles").and_then(|payload| payload.get("toIndex")).and_then(serde_json::Value::as_u64), Some(0), "the landing slot is addressed by id plus a final-state index");

@@ -1,0 +1,30 @@
+{
+  "schema": "semio.hub.trusted-publication-owner/v1",
+  "before": "previous-selection\n",
+  "after": "next-selection\n",
+  "nonce": "0123456789abcdef0123456789abcdef",
+  "lock": {
+    "first": "acquired",
+    "competing": "contended",
+    "afterDrop": "acquired"
+  },
+  "replacement": {
+    "selected": "next-selection\n",
+    "foreignRoot": "foreign-selection\n"
+  },
+  "process": {
+    "holder": "acquired",
+    "competing": "contended",
+    "afterCrash": "acquired",
+    "current": "unchanged"
+  },
+  "cases": [
+    "same-directory-replace",
+    "cancel-before-replace",
+    "duplicate-nonce-refused",
+    "root-replacement-isolated",
+    "lock-link-refused",
+    "lock-directory-refused",
+    "process-crash-releases-lock"
+  ]
+}

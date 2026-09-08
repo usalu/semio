@@ -92,11 +92,15 @@ describe("framework renderer wgpu pack integer carriers", () => {
       diagnostics: Array.from(encodePackValue(diagnostics)),
       ui_scope: Array.from(encodePackValue({ surfaces: [packUInt(1n)] })),
       history_patch: Array.from(encodePackValue({ revision: packUInt(2n) })),
+      mutations: Array.from(encodePackValue([])),
+      inverse_group: Array.from(encodePackValue({ invocationId: "", mutations: [], inverseMutations: [] })),
     });
     expect(decoded.output).toEqual(JSON.parse('{"revision":9007199254740991,"label":"done"}'));
     expect(decoded.diagnostics).toEqual(JSON.parse('[{"severity":"info","code":3}]'));
     expect(decoded.uiScope).toEqual(JSON.parse('{"surfaces":[1]}'));
     expect(decoded.historyPatch).toEqual(JSON.parse('{"revision":2}'));
+    expect(decoded.mutations).toEqual([]);
+    expect(decoded.inverseGroup).toEqual({ invocationId: "", mutations: [], inverseMutations: [] });
     expect(JSON.stringify(decoded.output)).not.toContain("kind");
   });
 });

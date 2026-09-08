@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🧬️mutations/📤️set-run-output",
+  "semanticKind": "set-run-output",
+  "displayName": "Set Run Output",
+  "emoji": "📤️",
+  "aggregateVariant": "SetRunOutput",
+  "payloadSchema": "🧬️.schema.json",
+  "textOpcode": "set-run-output",
+  "binaryTag": 1,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "apply-only",
+  "outcomeClasses": [
+    "applied"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "text",
+    "binary",
+    "json-schema"
+  ]
+}

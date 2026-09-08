@@ -1,0 +1,17 @@
+# 🧬️ PDF 1.7/X direct mutation aggregate.
+input PdfXMutationInput {
+  insertEncryptionDictionary: InsertEncryptionDictionaryMutationInput
+  removeEncryptionDictionary: RemoveEncryptionDictionaryMutationInput
+  setOutputIntent: SetOutputIntentMutationInput
+  removeOutputIntent: RemoveOutputIntentMutationInput
+  setTrimBox: SetTrimBoxMutationInput
+  removeTrimBox: RemoveTrimBoxMutationInput
+  embedFontFile: EmbedFontFileMutationInput
+  removeFontFile: RemoveFontFileMutationInput
+  insertJavascriptAction: InsertJavascriptActionMutationInput
+  removeJavascriptAction: RemoveJavascriptActionMutationInput
+  insertLaunchAction: InsertLaunchActionMutationInput
+  removeLaunchAction: RemoveLaunchActionMutationInput
+  insertMediaAnnotation: InsertMediaAnnotationMutationInput
+  removeMediaAnnotation: RemoveMediaAnnotationMutationInput
+}

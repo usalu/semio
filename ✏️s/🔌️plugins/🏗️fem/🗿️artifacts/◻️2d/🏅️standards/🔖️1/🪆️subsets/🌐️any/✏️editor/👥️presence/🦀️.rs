@@ -13,7 +13,7 @@ pub struct Fem2dPresence {}
 
 impl protocol::MutationDiff<Fem2dPresence> for Fem2dPresence {
     fn apply(&self, base: &Fem2dPresence) -> protocol::MutationApplyResult<Fem2dPresence> {
-        Ok({ base.clone() })
+        Ok(base.clone())
     }
     fn absorb(&mut self, _other: Self) {}
 }

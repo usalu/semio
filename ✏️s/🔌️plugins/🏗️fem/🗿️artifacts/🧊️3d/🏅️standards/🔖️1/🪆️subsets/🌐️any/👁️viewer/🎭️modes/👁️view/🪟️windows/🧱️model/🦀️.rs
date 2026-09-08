@@ -18,8 +18,6 @@ pub const WINDOW_KIND_ID: &str = "fem3d-view-model";
 /// 📄️ The viewer Model window's sole render body key.
 pub const BODY_KEY: &str = "fem3d.view.model";
 /// 👁️ Read-only counterpart of the editor's `FEM3D_APP_ID` controller id — kept distinct so a viewer
-/// session's world-3d controller can never be mistaken for an editor session's.
-const FEM3D_VIEW_CONTROLLER_ID: &str = "fem3d-view";
 //#endregion 🔖️Constants
 
 //#region 🔖️PreparedScene
@@ -52,8 +50,8 @@ mod tests {
 
     #[test]
     fn renders_a_prepared_scene_node_without_a_whole_scene_bypass() {
-        let node = render(None);
-        let json = dsl::json::to_json_string(&node);
+        let node = render(None).expect("fixture surface admission");
+        let json = serde_json::to_string(&node).expect("independent semantic JSON oracle");
         assert!(json.contains("world-3d"));
         let semio_framework_ui_contract::Component::Surface(props) = &node.component else { panic!("expected world surface") };
         let scene: semio_framework_ui_scene::World3dScene = semio_framework_ui_scene::decode(props).expect("decode world scene");

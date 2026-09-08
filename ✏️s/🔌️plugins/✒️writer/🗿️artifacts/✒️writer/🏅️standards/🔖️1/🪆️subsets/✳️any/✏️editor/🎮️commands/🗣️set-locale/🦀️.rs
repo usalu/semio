@@ -13,7 +13,7 @@ pub struct SetLocale {
 }
 
 pub fn handle(payload: &SetLocale, _doc: &ArtifactView<'_, WriterSnapshot>, _cfg: &ConfigView<'_, WriterConfig>) -> Result<Emit<WriterMutation, WriterConfigMutation>, Fault> {
-    Ok(Emit::config(vec![WriterConfigMutation::SetLocale { value: payload.value.clone() }]))
+    Ok(Emit::config(vec![WriterConfigMutation::SetLocale(crate::editor::writer::config::SetLocale { value: payload.value.clone() })]))
 }
 
 //#region 🧪️Tests
@@ -25,11 +25,11 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn writer_labels_resolve_native_english_and_german() {
-        let mut app = new_app();
-        let english = render(&mut app, WRITER_PLAY_BODY_INSPECTION);
+        let mut app = new_app().await;
+        let english = render(&mut app, WRITER_PLAY_BODY_INSPECTION).await;
         assert!(english.contains("\"Document\"") && english.contains("\"Camera\""), "english labels: {english}");
-        dispatch(&mut app, WriterCommand::SetLocale(SetLocale { value: "de-DE".into() }));
-        let german = render(&mut app, WRITER_PLAY_BODY_INSPECTION);
+        dispatch(&mut app, WriterCommand::SetLocale(SetLocale { value: "de-DE".into() })).await;
+        let german = render(&mut app, WRITER_PLAY_BODY_INSPECTION).await;
         assert!(german.contains("Dokument") && german.contains("Kamera"), "german labels: {german}");
     }
 }

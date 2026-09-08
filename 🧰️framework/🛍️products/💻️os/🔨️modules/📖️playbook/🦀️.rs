@@ -931,9 +931,8 @@ pub mod builder_kit {
     //! (embedded Blueprint mode). Block-kind-specific property editing stays with the host app. Moved
     //! here (from `semio-framework-plugin`) since it is entirely playbook-domain code.
 
-    use super::{DslValue, FromValue, PlaybookSpec, ToValue};
+    use super::{DslValue, FromValue, PlaybookSpec};
     use semio_framework::ProgramContributionEntry;
-    use serde::Deserialize;
     use ui_wgpu::wgpu::{ActionDescriptor, BlockListScene, BlockPaletteEntry, IconName, SurfaceKind, UiComponentSceneNode, UiNode, UiPresence};
 
     //#region 🔖️Config
@@ -1170,10 +1169,10 @@ mod tests {
                 },
             ],
         };
-        let mut values = serde_json::Map::new();
-        values.insert("show".into(), serde_json::json!(false));
+        let mut values = PlaybookValues::new();
+        values.insert("show".into(), DslValue::Bool(false));
         assert_eq!(visible_blocks(&step, &values).len(), 1);
-        values.insert("show".into(), serde_json::json!(true));
+        values.insert("show".into(), DslValue::Bool(true));
         assert_eq!(visible_blocks(&step, &values).len(), 2);
     }
 

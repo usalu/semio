@@ -1,20 +1,14 @@
 // #region 🧲️Header
 // 🎨️ framework/products/os/modules/renderer/engine/elements/AgentBridge/component.test.ts
-/** @emoji 🧪️ Pure-logic tests for `AgentBridge`: bridge-frame codec round-trip against P1b's own
- * Rust↔TS parity fixtures, `reduce()` application to an inbound `ShellCommand` frame, and
- * config/URL discovery. Not wired into `@semio-tech/framework-renderer-react`'s nx `test` target
- * (its `vitest.config.ts` `root` is the `⚛️react` package dir, which does not reach into
- * `🧱️elements/**` — see `.🧬semio/…/📓️terra-P10-report.md` §"Acceptance" for the direct foreground
- * `vitest run` invocation that verifies this file instead of leasing that config).
- */
+/** 🧪️ Registered AgentBridge frame parity, protected configuration and exact Shell state laws. */
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { describe, expect, it } from "vitest";
-import { applyInboundShellCommand, bridgeUrlWithToken, buildShellStateFrame, createDefaultShellState, decodeJsonPayload, discoverAgentBridgeConfig, encodeJsonPayload } from "./🟦️.tsx";
+import { describe, expect, it, vi } from "vitest";
+import { type AgentBridgeConfig, useAgentBridge, applyInboundShellCommand, bridgeProtocols, buildShellStateFrame, createDefaultShellState, decodeJsonPayload, discoverAgentBridgeConfig, encodeJsonPayload } from "./🟦️.tsx";
 import { bytesToHex, decodeShellToGateway, decodeGatewayToShell, encodeShellToGateway, encodeGatewayToShell, type GatewayToShell, type ShellToGateway } from "../../../../🌉️mcp/🧵️bridge/🟦️.ts";
 // #endregion 🔌️Adapters
 
@@ -48,7 +42,7 @@ describe("bridgeProtocols", () => {
 type FixtureRow = { readonly direction: "shell_to_gateway" | "gateway_to_shell"; readonly variant: string; readonly frame: unknown; readonly hex: string };
 
 function loadFixtures(): readonly FixtureRow[] {
-  const path = join(here, "..", "..", "..", "..", "🌉️mcp", "🧵️bridge", "🧫️fixtures", "frames.json");
+  const path = join(here, "..", "..", "..", "..", "🌉️mcp", "🧵️bridge", "🧫️fixtures", "📨️frames.json");
   return JSON.parse(readFileSync(path, "utf8")) as FixtureRow[];
 }
 
@@ -149,3 +143,57 @@ describe("buildShellStateFrame", () => {
   });
 });
 //#endregion 🔖️ApplyInboundShellCommand
+
+describe("AgentBridge inference state parity", () => {
+  it("starts from the neutral Shell state and applies the exact inference port command", async () => {
+    const { default: equal } = await import("fast-deep-equal");
+    const fixture = JSON.parse(readFileSync(join(here, "../../../../🖥️shell/🧫️fixtures/💡️set-document-inference-port.json"), "utf8"));
+    const state = createDefaultShellState();
+    expect(equal(state, fixture.state)).toBe(true);
+    expect(state).toEqual(fixture.state);
+    const applied = applyInboundShellCommand(state, 8n, encodeJsonPayload(fixture.command), 1000);
+    if (!applied.result?.ok) throw new Error("inference port command was rejected");
+    expect(equal(applied.result.state, fixture.expected.state)).toBe(true);
+    expect(applied.result.state).toEqual(fixture.expected.state);
+    expect(state.inferencePortByDocument).toEqual({});
+    console.log("[DEBUG] AgentBridge inference default/command parity: neutral=1 equality=2");
+  });
+});
+
+describe("AgentBridge protected connection ownership", () => {
+  it("retires the old socket before a replacement or disabled configuration", async () => {
+    const { renderHook } = await import("@testing-library/react");
+    const opened: { url: string; protocols: readonly string[]; closed: boolean }[] = [];
+    class Socket {
+      static OPEN = 1;
+      readonly readyState = 1;
+      readonly record: (typeof opened)[number];
+      constructor(url: string, protocols: readonly string[]) {
+        this.record = { url, protocols, closed: false };
+        opened.push(this.record);
+      }
+      send(_bytes: Uint8Array): void {}
+      close(): void { this.record.closed = true; }
+    }
+    vi.stubGlobal("WebSocket", Socket);
+    const first = { url: "ws://127.0.0.1:6300/bridge", admissionProof: "session.v1.first.proof" };
+    const second = { url: "ws://127.0.0.1:6301/bridge", admissionProof: "session.v1.second.proof" };
+    const initialProps: { config: AgentBridgeConfig | null } = { config: first };
+    const hook = renderHook(({ config }) => useAgentBridge({ config }), { initialProps });
+    try {
+      expect(opened).toEqual([{ url: first.url, protocols: bridgeProtocols(first), closed: false }]);
+      hook.rerender({ config: second });
+      expect(opened).toEqual([
+        { url: first.url, protocols: bridgeProtocols(first), closed: true },
+        { url: second.url, protocols: bridgeProtocols(second), closed: false },
+      ]);
+      hook.rerender({ config: null });
+      expect(opened.every((socket) => socket.closed)).toBe(true);
+      expect(hook.result.current.status).toBe("disabled");
+      console.log("[DEBUG] AgentBridge protected config lifetime: opened=2 retired=2 disabled=1");
+    } finally {
+      hook.unmount();
+      vi.unstubAllGlobals();
+    }
+  });
+});

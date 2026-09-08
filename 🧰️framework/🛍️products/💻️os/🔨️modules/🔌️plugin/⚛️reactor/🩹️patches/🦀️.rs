@@ -108,7 +108,6 @@ impl ReadySlot {
 struct UnadmittedSlot {
     key: NativeCloseKey,
     generation: u64,
-    surface: ui_contract::SurfaceId,
 }
 
 /// 🎟️ Exact mounted render reservation; the tree cannot exist before its fixed slot does.
@@ -185,9 +184,8 @@ impl MountedReconcileGrant {
             self.active = false;
             return;
         };
-        let surface = marker.surface.clone();
-        {
-            let Some(slot) = state.slots[self.surface_index].as_mut().filter(|slot| slot.surface == marker.surface && slot.reconciler.is_none()) else {
+        let surface = {
+            let Some(slot) = state.slots[self.surface_index].as_mut().filter(|slot| slot.key == self.key && slot.output_index == Some(self.output_index) && slot.reconciler.is_none() && slot.producer.is_none() && slot.job.is_none()) else {
                 drop(state);
                 drop(admission);
                 self.active = false;
@@ -197,7 +195,8 @@ impl MountedReconcileGrant {
             slot.operation = semio_framework_job::allocate_operation_id();
             slot.preview_sequence = 0;
             slot.cancel = semio_framework_job::root_cancel_token();
-        }
+            slot.surface.clone()
+        };
         match admission {
             Ok(job) => {
                 state.rejected_reserved[self.rejected_index] = None;
@@ -443,7 +442,7 @@ impl PatchTracker {
         };
         commit_generation(&mut state, generation);
         state.rejected_reserved[rejected_index] = Some(generation);
-        state.unadmitted[index] = Some(UnadmittedSlot { key, generation, surface });
+        state.unadmitted[index] = Some(UnadmittedSlot { key, generation });
         drop(state);
         Ok(MountedReconcileGrant { key, output_index, state: self.state.clone(), index, surface_index, rejected_index, generation, owner: MountedReconcileOwner::Live { reconciler, reservation }, active: true })
     }

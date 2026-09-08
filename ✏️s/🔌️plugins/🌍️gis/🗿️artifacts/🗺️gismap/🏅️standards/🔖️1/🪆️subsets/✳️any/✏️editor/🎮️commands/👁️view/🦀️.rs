@@ -8,6 +8,7 @@ use crate::editor::gis2d::config::{layer_visible, mutations as config_mutations,
 use crate::editor::gis2d::maphost::map_host_from;
 use framework_surface::tiled_map::clamp_map_layer_weight;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+#[cfg(test)]
 use serde::{Deserialize, Serialize};
 use semio_framework_value_derive::{FromValue, ToValue};
 

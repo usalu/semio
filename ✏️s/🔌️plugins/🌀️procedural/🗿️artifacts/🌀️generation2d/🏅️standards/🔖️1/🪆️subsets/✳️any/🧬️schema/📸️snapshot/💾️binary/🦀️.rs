@@ -941,7 +941,7 @@ impl Generation2dMountedTypedSnapshotOwner {
                 }
                 self.complete = true;
             }
-            Token::Tag { .. } | Token::Unsigned { .. } | Token::Signed(_) | Token::Byte(_) | Token::WireLabelPresence(_) => {}
+            Token::Tag { .. } | Token::Unsigned { .. } | Token::Byte(_) | Token::WireLabelPresence(_) => {}
         }
         Ok(())
     }

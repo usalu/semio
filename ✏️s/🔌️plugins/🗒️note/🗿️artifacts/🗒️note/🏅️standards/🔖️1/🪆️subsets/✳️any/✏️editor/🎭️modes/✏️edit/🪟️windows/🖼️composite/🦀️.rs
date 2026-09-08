@@ -4,8 +4,7 @@ use crate::artifacts::note::{NoteCamera, NoteSnapshot};
 use crate::editor::note::config::NoteConfig;
 use crate::editor::note::modes::edit::windows::composite::options;
 use crate::editor::note::terminology::NotePlayLabels;
-use crate::editor::note::NOTE_PLAY_CONTROLLER_ID;
-use semio_framework_plugin::{build_ink_canvas_scene, InkCanvasScene, LocalizedLabel, SurfaceKind, UiNode, WindowEngagement, WindowEngagementInput, WindowEngagementStatus, WindowKindDefinition, WindowMeasure, WindowOptions};
+use semio_framework_plugin::{InkCanvasScene, LocalizedLabel, SurfaceKind, BuiltNode, UiAssemblyResult, WindowEngagement, WindowEngagementInput, WindowEngagementStatus, WindowKindDefinition, WindowMeasure, WindowOptions};
 
 //#region 🔖️Constants
 pub const NOTE_PLAY_WINDOW_COMPOSITE: &str = "note-composite";
@@ -88,16 +87,12 @@ pub fn engagement(document: &NoteSnapshot, camera: &NoteCamera, engagement_input
 /// threaded an `InteractionView`, so selection/hover are no longer stamped into the scene here — the
 /// "blocks" domain's presence is a known gap for canvas surfaces this wave (matches lowpoly/gis2d's
 /// `render` precedent), left at `InkCanvasScene::base`'s empty defaults.
-pub fn render_canvas_scene(document: &NoteSnapshot, camera: &NoteCamera, active_utility: &str, surface_id: &str, view_mode: &str) -> UiNode {
-    let mut document_value = serde_json::to_value(document).unwrap_or_else(|_| serde_json::json!({}));
-    if let Some(map) = document_value.as_object_mut() {
-        map.insert("camera".into(), serde_json::to_value(camera).unwrap_or_else(|_| serde_json::json!({ "x": 0.0, "y": 0.0, "zoom": 1.0 })));
-    }
-    let document_json = document_value.to_string();
-    build_ink_canvas_scene(surface_id, NOTE_PLAY_CONTROLLER_ID, InkCanvasScene::base(document_json, active_utility.into(), view_mode.into(), view_mode == "composite"))
+pub fn render_canvas_scene(document: &NoteSnapshot, camera: &NoteCamera, active_utility: &str, surface_id: &str, view_mode: &str) -> UiAssemblyResult<BuiltNode> {
+    let document_json = crate::artifacts::note::note_canvas_document_json(document, camera);
+    semio_framework_plugin::scene_surface(surface_id, semio_framework_ui_contract::SurfaceKind::InkCanvas, &InkCanvasScene::base(document_json, active_utility.into(), view_mode.into(), view_mode == "composite"))
 }
 
-pub fn render(document: &NoteSnapshot, cfg: &NoteConfig) -> UiNode {
+pub fn render(document: &NoteSnapshot, cfg: &NoteConfig) -> UiAssemblyResult<BuiltNode> {
     render_canvas_scene(document, &cfg.camera, &cfg.active_utility_id, NOTE_PLAY_SURFACE_COMPOSITE, "composite")
 }
 //#endregion 🔖️Render
@@ -111,8 +106,8 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn renders_composite_canvas() {
-        let mut app = note_app();
-        let json = render_body(&mut app, BODY_COMPOSITE);
+        let mut app = note_app().await;
+        let json = render_body(&mut app, BODY_COMPOSITE).await;
         assert!(json.contains("ink-canvas"));
         assert!(json.contains("documentJson"));
     }

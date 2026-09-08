@@ -2,7 +2,7 @@
 //! 🧵️ The retained-mode `Ui` façade: the missing keystone tying `arena`/`tree`/`reconcile`/`flex`/
 //! `paint`/`events`/`scene_slots`/`shell` into one usable pipeline — each of those regions was built
 //! and individually tested to its own milestone but nothing ever assembled them together, and nothing
-//! in `framework/renderer/wgpu` calls into any of it (see `.🦑️repo/🎫️tickets/26/07/11/RETAINED-MODE-UI-CRATE`'s
+//! in `framework/renderer/wgpu` calls into any of it (see `.🧬semio/🦑️repo/🎫️tickets/26/07/11/RETAINED-MODE-UI-CRATE`'s
 //! plan for the historical intent). This module is purely additive: the immediate-mode `widgets`
 //! path stays the only pipeline actually driving pixels until a later workstream proves this façade
 //! out (via the golden `tests` module below) and cuts over.
@@ -1439,7 +1439,7 @@ impl Default for Ui {
 
 //#region 🔬️Introspection
 /// 🔬️ Read-only accessors for the wgpu↔React parity structural-dump harness (see
-/// `.🦑️repo/🎫️tickets/26/07/11/WGPU-RENDERER-FULL-PARITY` and `framework/renderer/wgpu`'s own
+/// `.🧬semio/🦑️repo/🎫️tickets/26/07/11/WGPU-RENDERER-FULL-PARITY` and `framework/renderer/wgpu`'s own
 /// `🔬️Introspection` region, which is the actual JSON-building caller): exposes just enough of
 /// `Ui`'s private `windows`/`theme` state for a caller to walk a window's retained `UiTree` (via
 /// `UiTree::node`/`UiTree::children`, both already public) and know which theme it last painted
@@ -1484,7 +1484,7 @@ impl Ui {
 
     /// 🎯️ Whether `window_id`'s retained content currently has a focused node — `false` if that
     /// window has no retained state at all. Lets a host (`w2-input-wiring`,
-    /// `.🦑️repo/🎫️tickets/26/07/11/WGPU-RENDERER-FULL-PARITY/report-w2-input-wiring.md`) decide whether real
+    /// `.🧬semio/🦑️repo/🎫️tickets/26/07/11/WGPU-RENDERER-FULL-PARITY/report-w2-input-wiring.md`) decide whether real
     /// keyboard/IME events belong to this window's content (route via `dispatch_event`) or should
     /// fall back to chrome-level shortcuts. Forwards to `EventRouter::is_focused`, itself added this
     /// same pass — both purely additive reads, no change to `dispatch_event`'s own focus logic.
@@ -2325,7 +2325,7 @@ mod tests {
         assert!(instances > 0, "NumberStepper should paint its minus/value/plus segments");
     }
 
-    /// 🔒️ Added by `w1c-paint-parity` (see `.🦑️repo/🎫️tickets/26/07/11/WGPU-RENDERER-FULL-PARITY/report-w1c-paint-parity.md`):
+    /// 🔒️ Added by `w1c-paint-parity` (see `.🧬semio/🦑️repo/🎫️tickets/26/07/11/WGPU-RENDERER-FULL-PARITY/report-w1c-paint-parity.md`):
     /// `paint::paint_number_stepper` now ports `widgets::render_number_stepper`'s nested
     /// center-value border box (the exact gap `golden_number_stepper_known_gap`'s doc comment
     /// above documents), closing the 14-vs-19-instance divergence for the `uniform: true` case.

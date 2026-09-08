@@ -17,13 +17,13 @@ const DIFF: &str = include_str!("🔺️diff/🔣️.json");
 const OUTCOME: &str = include_str!("🎯️outcome/🔣️.json");
 
 fn before() -> NoteSnapshot {
-    serde_json::from_str(BEFORE).expect("before snapshot decodes")
+    dsl::os_pack::from_json_str(BEFORE).expect("before snapshot decodes")
 }
 fn expected_after() -> NoteSnapshot {
-    serde_json::from_str(AFTER).expect("after snapshot decodes")
+    dsl::os_pack::from_json_str(AFTER).expect("after snapshot decodes")
 }
 fn mutation() -> NoteMutation {
-    serde_json::from_str(MUTATION).expect("mutation decodes")
+    dsl::os_pack::from_json_str(MUTATION).expect("mutation decodes")
 }
 
 /// ▶️ `edit-block-text` remints the block's COMPOSED child handle from `(block_id, new_paragraphs)` — the paragraphs themselves never land in the snapshot.
@@ -51,12 +51,12 @@ async fn inverse_restores_before() {
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {
-        let decoded: NoteSnapshot = serde_json::from_str(text).expect("snapshot decodes");
-        let reencoded = serde_json::to_value(&decoded).expect("snapshot encodes");
+        let decoded: NoteSnapshot = dsl::os_pack::from_json_str(text).expect("snapshot decodes");
+        let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::os_pack::to_json_string(&decoded)).expect("snapshot encodes");
         let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
         assert_eq!(reencoded, original, "edit-block-text/replaces-the-intro-paragraphs: committed {label} JSON is not canonical");
     }
-    let reencoded = serde_json::to_value(mutation()).expect("mutation encodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::os_pack::to_json_string(&mutation())).expect("mutation encodes");
     let original: serde_json::Value = serde_json::from_str(MUTATION).expect("mutation reparses");
     assert_eq!(reencoded, original, "edit-block-text/replaces-the-intro-paragraphs: committed mutation JSON is not canonical");
 }
@@ -79,8 +79,8 @@ async fn declared_outcome_holds() {
 /// state, whereas this pins WHICH collections and fields this mutation is allowed to touch.
 #[semio_framework_async_macros::async_test]
 async fn produces_committed_diff() {
-    let outcome = <NoteMutation as protocol::Mutation<NoteSnapshot>>::diff(&mutation(), &before());
-    let produced = serde_json::to_value(outcome.diff()).expect("produced diff encodes");
+    let outcome = <NoteMutation as Mutation<NoteSnapshot>>::diff(&mutation(), &before());
+    let produced = serde_json::from_str::<serde_json::Value>(&dsl::os_pack::to_json_string(outcome.diff())).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
     assert_eq!(produced, committed, "edit-block-text/replaces-the-intro-paragraphs: produced diff differs from the committed 🔺️diff/🔣️.json");
 }
@@ -90,8 +90,8 @@ async fn produces_committed_diff() {
 /// every slot `edit-block-text` leaves alone.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical() {
-    let decoded: NoteDiff = serde_json::from_str(DIFF).expect("committed diff decodes");
-    let reencoded = serde_json::to_value(&decoded).expect("diff re-encodes");
+    let decoded: NoteDiff = dsl::os_pack::from_json_str(DIFF).expect("committed diff decodes");
+    let reencoded = serde_json::from_str::<serde_json::Value>(&dsl::os_pack::to_json_string(&decoded)).expect("diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
     assert_eq!(reencoded, original, "edit-block-text/replaces-the-intro-paragraphs: committed diff JSON is not canonical");
 }
@@ -99,7 +99,7 @@ async fn committed_diff_is_canonical() {
 /// 🩹 The committed single-`patched` delta carries `before` to `after` using only snapshot-owned records.
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_applies_to_after() {
-    let decoded: NoteDiff = serde_json::from_str(DIFF).expect("committed diff decodes");
+    let decoded: NoteDiff = dsl::os_pack::from_json_str(DIFF).expect("committed diff decodes");
     let produced = <NoteDiff as protocol::MutationDiff<NoteSnapshot>>::apply(&decoded, &before()).expect("committed diff applies to the before-snapshot");
     assert_eq!(produced, expected_after(), "edit-block-text/replaces-the-intro-paragraphs: committed diff did not carry before to after");
 }
@@ -116,7 +116,7 @@ async fn content_child_id_is_reminted_while_the_target_slot_is_stable() {
         panic!("edit-block-text must not change the block's kind");
     };
     assert_ne!(content.handle.child_id, before_content.handle.child_id, "edit-block-text/replaces-the-intro-paragraphs: new paragraphs must mint a new content-addressed child id");
-    assert_eq!(content.target, before_content.target, "the child SLOT is keyed by block id, so it must not move when the content changes");
+    assert_eq!(content.handle.target, before_content.handle.target, "the child SLOT is keyed by block id, so it must not move when the content changes");
     assert_eq!(*font_size, 16.0, "editing the text must not restyle the block");
     assert_eq!(block_bounds(find_block(&applied.blocks, "blk-text").expect("the text block exists")), (0.0, 0.0, 280.0, 120.0), "editing the text must not reflow the block's box");
 }

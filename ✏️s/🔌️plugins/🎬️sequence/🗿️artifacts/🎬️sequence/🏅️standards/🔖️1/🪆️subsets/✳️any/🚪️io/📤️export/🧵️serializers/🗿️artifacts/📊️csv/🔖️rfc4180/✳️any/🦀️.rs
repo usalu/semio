@@ -23,7 +23,7 @@ impl Serializer<SequenceSnapshot> for SequenceIntoCsv {
             .steps
             .iter()
             .map(|step| {
-                let value = serde_json::to_string(&step.params.0).unwrap_or_default();
+                let value = dsl::os_pack::to_json_string(&step.params.0);
                 CsvRecord { fields: vec![CsvField { value: step.id.clone(), quoted: false }, CsvField { value: step.kind.clone(), quoted: false }, CsvField { value, quoted: true }] }
             })
             .collect();

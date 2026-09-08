@@ -69,7 +69,7 @@ const ENGINES = {
 } as const;
 
 const PROBE_VERSION = "quick-xml@0.42.0 + dxf@0.6.1 + lopdf@0.44.0";
-const CRATE_BIN = "semio-drawing-oracle-probe";
+const CRATE_BIN = "semio-stdio-drawing-oracle-probe";
 
 /** ⚙️ Which reader family answers each probe — recorded per probe so the report names the engine that
  *  actually produced the numbers rather than a single blanket family for the whole subset. */

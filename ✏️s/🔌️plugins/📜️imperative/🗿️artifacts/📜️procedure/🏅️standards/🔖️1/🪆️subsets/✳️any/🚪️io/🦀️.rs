@@ -64,11 +64,11 @@ pub mod derived_composition {
         type Snapshot = ProcedureSnapshot;
         const WRITES: Dialect = DIALECT;
 
-        async fn reads() -> &'static [Dialect] {
+        fn reads() -> &'static [Dialect] {
             &[DIALECT, DEP_CSV, DEP_JSON, DEP_MD, DEP_TXT]
         }
 
-        async fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
+        fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
             for source in sources {
                 if source.dialect == DIALECT {
                     let snapshot = match &source.payload {
