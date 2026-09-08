@@ -140,9 +140,6 @@ impl Generation3dDiff {
             if let Some(value) = &self.generation_preview_text {
                 next.generation_preview_text = value.clone();
             }
-            if let Some(value) = &self.active_utility_id {
-                next.active_utility_id = value.clone();
-            }
             next
         })
     }
@@ -188,7 +185,6 @@ impl MutationDiff<Generation3dSnapshot> for Generation3dDiff {
         take!(sun_json);
         take!(selected_generation_id);
         take!(generation_preview_text);
-        take!(active_utility_id);
     }
 }
 //#endregion 🔖️Apply

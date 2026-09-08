@@ -213,7 +213,7 @@ pub mod derived_construction {
         type Mutation = LayoutMutation;
         type Diff = LayoutDiff;
         fn empty() -> Self {
-            Self { snapshot: crate::schema::default_document(), diagnostics: Vec::new() }
+            Self { snapshot: crate::standards::v1::subsets::any::schema::default_document(), diagnostics: Vec::new() }
         }
         fn from_snapshot(snapshot: Self::Snapshot) -> Self {
             Self { snapshot, diagnostics: Vec::new() }

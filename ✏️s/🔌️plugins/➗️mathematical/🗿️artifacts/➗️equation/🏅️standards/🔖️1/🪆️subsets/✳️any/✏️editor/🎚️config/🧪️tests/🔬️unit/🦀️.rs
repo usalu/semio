@@ -1,16 +1,10 @@
 
 use super::*;
 
-#[semio_framework_async_macros::async_test]
-async fn math_config_default_is_the_identity_camera_and_english_locale() {
-    let config = EquationConfig::default();
-    assert_eq!(config.camera, EquationCamera::default());
-    assert_eq!(config.locale, "en-US");
-}
 
 #[semio_framework_async_macros::async_test]
 async fn math_config_dsl_round_trips() {
-    let config = EquationConfig { camera: EquationCamera { x: 5.0, y: 6.0, zoom: 2.0 }, locale: "de-DE".into() };
+    let config = EquationConfig { camera: EquationCamera { x: 5.0, y: 6.0, zoom: 2.0 }, };
     store::os_store::test_support::assert_dsl_round_trip(&config);
     store::os_store::test_support::assert_dsl_pack_equivalence(&config);
 }
@@ -36,7 +30,3 @@ async fn config_operation_set_camera_round_trips() {
     store::os_store::test_support::assert_op_line_round_trip(&operation);
 }
 
-#[semio_framework_async_macros::async_test]
-async fn config_operation_set_locale_round_trips() {
-    store::os_store::test_support::assert_op_line_round_trip(&EquationConfigMutation::SetLocale(SetLocale { value: "de-DE".into() }));
-}

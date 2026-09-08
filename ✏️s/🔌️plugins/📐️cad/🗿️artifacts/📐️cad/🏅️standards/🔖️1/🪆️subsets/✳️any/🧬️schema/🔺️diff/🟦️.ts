@@ -46,7 +46,6 @@ export interface CadDiff {
   /** @state presence */
   selectedPrimitiveKind?: string | null;
   /** @state presence */
-  activeUtilityId?: string;
   /** @state presence */
   activeExampleId?: string | null;
   /** @state config */

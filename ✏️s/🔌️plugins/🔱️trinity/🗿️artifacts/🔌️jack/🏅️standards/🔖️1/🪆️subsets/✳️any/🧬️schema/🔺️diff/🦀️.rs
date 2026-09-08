@@ -40,8 +40,6 @@ pub struct JackDiff {
     #[state(config)]
     pub viewport_camera: Option<Camera>,
     #[state(config)]
-    pub jack_result_json: Option<String>,
-    #[state(config)]
     pub editor_selection: Option<Option<JackEditorSelection>>,
 }
 //#endregion 🔖️Diff

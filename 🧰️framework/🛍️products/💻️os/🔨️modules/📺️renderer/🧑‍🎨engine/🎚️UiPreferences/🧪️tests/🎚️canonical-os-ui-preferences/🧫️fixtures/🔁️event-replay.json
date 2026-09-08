@@ -3,20 +3,29 @@
   "events": [
     { "mutation": "setAppearance", "appearance": "dark" },
     { "mutation": "setLayout", "layout": "tablet" },
+    { "mutation": "setDriver", "driverId": "studio" },
+    { "mutation": "setCustomDriver", "driverId": "studio", "driver": { "driverId": "studio", "label": "Studio", "config": { "scale": 1.25 } } },
     { "mutation": "setLocale", "locale": "de" },
     { "mutation": "setTerminology", "terminology": "reuse" },
     { "mutation": "setLocale", "locale": "en" },
-    { "mutation": "setLocale", "locale": "de" }
+    { "mutation": "setLocale", "locale": "de" },
+    { "mutation": "setTheme", "themeId": "contrast" },
+    { "mutation": "setCustomTheme", "themeId": "contrast", "theme": { "themeId": "contrast", "label": "Contrast", "config": { "colors": { "surface": "#000000", "text": "#ffffff" } } } },
+    { "mutation": "setKeybindingOverride", "controlId": "edit.undo", "keys": "Meta+Z" }
   ],
   "expected": {
     "appearance": "dark",
     "layout": "tablet",
-    "driverId": null,
-    "customDrivers": {},
+    "driverId": "studio",
+    "customDrivers": {
+      "studio": { "driverId": "studio", "label": "Studio", "config": { "scale": 1.25 } }
+    },
     "locale": "de",
     "terminology": "reuse",
-    "themeId": null,
-    "customThemes": {},
-    "keybindingOverrides": {}
+    "themeId": "contrast",
+    "customThemes": {
+      "contrast": { "themeId": "contrast", "label": "Contrast", "config": { "colors": { "surface": "#000000", "text": "#ffffff" } } }
+    },
+    "keybindingOverrides": { "edit.undo": "Meta+Z" }
   }
 }

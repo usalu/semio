@@ -1,0 +1,8 @@
+{
+  "version": 1,
+  "grant": { "maxItems": 1, "maxBytes": 4096 },
+  "prefixes": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+  "maximumSteps": 128,
+  "terminal": { "phase": "empty", "capacity": 0, "pendingReturn": null, "posts": 0 },
+  "denied": ["executed", "in-flight", "page-owned", "content-owned", "faulted"]
+}

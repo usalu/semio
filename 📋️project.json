@@ -1161,6 +1161,13 @@
       "options": {
         "command": "bun ./📜️script.ts verify surface-view-context menu"
       }
+    },
+    "test-jack-query-ownership": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts verify jack-query-ownership"
+      }
     }
   }
 }

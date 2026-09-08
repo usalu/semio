@@ -49,7 +49,6 @@ message CadDiff {
   // @state presence
   optional string selected_primitive_kind = 22;
   // @state presence
-  optional string active_utility_id = 23;
   // @state presence
   optional string active_example_id = 24;
   // @state config

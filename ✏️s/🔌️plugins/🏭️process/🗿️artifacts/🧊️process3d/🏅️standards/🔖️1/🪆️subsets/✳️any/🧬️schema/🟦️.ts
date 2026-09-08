@@ -20,7 +20,6 @@ export interface Process3dArtifact {
   /** @state presence */
   selectedFaceId?: number;
   /** @state presence */
-  activeUtilityId: string;
   /** @state config */
   selectionMethod: string;
   /** @state config */
@@ -143,7 +142,6 @@ export function parseProcess3dArtifact(value: unknown, at = "$"): Process3dArtif
     resolvedUpTo: row["resolvedUpTo"] === undefined ? undefined : processProcess3dArtifactGuardInteger(row["resolvedUpTo"], `${at}.resolvedUpTo`),
     selectedId: row["selectedId"] === undefined ? undefined : processProcess3dArtifactGuardString(row["selectedId"], `${at}.selectedId`),
     selectedFaceId: row["selectedFaceId"] === undefined ? undefined : processProcess3dArtifactGuardInteger(row["selectedFaceId"], `${at}.selectedFaceId`),
-    activeUtilityId: processProcess3dArtifactGuardString(row["activeUtilityId"], `${at}.activeUtilityId`),
     selectionMethod: processProcess3dArtifactGuardString(row["selectionMethod"], `${at}.selectionMethod`),
     engagementInput: processProcess3dArtifactGuardString(row["engagementInput"], `${at}.engagementInput`),
     cameraPositionX: processProcess3dArtifactGuardNumber(row["cameraPositionX"], `${at}.cameraPositionX`),

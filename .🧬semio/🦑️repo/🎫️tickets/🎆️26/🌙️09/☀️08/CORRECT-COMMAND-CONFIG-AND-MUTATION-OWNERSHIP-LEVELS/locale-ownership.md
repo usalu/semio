@@ -2,7 +2,7 @@
 
 ## Result
 
-The persisted local OS preference authority is `UiPreferences` in the shell schema and `os.config.ui-preferences` in the OS config mutation vocabulary. The record has optional selections for appearance, layout, driver, locale, terminology, and theme, plus keyed custom drivers, custom themes, and keybinding overrides. Absence of locale remains representable. Draft driver/theme editor state stays ephemeral and is not part of this config facet.
+The persisted local OS preference authority is `UiPreferences` in `semio-framework-os-config` and `os.config.ui-preferences` in the OS config mutation vocabulary. The shell Rust and TypeScript schema surfaces reexport the config-owned values. The record has optional selections for appearance, layout, driver, locale, terminology, and theme, plus keyed custom drivers, custom themes, and keybinding overrides. Absence of locale remains representable. Draft driver/theme editor state stays ephemeral and is not part of this config facet.
 
 The plugin author API now receives the canonical `ViewModel` directly. `ArtifactApp`, `ArtifactEditor`, and `ArtifactViewer` render and context-menu methods receive `&ViewModel`; request-context wrappers and Editor/Viewer adapters forward the same value. `VcsArtifactApp` forwards its host-provided value rather than deriving a copied locale context. Context-menu JSON and packed wire requests require `viewState` and forward it through the object-safe plugin boundary. The contract test rejects a context-menu request without `viewState` and verifies German/reuse axes survive decoding.
 
@@ -20,7 +20,7 @@ The plugin author API now receives the canonical `ViewModel` directly. `Artifact
 - `SetCustomTheme`
 - `SetKeybindingOverride`
 
-Scalar payloads accept an optional value so an inverse can restore an unset host-derived preference. Keyed custom values accept an optional value so removal is a first-class event and inverses restore the prior entry. Every leaf owns its Rust source, TypeScript face, JSON payload schema, and mutation descriptor under `🎚️config/🧬️schema/🧬️mutations/🎨️ui-preferences/`.
+Scalar payloads accept an optional value so an inverse can restore an unset host-derived preference. Keyed custom values accept an optional value so removal is a first-class event and inverses restore the prior entry. Every leaf owns its Rust source, TypeScript face, JSON payload schema, and mutation descriptor directly under `🎚️config/🧬️schema/🧬️mutations/`; the `🎨️ui-preferences` aggregate composes those leaves.
 
 The whole-record `UiPreferencesDiff` is owned by the OS config facet. This avoids an orphan implementation on the shell-owned `UiPreferences` value while retaining one canonical preference record.
 
@@ -34,9 +34,7 @@ The whole-record `UiPreferencesDiff` is owned by the OS config facet. This avoid
   - Ajv strict validation accepted all nine language-neutral mutations.
   - TypeScript fold matched the committed after snapshot.
   - Reversed TypeScript inverses restored the committed before snapshot.
-- Passed: `git diff --check` for the OS config, plugin SDK, plugin SDK contract tests, and ticket validation files at the time it was run.
-- Pending at handoff: ticket-local Bun+Nx target `abstraction-ownership-validation:plugin-host-check`, unified exec session `87769`, compiling with `CARGO_TARGET_DIR=../🗑️generated/cargo-plugin-host` and `CARGO_NET_OFFLINE=true`. Its output is live PTY output; no completion has been claimed.
-- Also pending: the first shared-target `@semio-tech/framework-plugin-host:check`, unified exec session `94189`, remains queued behind unrelated workspace Cargo/Nx work. It must not be treated as a result.
+- Passed: ticket-local Bun+Nx target `abstraction-ownership-validation:os-config-check`, session `13984`, after a production build of `semio-framework-os-config` and its dependencies (5m23s).
 
 ## Files Owned by This Pass
 

@@ -63,6 +63,7 @@ impl ArtifactViewer for LowpolyViewer {
         _doc: &ArtifactView<'_, Self::Snapshot>,
         _cfg: &ConfigView<'_, Self::Config>,
         _interaction: &semio_framework_plugin::app::InteractionView<'_>,
+        _view_state: Option<&semio_framework_plugin::ViewModel>,
         _engines: &EngineHandles,
     ) -> Result<ViewEmit<Self::ConfigMutation>, Fault> {
         Ok(ViewEmit::default())

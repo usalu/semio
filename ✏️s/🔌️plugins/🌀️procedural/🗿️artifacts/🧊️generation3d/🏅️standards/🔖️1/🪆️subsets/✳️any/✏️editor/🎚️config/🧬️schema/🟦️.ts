@@ -15,9 +15,6 @@ export interface Generation3dConfig {
   /** @state config */
   generationPreviewText?: string;
   /** @state config */
-  activeUtilityId: string;
-  /** @state config */
-  /** @state config */
   previewEvalText?: string;
 }
 

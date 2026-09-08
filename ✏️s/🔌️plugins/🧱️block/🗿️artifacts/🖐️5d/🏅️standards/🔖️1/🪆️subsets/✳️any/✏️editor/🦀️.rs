@@ -181,7 +181,7 @@ fn block5d_retained_reduce(
     history: &semio_framework_plugin::HistoryView,
     _interaction: &protocol::InteractionState,
     _hover: &semio_framework_plugin::app::InteractionHoverState,
-    _context: Option<&semio_framework_plugin::ArtifactOwnedToolJobContext<EditorApp<Block5dPlayApp>>>,
+    _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<Block5dPlayApp>>>,
     operation: &AppOperationContext,
 ) -> Result<Emit<Block5dMutation, Block5dConfigMutation, NoDraftMutation>, Fault> {
     command.dispatch(&ArtifactView::with_operation(snapshot, history, operation.clone()), &ConfigView { snapshot: config })

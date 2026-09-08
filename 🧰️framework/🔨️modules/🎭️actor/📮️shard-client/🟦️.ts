@@ -595,6 +595,7 @@ export interface ShardInstanceLifecycleLease {
   readonly interruptedTurn: unknown;
   readonly pendingReturn: OwnedShardReturn | null;
   reserveReturn(maximumResponses: number, grant: ResidentGrant): ShardReturnAdmission;
+  retireUnusedReturn(grant: ResidentGrant): ResidentStep;
   open(input: ShardInstanceOpenInput, budget: ShardBudget): Promise<unknown>;
   poll(budget: ShardBudget): Promise<unknown>;
   beginClose(): ActorInstanceCloseRequest;
@@ -665,9 +666,9 @@ type ShardInstanceOwner = {
 //#region 📤️CapturedReturnAuthority
 export type ShardReturnReport = Exclude<ActorReturnResult, { kind: "page" }> | { readonly kind: "page"; readonly receipt: ActorReturnPageReceipt };
 export type ShardReturnAdmission = { readonly step: ResidentStep; readonly source: OwnedShardReturn | null };
-type ReturnAdmissionPhase = "empty" | "preparing" | "cell-held" | "claiming" | "claimed" | "record-admitting" | "record-held" | "installing" | "installed" | "state-held" | "roster-held" | "facade-held" | "published" | "rejected";
+type ReturnAdmissionPhase = "empty" | "preparing" | "cell-held" | "claiming" | "claimed" | "record-admitting" | "record-held" | "installing" | "installed" | "state-held" | "roster-held" | "facade-held" | "published" | "closing" | "rejected";
 type CapturedReturnWork = { readonly kind: "execute"; readonly events: readonly ShardEventEnvelope[] } | { readonly kind: "retry" | "poll" | "cancel" };
-type CapturedReturn = { readonly instance: ShardInstanceOwner; outputs: OwnedActorTurnOutputs | null; readonly client: ShardClient; facade: OwnedShardReturn | null; origin: ActorReturnOrigin | null; identity: ActorReturnIdentity | null; events: readonly ShardEventEnvelope[] | null; latest: OwnedActorTurnOutput | null; page: OwnedShardReturnPage | null; content: OwnedKernelReturnContent | null; inFlight: boolean; retry: boolean; failed: boolean; fault: unknown; cancelled: boolean; retired: boolean };
+type CapturedReturn = { instance: ShardInstanceOwner | null; outputs: OwnedActorTurnOutputs | null; client: ShardClient | null; facade: OwnedShardReturn | null; origin: ActorReturnOrigin | null; identity: ActorReturnIdentity | null; events: readonly ShardEventEnvelope[] | null; latest: OwnedActorTurnOutput | null; page: OwnedShardReturnPage | null; content: OwnedKernelReturnContent | null; inFlight: boolean; retry: boolean; failed: boolean; fault: unknown; cancelled: boolean; retired: boolean };
 const RETURN_MINT = Object.freeze({});
 const NO_RETURN_FAULT = Object.freeze({});
 const returnDomainEnvelope = Object.freeze({ bytes: 800, slots: 4, owners: 4 });
@@ -688,22 +689,23 @@ export class OwnedShardReturn {
   static matchesOwner(source: unknown, owner: OwnedUiInstance, activation: ShardActorActivationLease, lifetime: ActorInstanceLifetime): source is OwnedShardReturn {
     if (source === null || typeof source !== "object" || !(#state in source)) return false;
     const instance = source.#state.instance;
-    return instance.host === owner && instance.operation === activation && instance.lifetime !== null && actorInstanceLifetimeEquals(instance.lifetime, lifetime);
+    return instance !== null && instance.host === owner && instance.operation === activation && instance.lifetime !== null && actorInstanceLifetimeEquals(instance.lifetime, lifetime);
   }
   get origin(): ActorReturnOrigin | null { return this.#state.origin; }
   get page(): OwnedShardReturnPage | null { return this.#state.page; }
   get content(): OwnedKernelReturnContent | null { return this.#state.content; }
   bindContent(content: OwnedKernelReturnContent): boolean {
     const state = this.#state; const instance = state.instance;
-    if (state.content !== null || !instance.host || !instance.lifetime || !OwnedKernelReturnContent.matches(content, this, instance.host, instance.operation, instance.lifetime)) return false;
+    if (!instance || instance.returnPhase !== "published" || state.content !== null || !instance.host || !instance.lifetime || !OwnedKernelReturnContent.matches(content, this, instance.host, instance.operation, instance.lifetime)) return false;
     state.content = content; return true;
   }
   get retainedResponses(): number { return this.#state.outputs?.pending ?? 0; }
-  reserveResponse(grant: ResidentGrant): ResidentStep { return reserveCapturedResponse(this.#state.client, this.#state, grant); }
-  execute(events: readonly ShardEventEnvelope[], budget: ShardBudget): Promise<ShardReturnReport> { return submitCapturedReturn(this.#state.client, this.#state, { kind: "execute", events }, budget); }
-  retry(budget: ShardBudget): Promise<ShardReturnReport> { return submitCapturedReturn(this.#state.client, this.#state, { kind: "retry" }, budget); }
-  poll(budget: ShardBudget): Promise<ShardReturnReport> { return submitCapturedReturn(this.#state.client, this.#state, { kind: "poll" }, budget); }
-  cancel(budget: ShardBudget): Promise<ShardReturnReport> { return submitCapturedReturn(this.#state.client, this.#state, { kind: "cancel" }, budget); }
+  reserveResponse(grant: ResidentGrant): ResidentStep { return this.#state.client ? reserveCapturedResponse(this.#state.client, this.#state, grant) : residentStep("rejected", "actor-return.closed"); }
+  execute(events: readonly ShardEventEnvelope[], budget: ShardBudget): Promise<ShardReturnReport> { return this.#submit({ kind: "execute", events }, budget); }
+  retry(budget: ShardBudget): Promise<ShardReturnReport> { return this.#submit({ kind: "retry" }, budget); }
+  poll(budget: ShardBudget): Promise<ShardReturnReport> { return this.#submit({ kind: "poll" }, budget); }
+  cancel(budget: ShardBudget): Promise<ShardReturnReport> { return this.#submit({ kind: "cancel" }, budget); }
+  #submit(work: CapturedReturnWork, budget: ShardBudget): Promise<ShardReturnReport> { return this.#state.client ? submitCapturedReturn(this.#state.client, this.#state, work, budget) : Promise.reject(new Error("actor-return.closed")); }
 }
 
 /** 📄️ Only exact captured response settlement mints this page; its raw response remains strongly retained. */
@@ -717,7 +719,7 @@ export class OwnedShardReturnPage {
   static matchesOwner(page: unknown, owner: OwnedUiInstance, activation: ShardActorActivationLease, lifetime: ActorInstanceLifetime): page is OwnedShardReturnPage {
     if (page === null || typeof page !== "object" || !(#state in page)) return false;
     const instance = page.#state.instance;
-    return instance.host === owner && instance.operation === activation && instance.lifetime !== null && actorInstanceLifetimeEquals(instance.lifetime, lifetime) && page.#receipt.identity.origin.activationGeneration === lifetime.activationGeneration && page.#output.responseEnvelope !== null;
+    return instance !== null && instance.host === owner && instance.operation === activation && instance.lifetime !== null && actorInstanceLifetimeEquals(instance.lifetime, lifetime) && page.#receipt.identity.origin.activationGeneration === lifetime.activationGeneration && page.#output.responseEnvelope !== null;
   }
   get receipt(): ActorReturnPageReceipt { return this.#receipt; }
   byteAt(index: number): number {
@@ -1500,6 +1502,7 @@ export class ShardClient {
       get interruptedTurn() { return owner.interruptedTurn; },
       get pendingReturn() { return owner.activation.returned?.instance === owner ? owner.activation.returned.facade : null; },
       reserveReturn: (maximumResponses: number, grant: ResidentGrant) => this.reserveInstanceReturn(owner, maximumResponses, grant),
+      retireUnusedReturn: (grant: ResidentGrant) => this.retireUnusedInstanceReturn(owner, grant),
       open: async (input: ShardInstanceOpenInput, budget: ShardBudget): Promise<unknown> => {
         if (owner.phase !== "opening") throw new Error("actor-lifecycle.open-already-captured");
         operation.assertActive();
@@ -1532,6 +1535,7 @@ export class ShardClient {
   }
 
   private reserveInstanceReturn(instance: ShardInstanceOwner, maximumResponses: number, grant: ResidentGrant): ShardReturnAdmission {
+    if (instance.returnPhase === "closing") return returnAdmission("rejected", "actor-return.closing");
     if (!Number.isSafeInteger(maximumResponses) || maximumResponses < 1 || maximumResponses > 0xffffffff) return returnAdmission("rejected", "actor-return.capacity");
     if (!residentGrant(grant, 64)) return returnAdmission("blocked", "actor-return.admission");
     if (instance.returnCapacity !== 0 && instance.returnCapacity !== maximumResponses || instance.activation.returned !== null && instance.activation.returned.instance !== instance) return returnAdmission("rejected", "actor-return.original-owner");
@@ -1619,8 +1623,49 @@ export class ShardClient {
     }
   }
 
+  /** 🧺️ Only a never-executed original return can retire without a guest return/page/content discharge. */
+  private retireUnusedInstanceReturn(instance: ShardInstanceOwner, grant: ResidentGrant): ResidentStep {
+    if (!residentGrant(grant, 64)) return residentStep("blocked", "actor-return.close-grant");
+    const state = instance.activation.returned;
+    if (state && state.instance !== instance && !(state.instance === null && instance.returnPhase === "closing")) return residentStep("rejected", "actor-return.foreign-owner");
+    if (instance.inFlight || state?.inFlight) return residentStep("blocked", "actor-return.request-pending");
+    if (instance.returnFault !== NO_RETURN_FAULT || state && (state.origin !== null || state.identity !== null || state.events !== null || state.page !== null || state.content !== null || state.retry || state.failed || state.fault !== NO_RETURN_FAULT)) return residentStep("blocked", "actor-return.domain-discharge-required");
+    if (instance.returnPhase === "empty" && state === null && instance.returnCell === null && instance.returnRecord === null && instance.returnCapacity === 0) return residentStep("complete", "actor-return.unused-retired");
+    if (!instance.returnCell) {
+      const cell = this.#residentLedger.preparedAdmission(instance);
+      if (!cell) return residentStep("blocked", "actor-return.cell-handoff");
+      instance.returnCell = cell; instance.returnPhase = "closing";
+      return residentStep("pending", "actor-return.cell-observation", 64);
+    }
+    instance.returnPhase = "closing";
+    const cell = instance.returnCell;
+    if (cell.hasFailure) return residentStep("blocked", "actor-return.admission-fault");
+    if (state?.outputs) {
+      if (!state.outputs.terminalIsEmpty()) { state.outputs.beginClose(); return residentChild(state.outputs.closeStep(grant), grant); }
+      state.outputs = null; state.latest = null;
+      return residentStep("pending", "actor-return.roster-detachment", 64);
+    }
+    if (state?.latest) return residentStep("blocked", "actor-return.response-held");
+    if (state && (state.instance !== null || state.client !== null || state.facade !== null)) {
+      if (!residentGrant(grant, 128)) return residentStep("blocked", "actor-return.state-detachment");
+      state.instance = null; state.client = null; state.facade = null;
+      return residentStep("pending", "actor-return.state-detachment", 128);
+    }
+    const record = instance.returnRecord ?? cell.result?.record ?? null;
+    if (record && instance.returnRecord !== record) { instance.returnRecord = record; return residentStep("pending", "actor-return.record-observation", 64); }
+    if (record?.matchesShell(instance)) { record.beginClose(); return record.detach(instance, grant); }
+    if (!cell.terminalIsEmpty()) { cell.beginClose(); return residentChild(cell.closeStep(grant), grant); }
+    if (!OwnedResidentRetirement.matches(cell.retirement, cell) || record && (!record.terminalIsEmpty() || !OwnedResidentRetirement.matches(record.retirement, record) || record.detachment !== null && !OwnedResidentRecordDetachment.matches(record.detachment, record, instance))) return residentStep("blocked", "actor-return.retirement-proof");
+    if (!residentGrant(grant, 128)) return residentStep("blocked", "actor-return.parent-detachment");
+    if (instance.activation.returned !== state) return residentStep("rejected", "actor-return.replaced-owner");
+    instance.activation.returned = null; instance.returnCell = null; instance.returnRecord = null; instance.returnCapacity = 0; instance.returnPhase = "empty";
+    return residentStep("complete", "actor-return.unused-retired", 128);
+  }
+
   private reserveReturnResponse(state: CapturedReturn, grant: ResidentGrant): ResidentStep {
-    const instance = state.instance; const activation = instance.activation; const slot = activation.slot;
+    const instance = state.instance;
+    if (!instance) return residentStep("rejected", "actor-return.closed");
+    const activation = instance.activation; const slot = activation.slot;
     if (!residentGrant(grant, 64)) return residentStep("blocked", "actor-return.response-grant");
     if (!activation.available || !slot.available || this.shards[slot.index] !== slot) return residentStep("rejected", "actor-return.worker-lost");
     if (state.inFlight || instance.inFlight) return residentStep("blocked", "actor-return.request-pending");
@@ -1637,7 +1682,9 @@ export class ShardClient {
   }
 
   private async sendCapturedReturn(state: CapturedReturn, work: CapturedReturnWork, budget: ShardBudget): Promise<ShardReturnReport> {
-    const instance = state.instance; const activation = instance.activation; const slot = activation.slot;
+    const instance = state.instance;
+    if (!instance) throw new Error("actor-return.closed");
+    const activation = instance.activation; const slot = activation.slot;
     if (!activation.available || !slot.available || this.shards[slot.index] !== slot) throw new Error("actor-return.worker-lost");
     if (state.inFlight || instance.inFlight) throw new Error("actor-return.request-pending");
     if (state.failed && work.kind !== "cancel") throw new Error("actor-return.owner-fault");
@@ -1672,6 +1719,7 @@ export class ShardClient {
   }
 
   private acceptCapturedReturn(state: CapturedReturn, drive: ActorReturnDrive, result: ActorReturnResult, output: OwnedActorTurnOutput): void {
+    if (!state.instance) throw new Error("actor-return.closed");
     if (result.kind === "protocolFault") { state.failed = true; return; }
     const identity = result.kind === "page" ? result.receipt.identity : result.kind === "pending" || result.kind === "retired" ? result.identity : result.kind === "control" ? result.control.kind === "inputAck" ? result.control.receipt.identity : result.control.identity : null;
     const origin = result.kind === "refused" ? result.origin : identity!.origin;

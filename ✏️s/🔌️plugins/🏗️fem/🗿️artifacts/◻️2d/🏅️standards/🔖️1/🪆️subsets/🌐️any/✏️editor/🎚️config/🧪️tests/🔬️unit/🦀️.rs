@@ -1,15 +1,6 @@
 
 use super::*;
 
-#[test]
-fn fem2d_config_default_is_static_display_with_default_camera_and_locale() {
-    let config = Fem2dConfig::default();
-    assert_eq!(config.result_mode, "static");
-    assert!(config.result_source_id.is_none());
-    assert_eq!(config.result_mode_index, 0);
-    assert_eq!(config.camera, FemCamera::default());
-    assert_eq!(config.locale, "en-US");
-}
 
 /// 🧮️ `Fem2dConfig`'s `MutationDiff` is a whole-record replace, mirroring `ShootingConfig`'s
 /// identical B1 pilot pattern: `apply` ignores `base` entirely.
@@ -48,13 +39,6 @@ fn set_result_display_config_operation_round_trips() {
     assert_eq!(next.result_mode_index, 2);
 }
 
-#[test]
-fn set_locale_config_operation_round_trips() {
-    let base = Fem2dConfig::default();
-    let op = Fem2dConfigMutation::SetLocale { value: "de-DE".into() };
-    let next = op.diff(&base).diff().clone();
-    assert_eq!(next.locale, "de-DE");
-}
 
 /// 🧷️ LAW: every `Fem2dConfigMutation` variant owns exactly one `MutationLeafDescriptor`, and
 /// `descriptor()` returns the one whose `aggregate_variant` names it.
@@ -64,7 +48,6 @@ fn every_config_mutation_variant_has_its_own_descriptor() {
         Fem2dConfigMutation::Snapshot { config: Fem2dConfig::default() },
         Fem2dConfigMutation::SetResultDisplay { source_id: None, mode: "static".into(), mode_index: 0 },
         Fem2dConfigMutation::SetCamera { camera: FemCamera::default() },
-        Fem2dConfigMutation::SetLocale { value: "de-DE".into() },
     ];
     assert_eq!(<Fem2dConfigMutation as Mutation<Fem2dConfig>>::DESCRIPTORS.len(), variants.len());
     for (index, variant) in variants.iter().enumerate() {
@@ -80,5 +63,4 @@ fn fem2d_config_operation_text_round_trips_every_variant() {
     semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem2dConfigMutation::Snapshot { config: Fem2dConfig::default() });
     semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem2dConfigMutation::SetResultDisplay { source_id: Some("dead".into()), mode: "modal".into(), mode_index: 1 });
     semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem2dConfigMutation::SetCamera { camera: FemCamera { x: 1.0, y: 2.0, zoom: 1.5 } });
-    semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Fem2dConfigMutation::SetLocale { value: "de-DE".into() });
 }

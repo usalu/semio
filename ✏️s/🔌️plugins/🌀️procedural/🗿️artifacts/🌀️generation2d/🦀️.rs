@@ -142,10 +142,10 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
 #[cfg(feature = "component-app-assembly")]
 pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
     semio_framework_plugin::ArtifactDeclaration::builder(definition()?)
-        .schema(crate::standards::v1::subsets::any::schema::generation2d_artifact_schema_descriptor())
-        .inferences([crate::standards::v1::subsets::any::schema::inferences::generation2d_artifact_inference_descriptor()])
-        .composers(crate::standards::v1::subsets::any::io::io_registry::entries())
-        .document_codec::<semio_framework_plugin::EditorApp<crate::editor::generation2d::Generation2dPlayApp>>()
+        .schema(standards::v1::subsets::any::schema::generation2d_artifact_schema_descriptor())
+        .inferences([standards::v1::subsets::any::schema::inferences::generation2d_artifact_inference_descriptor()])
+        .composers(standards::v1::subsets::any::io::io_registry::entries())
+        .document_codec::<semio_framework_plugin::EditorApp<editor::generation2d::Generation2dPlayApp>>()
         .try_build()
 }
 //#endregion 🔖️Declaration

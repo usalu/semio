@@ -20,7 +20,6 @@ async fn round_trip(config: &SpaceConfig, operation: &SpaceConfigMutation) -> Sp
 async fn space_config_default_matches_the_expected_sticky_defaults() {
     let config = SpaceConfig::default();
     assert_eq!(config.active_panel_tab, S_PLAY_CATALOGUE_TAB_ID);
-    assert_eq!(config.locale, "en-US");
     assert!(config.camera.is_empty());
 }
 
@@ -62,7 +61,6 @@ async fn space_config_op_text_round_trips_every_variant() {
     store::os_store::test_support::assert_op_line_round_trip(&SpaceConfigMutation::SetSpaceId { space_id: Some("demo".into()) });
     store::os_store::test_support::assert_op_line_round_trip(&SpaceConfigMutation::SetClient { client_id: Some("c1".into()), client_name: Some("Ada".into()) });
     store::os_store::test_support::assert_op_line_round_trip(&SpaceConfigMutation::SetActivePanelTab { tab_id: "s-play-catalogue".into() });
-    store::os_store::test_support::assert_op_line_round_trip(&SpaceConfigMutation::SetLocale { value: "de".into() });
 }
 
 #[semio_framework_async_macros::async_test]

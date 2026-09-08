@@ -26,7 +26,6 @@ export interface Generation3dArtifact {
   /** @state artifact */
   generationPreviewText?: string;
   /** @state presence */
-  activeUtilityId: string;
   /** @state config */
 }
 
@@ -120,7 +119,6 @@ export function parseGeneration3dArtifact(value: unknown, at = "$"): Generation3
     sunJson: proceduralGeneration3dArtifactGuardString(row["sunJson"], `${at}.sunJson`),
     selectedGenerationId: row["selectedGenerationId"] === undefined ? undefined : proceduralGeneration3dArtifactGuardString(row["selectedGenerationId"], `${at}.selectedGenerationId`),
     generationPreviewText: row["generationPreviewText"] === undefined ? undefined : proceduralGeneration3dArtifactGuardString(row["generationPreviewText"], `${at}.generationPreviewText`),
-    activeUtilityId: proceduralGeneration3dArtifactGuardString(row["activeUtilityId"], `${at}.activeUtilityId`),
   };
 }
 

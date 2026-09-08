@@ -1,45 +1,4 @@
-//! 🔎️ 🔎️ Trinity Jack app command — `run-query`.
+//! 🔎️ Retained Jack query command and its single-execution result publication.
 
-use crate::standards::v1::subsets::any::schema::mutations::text::TrinityGraphMutation;
-use crate::JackSnapshot;
-use crate::core;
-use crate::editor::jack::config::JackConfigMutation;
-use semio_framework_plugin::Emit;
-
-/// 🔎️ Runs a jack query against the fixture, returning `(result_json, forward operations)`; a parse/execute
-/// failure yields an error result and no operations (no document mutation).
-pub(crate) fn run_jack_query(fixture: &JackSnapshot, query: &str) -> (String, Vec<TrinityGraphMutation>) {
-    let graph = match crate::Graph::from_fixture(fixture.clone()) {
-        Ok(graph) => graph,
-        Err(error) => return (error_result_json(&error.to_string()), Vec::new()),
-    };
-    let parsed = match core::parse(query) {
-        Ok(parsed) => parsed,
-        Err(error) => return (error_result_json(&error), Vec::new()),
-    };
-    match crate::executor::execute(&graph, &parsed) {
-        Ok((result, operations)) => (pack::to_json_string(&result), operations),
-        Err(error) => (error_result_json(&error), Vec::new()),
-    }
-}
-
-pub(crate) fn preset_query(preset_id: &str) -> &'static str {
-    match preset_id {
-        "branch-chain" => "MATCH (a:Piece)-[r:Connection]->(b:Piece) RETURN a, r, b",
-        _ => crate::editor::jack::TRINITY_JACK_DEFAULT_QUERY,
-    }
-}
-
-fn error_result_json(message: &str) -> String {
-    pack::json!({ "error": message }).to_string()
-}
-
-pub(crate) fn run_query(fixture: &JackSnapshot, query: &Option<String>, current_query: &str) -> Emit<TrinityGraphMutation, JackConfigMutation> {
-    let resolved = query.as_deref().filter(|value| !value.trim().is_empty()).map_or_else(|| current_query.to_string(), str::to_string);
-    let (result_json, operations) = run_jack_query(fixture, &resolved);
-    Emit {
-        artifact_mutations: operations,
-        config_mutations: vec![JackConfigMutation::SetQuery(crate::editor::jack::config::SetQuery { value: resolved }), JackConfigMutation::SetResult(crate::editor::jack::config::SetResult { value: result_json })],
-        ..Default::default()
-    }
-}
+#[path = "🧵️job/🦀️.rs"]
+pub(crate) mod job;

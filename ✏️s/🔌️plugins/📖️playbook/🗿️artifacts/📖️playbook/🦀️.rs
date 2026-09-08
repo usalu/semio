@@ -62,7 +62,7 @@ pub fn empty_playbook_snapshot() -> PlaybookSnapshot {
 
 /// 🧱️ Flattens all blocks across steps — delegates to the kernel helper.
 pub fn flatten_playbook_blocks(snapshot: &PlaybookSnapshot) -> Vec<PlaybookBlock> {
-    crate::playbook::flatten_playbook_blocks(&snapshot.as_kernel()).into_iter().cloned().collect()
+    playbook::flatten_playbook_blocks(&snapshot.as_kernel()).into_iter().cloned().collect()
 }
 //#endregion 🔖️Types
 
@@ -327,21 +327,21 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
 pub fn artifact<A: PlaybookApplication>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<A> {
     use semio_framework_plugin::app::declarations::ArtifactDeclaration;
     use store::os_io::ArtifactKindId;
-    ArtifactDeclaration { kind: ArtifactKindId::parse("s.playbook.playbook").expect("canonical playbook kind"), localization: &[], standards: vec![crate::standards::v1::standard()] }
+    ArtifactDeclaration { kind: ArtifactKindId::parse("s.playbook.playbook").expect("canonical playbook kind"), localization: &[], standards: vec![standards::v1::standard()] }
 }
 
 /// 📖️ Application variants required to assemble the Playbook artifact.
 pub trait PlaybookApplication:
     semio_framework_plugin::PluginApp
-    + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::EditorApp<crate::editor::playbook::PlaybookPlayApp>>>
-    + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::ViewerApp<crate::viewer::playbook::PlaybookViewer>>>
+    + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::EditorApp<editor::playbook::PlaybookPlayApp>>>
+    + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::ViewerApp<viewer::playbook::PlaybookViewer>>>
 {
 }
 
 impl<A> PlaybookApplication for A where
     A: semio_framework_plugin::PluginApp
-        + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::EditorApp<crate::editor::playbook::PlaybookPlayApp>>>
-        + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::ViewerApp<crate::viewer::playbook::PlaybookViewer>>>
+        + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::EditorApp<editor::playbook::PlaybookPlayApp>>>
+        + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::ViewerApp<viewer::playbook::PlaybookViewer>>>
 {
 }
 
@@ -358,28 +358,28 @@ pub fn pilot_languages() -> &'static [dsl::LanguageSpec] {
                     id: "playbook.playbook",
                     extension: Some("playbook"),
                     role: dsl::LanguageRole::Document,
-                    grammar: Some(crate::document_dsl::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(crate::document_dsl::COMPONENT_GRAMMAR_PATH),
-                    protocol: Some(crate::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(crate::snapshot::pack::COMPONENT_PROTOCOL_PATH),
+                    grammar: Some(document_dsl::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(document_dsl::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(snapshot::pack::COMPONENT_PROTOCOL_PATH),
                     hooks: dsl::passthrough_hooks("playbook.playbook"),
                 },
                 dsl::LanguageSpec {
                     id: "playbook.playbook.op",
                     extension: None,
                     role: dsl::LanguageRole::Ops,
-                    grammar: Some(crate::op::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(crate::op::COMPONENT_GRAMMAR_PATH),
-                    protocol: Some(crate::spr::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(crate::spr::COMPONENT_PROTOCOL_PATH),
+                    grammar: Some(op::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(op::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(spr::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(spr::COMPONENT_PROTOCOL_PATH),
                     hooks: dsl::passthrough_hooks("playbook.playbook.op"),
                 },
                 dsl::LanguageSpec {
                     id: "playbook.playbook.diff",
                     extension: None,
                     role: dsl::LanguageRole::Diff,
-                    grammar: Some(crate::schema::diff::text::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(crate::schema::diff::text::COMPONENT_GRAMMAR_PATH),
+                    grammar: Some(schema::diff::text::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(schema::diff::text::COMPONENT_GRAMMAR_PATH),
                     protocol: None,
                     protocol_path: None,
                     hooks: dsl::passthrough_hooks("playbook.playbook.diff"),
@@ -390,8 +390,8 @@ pub fn pilot_languages() -> &'static [dsl::LanguageSpec] {
                     role: dsl::LanguageRole::Pack,
                     grammar: None,
                     grammar_path: None,
-                    protocol: Some(crate::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(crate::snapshot::pack::COMPONENT_PROTOCOL_PATH),
+                    protocol: Some(snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(snapshot::pack::COMPONENT_PROTOCOL_PATH),
                     hooks: dsl::passthrough_hooks("playbook.pack"),
                 },
                 dsl::LanguageSpec {
@@ -400,8 +400,8 @@ pub fn pilot_languages() -> &'static [dsl::LanguageSpec] {
                     role: dsl::LanguageRole::Spr,
                     grammar: None,
                     grammar_path: None,
-                    protocol: Some(crate::spr::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(crate::spr::COMPONENT_PROTOCOL_PATH),
+                    protocol: Some(spr::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(spr::COMPONENT_PROTOCOL_PATH),
                     hooks: dsl::passthrough_hooks("playbook.spr"),
                 },
             ]
@@ -921,6 +921,3 @@ pub mod viewer {
     }
 }
 
-//#region 📚️Examples
-pub use standards::v1::subsets::any::examples;
-//#endregion 📚️Examples

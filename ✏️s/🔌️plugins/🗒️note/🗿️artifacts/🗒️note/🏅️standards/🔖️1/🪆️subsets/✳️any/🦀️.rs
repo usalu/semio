@@ -19,13 +19,18 @@ fn inference_descriptors() -> &'static [::semio_framework_schema::ArtifactInfere
     DESCRIPTORS.get_or_init(|| vec![schema::inferences::note_artifact_inference_descriptor()]).as_slice()
 }
 
-pub fn subset() -> SubsetDeclaration<crate::NoteApps> {
+pub fn subset<PA>() -> SubsetDeclaration<PA>
+where
+    PA: semio_framework_plugin::PluginApp
+        + From<semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<crate::editor::note::NotePlayApp>>>
+        + From<semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<crate::viewer::note::NoteViewer>>>,
+{
     SubsetDeclaration {
         dialect: crate::NOTE_DIALECT,
         schema: SchemaDeclaration { descriptor: schema::note_artifact_schema_descriptor(), inferences: inference_descriptors(), inference_services: Vec::new() },
         io: io::io(),
-        viewer: viewer_surface::<viewer::NoteViewer, crate::NoteApps>(viewer::create_note_viewer()),
-        editor: editor_surface::<editor::NotePlayApp, crate::NoteApps>(editor::create_note_app()),
+        viewer: viewer_surface::<viewer::NoteViewer, PA>(viewer::create_note_viewer()),
+        editor: editor_surface::<editor::NotePlayApp, PA>(editor::create_note_app()),
         examples: examples(),
     }
 }

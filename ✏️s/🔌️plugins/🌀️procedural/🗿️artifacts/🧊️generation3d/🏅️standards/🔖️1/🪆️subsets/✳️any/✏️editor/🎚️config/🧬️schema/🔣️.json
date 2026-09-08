@@ -9,8 +9,7 @@
     "showMode",
     "camera",
     "previewCamera",
-    "sunJson",
-    "activeUtilityId"
+    "sunJson"
   ],
   "properties": {
     "lodMode": {
@@ -38,10 +37,6 @@
       "x-semio-state": "config"
     },
     "generationPreviewText": {
-      "type": "string",
-      "x-semio-state": "config"
-    },
-    "activeUtilityId": {
       "type": "string",
       "x-semio-state": "config"
     },

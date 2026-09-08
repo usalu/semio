@@ -25,7 +25,6 @@ message Process3dDiff {
   // @state presence
   optional uint32 selected_face_id = 13;
   // @state presence
-  optional string active_utility_id = 14;
   // @state config
   optional string selection_method = 15;
   // @state config

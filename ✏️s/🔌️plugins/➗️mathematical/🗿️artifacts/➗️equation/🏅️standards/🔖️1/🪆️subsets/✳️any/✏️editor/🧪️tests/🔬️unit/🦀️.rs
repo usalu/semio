@@ -69,8 +69,6 @@ async fn retained_semantic_maxima_accept_exact_and_reject_maximum_plus_one() {
     let excessive_text = "a".repeat(EQUATION_MAX_TEXT_BYTES + 1);
     assert!(equation_command_extent(&EquationCommand::SetAlgorithm(set_algorithm::SetAlgorithm { algorithm: maximum_text, seed: None }), &snapshot).is_some());
     assert!(equation_command_extent(&EquationCommand::SetAlgorithm(set_algorithm::SetAlgorithm { algorithm: excessive_text, seed: None }), &snapshot).is_none());
-    assert!(equation_command_extent(&EquationCommand::SetLocale(set_locale::SetLocale { value: "d".repeat(EQUATION_MAX_LOCALE_BYTES) }), &snapshot).is_some());
-    assert!(equation_command_extent(&EquationCommand::SetLocale(set_locale::SetLocale { value: "d".repeat(EQUATION_MAX_LOCALE_BYTES + 1) }), &snapshot).is_none());
 
     let operations = |count: usize| json::to_string(&json::array(std::iter::repeat(json::object([])).take(count)));
     assert!(equation_command_extent(&EquationCommand::NodeGraphEdit(node_graph_edit::NodeGraphEdit { operations_json: operations(EQUATION_MAX_EDIT_OPERATIONS) }), &snapshot).is_some());
@@ -205,7 +203,6 @@ async fn every_command_round_trips_through_text_and_binary() {
 }
 
 /// ⚖️ LAW: the leading token of every printed op line is the row's `dsl` wire keyword — the
-/// kebab-cased command id, except for the two documented divergences: `setLocale` → `locale`
 /// (an undeclared host-pushed command) and `setDocument` → `set-artifact` (the `app_commands!`
 /// row's own `"setDocument" as "set-artifact" => set_artifact::SetArtifact` explicitly pins a
 /// non-kebab wire keyword, matching `SetArtifact`'s own `#[dsl(keyword = "set-artifact")]`).
@@ -219,7 +216,6 @@ async fn every_printed_op_line_starts_with_the_rows_wire_keyword() {
     for command in every_command() {
         let id = command.command_id();
         let expected = match id {
-            "setLocale" => "locale".to_string(),
             "setDocument" => "set-artifact".to_string(),
             _ => id.chars().flat_map(|c| if c.is_ascii_uppercase() { vec!['-', c.to_ascii_lowercase()] } else { vec![c] }).collect(),
         };
@@ -237,7 +233,6 @@ pub(super) fn every_command() -> Vec<EquationCommand> {
         EquationCommand::NodeGraphEdit(node_graph_edit::NodeGraphEdit { operations_json: r#"[{"operation":"addNode","x":12.0,"y":34.0}]"#.into() }),
         EquationCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { camera: crate::EquationCamera { x: 5.0, y: 6.0, zoom: 2.0 } }),
         EquationCommand::SetPoints(set_points::SetPoints { geometry: EquationGeometry::default() }),
-        EquationCommand::SetLocale(set_locale::SetLocale { value: "de-DE".into() }),
     ]
 }
 

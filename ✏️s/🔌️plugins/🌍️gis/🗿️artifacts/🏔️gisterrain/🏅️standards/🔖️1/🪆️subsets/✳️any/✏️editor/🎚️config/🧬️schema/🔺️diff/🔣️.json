@@ -18,12 +18,6 @@
               "string",
               "null"
             ]
-          },
-          "locale": {
-            "type": [
-              "string",
-              "null"
-            ]
           }
         }
       }

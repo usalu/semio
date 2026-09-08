@@ -3,15 +3,7 @@
 use crate::Camera;
 use std::collections::BTreeMap;
 
-/// 🎯️ Ephemeral editor selection range (offsets into the jack query text).
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
-#[value(rename_all = "camelCase")]
-pub struct JackEditorSelection {
-    pub start: u64,
-    pub end: u64,
-}
-
-/// 🧮️ Jack editor configuration contains its viewport, query, result, text selection, LOD.
+/// 🧮️ Jack editor configuration contains authored query and window configuration.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslArtifact)]
 #[value(rename_all = "camelCase", default)]
 #[dsl(extension = "trinity.jackcfg")]
@@ -20,9 +12,6 @@ pub struct JackConfig {
     #[dsl(block)]
     pub camera: Camera,
     pub jack_query: String,
-    pub jack_result_json: String,
-    #[dsl(block)]
-    pub editor_selection: Option<JackEditorSelection>,
     pub lod_mode_by_window: BTreeMap<String, String>,
 }
 
@@ -75,8 +64,6 @@ impl Default for JackConfig {
         Self {
             camera: Camera::default(),
             jack_query: String::new(),
-            jack_result_json: String::new(),
-            editor_selection: None,
             lod_mode_by_window: BTreeMap::new(),
         }
     }

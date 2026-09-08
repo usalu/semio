@@ -56,8 +56,7 @@ fn interactive_job_fixture_matches_the_exact_factory_join() {
 
 #[test]
 fn writer_config_store_preparation_is_exact_bounded_and_reversible() {
-    let base = WriterConfig { engagement_input: "format".into(), locale: "en-US".into(), revision: 7, ..WriterConfig::default() };
-    let mutation = WriterConfigMutation::SetLocale(crate::editor::writer::config::SetLocale { value: "de-DE".into() });
+    let base = WriterConfig { engagement_input: "format".into(), revision: 7, ..WriterConfig::default() };
     let footprint = admit_writer_config_mutation(&mutation).expect("bounded config mutation");
     assert_eq!(footprint.work_items, 1);
     assert_eq!(footprint.retained_bytes, 5);
@@ -107,7 +106,6 @@ fn retained_wire_decoder_and_third_party_serde_have_command_parity() {
         WriterCommand::FormatDocument(format_document::FormatDocument {}),
         WriterCommand::CommitRename(commit_rename::CommitRename { text: "renamed".into() }),
         WriterCommand::EngagementSubmit(engagement_submit::EngagementSubmit { value: Some("format".into()) }),
-        WriterCommand::SetLocale(set_locale::SetLocale { value: "de-DE".into() }),
     ];
     for command in commands {
         let wire = <WriterCommand as protocol::OpBinary>::encode_op(&command).expect("owned protocol wire");
@@ -148,7 +146,6 @@ fn writer_completion_rejection_retires_child_before_command_without_reemission()
         ephemeral: EphemeralEmit::default(),
         fault: Fault::new(semio_framework_plugin::FaultOrigin::Framework, semio_framework_plugin::FaultCode::new("test.completion-rejected"), "injected completion rejection"),
     };
-    let mut job = writer_command_job(WriterCommand::SetLocale(set_locale::SetLocale { value: "de-DE".into() }), Arc::from("writer"));
     job.raw_bytes = Vec::new();
     job.pending_completion_rejection = Some(rejected);
     job.begin_close();
@@ -212,31 +209,6 @@ fn bounded_text_admission_preserves_rejected_job_state_and_owners() {
     assert!(lint.admit_text());
 }
 
-#[test]
-fn bounded_locale_admission_preserves_maximum_plus_one_job_state_and_owners() {
-    let current: Arc<str> = Arc::from("");
-    let mut accepted = writer_command_job(WriterCommand::SetLocale(set_locale::SetLocale { value: "x".repeat(MAX_WRITER_LOCALE_BYTES) }), current.clone());
-    let accepted_cursor = (accepted.raw_page_cursor, accepted.raw_scan_cursor, accepted.raw_bytes.clone());
-    assert!(accepted.admit_text());
-    assert!(accepted.text_admitted);
-    assert_eq!((accepted.raw_page_cursor, accepted.raw_scan_cursor, accepted.raw_bytes.clone()), accepted_cursor);
-    assert_eq!(Arc::strong_count(&current), 2);
-    let accepted_emit = accepted.emit().expect("bounded locale emission");
-    assert_eq!(accepted_emit.config_mutations, vec![WriterConfigMutation::SetLocale(crate::editor::writer::config::SetLocale { value: "x".repeat(MAX_WRITER_LOCALE_BYTES) })]);
-
-    let mut rejected = writer_command_job(WriterCommand::SetLocale(set_locale::SetLocale { value: "x".repeat(MAX_WRITER_LOCALE_BYTES + 1) }), current.clone());
-    let rejected_cursor = (rejected.raw_page_cursor, rejected.raw_scan_cursor, rejected.raw_bytes.clone());
-    let rejected_command = rejected.command.clone();
-    let rejected_snapshot = rejected.snapshot.clone();
-    let rejected_config = rejected.config.clone();
-    assert!(!rejected.admit_text());
-    assert!(!rejected.text_admitted);
-    assert_eq!((rejected.raw_page_cursor, rejected.raw_scan_cursor, rejected.raw_bytes.clone()), rejected_cursor);
-    assert_eq!(rejected.command, rejected_command);
-    assert!(Arc::ptr_eq(rejected.snapshot.as_ref().expect("snapshot owner"), rejected_snapshot.as_ref().expect("saved snapshot owner")));
-    assert!(Arc::ptr_eq(rejected.config.as_ref().expect("config owner"), rejected_config.as_ref().expect("saved config owner")));
-    assert_eq!(Arc::strong_count(&current), 3);
-}
 
 #[test]
 fn bounded_open_document_admission_preserves_maximum_plus_one_job_state_and_owners() {
@@ -411,7 +383,6 @@ async fn every_printed_op_line_starts_with_the_rows_declared_wire_keyword() {
         ("tab-size", WriterCommand::SetTabSize(set_tab_size::SetTabSize { value: 4 })),
         ("engagement-input", WriterCommand::EngagementInput(engagement_input::EngagementInput { value: "x".into() })),
         ("engagement-submit", WriterCommand::EngagementSubmit(engagement_submit::EngagementSubmit { value: Some("x".into()) })),
-        ("locale", WriterCommand::SetLocale(set_locale::SetLocale { value: "de-DE".into() })),
     ];
     for (expected_keyword, command) in expectations {
         let printed = protocol::OpText::print_op(&command);
@@ -446,7 +417,6 @@ pub(super) fn every_command() -> Vec<WriterCommand> {
         WriterCommand::SetTabSize(set_tab_size::SetTabSize { value: 4 }),
         WriterCommand::EngagementInput(engagement_input::EngagementInput { value: "format".into() }),
         WriterCommand::EngagementSubmit(engagement_submit::EngagementSubmit { value: None }),
-        WriterCommand::SetLocale(set_locale::SetLocale { value: "de-DE".into() }),
     ]
 }
 
@@ -666,26 +636,4 @@ async fn writer_labels_resolve_native_english_by_default_across_every_surface() 
     assert!(!measures_json.contains("Schriftgröße"));
 }
 
-#[semio_framework_async_macros::async_test]
-async fn writer_labels_resolve_german_locale_across_every_surface() {
-    let mut app = testkit::new_app().await;
-    app.dispatch_typed(WriterCommand::SetLocale(set_locale::SetLocale { value: "de".into() }), &semio_framework_plugin::testkit::meta("local")).await.expect("set locale");
-    let inspection = app.render(WRITER_PLAY_BODY_INSPECTION, None, &semio_framework_plugin::ViewModel::default()).await.expect("render");
-    let inspection_json = semio_framework_plugin::testkit::project_and_retire_fixture_tree(inspection).expect("render JSON");
-    assert!(inspection_json.contains("Dokument"));
-    assert!(inspection_json.contains("Kamera"));
-    assert!(!inspection_json.contains("\"Camera\""));
-    let catalogue = app.render(WRITER_PLAY_BODY_CATALOGUE, None, &semio_framework_plugin::ViewModel::default()).await.expect("render");
-    let catalogue_json = semio_framework_plugin::testkit::project_and_retire_fixture_tree(catalogue).expect("render JSON");
-    assert!(catalogue_json.contains("Sprache"));
-    let measures = app.window_measures().await;
-    let measures_json = serde_json::to_string(&measures).unwrap();
-    assert!(measures_json.contains("Schriftgröße"));
-    assert!(measures_json.contains("Zeilennummern"));
-    let engagements = app.window_engagements().await;
-    let engagements_json = serde_json::to_string(&engagements).unwrap();
-    assert!(engagements_json.contains("Texteditor"));
-    assert!(engagements_json.contains("Formatieren"));
-    assert!(engagements_json.contains("Prüfen"));
-}
 //#endregion 🔖️CrossCutting

@@ -71,7 +71,7 @@ async fn sample_fixture_dsl_round_trips() {
 
 #[semio_framework_async_macros::async_test]
 async fn demo_dsl_snapshot() {
-    let text = print_dsl(&crate::schema::default_document());
+    let text = print_dsl(&crate::standards::v1::subsets::any::schema::default_document());
     assert!(parse_dsl(&text).is_ok());
     if std::env::var("LAYOUT_EMIT_DEMO_DSL").is_ok() {
         eprintln!("{text}");
@@ -80,7 +80,7 @@ async fn demo_dsl_snapshot() {
 
 #[semio_framework_async_macros::async_test]
 async fn example_fixture_matches_engine_demo() {
-    let demo = crate::schema::default_document();
+    let demo = crate::standards::v1::subsets::any::schema::default_document();
     let from_example = parse_dsl(LAYOUT_SAMPLE_TEXT).expect("example dsl");
     assert_eq!(from_example.pages.len(), demo.pages.len());
     assert_eq!(from_example.pages[0].frames.len(), demo.pages[0].frames.len());

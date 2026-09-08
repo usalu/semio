@@ -10,7 +10,7 @@
 //! a cascading removal apart from three separate ones.
 
 use crate::mutations::{apply_raster_mutation, inverse_raster_mutation, RasterMutation};
-use crate::schema::{find_layer, flatten_raster_layers, layer_node_id, locate_layer};
+use crate::standards::v1::subsets::any::schema::{find_layer, flatten_raster_layers, layer_node_id, locate_layer};
 use crate::{RasterDiff, RasterLayerNode, RasterSnapshot};
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");

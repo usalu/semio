@@ -33,6 +33,9 @@ export function testBuiltTreeRetirementFixture(): void {
   const fixtureUrl = new URL("../../🧫️fixture/🔣️.json", import.meta.url);
   const includes = [...readFileSync(testUrl, "utf8").matchAll(/include_str!\(\s*"([^"]+)"\s*\)/gu)];
   assert(includes.some(match => new URL(match[1]!, testUrl).href === fixtureUrl.href));
-  assert.equal((native.match(/as UiTypedRetire>::DEPTH <= super::typed::UI_TYPED_RETIREMENT_DEPTH/g) ?? []).length, fixture.payloadFields.length);
+  const typedDepths = ["UiText", "crate::Component", "crate::LayoutSpec", "crate::StyleSpec", "crate::Activity", "bool", "crate::AccessibilitySpec", "crate::UiNodeBindings", "Option<MenuRef>"];
+  assert.equal(typedDepths.length, fixture.payloadFields.length);
+  for (const type of typedDepths) assert(native.includes(`<${type} as UiTypedRetire>::DEPTH`), `missing typed depth guard for ${type}`);
+  assert(/while index < depths\.len\(\)\s*\{\s*assert!\(depths\[index\] <= typed::UI_TYPED_RETIREMENT_DEPTH\);\s*index \+= 1;\s*\}/u.test(native), "typed depth guards must exhaust the guarded depth array");
   console.log(`[DEBUG] built-tree ownership source: 384-page chain, 9 typed fields, 30 exact extra bytes, ${hostile} denials; native closure and safe abandonment unverified`);
 }

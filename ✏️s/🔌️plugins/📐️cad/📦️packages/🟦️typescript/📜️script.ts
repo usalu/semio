@@ -79,34 +79,34 @@ type RetainedAuditFixture = {
 
 class RetainedAuditScript extends BundleScript {
   async run(): Promise<void> {
-    const fixturePath = resolve(this.root, "../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🔣️retained-jobs.json");
-    const schemaPath = resolve(this.root, "../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🔣️retained-jobs.schema.json");
+    const fixturePath = resolve(this.root, "../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🗄️retained-jobs/🔣️.json");
+    const schemaPath = resolve(this.root, "../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json");
     const ownerPath = resolve(this.root, "../../🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs");
     const fixture = (await Bun.file(fixturePath).json()) as RetainedAuditFixture;
-    const schema = await Bun.file(schemaPath).json();
+    const schema = (await Bun.file(schemaPath).json()).$defs.CadRetainedJobs;
     const owner = await Bun.file(ownerPath).text();
     const validate = new Ajv({ allErrors: true, strict: true }).compile(schema);
     if (!validate(fixture)) throw new Error(`CAD retained audit schema rejected the fixture: ${JSON.stringify(validate.errors)}`);
 
     const commandBlock = owner.slice(owner.indexOf("semio_framework_plugin::app_commands!"), owner.indexOf("/// 🌉️ Converts"));
-    const commandIds = [...commandBlock.matchAll(/^\s*"([^"]+)"\s+as\s+/gm)].map((match) => match[1]!).filter((id) => id !== "setActiveUtility");
+    const commandIds = [...commandBlock.matchAll(/^\s*"([^"]+)"\s+as\s+/gm)].map((match) => match[1]!);
     const routeIds = fixture.routes.map((route) => route.id);
     const expectedAdmitted = [
       "addNode", "renameNode", "patchCadPlayReference", "focusModelDefinition",
       "setCamera", "setProjection", "setProjectionParam", "setDislocateOption", "setNodeSelection", "setReferenceSelection", "referenceHover", "engagementInput", "engagementPossibleSelect", "engagementRepeatLast",
-      "engagementAbort", "worldPointerMove", "toggleSun", "setSunAzimuth", "setSunElevation", "setSunIntensity", "setActiveUtility", "setContributions", "loadRawRequest",
+      "engagementAbort", "worldPointerMove", "toggleSun", "setSunAzimuth", "setSunElevation", "setSunIntensity", "setContributions", "loadRawRequest",
     ];
     const retainedToolBlock = owner.slice(owner.indexOf("const CAD_RETAINED_TOOL_IDS"), owner.indexOf("const CAD_RETAINED_COMMAND_SCHEMA"));
     const retainedToolIds = [...retainedToolBlock.matchAll(/"([^"]+)"/g)].map((match) => match[1]!);
     const semanticValid = (source: string): boolean => {
       const occurrences = (needle: string): number => source.split(needle).length - 1;
       const annotationPairs = [...source.matchAll(/\.action_interactive_job\("([^"]+)", semio_framework_plugin::InteractiveJobClassification::(Migrated|BatchOnlyPendingRewrite)\)/g)].map((match) => `${match[1]}:${match[2]}`);
-      const expectedPairs = fixture.routes.map((route) => `${route.id}:${variant(route.disposition)}`).concat("setActiveUtility:Migrated");
-      return fixture.routeCount === 40
-        && new Set(routeIds).size === 40
+      const expectedPairs = fixture.routes.map((route) => `${route.id}:${variant(route.disposition)}`);
+      return fixture.routeCount === 38
+        && new Set(routeIds).size === 38
         && JSON.stringify(commandIds) === JSON.stringify(routeIds)
         && JSON.stringify(annotationPairs.sort()) === JSON.stringify(expectedPairs.sort())
-        && JSON.stringify(fixture.excludedFrameworkRoutes) === JSON.stringify(["setActiveUtility"])
+        && JSON.stringify(fixture.excludedFrameworkRoutes) === JSON.stringify([])
         && JSON.stringify(fixture.admittedRoutes) === JSON.stringify(expectedAdmitted)
         && JSON.stringify(retainedToolIds) === JSON.stringify(expectedAdmitted)
         && fixture.limits.closePageBytes === 16_384
@@ -122,7 +122,6 @@ class RetainedAuditScript extends BundleScript {
         && source.includes("authority.prepare_one_item(edit, std::sync::Arc::new(post))")
         && source.includes("digest: prepared.edit_digest()")
         && source.includes('contract: semio_framework::ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500)')
-        && source.includes('tool_id: "setActiveUtility", lanes: &[ArtifactToolPublicationLane::Config]')
         && occurrences('tool_id: "loadRawRequest", lanes: &[ArtifactToolPublicationLane::HostOnly]') === 1
         && !source.includes('factory: "BoundedFirstStepCommandJobFactory"');
     };
@@ -133,7 +132,6 @@ class RetainedAuditScript extends BundleScript {
       owner.replace('.action_interactive_job("saveCurrent", semio_framework_plugin::InteractiveJobClassification::BatchOnlyPendingRewrite)', '.action_interactive_job("saveCurrent", semio_framework_plugin::InteractiveJobClassification::Migrated)'),
       owner.replace("fn build_config_store_one_item_preparation_factory()", "fn removed_config_store_one_item_preparation_factory()"),
       owner.replace('tool_id: "loadRawRequest", lanes: &[ArtifactToolPublicationLane::HostOnly]', 'tool_id: "loadRawRequest", lanes: &[ArtifactToolPublicationLane::Config]'),
-      owner.replace('tool_id: "setActiveUtility", lanes: &[ArtifactToolPublicationLane::Config]', 'tool_id: "setActiveUtility", lanes: &[ArtifactToolPublicationLane::HostOnly]'),
       owner.replace('bounded_first_step(8_192, 64, 1, 16_384, 7_500)', 'bounded_first_step(8_192, 64, 1, 32_768, 7_500)'),
       owner.replace("impl semio_framework::ToolJobFactory for CadRetainedCommandJobFactory", "impl ToolJobFactory for CadRetainedCommandJobFactory"),
       owner.replace("impl semio_framework_plugin::ArtifactOwnedToolJobFactory for CadRetainedCommandJobFactory", "impl ArtifactOwnedToolJobFactory for CadRetainedCommandJobFactory"),

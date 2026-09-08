@@ -56,8 +56,7 @@ pub struct RemodelingFrameCursor {
 }
 
 /// 🧮️ Remodeling's `ArtifactEditor::Config` — absorbs every former `RemodelingPlayRuntime` view/session field
-/// (camera/selection/layers/frame cursor/report table selection) plus the two `ViewModel`-sourced
-/// fields the UI actually reads (`active_utility_id`/`locale`).
+/// (camera/selection/layers/frame cursor/report table selection).
 /// The live `engine::reconstruction::ReconstructionEngine` (now `crate::editor::remodeling::engine::reconstruction::ReconstructionEngine`) and the video-import blur-gate rolling
 /// window are deliberately NOT here: neither is `Clone + ToValue + FromValue` in a way that
 /// round-trips through a pure `&self` `handle()`. Both are rebuilt from already-persisted document
@@ -77,9 +76,6 @@ pub struct RemodelingConfig {
     pub frame_cursor: RemodelingFrameCursor,
     /// 📊️ Which `remodeling-report` dataset is selected (`"frames"`/`"cameras"`/`"tracks"`/`"gcps"`/…).
     pub report_table: String,
-    /// 🧰️ The active utility for `remodeling-main`/`remodeling-frames` — was read off `view_state.active_utility_id`.
-    pub active_utility_id: String,
-    /// 🗣️ BCP-47 locale tag — was read off `view_state.locale`.
 }
 
 //#region 🔖️ArtifactCodec
@@ -128,7 +124,7 @@ impl store::ArtifactPack for RemodelingConfig {
 
 impl Default for RemodelingConfig {
     fn default() -> Self {
-        Self { camera: RemodelingWorldCamera::default(), layers: RemodelingLayerVisibility::default(), frame_cursor: RemodelingFrameCursor::default(), report_table: "frames".into(), active_utility_id: "select".into(), }
+        Self { camera: RemodelingWorldCamera::default(), layers: RemodelingLayerVisibility::default(), frame_cursor: RemodelingFrameCursor::default(), report_table: "frames".into() }
     }
 }
 
@@ -138,7 +134,7 @@ store::impl_whole_record_config!(RemodelingConfig);
 
 #[path = "🧬️schema/🧬️mutations/🦀️.rs"]
 mod mutations;
-pub use mutations::{RemodelingConfigMutation, ReplaceConfig, SetCamera, SetLayerVisibility, SetFrameCursor, SetReportTable, SetActiveUtility};
+pub use mutations::{RemodelingConfigMutation, ReplaceConfig, SetCamera, SetLayerVisibility, SetFrameCursor, SetReportTable};
 
 //#region 🧪️Tests
 #[cfg(test)]

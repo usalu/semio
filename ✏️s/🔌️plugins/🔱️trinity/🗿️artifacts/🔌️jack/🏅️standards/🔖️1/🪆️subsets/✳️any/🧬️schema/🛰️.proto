@@ -28,7 +28,6 @@ message JackArtifact {
   // @state config
   Camera viewport_camera = 13;
   // @state config
-  string jack_result_json = 14;
   // @state config
   // @state config
   // @state config

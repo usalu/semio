@@ -1,5 +1,5 @@
 //! shooting <- tiff
-use crate::schema::snapshot::ShootingSnapshot;
+use crate::standards::v1::subsets::any::schema::snapshot::ShootingSnapshot;
 use semio_s_artifact_stdio_tiff::{TiffSnapshot, STDIO_TIFF_DOCUMENT_SCHEMA};
 
 pub fn register() {}

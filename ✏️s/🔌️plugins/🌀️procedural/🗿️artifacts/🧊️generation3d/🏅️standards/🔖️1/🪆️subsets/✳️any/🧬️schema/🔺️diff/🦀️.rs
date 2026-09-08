@@ -40,8 +40,6 @@ pub struct Generation3dDiff {
     pub selected_generation_id: Option<Option<String>>,
     #[state(artifact)]
     pub generation_preview_text: Option<Option<String>>,
-    #[state(presence)]
-    pub active_utility_id: Option<String>,
 }
 //#endregion 🔖️Generation3dDiff
 

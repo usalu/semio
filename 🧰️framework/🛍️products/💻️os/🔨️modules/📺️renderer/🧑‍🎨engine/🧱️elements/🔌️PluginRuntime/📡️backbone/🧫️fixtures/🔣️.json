@@ -14,6 +14,10 @@
   "retirement": ["deliver:1", "finished:1", "retire"],
   "disposal": {
     "bound": ["bind", "retire", "retired", "dispose"],
+    "retirementRetry": [
+      { "failure": "refused", "witnesses": 1, "events": ["open", "ack:captured", "close", "ack:accepted", "ack:retired", "ack:retired", "dispose"] },
+      { "failure": "transport", "witnesses": 1, "events": ["open", "ack:captured", "close", "ack:accepted", "ack:retired", "ack:retired", "dispose"] }
+    ],
     "opening": [
       { "phase": "activation", "events": ["activate", "activated", "dispose"] },
       { "phase": "open", "events": ["activate", "activated", "open", "opened", "dispose"] }

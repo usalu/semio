@@ -35,7 +35,7 @@ fn shot_mutation_for_field(id: String, field: &str, value: &Value) -> Option<Sho
 }
 
 fn active_shot_id(fixture: &crate::ShootingSnapshot) -> Option<String> {
-    crate::schema::active_shot(fixture).map(|shot| shot.id.clone())
+    crate::standards::v1::subsets::any::schema::active_shot(fixture).map(|shot| shot.id.clone())
 }
 
 //#region 🔖️SetActiveShot
@@ -169,7 +169,7 @@ pub mod patch_shots {
 //#region 🔖️AddShot
 pub mod add_shot {
     use super::*;
-    use crate::schema::next_shooting_id;
+    use crate::standards::v1::subsets::any::schema::next_shooting_id;
 
     #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
     #[dsl(keyword = "add-shot")]

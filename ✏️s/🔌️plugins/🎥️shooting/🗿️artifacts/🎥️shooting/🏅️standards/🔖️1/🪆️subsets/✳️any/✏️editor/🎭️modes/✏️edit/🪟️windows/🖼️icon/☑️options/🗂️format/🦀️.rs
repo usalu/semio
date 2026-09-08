@@ -7,7 +7,7 @@ use semio_framework_plugin::{MeasureSelectItem, WindowMeasure};
 
 //#region 🔖️Measure
 pub fn measure(snapshot: &ShootingSnapshot, labels: &ShootingLabels) -> WindowMeasure {
-    let shot = crate::schema::active_shot(snapshot);
+    let shot = crate::standards::v1::subsets::any::schema::active_shot(snapshot);
     WindowMeasure::Select {
         id: "shooting.measure.format".into(),
         label: Some(labels.format_select_label.into()),

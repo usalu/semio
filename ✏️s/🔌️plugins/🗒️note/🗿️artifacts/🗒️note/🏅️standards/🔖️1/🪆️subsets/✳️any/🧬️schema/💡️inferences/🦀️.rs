@@ -70,7 +70,7 @@ impl ArtifactInferrer for NoteInferrer {
 pub fn note_artifact_inference_descriptor() -> framework_schema::ArtifactInferenceDescriptor {
     framework_schema::ArtifactInferenceDescriptor {
         id: "s.note.note.inference",
-        inference: schema::FacetLeaves {
+        inference: framework_schema::FacetLeaves {
             rust: include_str!("🦀️.rs"),
             typescript: include_str!("🟦️.ts"),
             graphql: include_str!("🔗️.graphql"),

@@ -17,7 +17,7 @@ async fn an_unknown_body_key_falls_back_to_a_text_node() {
     let snapshot = SSpaceSnapshot::default();
     let history = semio_framework_plugin::HistoryView::empty();
     let doc = ArtifactView::new(&snapshot, &history);
-    let tree = <SpaceIndexViewer as ArtifactViewer>::render("nope", &doc, &ConfigView { snapshot: &NoConfig::default() }).expect("unknown Space viewer body tree");
+    let tree = <SpaceIndexViewer as ArtifactViewer>::render("nope", &doc, &ConfigView { snapshot: &NoConfig::default() }, &semio_framework_plugin::ViewModel::default()).expect("unknown Space viewer body tree");
     let json = semio_framework_plugin::testkit::project_and_retire_fixture_tree(tree).expect("unknown Space viewer body projection");
     assert!(json.contains("Unknown body"));
 }

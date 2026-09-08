@@ -21,7 +21,7 @@ pub fn package_descriptor() -> Result<semio_s_artifact_norm_contract::NormArtifa
 }
 
 pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
-    crate::app_surface::artifact_kind_spec("en1997", "EN 1997")
+    app_surface::artifact_kind_spec("en1997", "EN 1997")
 }
 
 /// 🪪️ This subset's canonical `(artifact_kind, standard, subset)` coordinate (ticket
@@ -64,11 +64,11 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
 
 pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
     semio_framework_plugin::ArtifactDeclaration::builder(definition)
-        .schema(crate::document_schema::en1997_artifact_schema_descriptor())
-        .inferences([crate::standards::v1::subsets::any::schema::inferences::en1997_artifact_inference_descriptor()])
-        .composers(crate::standards::v1::subsets::any::io::io_registry::entries())
+        .schema(document_schema::en1997_artifact_schema_descriptor())
+        .inferences([standards::v1::subsets::any::schema::inferences::en1997_artifact_inference_descriptor()])
+        .composers(standards::v1::subsets::any::io::io_registry::entries())
         .languages(pilot_languages())
-        .document_codec::<semio_framework_plugin::EditorApp<crate::editor::en1997::En1997PlayApp>>()
+        .document_codec::<semio_framework_plugin::EditorApp<editor::en1997::En1997PlayApp>>()
         .try_build()
 }
 

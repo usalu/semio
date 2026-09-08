@@ -298,62 +298,11 @@ pub fn reduce(state: &ShellState, command: &ShellCommand, now_ms: u64) -> Result
             next.active_tutorial_id = tutorial_id.clone();
         }
 
-        ShellCommand::SetUiAppearance { appearance } => {
-            next.ui_appearance = *appearance;
-        }
-        ShellCommand::SetUiLayout { layout } => {
-            next.ui_layout = *layout;
-        }
-        ShellCommand::SetUiDriver { driver_id } => {
-            next.ui_driver_id = driver_id.clone();
-        }
-        ShellCommand::SetUiCustomDriver { driver_id, driver } => {
-            require_non_empty(driver_id, "driver_id")?;
-            match driver {
-                Some(d) => {
-                    next.ui_custom_drivers.insert(driver_id.clone(), d.clone());
-                }
-                None => {
-                    next.ui_custom_drivers.remove(driver_id);
-                }
-            }
-        }
         ShellCommand::SetUiDriverDraft { draft } => {
             next.ui_driver_draft = draft.clone();
         }
-        ShellCommand::SetUiLocale { locale } => {
-            next.ui_locale = *locale;
-        }
-        ShellCommand::SetUiTerminology { terminology_id } => {
-            next.ui_terminology = terminology_id.clone();
-        }
-        ShellCommand::SetUiTheme { theme_id } => {
-            next.ui_theme_id = theme_id.clone();
-        }
-        ShellCommand::SetUiCustomTheme { theme_id, theme } => {
-            require_non_empty(theme_id, "theme_id")?;
-            match theme {
-                Some(t) => {
-                    next.ui_custom_themes.insert(theme_id.clone(), t.clone());
-                }
-                None => {
-                    next.ui_custom_themes.remove(theme_id);
-                }
-            }
-        }
         ShellCommand::SetUiThemeDraft { draft } => {
             next.ui_theme_draft = draft.clone();
-        }
-        ShellCommand::SetUiKeybindingOverride { control_id, keys } => {
-            require_non_empty(control_id, "control_id")?;
-            match keys {
-                Some(k) => {
-                    next.ui_keybinding_overrides.insert(control_id.clone(), k.clone());
-                }
-                None => {
-                    next.ui_keybinding_overrides.remove(control_id);
-                }
-            }
         }
 
         ShellCommand::SetSyncBackboneUri { uri } => {

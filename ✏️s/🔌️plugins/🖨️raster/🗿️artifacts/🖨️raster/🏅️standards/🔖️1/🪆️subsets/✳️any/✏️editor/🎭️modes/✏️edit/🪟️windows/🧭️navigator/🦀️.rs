@@ -38,8 +38,8 @@ pub fn definition() -> WindowKindDefinition {
 //#region 🔖️Render
 /// 🎬️ Same `Paint2dScene` payload as the composite window under this window's own surface id — encoded
 /// behind the semantic surface contract (see the composite window's note on the dropped controller id).
-pub fn render(document: &RasterDocument, config: &RasterConfig) -> UiAssemblyResult<BuiltNode> {
-    scene_surface(RASTER_PLAY_SURFACE_NAVIGATOR, ContractSurfaceKind::Paint2d, &raster_scene(document, config, config.active_utility_id.as_str(), "navigator"))
+pub fn render(document: &RasterDocument, config: &RasterConfig, active_utility: &str) -> UiAssemblyResult<BuiltNode> {
+    scene_surface(RASTER_PLAY_SURFACE_NAVIGATOR, ContractSurfaceKind::Paint2d, &raster_scene(document, config, active_utility, "navigator"))
 }
 //#endregion 🔖️Render
 

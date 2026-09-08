@@ -16,7 +16,6 @@ export interface LowpolyArtifact {
   /** @state presence */
   activePaintLayer: number;
   /** @state presence */
-  activeUtilityId: string;
   /** @state config */
   showEdges: boolean;
   /** @state config */
@@ -187,7 +186,6 @@ export function parseLowpolyArtifact(value: unknown, at = "$"): LowpolyArtifact 
     selectedObjectIds: lowpolyLowpolyArtifactGuardArray(row["selectedObjectIds"], `${at}.selectedObjectIds`).map((item, index) => lowpolyLowpolyArtifactGuardString(item, `${at}.selectedObjectIds[${index}]`)),
     paintUtility: lowpolyLowpolyArtifactGuardString(row["paintUtility"], `${at}.paintUtility`),
     activePaintLayer: lowpolyLowpolyArtifactGuardInteger(row["activePaintLayer"], `${at}.activePaintLayer`, {"minimum": 0}),
-    activeUtilityId: lowpolyLowpolyArtifactGuardString(row["activeUtilityId"], `${at}.activeUtilityId`),
     showEdges: lowpolyLowpolyArtifactGuardBoolean(row["showEdges"], `${at}.showEdges`),
     sunEnabled: lowpolyLowpolyArtifactGuardBoolean(row["sunEnabled"], `${at}.sunEnabled`),
     sunAzimuth: lowpolyLowpolyArtifactGuardNumber(row["sunAzimuth"], `${at}.sunAzimuth`),

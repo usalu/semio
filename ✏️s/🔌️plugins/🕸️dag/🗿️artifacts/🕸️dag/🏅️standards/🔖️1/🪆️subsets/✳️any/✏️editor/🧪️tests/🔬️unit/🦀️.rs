@@ -3,15 +3,15 @@ use super::*;
 
 //#region 🧪️RetainedConfigOracle
 #[test]
-fn retained_config_preparation_matches_the_json_oracle_and_rejects_maximum_plus_one() {
+fn retained_config_preparation_matches_the_json_oracle_and_rejects_snapshot_input() {
     let base = DagConfig::default();
     let mut expected = serde_json::to_value(&base).expect("JSON oracle base");
-    expected["locale"] = serde_json::json!("de-DE");
-    let (post, inverse, _) = prepare_dag_config(&base, DagConfigMutation::ChangeLocale(crate::editor::dag::config::ChangeLocale { value: "de-DE".into() })).expect("bounded config candidate");
+    expected["cameraX"] = serde_json::json!(1.0);
+    expected["cameraY"] = serde_json::json!(2.0);
+    expected["cameraZoom"] = serde_json::json!(3.0);
+    let (post, inverse, _) = prepare_dag_config(&base, DagConfigMutation::ChangeCamera(crate::editor::dag::config::ChangeCamera { x: 1.0, y: 2.0, zoom: 3.0 })).expect("bounded config candidate");
     assert_eq!(serde_json::to_value(post).expect("JSON oracle post"), expected);
-    assert!(matches!(&inverse[0], DagConfigMutation::ChangeLocale(crate::editor::dag::config::ChangeLocale { value }) if value == &base.locale));
-    assert!(dag_config_footprint(&DagConfigMutation::ChangeLocale(crate::editor::dag::config::ChangeLocale { value: "x".repeat(DAG_CONFIG_TEXT_BYTES) })).is_ok());
-    assert!(dag_config_footprint(&DagConfigMutation::ChangeLocale(crate::editor::dag::config::ChangeLocale { value: "x".repeat(DAG_CONFIG_TEXT_BYTES + 1) })).is_err());
+    assert!(matches!(&inverse[0], DagConfigMutation::ChangeCamera(crate::editor::dag::config::ChangeCamera { x, y, zoom }) if (*x, *y, *zoom) == (base.camera_x, base.camera_y, base.camera_zoom)));
     assert!(dag_config_footprint(&DagConfigMutation::ReplaceConfig(crate::editor::dag::config::ReplaceConfig { config: base })).is_err());
     assert_eq!(DAG_CONFIG_STORE_MAXIMUM_BYTES * 4 + 1_024, 4_096);
 }
@@ -41,7 +41,6 @@ pub(super) fn every_command() -> Vec<DagCommand> {
         DagCommand::PatchDagNodes(patch_dag_nodes::PatchDagNodes { node_ids: vec!["n1".into(), "n2".into()], field: "value".into(), value: "5".into() }),
         DagCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { x: 1.0, y: 2.0, zoom: 1.5 }),
         DagCommand::GraphPointerDown(graph_pointer_down::GraphPointerDown {}),
-        DagCommand::SetLocale(set_locale::SetLocale { value: "de-DE".into() }),
     ]
 }
 
@@ -50,7 +49,7 @@ pub(super) fn every_command() -> Vec<DagCommand> {
 #[semio_framework_async_macros::async_test]
 async fn command_surface_has_the_expected_row_count_and_distinct_wire_keywords() {
     let commands = every_command();
-    assert_eq!(commands.len(), 13, "every DagCommand row must be covered by every_command()");
+    assert_eq!(commands.len(), 12, "every DagCommand row must be covered by every_command()");
     let mut keywords: Vec<String> = commands.iter().map(|command| protocol::OpText::print_op(command).split(' ').next().unwrap_or_default().to_string()).collect();
     keywords.sort();
     keywords.dedup();
@@ -83,7 +82,6 @@ async fn every_printed_op_line_starts_with_the_rows_declared_wire_keyword() {
         ("patch-dag-nodes", DagCommand::PatchDagNodes(patch_dag_nodes::PatchDagNodes { node_ids: vec!["n1".into()], field: "value".into(), value: "5".into() })),
         ("node-graph-viewport", DagCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { x: 1.0, y: 2.0, zoom: 1.0 })),
         ("graph-pointer-down", DagCommand::GraphPointerDown(graph_pointer_down::GraphPointerDown {})),
-        ("locale", DagCommand::SetLocale(set_locale::SetLocale { value: "de-DE".into() })),
     ];
     for (expected_keyword, command) in expectations {
         let printed = protocol::OpText::print_op(&command);

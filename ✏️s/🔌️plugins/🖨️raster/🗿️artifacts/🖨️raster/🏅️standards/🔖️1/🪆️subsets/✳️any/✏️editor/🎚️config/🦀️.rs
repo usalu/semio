@@ -1,8 +1,6 @@
 //! 🧮️ Raster app — view-state configuration (constitutional: general/config). B1: this absorbs every
 //! former `RasterPlayRuntime` (`ui`-crate `RefCell`) field (brush size/opacity, navigator
-//! composite-viewport size, the session-only free camera) plus the two former `ViewModel`-driven
-//! fields the raster UI actually reads (`active_utility_id`/`locale` — mirrors
-//! `shooting_engine::ShootingConfig`'s identical B1 migration). `RasterConfigMutation` lives here too,
+//! composite-viewport size and the session-only free camera). `RasterConfigMutation` lives here too,
 //! next to the `RasterConfig` it patches (TEMPLATE.md §4).
 //!
 //! 🕹️ `selected_ids`/`hovered_id` deleted (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM):
@@ -32,10 +30,6 @@ pub struct RasterConfig {
     /// `RasterPlayRuntime::camera`.
     #[dsl(block)]
     pub camera: RasterCamera,
-    /// 🧰️ The active composite-window utility — was read off `view_state.active_utility_id`
-    /// (host-pushed `ViewModel`, deleted by B1). Default mirrors the app's `RASTER_DEFAULT_UTILITY`.
-    pub active_utility_id: String,
-    /// 🗣️ BCP-47 locale tag — was read off `view_state.locale`.
 }
 
 //#region 🔖️ArtifactCodec
@@ -86,7 +80,7 @@ pub type RasterConfigViewportSize = crate::RasterViewportSize;
 
 impl Default for RasterConfig {
     fn default() -> Self {
-        Self { brush_size: 24.0, brush_opacity: 1.0, composite_viewport: None, camera: RasterCamera::default(), active_utility_id: "selectMarquee".into(), }
+        Self { brush_size: 24.0, brush_opacity: 1.0, composite_viewport: None, camera: RasterCamera::default() }
     }
 }
 
@@ -118,8 +112,6 @@ pub enum RasterConfigMutation {
         #[dsl(block)]
         camera: RasterCamera,
     },
-    #[dsl(key = "active-utility")]
-    SetActiveUtility { utility_id: String },
 }
 
 //#region 🔖️OpCodec
@@ -188,7 +180,6 @@ impl Mutation<RasterConfig> for RasterConfigMutation {
         protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🌫️brush-opacity", semantic_kind: "set-brush-opacity", display_name: "Set Brush Opacity", emoji: "🌫️", aggregate_variant: "SetBrushOpacity", payload_schema: "🧬️schema/🔣️.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
         protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🖼️composite-viewport", semantic_kind: "set-composite-viewport", display_name: "Set Composite Viewport", emoji: "🖼️", aggregate_variant: "SetCompositeViewport", payload_schema: "🧬️schema/🔣️.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
         protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🎥️camera", semantic_kind: "set-camera", display_name: "Set Camera", emoji: "🎥️", aggregate_variant: "SetCamera", payload_schema: "🧬️schema/🔣️.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
-        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🛠️active-utility", semantic_kind: "set-active-utility", display_name: "Set Active Utility", emoji: "🛠️", aggregate_variant: "SetActiveUtility", payload_schema: "🧬️schema/🔣️.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
     ];
 
     fn descriptor(&self) -> &'static protocol::MutationLeafDescriptor {
@@ -198,7 +189,6 @@ impl Mutation<RasterConfig> for RasterConfigMutation {
             Self::SetBrushOpacity { .. } => &Self::DESCRIPTORS[2],
             Self::SetCompositeViewport { .. } => &Self::DESCRIPTORS[3],
             Self::SetCamera { .. } => &Self::DESCRIPTORS[4],
-            Self::SetActiveUtility { .. } => &Self::DESCRIPTORS[5],
         }
     }
 
@@ -210,7 +200,6 @@ impl Mutation<RasterConfig> for RasterConfigMutation {
             RasterConfigMutation::SetBrushOpacity { value } => next.brush_opacity = value.clamp(0.0, 1.0),
             RasterConfigMutation::SetCompositeViewport { viewport } => next.composite_viewport = viewport.clone(),
             RasterConfigMutation::SetCamera { camera } => next.camera = camera.clone(),
-            RasterConfigMutation::SetActiveUtility { utility_id } => next.active_utility_id = utility_id.clone(),
         }
         protocol::MutationOutcome::new(next)
     }

@@ -7112,6 +7112,7 @@ dependencies = [
  "semio-framework-async-macros",
  "semio-framework-dispatch-macros",
  "semio-framework-geometry",
+ "semio-framework-graph",
  "semio-framework-job",
  "semio-framework-os-infinite",
  "semio-framework-os-kernel",

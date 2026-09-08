@@ -5,7 +5,7 @@ use crate::mutations::create_asset::CreateAsset;
 use crate::mutations::rename_asset::RenameAsset;
 use crate::mutations::set_active_asset::SetActiveAsset as SetActiveAssetMutation;
 use crate::op::ShootingMutation;
-use crate::schema::next_shooting_id;
+use crate::standards::v1::subsets::any::schema::next_shooting_id;
 use crate::{ShootingAsset, ShootingSnapshot};
 use crate::editor::shooting::config::{ShootingConfig, ShootingConfigMutation};
 use crate::editor::shooting::ShootingDispatchCtx;

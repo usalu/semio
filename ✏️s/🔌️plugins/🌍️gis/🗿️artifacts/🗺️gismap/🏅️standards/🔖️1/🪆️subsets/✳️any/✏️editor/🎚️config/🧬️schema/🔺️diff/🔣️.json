@@ -60,12 +60,6 @@
               "null"
             ]
           }
-        },
-        "locale": {
-          "type": [
-            "string",
-            "null"
-          ]
         }
       },
       "additionalProperties": false

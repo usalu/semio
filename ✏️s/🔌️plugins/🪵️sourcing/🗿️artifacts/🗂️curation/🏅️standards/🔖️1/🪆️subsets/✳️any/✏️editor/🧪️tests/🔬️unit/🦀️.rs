@@ -145,7 +145,6 @@ async fn every_command_round_trips_through_text_and_binary() {
 /// ⚖️ LAW: the leading token of every printed op line is the row's `dsl` wire keyword — copied
 /// verbatim from each `app_commands!` row's `as "…"` literal (NOT a mechanical kebab-case of the
 /// manifest action id: `setDocument`/`document-json`, `setActiveExample`/`active-example`, the whole
-/// `setFilter*` family, and `setLocale`/`locale` all drop or rewrite the `set` prefix). This is what a
 /// missing `#[dsl(keyword = ..)]` on a payload struct silently breaks (the record prints with no
 /// keyword at all and no longer parses).
 #[semio_framework_async_macros::async_test]
@@ -165,7 +164,6 @@ async fn every_printed_op_line_starts_with_the_rows_wire_keyword() {
             "setFilterTypology" => "filter-typology",
             "setFilterMinAvailability" => "filter-min-availability",
             "sortTable" => "sort-table",
-            "setLocale" => "locale",
             "setContributions" => "contributions",
             other => panic!("expected_wire_key: unhandled command id {other}"),
         }
@@ -219,7 +217,6 @@ fn every_command() -> Vec<SourcingCurationCommand> {
         SourcingCurationCommand::SetFilterTypology(set_filter_typology::SetFilterTypology { path: "beams/steel".into() }),
         SourcingCurationCommand::SetFilterMinAvailability(set_filter_min_availability::SetFilterMinAvailability { delta: Some(1.0), value: None }),
         SourcingCurationCommand::SortTable(sort_table::SortTable { column_id: "availability".into(), direction: "desc".into() }),
-        SourcingCurationCommand::SetLocale(set_locale::SetLocale { value: "de-DE".into() }),
         SourcingCurationCommand::SetContributions(set_contributions::SetContributions { json: "[]".into() }),
     ]
 }
@@ -287,7 +284,6 @@ async fn sourcing_curation_io_and_catalog_export_round_trip() {
     }
 }
 
-/// 🧵️ Every UI-reachable command is on the retained bounded lane and nowhere else. `setLocale` is
 /// deliberately absent — it is `ForbiddenFromUi`, dispatched only through the host configuration
 /// route, and it is the ONLY command of this app that is not a retained tool.
 #[test]
@@ -297,7 +293,6 @@ fn retained_route_catalog_covers_every_ui_reachable_command() {
     routes.dedup();
     assert_eq!(routes.len(), SOURCING_CURATION_BOUNDED_TOOL_IDS.len(), "no route is declared twice");
     assert_eq!(routes.len(), 14);
-    assert!(!SOURCING_CURATION_BOUNDED_TOOL_IDS.contains(&"setLocale"));
 }
 
 #[semio_framework_async_macros::async_test]

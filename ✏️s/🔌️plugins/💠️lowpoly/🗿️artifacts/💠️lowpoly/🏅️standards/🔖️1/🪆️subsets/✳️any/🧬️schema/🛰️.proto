@@ -19,7 +19,6 @@ message LowpolyArtifact {
   // @state presence
   uint32 active_paint_layer = 7;
   // @state presence
-  string active_utility_id = 8;
   // @state config
   bool show_edges = 9;
   // @state config

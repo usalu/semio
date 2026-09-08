@@ -60,12 +60,13 @@ impl ArtifactViewer for EnergyModelViewer {
         _doc: &ArtifactView<'_, Self::Snapshot>,
         _cfg: &ConfigView<'_, Self::Config>,
         _interaction: &semio_framework_plugin::app::InteractionView<'_>,
+        _view_state: Option<&semio_framework_plugin::ViewModel>,
         _engines: &store::EngineHandles,
     ) -> Result<ViewEmit<Self::ConfigMutation>, Fault> {
         Ok(ViewEmit::default())
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, view_state: &semio_framework_plugin::ViewModel) -> UiAssemblyResult<ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _view_state: &semio_framework_plugin::ViewModel) -> UiAssemblyResult<ComponentTree> {
         let node = match body_key {
             structure::BODY_KEY => structure::render(doc.snapshot)?,
             zones::BODY_KEY => zones::render(doc.snapshot)?,

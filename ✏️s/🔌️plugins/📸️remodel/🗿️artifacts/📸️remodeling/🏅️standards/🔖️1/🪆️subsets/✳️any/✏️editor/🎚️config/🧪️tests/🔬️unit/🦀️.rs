@@ -9,8 +9,6 @@ async fn remodeling_config_default_matches_the_former_runtime_defaults() {
     assert!(config.layers.mesh && config.layers.dense && config.layers.sparse && config.layers.cameras && config.layers.gcps);
     assert_eq!(config.frame_cursor, RemodelingFrameCursor::default());
     assert_eq!(config.report_table, "frames");
-    assert_eq!(config.active_utility_id, "select");
-    assert_eq!(config.locale, "en-US");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -45,11 +43,6 @@ async fn config_mutations_apply_and_backwards_restore_the_pre_edit_snapshot() {
     let op = RemodelingConfigMutation::SetReportTable(SetReportTable { table: "gcps".into() });
     assert_eq!(op.diff(&base).diff().report_table, "gcps");
 
-    let op = RemodelingConfigMutation::SetActiveUtility(SetActiveUtility { utility_id: "measure".into() });
-    assert_eq!(op.diff(&base).diff().active_utility_id, "measure");
-
-    let op = RemodelingConfigMutation::SetLocale(SetLocale { value: "de-DE".into() });
-    assert_eq!(op.diff(&base).diff().locale, "de-DE");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -61,6 +54,4 @@ async fn config_mutations_roundtrip_through_op_text() {
     store::os_store::test_support::assert_op_line_round_trip(&RemodelingConfigMutation::SetFrameCursor(SetFrameCursor { stream_id: Some("stream-1".into()), frame_index: 2 }));
     store::os_store::test_support::assert_op_line_round_trip(&RemodelingConfigMutation::SetFrameCursor(SetFrameCursor { stream_id: None, frame_index: 0 }));
     store::os_store::test_support::assert_op_line_round_trip(&RemodelingConfigMutation::SetReportTable(SetReportTable { table: "tracks".into() }));
-    store::os_store::test_support::assert_op_line_round_trip(&RemodelingConfigMutation::SetActiveUtility(SetActiveUtility { utility_id: "gcpPlace".into() }));
-    store::os_store::test_support::assert_op_line_round_trip(&RemodelingConfigMutation::SetLocale(SetLocale { value: "de-DE".into() }));
 }

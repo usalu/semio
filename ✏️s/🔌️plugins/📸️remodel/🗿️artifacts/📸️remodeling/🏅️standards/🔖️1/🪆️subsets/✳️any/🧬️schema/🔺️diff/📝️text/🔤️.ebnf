@@ -34,7 +34,6 @@ gcps lane = 'gcps', '=', value ;
 job lane = 'job', '=', value ;
 results lane = 'results', '=', value ;
 selection lane = 'selection', '=', value ;
-active utility id lane = 'activeUtilityId', '=', value ;
 report table lane = 'reportTable', '=', value ;
 frame cursor lane = 'frameCursor', '=', value ;
 camera lane = 'camera', '=', value ;

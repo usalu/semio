@@ -130,7 +130,7 @@ fn generation2d_retained_reduce(
     history: &semio_framework_plugin::HistoryView,
     _interaction: &protocol::InteractionState,
     _hover: &semio_framework_plugin::app::InteractionHoverState,
-    _context: Option<&semio_framework_plugin::ArtifactOwnedToolJobContext<EditorApp<Generation2dPlayApp>>>,
+    _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<Generation2dPlayApp>>>,
     operation: &AppOperationContext,
 ) -> Result<Emit<Generation2dMutation, Generation2dConfigMutation, NoDraftMutation>, Fault> {
     if !GENERATION2D_BOUNDED_TOOL_IDS.contains(&command.command_id()) { return Err(Fault::from("generation2d-command-retained-route-rejected")); }
@@ -501,8 +501,8 @@ impl ArtifactEditor for Generation2dPlayApp {
         command: &Generation2dCommand,
         doc: &ArtifactView<'_, Generation2dSnapshot>,
         cfg: &ConfigView<'_, Generation2dConfig>,
-        _view_state: &semio_framework_plugin::ViewModel,
-        interaction: &InteractionView<'_>, _view_state: Option<&semio_framework_plugin::ViewModel>,
+        interaction: &InteractionView<'_>,
+        _view_state: Option<&semio_framework_plugin::ViewModel>,
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<Generation2dMutation, Generation2dConfigMutation, Self::DraftMutation>, Fault> {
@@ -589,6 +589,7 @@ impl ArtifactEditor for Generation2dPlayApp {
         request: &semio_framework_plugin::ContextMenuRequest,
         _doc: &ArtifactView<'_, Generation2dSnapshot>,
         cfg: &ConfigView<'_, Generation2dConfig>,
+        view_state: &semio_framework_plugin::ViewModel,
         registry: &semio_framework_plugin::AppActionRegistry,
     ) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
         use semio_framework_plugin::{node_graph_delete_selection_spec, selection_domains_from_surface, Menu, NodeGraphDeleteDispatch};

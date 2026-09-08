@@ -18,7 +18,6 @@ export interface LowpolyDiff {
   /** @state presence */
   activePaintLayer?: number;
   /** @state presence */
-  activeUtilityId?: string;
   /** @state config */
   showEdges?: boolean;
   /** @state config */

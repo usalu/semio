@@ -1,19 +1,12 @@
 type JackConfig {
   camera: Camera! @state(class: CONFIG)
   jackQuery: String! @state(class: CONFIG)
-  jackResultJson: String! @state(class: CONFIG)
-  editorSelection: JackEditorSelection @state(class: CONFIG)
   lodModeByWindow: [StringEntry!]! @state(class: CONFIG)
 }
 
 type StringEntry {
   key: String!
   value: String!
-}
-
-type JackEditorSelection {
-  start: Int!
-  end: Int!
 }
 
 type Camera {

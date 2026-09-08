@@ -16,7 +16,6 @@ semio_framework_plugin::app_labels! {
 //#endregion 🔖️Labels
 
 //#region 🔖️Resolvers
-/// 🗣️ Resolves the active label set from `cfg.locale`; falls back to native English.
 pub fn playbook_play_labels(view_state: &semio_framework_plugin::ViewModel) -> &'static PlaybookPlayLabels {
     semio_framework_plugin::resolve_labels::<PlaybookPlayLabels>(view_state)
 }

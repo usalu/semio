@@ -3,7 +3,7 @@
 
 use crate::{LayoutDiff, LayoutSnapshot};
 use crate::mutations::{LayoutMutation, create_page};
-use crate::schema::diff::LayoutPagesDelta;
+use crate::standards::v1::subsets::any::schema::diff::LayoutPagesDelta;
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 

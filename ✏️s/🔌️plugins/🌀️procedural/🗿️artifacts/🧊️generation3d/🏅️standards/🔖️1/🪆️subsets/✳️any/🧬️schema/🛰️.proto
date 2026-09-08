@@ -29,7 +29,6 @@ message Generation3dArtifact {
   // @state artifact
   optional string generation_preview_text = 12;
   // @state presence
-  string active_utility_id = 13;
   // @state config
 }
 

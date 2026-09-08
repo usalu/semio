@@ -20,6 +20,6 @@ async fn unknown_body_key_renders_a_diagnostic_instead_of_panicking() {
     let doc = ArtifactView::new(&document, &history);
     let config = NoConfig::default();
     let cfg = ConfigView { snapshot: &config };
-    let node = WriterViewer::render("writer.view.nope", &doc, &cfg);
+    let node = WriterViewer::render("writer.view.nope", &doc, &cfg, &semio_framework_plugin::ViewModel::default());
     assert!(semio_framework_plugin::testkit::project_and_retire_fixture_tree(node.expect("viewer render")).unwrap().contains("Unknown body"));
 }

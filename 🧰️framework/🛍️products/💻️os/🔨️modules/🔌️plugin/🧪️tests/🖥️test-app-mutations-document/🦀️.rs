@@ -79,7 +79,7 @@ impl protocol::MutationDiff<TestSnapshot> for TestDiff {
 //#endregion 🔺️Diff
 
 //#region 🧬️Mutations
-#[path = "../🖥️test-app-mutations-document-mutations/🦀️.rs"]
+#[path = "../../🧫️fixtures/🖥️test-app-mutations/🧬️document/🧬️mutations/🦀️.rs"]
 pub mod mutations;
 pub(crate) use mutations::{SetCount, SetLabel, TestMutation};
 //#endregion 🧬️Mutations

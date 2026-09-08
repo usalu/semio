@@ -10,8 +10,8 @@ use std::collections::BTreeMap;
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Config
-/// 🧮️ gis2d's `ArtifactEditor::Config` — per-layer visibility/stroke-weight, camera, render/vector/LOD
-/// mode, plus `locale`. Layer AND feature selection/hover/method/mode moved to the framework-owned
+/// 🧮️ gis2d's `ArtifactEditor::Config` — per-layer visibility/stroke-weight, camera, and render/vector/LOD
+/// mode. Layer AND feature selection/hover/method/mode moved to the framework-owned
 /// `"features"` interaction domain (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM) —
 /// read via `InteractionView::selection("features")`/`.hover("features", "pointer")`, never stored
 /// here again. Per-layer maps are `BTreeMap` (not `HashMap`) because the DSL derive only binds
@@ -38,7 +38,6 @@ pub struct Gis2dConfig {
     /// 👁️ Per-layer stroke-weight multiplier; a missing entry defaults to `1.0`.
     #[dsl(block)]
     pub layer_stroke_scale: BTreeMap<String, f64>,
-    /// 🗣️ BCP-47 locale tag.
 }
 
 //#region 🔖️ArtifactCodec

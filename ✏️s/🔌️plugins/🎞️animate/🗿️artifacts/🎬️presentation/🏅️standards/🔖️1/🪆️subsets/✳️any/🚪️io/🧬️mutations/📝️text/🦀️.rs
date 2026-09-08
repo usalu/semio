@@ -4,7 +4,7 @@
 //! enum is needed — unlike the retired generic whole-collection `Tiles(...)` variant, every
 //! payload here is a plain struct declared in this crate, so `dsl::DslRecord` applies directly.
 
-pub use crate::schema::mutations::{apply_presentation_mutation, inverse_presentation_mutation, PresentationMutation};
+pub use crate::standards::v1::subsets::any::schema::mutations::{apply_presentation_mutation, inverse_presentation_mutation, PresentationMutation};
 
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).

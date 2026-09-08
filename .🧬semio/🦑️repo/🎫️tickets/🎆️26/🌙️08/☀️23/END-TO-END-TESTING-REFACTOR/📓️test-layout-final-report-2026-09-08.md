@@ -1,6 +1,8 @@
 # Canonical Test Layout Verification
 
-Every authored executable test now belongs to its semantic owner at `<parent>/🧪️tests/<test-name>/<implementation>`. The final repository scan returned **zero layout violations across 29,224 authored source files**. The test-layout policy enforces the structure, implementation names, named cases, and owner scope; negative vectors cover legacy filenames, delivery directories, hidden inline tests, and misleading source text.
+> Current closeout status: the latest whole-repository scan inspected 29,452 sources and found 37 new SPR command/testkit mutation-fixture violations. The earlier 58 plugin/TypeScript findings are repaired and absent from this scan. SPR repairs and a new final scan are pending.
+
+The refactor places authored executable tests under their semantic owner at `<parent>/🧪️tests/<test-name>/<implementation>`. The earlier repository scan returned **zero layout violations across 29,224 authored source files**; the later concurrent additions listed above are pending final verification. The test-layout policy enforces the structure, implementation names, named cases, and owner scope; negative vectors cover legacy filenames, delivery directories, hidden inline tests, and misleading source text.
 
 Legacy test filenames and misplaced bodies were relocated across Rust, TypeScript/JavaScript, Go, and Python. Script self-tests, Storybook interaction tests, and nested Rust test modules were included. Runners, module mounts, imports, fixture paths, and source-policy evidence readers follow the canonical locations. Production source checks remain separate from test-law evidence. The user’s example now lives at `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🏛️space-administration/🟦️.tsx`.
 
@@ -8,7 +10,7 @@ Legacy test filenames and misplaced bodies were relocated across Rust, TypeScrip
 
 | Check | Observed result |
 | --- | --- |
-| Actual whole-repository test-layout scan through Bun/Nx | 29,224 authored sources; zero findings |
+| Earlier whole-repository test-layout scan through Bun/Nx | 29,224 authored sources; zero findings before the later 58 concurrent findings |
 | Layout policy and Rust source-evidence tests | 25 passed; 84 assertions |
 | Independent Rust module-resolution oracle | Six valid trees compiled and ran; one deliberately invalid tree rejected |
 | Full repository Nx test-contract discovery | 250 projects, including 248 generated canonical case projects |
@@ -18,6 +20,7 @@ Legacy test filenames and misplaced bodies were relocated across Rust, TypeScrip
 | Final Rust-only layout and literal-edge audit | 19,860 sources; zero layout findings; final 7,166 canonical test files / 20,740 test edges with zero broken |
 | Focused Rust resident and replication Nx targets | 17 and 257 tests passed respectively |
 | Browser actor canonical dispatcher | Passed full AJV/JCO/Wasm/JSPI pipeline, emitted modules, and actor pack/stream/close laws |
+| JS/TS runner coverage | 518 classified cases with zero unreferenced; one concurrent caching/Wasm case independently verified through its existing dispatcher (519 at that snapshot; the two later TypeScript cases have separately verified callers and runtime) |
 | JS/TS move literal-integrity audit | 69 move pairs checked against pre-goal source; zero remaining non-path literal rebases |
 | Go MCP and focused CLI Nx targets | Passed through canonical source overlays |
 | Canonical Go compiler oracle | Two private-function tests passed; Bun wrapper passed six assertions |
@@ -40,12 +43,17 @@ The full layering gate reported unrelated repository-wide excess references. Onl
 - [Layout policy and compiler checks](📓️test-layout-policy-review-2026-09-08.md)
 - [Whole-repository scan](📓️test-layout-current-snapshot-2026-09-08.md)
 - [Independent final source audit](📓️test-layout-final-current-audit-2026-09-08.md)
-- [Runner audit](📓️test-layout-final-runner-audit-2026-09-08.md)
+- [Current runner map](📓️test-layout-runner-map-2026-09-08.md)
+- [Independent runner closeout](📓️test-layout-final-closeout-audit-2026-09-08.md)
+- [Runner snapshot reconciliation](📓️runner-inventory-scope-audit-2026-09-08.md)
 - [Moved caller runtime checks](📓️test-layout-caller-runtime-2026-09-08.md)
 - [Rust source-policy integration and P2a1 runtime](📓️test-layout-source-evidence-execution-2026-09-08.md)
 - [Rust extraction, physical traversal, and runtime](📓️test-layout-rust-migration-2026-09-08.md)
 - [Native language checks and limitations](📓️test-layout-native-migration-2026-09-08.md)
 - [Layering provenance](📓️test-layout-layering-baseline-audit-2026-09-08.md)
 - [Applied layering update](📓️test-layout-layering-update-2026-09-08.md)
+- [Late TypeScript case verification](📓️test-layout-late-typescript-2026-09-08.md)
+- [Initial legacy JS/TS attribution](📓️test-layout-legacy-js-ts-attribution-2026-09-08.md)
+- [Initial inline and flat-case attribution](📓️test-layout-initial-inline-manifest-2026-09-08.md)
 
-Final executor manifests, runner classification, and ticket closure are being consolidated. No Git commit, checkout, stash, or worktree operation was used.
+Final executor manifests and ticket closure are being consolidated. Runner classification documents discovery and execution routes; it does not claim that all classified cases ran in this session. No Git commit, checkout, stash, or worktree operation was used.

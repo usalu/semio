@@ -25,8 +25,6 @@ pub struct LowpolyDiff {
     pub paint_utility: Option<String>,
     #[state(presence)]
     pub active_paint_layer: Option<u32>,
-    #[state(presence)]
-    pub active_utility_id: Option<String>,
     #[state(config)]
     pub show_edges: Option<bool>,
     #[state(config)]

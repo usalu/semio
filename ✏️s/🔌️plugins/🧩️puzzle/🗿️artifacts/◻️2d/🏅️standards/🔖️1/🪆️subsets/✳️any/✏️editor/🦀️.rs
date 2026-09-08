@@ -3561,8 +3561,8 @@ impl ArtifactEditor for Puzzle2dPlayApp {
         command: &Puzzle2dCommand,
         doc: &ArtifactView<'_, Puzzle2dPlaySnapshot>,
         cfg: &ConfigView<'_, Puzzle2dConfig>,
-        _view_state: &semio_framework_plugin::ViewModel,
-        interaction: &InteractionView<'_>, _view_state: Option<&semio_framework_plugin::ViewModel>,
+        interaction: &InteractionView<'_>,
+        _view_state: Option<&semio_framework_plugin::ViewModel>,
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<Puzzle2dMutation, Puzzle2dConfigMutation, Self::DraftMutation>, Fault> {

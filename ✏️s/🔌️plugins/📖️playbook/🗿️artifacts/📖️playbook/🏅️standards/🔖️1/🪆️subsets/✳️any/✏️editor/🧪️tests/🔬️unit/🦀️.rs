@@ -28,7 +28,6 @@ async fn every_command_round_trips_through_text_and_binary() {
 }
 
 /// ⚖️ LAW: the leading token of every printed op line is the row's `dsl` wire keyword — the
-/// kebab-cased command id for every row except `setLocale`, preserved exactly (VERBATIM off the
 /// pre-migration `playbook_protocol::PlaybookCommand`'s own `#[dsl(key = ..)]` attribute) so the wire
 /// format stays byte-identical across the migration; see TEMPLATE.md §5.1.
 #[semio_framework_async_macros::async_test]
@@ -36,7 +35,6 @@ async fn every_printed_op_line_starts_with_the_rows_wire_keyword() {
     for command in every_command() {
         let id = command.command_id();
         let expected = match id {
-            "setLocale" => "locale".to_string(),
             "setContributions" => "contributions".to_string(),
             _ => id.chars().flat_map(|c| if c.is_ascii_uppercase() { vec!['-', c.to_ascii_lowercase()] } else { vec![c] }).collect(),
         };
@@ -74,7 +72,6 @@ pub(super) fn every_command() -> Vec<PlaybookCommand> {
         PlaybookCommand::RemoveBlock(remove_block::RemoveBlock { step_id: "s".into(), block_id: "b".into() }),
         PlaybookCommand::MoveBlock(move_block::MoveBlock { block_id: "b".into(), from_step_id: "s1".into(), to_step_id: "s2".into(), index: 0 }),
         PlaybookCommand::UpdatePlaybook(update_playbook::UpdatePlaybook { value: "Recipe".into() }),
-        PlaybookCommand::SetLocale(set_locale::SetLocale { value: "de-DE".into() }),
         PlaybookCommand::SetContributions(set_contributions::SetContributions { json: "[]".into() }),
     ]
 }

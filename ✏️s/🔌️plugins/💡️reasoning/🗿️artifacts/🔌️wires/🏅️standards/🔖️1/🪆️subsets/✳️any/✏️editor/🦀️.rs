@@ -209,7 +209,7 @@ fn wires_retained_reduce(
     _history: &semio_framework_plugin::HistoryView,
     _interaction: &protocol::InteractionState,
     _hover: &semio_framework_plugin::app::InteractionHoverState,
-    _context: Option<&semio_framework_plugin::ArtifactOwnedToolJobContext<EditorApp<ReasoningWiresPlayApp>>>,
+    _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<ReasoningWiresPlayApp>>>,
     _operation: &AppOperationContext,
 ) -> Result<Emit<WiresMutation, WiresConfigMutation, NoDraftMutation>, Fault> {
     match command {

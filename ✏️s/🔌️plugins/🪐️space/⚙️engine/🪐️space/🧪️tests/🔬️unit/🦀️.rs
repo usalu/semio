@@ -26,7 +26,6 @@ fn retained_config_preparation_matches_the_json_oracle_and_rejects_maximum_plus_
         assert!(space_config_mutation_bytes(&admitted).is_ok(), "the retained config lane must admit {admitted:?}");
         assert!(prepare_space_config(&base, admitted).is_ok());
     }
-    assert!(space_config_mutation_bytes(&SpaceConfigMutation::SetLocale { value: "de-DE".into() }).is_err());
     assert_eq!(SPACE_CONFIG_MAXIMUM_BYTES * 4 + 1_024, 263_168);
 }
 //#endregion 🧪️RetainedConfigOracle
@@ -255,11 +254,11 @@ async fn space_labels_resolve_native_english_by_default() {
     let config = SpaceConfig::default();
     let cfg = ConfigView { snapshot: &config };
     let _app = SpaceApp::default();
-    let catalogue_tree = SpaceApp::render(S_PLAY_CATALOGUE_BODY_KEY, &doc, &cfg).await.expect("catalogue tree");
+    let catalogue_tree = SpaceApp::render(S_PLAY_CATALOGUE_BODY_KEY, &doc, &cfg, &semio_framework_plugin::ViewModel::default()).await.expect("catalogue tree");
     let catalogue_json = plugin_testkit::project_and_retire_fixture_tree(catalogue_tree).expect("catalogue projection");
     assert!(catalogue_json.contains("\"Apps\""));
 
-    let parameters_tree = SpaceApp::render(S_PLAY_PARAMETERS_BODY_KEY, &doc, &cfg).await.expect("parameters tree");
+    let parameters_tree = SpaceApp::render(S_PLAY_PARAMETERS_BODY_KEY, &doc, &cfg, &semio_framework_plugin::ViewModel::default()).await.expect("parameters tree");
     let parameters_json = plugin_testkit::project_and_retire_fixture_tree(parameters_tree).expect("parameters projection");
     assert!(parameters_json.contains("Add Parameter"));
     assert!(parameters_json.contains("\"Name\""));
@@ -267,31 +266,13 @@ async fn space_labels_resolve_native_english_by_default() {
     assert!(!parameters_json.contains("Parameter hinzufügen"));
 }
 
-#[semio_framework_async_macros::async_test]
-async fn space_labels_resolve_native_german_locale() {
-    let projection = demo_space_projection().await;
-    let history = empty_history();
-    let doc = ArtifactView::new(&projection, &history);
-    let config = SpaceConfig { locale: "de".into(), ..SpaceConfig::default() };
-    let cfg = ConfigView { snapshot: &config };
-    let _app = SpaceApp::default();
-    let parameters_tree = SpaceApp::render(S_PLAY_PARAMETERS_BODY_KEY, &doc, &cfg).await.expect("parameters tree");
-    let parameters_json = plugin_testkit::project_and_retire_fixture_tree(parameters_tree).expect("parameters projection");
-    assert!(parameters_json.contains("Parameter hinzufügen"));
-    assert!(parameters_json.contains("\"Entfernen\""));
-    assert!(!parameters_json.contains("Add Parameter"));
-
-    let inspector_tree = SpaceApp::render(S_PLAY_INSPECTOR_BODY_KEY, &doc, &cfg).await.expect("inspector tree");
-    let inspector_json = plugin_testkit::project_and_retire_fixture_tree(inspector_tree).expect("inspector projection");
-    assert!(inspector_json.contains("Wähle Workflow-Knoten im Arbeitsbereich aus."));
-}
 
 /// 🗂️ Grouped-disclosure context menu: at most 9 top-level rows (leaves+groups combined) and the
 /// destructive `removeAppInstance` row is always the final top-level entry.
 #[semio_framework_async_macros::async_test]
 async fn space_workflow_context_menu_stays_within_budget_with_destructive_tail() {
     let registry = semio_framework_plugin::AppActionRegistry::from_definition(&create_space_app().await.definition);
-    let labels = semio_framework_plugin::resolve_labels_for_locale::<SStudioLabels>(&SpaceConfig::default().locale);
+    let labels = semio_framework_plugin::resolve_labels::<SStudioLabels>(&semio_framework_plugin::ViewModel::default());
     let selected_node_ids = vec!["node-1".to_string()];
     let items = space_workflow_context_menu_items(&registry, labels, false, None, &selected_node_ids).await;
     assert!(items.len() <= 9, "top-level context menu rows must stay within budget: {} rows", items.len());

@@ -61,9 +61,6 @@ impl Process3dDiff {
             if let Some(value) = &self.selected_face_id {
                 next.selected_face_id = *value;
             }
-            if let Some(value) = &self.active_utility_id {
-                next.active_utility_id = value.clone();
-            }
             if let Some(value) = &self.selection_method {
                 next.selection_method = value.clone();
             }
@@ -181,7 +178,6 @@ impl MutationDiff<Process3dSnapshot> for Process3dDiff {
         take!(resolved_up_to);
         take!(selected_id);
         take!(selected_face_id);
-        take!(active_utility_id);
         take!(selection_method);
         take!(engagement_input);
         take!(camera_position_x);

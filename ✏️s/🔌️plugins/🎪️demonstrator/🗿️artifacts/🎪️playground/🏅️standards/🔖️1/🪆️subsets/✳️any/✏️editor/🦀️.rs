@@ -62,7 +62,7 @@ fn playground_retained_reduce(
     history: &semio_framework_plugin::HistoryView,
     _interaction: &protocol::InteractionState,
     _hover: &semio_framework_plugin::app::InteractionHoverState,
-    _context: Option<&semio_framework_plugin::ArtifactOwnedToolJobContext<EditorApp<PlaygroundEditor>>>,
+    _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<PlaygroundEditor>>>,
     operation: &AppOperationContext,
 ) -> Result<Emit<PlaygroundMutation, NoConfigMutation, NoDraftMutation>, Fault> {
     command.dispatch(&ArtifactView::with_operation(snapshot, history, operation.clone()), &ConfigView { snapshot: config })

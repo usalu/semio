@@ -1655,7 +1655,6 @@ pub mod editor {
             pub mod stock;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/☀️sun/🦀️.rs"]
             pub mod sun;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧰️utility/🦀️.rs"]
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🛠️workshop/🦀️.rs"]
             pub mod workshop;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🌍️world/🦀️.rs"]
@@ -1741,7 +1740,3 @@ pub mod viewer {
         }
     }
 }
-
-//#region 📚️Examples
-pub use standards::v1::subsets::any::examples;
-//#endregion 📚️Examples

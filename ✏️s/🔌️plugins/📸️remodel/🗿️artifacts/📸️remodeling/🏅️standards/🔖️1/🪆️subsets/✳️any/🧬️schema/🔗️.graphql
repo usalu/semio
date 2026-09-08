@@ -12,7 +12,6 @@ type RemodelingArtifact {
   job: ReconstructionJob! @state(class: ARTIFACT)
   results: ReconstructionResults! @state(class: ARTIFACT)
   selection: RemodelingUiSelection! @state(class: PRESENCE)
-  activeUtilityId: String! @state(class: PRESENCE)
   reportTable: String! @state(class: PRESENCE)
   frameCursor: RemodelingUiFrameCursor! @state(class: PRESENCE)
   camera: RemodelingUiCamera! @state(class: CONFIG)

@@ -8,7 +8,6 @@ type LowpolyArtifact {
   selectedObjectIds: [String!]! @state(class: PRESENCE)
   paintUtility: String! @state(class: PRESENCE)
   activePaintLayer: Int! @state(class: PRESENCE)
-  activeUtilityId: String! @state(class: PRESENCE)
   showEdges: Boolean! @state(class: CONFIG)
   sunEnabled: Boolean! @state(class: CONFIG)
   sunAzimuth: Float! @state(class: CONFIG)

@@ -2112,9 +2112,8 @@ describe("playground static sites", () => {
   test("frameworkOsPlaygroundDevEnv derives the port from an explicit renderer override", () => {
     const catalog = loadFrameworkOsPlaygroundCatalog();
     const row = catalog.find((entry) => entry.variant === "s")!;
-    const servedEnv = frameworkOsPlaygroundDevEnv(catalog, "s", { SEMIO_RENDERER: "react", SKIP_PLUGIN_BUILD: "1", SKIP_ENGINE_BUILD: "1" }, {});
+    const servedEnv = frameworkOsPlaygroundDevEnv(catalog, "s", { SEMIO_RENDERER: "react", SKIP_ENGINE_BUILD: "1" }, {});
     expect(servedEnv.SEMIO_RENDERER).toBe("react");
-    expect(servedEnv.SKIP_PLUGIN_BUILD).toBe("1");
     expect(servedEnv.SKIP_ENGINE_BUILD).toBe("1");
     expect(servedEnv.S_OS_PORT).toBe(String(row.ports.react));
     expect(servedEnv.S_OS_PORT).not.toBe(String(row.ports.wgpu));

@@ -4,7 +4,7 @@
 
 use crate::mutations::resize_tile_crop::ResizeTileCrop;
 use crate::op::PresentationMutation;
-use crate::schema::clamp_tile_crop;
+use crate::standards::v1::subsets::any::schema::clamp_tile_crop;
 use crate::PresentationSnapshot;
 use crate::editor::animate::config::{PresentationConfig, PresentationConfigMutation};
 use crate::editor::animate::PresentationDispatchCtx;

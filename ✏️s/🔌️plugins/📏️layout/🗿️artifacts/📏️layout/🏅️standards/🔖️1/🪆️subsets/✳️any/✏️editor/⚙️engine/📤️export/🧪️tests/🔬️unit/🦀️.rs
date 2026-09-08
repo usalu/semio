@@ -45,7 +45,7 @@ fn layout_retained_publication_zero_grant_and_exact_writer_close_are_exact() {
 }
 
 fn request(kind: LayoutExportKind) -> LayoutExportRequest {
-    let snapshot = crate::schema::default_document();
+    let snapshot = crate::standards::v1::subsets::any::schema::default_document();
     let page_id = (!matches!(kind, LayoutExportKind::Package)).then(|| snapshot.pages[0].id.clone());
     LayoutExportRequest { kind, page_id, snapshot: Arc::new(snapshot), preflight_json: None, parent_document_id: "layout-test-document".into(), canonical_base_revision_hex: "09".repeat(32) }
 }
@@ -374,7 +374,7 @@ fn owned_crc32_is_standard_and_incremental() {
 
 #[test]
 fn typed_document_json_matches_serde_and_every_write_is_credit_bounded() {
-    let mut snapshot = crate::schema::default_document();
+    let mut snapshot = crate::standards::v1::subsets::any::schema::default_document();
     snapshot.name = "\u{1f642}\n".repeat(MAX_LAYOUT_EXPORT_STRING_BYTES / 5);
     snapshot.background_drawing =
         Some(crate::LayoutDrawingChild { handle: store::ArtifactChild::new("drawing-child".into(), store::os_io::ArtifactRef::parse_uri("document!s.stdio.semio@v1/drawing").expect("child reference")), content: Default::default() });
@@ -437,7 +437,7 @@ fn terminal_candidate_is_empty_and_owned_chunks_never_exceed_four_kibibytes() {
 
 #[test]
 fn supplied_preflight_array_is_preserved_byte_for_byte_in_package_entry() {
-    let snapshot = crate::schema::default_document();
+    let snapshot = crate::standards::v1::subsets::any::schema::default_document();
     let supplied = r#"[{"kind":"custom","severity":"warning"}]"#;
     let json = dsl::os_pack::to_json_string(&snapshot);
     let package = export_package_zip_headless_batch(&json, supplied).expect("package");

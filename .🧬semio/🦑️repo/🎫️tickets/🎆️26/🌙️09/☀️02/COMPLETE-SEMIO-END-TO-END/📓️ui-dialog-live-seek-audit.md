@@ -1368,3 +1368,218 @@ pending/returned/faulted roots remain retained.  It does not, and must not,
 qualify the still-missing page/content/returned-data discharge or final
 `activation.returned` release.  No test result is claimed here; the requested
 runner was still blocked in graph construction at review time.
+
+### P0: Rebootstrap Fences Inbound Tail but Not Local Raw Outbound Batches
+
+The fresh rebootstrap watchdog correctly captures a document/config/runtime/
+client/Hub selection owner at
+[`backbone-worker:2744-2790`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts:2744>) and old timers cannot close a replacement owner; the focused watchdog fixture at
+[`space-artifact-creation-owner:733-858`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧪️tests/🧪️space-artifact-creation-owner/🟦️.ts:733>) exercises that successor fence.  This is source-level controlled evidence only.
+
+It does not fence all mutation traffic.  `captureArtifactRebootstrapOwner`
+sets `artifactRebootstrapRequired = true` before
+`requireArtifactRebootstrap` awaits retirement of the folder canonical mirror
+([`backbone-worker:2785-2789`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts:2785>),
+[`2911-2918`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts:2911>)).  A local bound-port message can concurrently reach
+`admitLocalMutations` and `relayMutationsToHub`
+([`4927-4958`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts:4927>),
+[`2485-2532`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts:2485>)).  That relay checks only read-only authority, actor readiness and socket openness—not bootstrap, rebootstrap or catch-up state—so it can publish through the still-live old actor before the old pair is dropped.
+
+There is a second, independently reachable bypass.  A fresh authenticated
+`Session` unconditionally removes and relays the outbox at
+[`3239-3244`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts:3239>),
+although the preceding `Welcome` starts a non-inline artifact transfer without
+awaiting its completion ([`3053-3076`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts:3053>).  The inbound `Commands` path rejects that same
+window ([`3176-3186`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts:3176>)); outbound delivery currently does not.  The existing
+`finishCatchupIfReady` is the right final release point, but its guarantee is
+undermined by the direct Session flush.
+
+An in-flight old-socket `Ack` is also not fenced by
+`artifactRebootstrapRequired`: it can run after the asynchronous control
+handler yields but before the close event updates `state.socket`, because the
+Ack branch only tests bootstrap/required-tail
+([`3189-3196`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts:3189>).  It can therefore release the exact raw-byte ledger and update the
+frontier during a transition.  The correct transition entry must synchronously
+move `pendingBatches` to the retained outbox before its first await, and must
+ignore old control-plane terminal frames thereafter; retrying the same
+mutation identifiers after the verified new pair is the already-established
+lost-Ack reconciliation shape.
+
+The smallest safe repair is one `flushOutboxWhenLive` predicate used by every
+outbound site.  It must require: authenticated actor; open current socket;
+`artifactBootstrap === null`; `artifactRebootstrapRequired === false`;
+`requiredTailFrontier === null`; and a verified installed pair/current
+frontier.  `relayMutationsToHub` queues rather than sends while that predicate
+is false, and `Session` never splices the queue directly.  `finishCatchupIfReady`
+is then the only normal post-bootstrap release.  New raw `documentBackbone`
+ingress while rebootstrap/catch-up is pending must be rejected *before*
+`exactLocalEnvelopes` is allocated: the current wire message carries no
+binding-generation capable of proving it belongs to the future bound guest
+port.  Already-admitted exact bytes remain retained in the outbox for exactly
+one post-catch-up replay; they must not be discarded or re-encoded.
+
+Required controlled rows belong with the existing worker fixture above: (1)
+RebootstrapRequired paused at mirror retirement plus a local raw message:
+zero Commands send and no byte-ledger admission; (2) a sent batch followed by
+control/requeue, then a fresh Session before Welcome/Bootstrap: zero send;
+(3) a non-inline bootstrap followed by Session and a local raw message: no
+send/no new admission; (4) bootstrap completion plus exact tail equality:
+one send of only the original retained raw batch; (5) delayed old-socket Ack
+after control: no ledger release/frontier mutation.  These rows qualify the
+TS fallback path only; they do not establish the WASM worker or a browser
+runtime result.
+
+### Audit: Narrow Never-Executed Return Retirement
+
+The new `ShardInstanceLifecycleLease.retireUnusedReturn` is scoped correctly
+to an original return that has never acquired domain output.  It blocks an
+in-flight request and every origin, identity, event, page, content, retry or
+fault root before it begins detachment
+([`shard-client:1626-1633`](</Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎭️actor/📮️shard-client/🟦️.ts:1626>)).  It first drives the original
+output roster empty, then clears `state.instance`, `state.client`, and
+`state.facade`, while the exact `activation.returned === state` relation is
+still held.  Only after the original cell/record retirement proof does it
+compare that relation and clear `activation.returned`
+([`1641-1662`](</Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎭️actor/📮️shard-client/🟦️.ts:1641>)).
+
+That order preserves identity continuity: while the state is being detached,
+the activation still owns the same source and `returnPhase` is `closing`, so a
+new admission refuses.  A previously captured `OwnedShardReturn` has no
+capability after detachment—its public reserve/submit routes both require the
+cleared `state.client` ([`OwnedShardReturn:700-709`](</Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎭️actor/📮️shard-client/🟦️.ts:700>)).  The new
+13-prefix test checks exact resident refund, stale-facade refusal, and that a
+later admission returns a distinct source
+([`reserved-response-settlement:716-754`](</Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎭️actor/📮️shard-client/🧪️tests/🧪️shardclient-reserved-response-settlement/🟦️.ts:716>)).
+
+No lost-return or stale-alias defect was found in this narrow primitive.  It
+must remain unavailable for returned, page-owned, content-owned, retryable,
+faulted, or executing sources; those roots still need the original-return
+supervisor described above.  The test/source state is not a native lifecycle
+qualification.
+
+### P0: Plugin Runtime Has Two Pre-Owner Disposal Windows
+
+The new composition correctly preserves the exact lifecycle turn in
+`coerceTurnResult`, mints an `OwnedUiInstance` from the captured lifetime,
+binds it through `lease.bindHostRetirement`, and routes a UI acknowledgement
+through `lease.captureUiPatchAuthority`/
+`submitUiAcknowledgement` rather than the former generic patch event
+([`PluginRuntime:1187-1238`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔌️PluginRuntime/🟦️.tsx:1187>),
+[`1400-1421`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔌️PluginRuntime/🟦️.tsx:1400>)).  `settlePluginTurn` respects that special
+acceptance result and does not add a second generic patch acknowledgement
+([`1008-1016`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔌️PluginRuntime/🟦️.tsx:1008>)).
+
+But `createApp` checks cancellation immediately after `registry.activate`,
+before it captures a lifecycle lease, and again immediately after its native
+open turn, before it mints/binds the actual host owner
+([`1398-1413`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔌️PluginRuntime/🟦️.tsx:1398>)).  `destroyApp` first makes that
+check fail, waits for the opening promise, then throws
+`plugin-ui.native-owner-required` unless both the lifecycle and host owner
+exist ([`1435-1446`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔌️PluginRuntime/🟦️.tsx:1435>)).  The actor id, closing bit and
+partial activation maps consequently remain live, and the outer create error
+path recursively observes the same failed retirement rather than reconciling
+the exact stage.
+
+The remedy needs a retained per-instance opening stage, not an empty
+close-time UI owner.  A cancellation before lifecycle capture must use only a
+pre-lifecycle activation reservation rollback.  Once the open request has
+been issued and its captured receipt is returned, the code must first mint and
+bind the *real* owner from that receipt, then honor cancellation by the normal
+document-port retire → `lease.beginClose` → Accepted → owner witness → Retired
+sequence.  Every stage must converge by deleting its exact maps and closing
+bit only after its own release succeeds.  Required focused rows pause: (1)
+after activate/before capture; (2) after capture/before native open completes;
+(3) after captured open/before host bind; and (4) activation failure.  Each
+must prove one cleanup, no retained actor/closing entry, no guest work after
+close, and no synthetic owner.
+
+`destroyApp` does issue `documentPort.retire()` before `lease.beginClose`, and
+the port uses its captured activation for the exchange rather than its public
+current predicate ([`backbone binding:130-174`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔌️PluginRuntime/📡️backbone/🟦️.ts:130>),
+[`PluginRuntime:1437-1446`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔌️PluginRuntime/🟦️.tsx:1437>)); that intended ordering is sound once
+the pre-owner stage is reconciled.
+
+### P0: Retirement Witness Still Precedes the Actual Presentation Root
+
+Although patch admission now has a real host owner, it also maintains a
+parallel `retainedWindowByActor` `UiDocumentState` projection and refreshes
+from that map ([`PluginRuntime:1198-1205`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔌️PluginRuntime/🟦️.tsx:1198>),
+[`1494-1523`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔌️PluginRuntime/🟦️.tsx:1494>)).  The exact owner surface is instead put in
+`uiSurfaceByInstance`, which has no production reader.  Lifecycle close
+obtains and submits the host retirement witness before `destroyApp` later
+deletes the parallel map ([`1240-1282`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔌️PluginRuntime/🟦️.tsx:1240>),
+[`1447-1458`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔌️PluginRuntime/🟦️.tsx:1447>)).  The witness therefore does not prove retirement of the
+state actually driving presentation.
+
+The agreed correction is to use the exact owned surface as the sole
+production presentation source.  `refreshUi` may create a transient
+`BuiltNode` response only while the exact instance/lease is current; it must
+not cache a plain `UiDocumentState`.  All subscriptions/reads used for that
+projection must be acknowledged, unsubscribed and terminal before
+`owner.closeStep`/Retired.  A stale asynchronous read is discarded, not
+published.  The old map/helpers may remain test-only, but cannot be a
+production cache that survives the witness.  All statements in this section
+are source audit; the real-authority fake-worker target was still launching.
+
+### Supersession: Owned Presentation and Opening-Stage Cleanup
+
+The two preceding PluginRuntime P0s are no longer accurate on the current
+source frontier.  Production `refreshUi` now projects from the exact
+`OwnedUiInstanceSurface` collection, subscribes/acknowledges/unsubscribes each
+read, checks the exact `(actor, lease, owner)` owner before returning, and
+tracks every in-flight read so close can wait for its retirement
+([`PluginRuntime:1234-1318`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔌️PluginRuntime/🟦️.tsx:1234>)).
+`retainedWindowByActor` and its patch helpers remain declared solely for
+colocated test registration; no production call reaches them.  The retained
+presentation map is cleared only as part of exact owner close, before the
+sole retirement witness is extracted
+([`PluginRuntime:1319-1354`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔌️PluginRuntime/🟦️.tsx:1319>)).
+
+Opening cancellation is likewise stage-aware.  `createApp` records the
+opening promise before external code can destroy the instance, captures the
+lifecycle before issuing its open turn, and creates/binds the real
+`OwnedUiInstance` before a subsequent cancellation check.  `destroyApp`
+first marks the exact instance closing, waits the exact opening and port
+retirement, and uses an activation-only rollback only when no lifecycle was
+captured ([`PluginRuntime:1470-1548`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔌️PluginRuntime/🟦️.tsx:1470>)).
+I found no remaining pre-owner leak in those paths.
+
+The earlier Retired-witness retry concern is also superseded: lifecycle close
+reads `lease.pendingReceipt` and retries accepted or retired receipts before
+consulting a blocked progress state
+([`PluginRuntime:1329-1351`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔌️PluginRuntime/🟦️.tsx:1329>)).
+The requested wrapper-level refusal/retry test is useful coverage, but this
+source audit does not find a retry-blocking branch.
+
+These are source conclusions only; they do not qualify a real guest, shard,
+WASM, or browser lifecycle.
+
+### P1: Legacy `localMutations` Bypasses the Rebootstrap Admission Fence
+
+The repaired raw `documentBackbone` route rejects ingress before parsing or
+retaining bytes unless the current pair, tail, and rebootstrap owner are all
+ready ([`backbone-worker:4987-5002`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts:4987>)).
+It also requeues sent batches synchronously at rebootstrap entry and funnels
+flush through the verified-current predicate
+([`backbone-worker:2480-2498`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts:2480>),
+[`2937-2956`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts:2937>)).
+
+However, the still-exported `ArtifactActorMsg.localMutations` variant enters
+`admitLocalMutations` directly, without `documentBackboneAdmissionReady`
+([`OS wire:660-665`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🟦️.ts:660>),
+[`backbone-worker:5004-5006`](</Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧵️backbone-worker.ts:5004>)).
+For a Hub-bound document this can append a newly supplied domain envelope to
+`pendingMutations`/the outbox during rebootstrap or unresolved tail and later
+relay it under the successor Session.  It does not violate the new exact-raw
+ledger because it is the older domain route, but it violates the broader
+"no new mutation admission before the verified current pair" rule.  The
+current Shell use found is identity configuration, not the bound GIS path;
+that is not a reason to leave the generic document-facing wire variant
+unfenced.
+
+Either reject `localMutations` for a Hub-bound document unless the same
+admission predicate holds, or split it into an explicit local/identity-only
+route and remove it from document ingress.  Add one controlled rebootstrap
+row proving this variant leaves pending/outbox/ledger and Commands sends
+unchanged.  This finding is source-only; it does not negate the reported
+controlled raw-worker repair.

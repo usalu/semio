@@ -12,7 +12,7 @@
 //! at `🚪️io` — this file reaches both by qualified path, which is the normal app→artifact direction.
 
 use crate::io::LayoutError;
-use crate::schema::{parse_layout_document, resolve_page};
+use crate::standards::v1::subsets::any::schema::{parse_layout_document, resolve_page};
 use crate::{Frame, LayoutBounds, LayoutRect, LayoutSnapshot, Page, ParagraphStyle, TextStory};
 use infinite_canvas::camera::{self, Camera, Viewport};
 use infinite_canvas::{Affine, Color, FillRule, Line, Point, Rect, RoundedRect, RoundedRectRadii, Scene, Stroke, Vec2};

@@ -1,7 +1,7 @@
 
 use super::*;
-use crate::schema::mutations::{create_tile, delete_tile, delete_tiles, rename_tile, reorder_tiles, replace_source, replace_tiles, resize_source_frame, resize_tile_crop};
-use crate::schema::{FigureTileGridSeedSpec, populate_tile_drafts_from_grid};
+use crate::standards::v1::subsets::any::schema::mutations::{create_tile, delete_tile, delete_tiles, rename_tile, reorder_tiles, replace_source, replace_tiles, resize_source_frame, resize_tile_crop};
+use crate::standards::v1::subsets::any::schema::{FigureTileGridSeedSpec, populate_tile_drafts_from_grid};
 use crate::{FigureTileDraft, FigureTileFrame, PresentationSnapshot, default_figure_tile_source, default_presentation_snapshot};
 use store::os_store::test_support;
 

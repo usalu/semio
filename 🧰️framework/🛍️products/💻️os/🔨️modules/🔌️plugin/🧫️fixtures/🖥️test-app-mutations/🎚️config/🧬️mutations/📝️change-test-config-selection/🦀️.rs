@@ -1,0 +1,80 @@
+use super::super::{TestConfig, TestConfigDiff, TestConfigMutation};
+use protocol::{MutationKind, MutationOutcome, OpBinary, OpText, ProtocolError, SemanticDescriptor};
+use semio_framework_value_derive::{FromValue, ToValue};
+fn required_nullable<'de, D: serde::Deserializer<'de>>(deserializer: D) -> Result<Option<String>, D::Error> {
+    <Option<String> as serde::Deserialize>::deserialize(deserializer)
+}
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, ToValue, FromValue, dsl::MutationLeaf)]
+#[mutation_leaf(contract=::protocol)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub(crate) struct ChangeTestConfigSelection {
+    #[serde(deserialize_with = "required_nullable")]
+    pub selected: Option<String>,
+}
+impl ChangeTestConfigSelection {
+    const OPCODE: &'static str = "change-test-config-selection";
+    const TAG: u8 = 0x73;
+}
+impl OpText for ChangeTestConfigSelection {
+    fn parse_op(line: &str) -> Result<Self, store::TextError> {
+        let value = line.strip_prefix("change-test-config-selection ").ok_or_else(|| store::TextError::new("expected change-test-config-selection", store::TextSpan::at(1, 1)))?;
+        Ok(Self { selected: serde_json::from_str(value).map_err(|_| store::TextError::new("selection must be a JSON nullable string", store::TextSpan::at(1, 1)))? })
+    }
+    fn print_op(&self) -> String {
+        format!("{} {}", Self::OPCODE, serde_json::to_string(&self.selected).expect("nullable string serializes"))
+    }
+}
+impl OpBinary for ChangeTestConfigSelection {
+    fn encode_op(&self) -> Result<Vec<u8>, ProtocolError> {
+        let mut bytes = vec![Self::TAG];
+        match &self.selected {
+            None => bytes.push(0),
+            Some(value) => {
+                bytes.push(1);
+                let length: u32 = value.len().try_into().map_err(|_| ProtocolError::Malformed { what: "change-test-config-selection", offset: 1, detail: "selection exceeds u32".into() })?;
+                bytes.extend_from_slice(&length.to_be_bytes());
+                bytes.extend_from_slice(value.as_bytes());
+            }
+        }
+        Ok(bytes)
+    }
+    fn decode_op(bytes: &[u8]) -> Result<Self, ProtocolError> {
+        if bytes.first() != Some(&Self::TAG) {
+            return Err(ProtocolError::Malformed { what: "change-test-config-selection", offset: 0, detail: "wrong tag".into() });
+        }
+        match bytes.get(1) {
+            Some(0) if bytes.len() == 2 => Ok(Self { selected: None }),
+            Some(1) if bytes.len() >= 6 => {
+                let length: usize = u32::from_be_bytes(bytes[2..6].try_into().expect("width")).try_into().map_err(|_| ProtocolError::Malformed { what: "change-test-config-selection", offset: 2, detail: "selection length exceeds usize".into() })?;
+                if bytes[6..].len() != length {
+                    return Err(ProtocolError::Malformed { what: "change-test-config-selection", offset: 6, detail: "wrong selection length".into() });
+                }
+                let value = std::str::from_utf8(&bytes[6..]).map_err(|_| ProtocolError::Malformed { what: "change-test-config-selection", offset: 6, detail: "selection is not utf8".into() })?;
+                Ok(Self { selected: Some(value.to_string()) })
+            }
+            _ => Err(ProtocolError::Malformed { what: "change-test-config-selection", offset: 1, detail: "invalid selection encoding".into() }),
+        }
+    }
+}
+impl MutationKind<TestConfig, TestConfigMutation> for ChangeTestConfigSelection {
+    const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "test-config-selection", kind: "change-test-config-selection", record: "ChangedTestConfigSelection" };
+    fn diff(&self, _: &TestConfig) -> MutationOutcome<TestConfigDiff> {
+        MutationOutcome::new(match &self.selected {
+            None => TestConfigDiff::Clear,
+            Some(value) => TestConfigDiff::Set(value.clone()),
+        })
+    }
+    fn inverse(&self, base: &TestConfig) -> Vec<TestConfigMutation> {
+        vec![Self { selected: base.selected.clone() }.into()]
+    }
+    fn label(&self) -> String {
+        match &self.selected {
+            None => "Clear test config selection".into(),
+            Some(value) => format!("Change test config selection to {value}"),
+        }
+    }
+}
+
+#[cfg(test)]
+#[path = "../../../../../🧪️tests/🎚️test-app-config-selection-unit/🦀️.rs"]
+mod tests;

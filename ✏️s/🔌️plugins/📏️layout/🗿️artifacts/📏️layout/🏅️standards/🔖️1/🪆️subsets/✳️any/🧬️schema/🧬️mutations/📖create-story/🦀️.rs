@@ -4,7 +4,7 @@
 
 use crate::{LayoutDiff, LayoutSnapshot, TextStory};
 use crate::mutations::{LayoutMutation, delete_story};
-use crate::schema::diff::LayoutStoriesDelta;
+use crate::standards::v1::subsets::any::schema::diff::LayoutStoriesDelta;
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 

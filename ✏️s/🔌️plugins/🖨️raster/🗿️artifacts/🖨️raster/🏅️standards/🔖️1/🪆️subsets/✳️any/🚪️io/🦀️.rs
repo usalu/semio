@@ -529,8 +529,8 @@ pub fn raster_document_from_semio_image(image: &SemioImageSnapshot, id_prefix: &
         return Err(format!("{id_prefix}: decoded image is {}x{} — an empty raster cannot become a pixel layer", image.width, image.height));
     }
     let data = png_bytes_from_semio_image(image)?;
-    let asset_key = crate::schema::create_raster_id(&format!("{id_prefix}-asset"));
-    let mut layer = crate::schema::create_pixel_layer(title, image.width, image.height);
+    let asset_key = crate::standards::v1::subsets::any::schema::create_raster_id(&format!("{id_prefix}-asset"));
+    let mut layer = crate::standards::v1::subsets::any::schema::create_pixel_layer(title, image.width, image.height);
     if let RasterLayerNode::Pixel { image_key, .. } = &mut layer {
         *image_key = Some(asset_key.clone());
     }
@@ -538,7 +538,7 @@ pub fn raster_document_from_semio_image(image: &SemioImageSnapshot, id_prefix: &
     let handle = crate::mint_raster_asset_child(&asset_key, &asset);
     let mut assets = crate::RasterOwnedMap::new();
     assets.insert(asset_key, handle).map_err(|rejected| rejected.reason.to_string())?;
-    Ok(RasterSnapshot { schema: RASTER_DOCUMENT_SCHEMA.into(), id: crate::schema::create_raster_id(id_prefix), title: Some(title.into()), layers: vec![layer], assets })
+    Ok(RasterSnapshot { schema: RASTER_DOCUMENT_SCHEMA.into(), id: crate::standards::v1::subsets::any::schema::create_raster_id(id_prefix), title: Some(title.into()), layers: vec![layer], assets })
 }
 //#endregion 🔖️Composite
 
@@ -627,8 +627,8 @@ pub fn raster_document_json_from_dwg(drawing: &DwgDrawing) -> Result<RasterSnaps
         Ok((bytes, width, height)) => (bytes, width, height),
         Err(_) => (raw_bytes, fallback_width, fallback_height),
     };
-    let asset_key = crate::schema::create_raster_id("dwg-asset");
-    let mut layer = crate::schema::create_pixel_layer("DWG Import", width, height);
+    let asset_key = crate::standards::v1::subsets::any::schema::create_raster_id("dwg-asset");
+    let mut layer = crate::standards::v1::subsets::any::schema::create_pixel_layer("DWG Import", width, height);
     if let RasterLayerNode::Pixel { image_key, .. } = &mut layer {
         *image_key = Some(asset_key.clone());
     }
@@ -636,7 +636,7 @@ pub fn raster_document_json_from_dwg(drawing: &DwgDrawing) -> Result<RasterSnaps
     let handle = crate::mint_raster_asset_child(&asset_key, &asset);
     let mut assets = crate::RasterOwnedMap::new();
     assets.insert(asset_key, handle).map_err(|rejected| rejected.reason.to_string())?;
-    let document = RasterSnapshot { schema: RASTER_DOCUMENT_SCHEMA.into(), id: crate::schema::create_raster_id("dwg-import"), title: Some("DWG Import".into()), layers: vec![layer], assets };
+    let document = RasterSnapshot { schema: RASTER_DOCUMENT_SCHEMA.into(), id: crate::standards::v1::subsets::any::schema::create_raster_id("dwg-import"), title: Some("DWG Import".into()), layers: vec![layer], assets };
     Ok(document)
 }
 
@@ -649,13 +649,13 @@ pub fn raster_document_json_from_dwg(drawing: &DwgDrawing) -> Result<RasterSnaps
 /// recovers the real width/height instead of leaving them unset, and re-encodes through the real
 /// serializer instead of storing the caller's bytes verbatim.
 pub fn raster_image_layer_and_asset(png_base64: &str) -> (String, RasterImageAsset, RasterLayerNode) {
-    let asset_key = crate::schema::create_raster_id("image-in-asset");
+    let asset_key = crate::standards::v1::subsets::any::schema::create_raster_id("image-in-asset");
     let raw_bytes = base64_codec::base64_standard_decode(png_base64.as_bytes()).unwrap_or_default();
     let (data, width, height) = match semio_image_from_png_bytes(&raw_bytes).and_then(|image| Ok((png_bytes_from_semio_image(&image)?, image.width, image.height))) {
         Ok((bytes, width, height)) => (bytes, Some(width), Some(height)),
         Err(_) => (raw_bytes, None, None),
     };
-    let mut layer = crate::schema::create_pixel_layer("Imported Image", width.unwrap_or(0), height.unwrap_or(0));
+    let mut layer = crate::standards::v1::subsets::any::schema::create_pixel_layer("Imported Image", width.unwrap_or(0), height.unwrap_or(0));
     if let RasterLayerNode::Pixel { image_key, width: layer_width, height: layer_height, .. } = &mut layer {
         *image_key = Some(asset_key.clone());
         *layer_width = width;

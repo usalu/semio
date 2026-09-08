@@ -2,7 +2,7 @@
 use super::*;
 
 fn sample_document() -> LayoutSnapshot {
-    crate::dsl::parse_dsl(crate::dsl::LAYOUT_SAMPLE_TEXT).expect("sample fixture parses")
+    crate::standards::v1::subsets::any::schema::snapshot::text::parse_dsl(crate::standards::v1::subsets::any::schema::snapshot::text::LAYOUT_SAMPLE_TEXT).expect("sample fixture parses")
 }
 
 #[semio_framework_async_macros::async_test]

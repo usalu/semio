@@ -13,8 +13,6 @@ pub struct RasterConfig {
     pub composite_viewport: Option<RasterConfigViewportSize>,
     #[state(config)]
     pub camera: RasterCamera,
-    #[state(config)]
-    pub active_utility_id: String,
 }
 
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, ArtifactSchema)]

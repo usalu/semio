@@ -45,19 +45,19 @@ Use the latest wip ueli branch: github.com/usalu/semio/tree/🐙ueli/⛳wip at t
 
 Use the main chat with GPT 6 Astra Extra High for main plan coordination, use multiple GPT 5.6 Sol Extra High agents for task execution, use multiple GPT 5.6 Terra Extra High agents for read-only exploration and audits.
 Always use a work fleet of maximum possible parallel agents.
-There are other agents working on other logical, even if they work on the same files, dont stop and keep on to work in conjuntion with them, just focus on your task.
+There are other agents working on other logical parts, even if they work on the same files, dont stop and keep on to work in conjuntion with them, just focus on your task.
 
 ---
 
-Use the main chat with Fable 5.1 High for main plan coordination, use multiple Opus 5 High agents for task execution, use multiple Sonnet 5 High agents for read-only exploration.
+Use the main chat with Fable 5.1 High for main plan coordination, use multiple Opus 5 High agents for task execution, use multiple Sonnet 5 High agents for read-only exploration and audits.
 Always use a work fleet of maximum possible parallel agents.
-There are other agents working on other logical, even if they work on the same files, dont stop and keep on to work in conjuntion with them, just focus on your task.
+There are other agents working on other logical parts, even if they work on the same files, dont stop and keep on to work in conjuntion with them, just focus on your task.
 
 ---
 
 Use the main chat with Opus 5 High for main plan coordination, use multiple Sonnet 5 High agents for task execution, use multiple Haiku 4.5 agents for read-only exploration.
 Always use a work fleet of maximum possible parallel agents.
-There are other agents working on other logical, even if they work on the same files, dont stop and keep on to work in conjuntion with them, just focus on your task.
+There are other agents working on other logical parts, even if they work on the same files, dont stop and keep on to work in conjuntion with them, just focus on your task.
 
 ---
 
@@ -73,7 +73,7 @@ Implement everything end to end. The plan is trusted, no need to double check it
 
 Extend/Refactor/Change clean mechanisms to properly achieve this.
 Exhaustively plan for work fleets of maximum possible parallel agents.
-Everything end to end (ignore everything inside ./compose folder).
+Everything end to end.
 Use the main chat with Fable 5 High for creating the plan, use the main chat with Opus 5 High for main plan coordination, use multiple Sonnet 5 High agents for task execution, use multiple Haiku 4.5 agents for read-only exploration.
 
 ---
@@ -578,7 +578,7 @@ TODO: Start new project `elements` that offers domain-agnostic primitives (such 
 
 ---
 
-/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🌊️flow/🧬️schema/📸️snapshot/💾️binary/🧬️schema/🔣️.json
+✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🌊️flow/🧬️schema/📸️snapshot/💾️binary/🧬️schema/🔣️.json
 
 ---
 
@@ -657,6 +657,7 @@ e.g.
 
 All emojis between sibilings must be unique and non-generic.
 violations e.g.
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/📡️contributed-mutation-wire
 🧰️framework/🔨️modules/🖱️ui/📦️packages/🟦️typescript/🎯️targets/⚛️react/🧪️tests/🧪️package-export/🟦️.ts 🧪️package-export is generic
 
 ---

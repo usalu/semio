@@ -17,7 +17,6 @@
     "selectedObjectIds",
     "selectedNodeIds",
     "componentSelection",
-    "activeUtilityId",
     "selectionMethod",
     "engagementInput",
     "engagementStep",
@@ -142,10 +141,6 @@
       "x-semio-state": "presence"
     },
     "selectedPrimitiveKind": {
-      "type": "string",
-      "x-semio-state": "presence"
-    },
-    "activeUtilityId": {
       "type": "string",
       "x-semio-state": "presence"
     },
@@ -450,19 +445,16 @@
           "const": "cad.scene.tool-command.v1"
         },
         "routeCount": {
-          "const": 40
+          "const": 38
         },
         "excludedFrameworkRoutes": {
-          "const": [
-            "setActiveUtility"
-          ]
+          "const": []
         },
         "activation": {
           "const": {
             "controller": "s.cad.cad@1/*#editor",
             "factory": "CadRetainedCommandJobFactory",
-            "proofRows": 25,
-            "injectedTool": "setActiveUtility",
+            "proofRows": 22,
             "closeItems": 1,
             "closeBytes": 4096
           }
@@ -521,15 +513,14 @@
             "setSunAzimuth",
             "setSunElevation",
             "setSunIntensity",
-            "setActiveUtility",
             "setContributions",
             "loadRawRequest"
           ]
         },
         "routes": {
           "type": "array",
-          "minItems": 40,
-          "maxItems": 40,
+          "minItems": 38,
+          "maxItems": 38,
           "items": {
             "type": "object",
             "additionalProperties": false,
@@ -561,7 +552,7 @@
               "disposition": {
                 "enum": [
                   "migrated",
-                  "batch-only-pending-rewrite"
+                  "batchOnlyPendingRewrite"
                 ]
               },
               "blocker": {
@@ -613,6 +604,9 @@
               }
             }
           }
+        },
+        "$schema": {
+          "const": "../🧬️schema/🔣️.json#/$defs/CadRetainedJobs"
         }
       },
       "title": "CadRetainedJobs",

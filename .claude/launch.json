@@ -47,6 +47,34 @@
       }
     },
     {
+      "name": "puzzle3d-react",
+      "runtimeExecutable": "bun",
+      "runtimeArgs": [
+        "./📜️script.ts",
+        "dev",
+        "3d"
+      ],
+      "port": 6013,
+      "env": {
+        "SEMIO_RENDERER": "react",
+        "S_OS_PORT": "6013"
+      }
+    },
+    {
+      "name": "puzzle3d-wgpu",
+      "runtimeExecutable": "bun",
+      "runtimeArgs": [
+        "./📜️script.ts",
+        "dev",
+        "3d"
+      ],
+      "port": 6113,
+      "env": {
+        "SEMIO_RENDERER": "wgpu",
+        "S_OS_PORT": "6113"
+      }
+    },
+    {
       "name": "dag-react",
       "runtimeExecutable": "bun",
       "runtimeArgs": [

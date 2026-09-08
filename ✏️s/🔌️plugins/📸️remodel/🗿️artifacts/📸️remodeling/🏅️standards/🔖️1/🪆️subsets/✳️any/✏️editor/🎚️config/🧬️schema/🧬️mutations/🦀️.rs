@@ -16,9 +16,6 @@ pub use set_frame_cursor::SetFrameCursor;
 #[path = "📊️set-report-table/🦀️.rs"]
 mod set_report_table;
 pub use set_report_table::SetReportTable;
-#[path = "🧰️set-active-utility/🦀️.rs"]
-mod set_active_utility;
-pub use set_active_utility::SetActiveUtility;
 
 #[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, dsl::ToValue, dsl::FromValue, dsl::DslOps, dsl::Mutations)]
 #[mutations(snapshot = RemodelingConfig, diff = RemodelingConfig, schema = "remodeling.config")]
@@ -33,8 +30,6 @@ pub enum RemodelingConfigMutation {
     SetFrameCursor(SetFrameCursor),
     #[dsl(key = "set-report-table")]
     SetReportTable(SetReportTable),
-    #[dsl(key = "set-active-utility")]
-    SetActiveUtility(SetActiveUtility),
 }
 
 impl protocol::OpText for RemodelingConfigMutation {

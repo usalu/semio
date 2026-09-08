@@ -9,3 +9,5 @@ The build returned exit 0. A sequential JSON-RPC initialization negotiated proto
 Closure will use `no_management: true` and the complete deduplicated authored-path array. Final request size and close result are recorded here after execution.
 
 Validated read-only ping: 2097215 request bytes, 2097199 response bytes, empty success result. This independently confirms the compiled instance accepts and returns a payload larger than the original 1 MiB limit without changing repository defaults.
+
+Retention preflight at 2026-09-08T22:08:05.612931+00:00: no retained root file exceeds the 5 MiB purge limit, and no retained immediate child directory exceeds 10 MiB (including its current caches/output children). The largest retained directory is the pre-existing `w14-audit` at 7,392,858 bytes. The private generated MCP executable remains until the close response; active executor lanes will be cleaned after their evidence is transcribed.

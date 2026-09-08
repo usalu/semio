@@ -7,7 +7,7 @@
 //! persisted per-session camera (`Config = NoConfig`), an intentional first-pass simplification, not a
 //! bug (mirrors the cad pilot's identical viewer-window simplification).
 
-use crate::schema::{active_shot, is_transparent_shooting_background};
+use crate::standards::v1::subsets::any::schema::{active_shot, is_transparent_shooting_background};
 use crate::{shooting_asset_scale, ShootingAsset, ShootingCamera, ShootingShot, ShootingSnapshot};
 use semio_framework_plugin::{
     world3d_mesh_id_from_url, world3d_meshes_json_from_kinds_and_urls, world3d_scene, world3d_selection_json, LocalizedLabel, SurfaceKind, WindowKindDefinition, WindowOptions, World3dScene, WorldSunConfig,

@@ -37,7 +37,7 @@ pub async fn main_window_measures(app: &mut RasterApp) -> Vec<WindowMeasure> {
 
 pub async fn semio_app() -> RasterApp {
     let mut app = framework_testkit::new_app::<EditorApp<RasterPlayApp>>().await;
-    let document = crate::schema::semio_example_document();
+    let document = crate::standards::v1::subsets::any::schema::semio_example_document();
     let envelope = store::create_document_envelope::<RasterSnapshot, RasterMutation>(RASTER_DOCUMENT_SCHEMA, "raster", document, None);
     let files = store::print_document_pack(&envelope).await.expect("print document pack");
     app.load_document_pack(&files).await.expect("load semio");

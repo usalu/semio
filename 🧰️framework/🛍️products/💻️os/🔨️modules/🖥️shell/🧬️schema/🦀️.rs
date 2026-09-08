@@ -60,7 +60,7 @@ pub mod schema_registry {
         SchemaExport {
             name: "ShellCommand",
             version: 1,
-            typescript: r##"export type ShellCommand = { "type": "registerLoadedPlugin", plugin: LoadedPlugin, } | { "type": "unregisterLoadedPlugin", pluginId: string, } | { "type": "setPluginStatus", pluginId: string, status: PluginPanelStatus, } | { "type": "setPluginSupervisorState", pluginId: string, state: PluginSupervisorState, } | { "type": "setActiveSession", session: ActiveSession | null, } | { "type": "setSessionError", error: string | null, } | { "type": "setAppLabelOverride", appId: string, labelKey: string, value: string | null, } | { "type": "setActionPaneFolded", windowId: string, folded: boolean, } | { "type": "setActionPaneExpanded", windowId: string, actionId: string | null, } | { "type": "stageActionArg", windowId: string, actionId: string, argId: string, value: unknown, } | { "type": "resetActionArgs", windowId: string, actionId: string, } | { "type": "setActiveUtility", windowId: string, utilityId: string | null, } | { "type": "setActiveTool", toolId: string | null, } | { "type": "setCommandExpanded", commandId: string | null, } | { "type": "stageCommandArg", commandId: string, argId: string, value: unknown, } | { "type": "resetCommandArgs", commandId: string, } | { "type": "setPanelVisible", anchor: Anchor, visible: boolean, } | { "type": "setPanelSize", anchor: Anchor, size: number, } | { "type": "setPanelPath", anchor: Anchor, path: Array<string>, } | { "type": "setDockOverride", dock: LayoutNode | null, } | { "type": "setPanelPathMemory", panelKey: string, path: string | null, } | { "type": "setTreeOpenState", treeId: string, open: boolean, } | { "type": "hydrateDockUi", dock: DockUiState | null, } | { "type": "resetDock" } | { "type": "focusWindow", windowId: string | null, } | { "type": "setShellLayout", layout: LayoutNode | null, } | { "type": "setActiveExample", exampleId: string, } | { "type": "setMobilePanelPath", path: Array<string>, } | { "type": "setMobilePanelVisible", visible: boolean, } | { "type": "setExtraWindows", windows: Array<ExtraWindowInstance>, } | { "type": "setWindowTitle", windowId: string, title: string, } | { "type": "setWindowIcon", windowId: string, icon: IconName, } | { "type": "setSearchOpen", open: boolean, } | { "type": "setFindOpen", open: boolean, } | { "type": "autoStartIntroduction", key: string, } | { "type": "setIntroductionStep", stepIndex: number | null, } | { "type": "completeIntroductionInteraction", interactionIndex: number, } | { "type": "openDialog", dialogId: string, seedArgs: unknown, } | { "type": "closeDialog", dialogId: string | null, } | { "type": "showTransientNotice", notice: TransientNotice, } | { "type": "dismissTransientNotice" } | { "type": "setOpenWithFocusRole", role: AppRole | null, } | { "type": "setActiveTutorial", tutorialId: string | null, } | { "type": "setUiAppearance", appearance: UiAppearance, } | { "type": "setUiLayout", layout: UiChromeLayout, } | { "type": "setUiDriver", driverId: string, } | { "type": "setUiCustomDriver", driverId: string, driver: UiDriver | null, } | { "type": "setUiDriverDraft", draft: UiDriver | null, } | { "type": "setUiLocale", locale: UiLocale, } | { "type": "setUiTerminology", terminologyId: string, } | { "type": "setUiTheme", themeId: string, } | { "type": "setUiCustomTheme", themeId: string, theme: UiTheme | null, } | { "type": "setUiThemeDraft", draft: UiTheme | null, } | { "type": "setUiKeybindingOverride", controlId: string, keys: string | null, } | { "type": "setSyncBackboneUri", uri: string | null, } | { "type": "setSyncCardKind", kind: SyncCardKind | null, } | { "type": "setSyncDraftPath", path: string, } | { "type": "setDocumentSyncStatus", documentId: string, status: ArtifactSyncStatus, } | { "type": "setDocumentInferencePort", documentId: string, port: InferencePortStatus, } | { "type": "clearDocumentInferencePort", documentId: string, } | { "type": "setMergePolicy", policy: MergePolicy, } | { "type": "setConflicts", conflicts: Array<Conflict>, } | { "type": "selectConflict", conflictId: string | null, } | { "type": "setStorageScope", scope: ShellScope, } | { "type": "setOpeningPreference", role: string, dialectId: string | null, };"##,
+            typescript: r##"export type ShellCommand = { "type": "registerLoadedPlugin", plugin: LoadedPlugin, } | { "type": "unregisterLoadedPlugin", pluginId: string, } | { "type": "setPluginStatus", pluginId: string, status: PluginPanelStatus, } | { "type": "setPluginSupervisorState", pluginId: string, state: PluginSupervisorState, } | { "type": "setActiveSession", session: ActiveSession | null, } | { "type": "setSessionError", error: string | null, } | { "type": "setAppLabelOverride", appId: string, labelKey: string, value: string | null, } | { "type": "setActionPaneFolded", windowId: string, folded: boolean, } | { "type": "setActionPaneExpanded", windowId: string, actionId: string | null, } | { "type": "stageActionArg", windowId: string, actionId: string, argId: string, value: unknown, } | { "type": "resetActionArgs", windowId: string, actionId: string, } | { "type": "setActiveUtility", windowId: string, utilityId: string | null, } | { "type": "setActiveTool", toolId: string | null, } | { "type": "setCommandExpanded", commandId: string | null, } | { "type": "stageCommandArg", commandId: string, argId: string, value: unknown, } | { "type": "resetCommandArgs", commandId: string, } | { "type": "setPanelVisible", anchor: Anchor, visible: boolean, } | { "type": "setPanelSize", anchor: Anchor, size: number, } | { "type": "setPanelPath", anchor: Anchor, path: Array<string>, } | { "type": "setDockOverride", dock: LayoutNode | null, } | { "type": "setPanelPathMemory", panelKey: string, path: string | null, } | { "type": "setTreeOpenState", treeId: string, open: boolean, } | { "type": "hydrateDockUi", dock: DockUiState | null, } | { "type": "resetDock" } | { "type": "focusWindow", windowId: string | null, } | { "type": "setShellLayout", layout: LayoutNode | null, } | { "type": "setActiveExample", exampleId: string, } | { "type": "setMobilePanelPath", path: Array<string>, } | { "type": "setMobilePanelVisible", visible: boolean, } | { "type": "setExtraWindows", windows: Array<ExtraWindowInstance>, } | { "type": "setWindowTitle", windowId: string, title: string, } | { "type": "setWindowIcon", windowId: string, icon: IconName, } | { "type": "setSearchOpen", open: boolean, } | { "type": "setFindOpen", open: boolean, } | { "type": "autoStartIntroduction", key: string, } | { "type": "setIntroductionStep", stepIndex: number | null, } | { "type": "completeIntroductionInteraction", interactionIndex: number, } | { "type": "openDialog", dialogId: string, seedArgs: unknown, } | { "type": "closeDialog", dialogId: string | null, } | { "type": "showTransientNotice", notice: TransientNotice, } | { "type": "dismissTransientNotice" } | { "type": "setOpenWithFocusRole", role: AppRole | null, } | { "type": "setActiveTutorial", tutorialId: string | null, } | { "type": "setUiDriverDraft", draft: UiDriver | null, } | { "type": "setUiThemeDraft", draft: UiTheme | null, } | { "type": "setSyncBackboneUri", uri: string | null, } | { "type": "setSyncCardKind", kind: SyncCardKind | null, } | { "type": "setSyncDraftPath", path: string, } | { "type": "setDocumentSyncStatus", documentId: string, status: ArtifactSyncStatus, } | { "type": "setDocumentInferencePort", documentId: string, port: InferencePortStatus, } | { "type": "clearDocumentInferencePort", documentId: string, } | { "type": "setMergePolicy", policy: MergePolicy, } | { "type": "setConflicts", conflicts: Array<Conflict>, } | { "type": "selectConflict", conflictId: string | null, } | { "type": "setStorageScope", scope: ShellScope, } | { "type": "setOpeningPreference", role: string, dialectId: string | null, };"##,
         },
         SchemaExport {
             name: "ShellError",
@@ -76,7 +76,7 @@ pub mod schema_registry {
         SchemaExport {
             name: "ShellState",
             version: 1,
-            typescript: r##"export type ShellState = { revision: number, loadedPlugins: Array<LoadedPlugin>, pluginStatusById: { [key in string]?: PluginPanelStatus }, pluginSupervisorById: { [key in string]?: PluginSupervisorState }, activeSession: ActiveSession | null, sessionError: string | null, appLabelsOverlay: { [key in string]?: { [key in string]?: string } }, actionPaneFoldedByWindow: { [key in string]?: boolean }, actionPaneExpandedByWindow: { [key in string]?: string | null }, stagedActionArgs: Record<string, Record<string, Record<string, unknown>>>, activeUtilityByWindow: { [key in string]?: string | null }, activeToolId: string | null, commandPanelExpanded: string | null, stagedCommandArgs: Record<string, Record<string, unknown>>, panelsVisible: ByAnchor<boolean>, panelsSize: ByAnchor<number>, panelsPath: ByAnchor<Array<string>>, dockOverride: LayoutNode | null, panelPathMemory: { [key in string]?: string }, treeOpenStates: { [key in string]?: boolean }, activeWindowId: string | null, shellLayout: LayoutNode | null, activeExampleId: string, mobilePanelPath: Array<string>, mobilePanelVisible: boolean, extraWindows: Array<ExtraWindowInstance>, windowTitlesById: { [key in string]?: string }, windowIconsById: { [key in string]?: IconName }, searchOpen: boolean, findOpen: boolean, introductionStepIndex: number | null, introductionAutoStartedKeys: Array<string>, introductionCompletedInteractions: Array<number>, dialogStack: Array<DialogState>, transientNotice: TransientNotice | null, openWithFocusRole: AppRole | null, activeTutorialId: string | null, uiAppearance: UiAppearance, uiLayout: UiChromeLayout, uiDriverId: string, uiCustomDrivers: { [key in string]?: UiDriver }, uiDriverDraft: UiDriver | null, uiLocale: UiLocale, uiTerminology: string, uiThemeId: string, uiCustomThemes: { [key in string]?: UiTheme }, uiThemeDraft: UiTheme | null, uiKeybindingOverrides: { [key in string]?: string }, syncBackboneUri: string | null, syncCardKind: SyncCardKind | null, syncDraftPath: string, syncStatusByDocument: { [key in string]?: ArtifactSyncStatus }, inferencePortByDocument: { [key in string]?: InferencePortStatus }, mergePolicy: MergePolicy, conflicts: Array<Conflict>, selectedConflictId: string | null, storageScope: ShellScope, openingPreferences: { [key in string]?: string }, };"##,
+            typescript: r##"export type ShellState = { revision: number, loadedPlugins: Array<LoadedPlugin>, pluginStatusById: { [key in string]?: PluginPanelStatus }, pluginSupervisorById: { [key in string]?: PluginSupervisorState }, activeSession: ActiveSession | null, sessionError: string | null, appLabelsOverlay: { [key in string]?: { [key in string]?: string } }, actionPaneFoldedByWindow: { [key in string]?: boolean }, actionPaneExpandedByWindow: { [key in string]?: string | null }, stagedActionArgs: Record<string, Record<string, Record<string, unknown>>>, activeUtilityByWindow: { [key in string]?: string | null }, activeToolId: string | null, commandPanelExpanded: string | null, stagedCommandArgs: Record<string, Record<string, unknown>>, panelsVisible: ByAnchor<boolean>, panelsSize: ByAnchor<number>, panelsPath: ByAnchor<Array<string>>, dockOverride: LayoutNode | null, panelPathMemory: { [key in string]?: string }, treeOpenStates: { [key in string]?: boolean }, activeWindowId: string | null, shellLayout: LayoutNode | null, activeExampleId: string, mobilePanelPath: Array<string>, mobilePanelVisible: boolean, extraWindows: Array<ExtraWindowInstance>, windowTitlesById: { [key in string]?: string }, windowIconsById: { [key in string]?: IconName }, searchOpen: boolean, findOpen: boolean, introductionStepIndex: number | null, introductionAutoStartedKeys: Array<string>, introductionCompletedInteractions: Array<number>, dialogStack: Array<DialogState>, transientNotice: TransientNotice | null, openWithFocusRole: AppRole | null, activeTutorialId: string | null, uiDriverDraft: UiDriver | null, uiThemeDraft: UiTheme | null, syncBackboneUri: string | null, syncCardKind: SyncCardKind | null, syncDraftPath: string, syncStatusByDocument: { [key in string]?: ArtifactSyncStatus }, inferencePortByDocument: { [key in string]?: InferencePortStatus }, mergePolicy: MergePolicy, conflicts: Array<Conflict>, selectedConflictId: string | null, storageScope: ShellScope, openingPreferences: { [key in string]?: string }, };"##,
         },
         SchemaExport { name: "SplitOrientation", version: 1, typescript: r##"export type SplitOrientation = "horizontal" | "vertical";"## },
         SchemaExport { name: "SyncCardKind", version: 1, typescript: r##"export type SyncCardKind = "file" | "folder" | "remote";"## },
@@ -664,19 +664,10 @@ pub struct ShellState {
     pub active_tutorial_id: Option<String>,
     //#endregion 🎓️Tutorial
 
-    //#region 🎨️UiPreferences
-    pub ui_appearance: UiAppearance,
-    pub ui_layout: UiChromeLayout,
-    pub ui_driver_id: String,
-    pub ui_custom_drivers: HashMap<String, UiDriver>,
+    //#region 🎨️UiPreferenceDrafts
     pub ui_driver_draft: Option<UiDriver>,
-    pub ui_locale: UiLocale,
-    pub ui_terminology: String,
-    pub ui_theme_id: String,
-    pub ui_custom_themes: HashMap<String, UiTheme>,
     pub ui_theme_draft: Option<UiTheme>,
-    pub ui_keybinding_overrides: HashMap<String, String>,
-    //#endregion 🎨️UiPreferences
+    //#endregion 🎨️UiPreferenceDrafts
 
     //#region 🔄️Sync
     pub sync_backbone_uri: Option<String>,
@@ -705,10 +696,7 @@ pub struct ShellState {
 
 impl Default for ShellState {
     /// 🧪️ A purely technical starting point for tests/fixtures/bootstrap wiring — NOT a product
-    /// choice of language, theme, or driver. CLAUDE.md requires "no default language"; a host
-    /// integrating this module MUST issue an explicit `SetUiLocale`/`SetUiAppearance`/… during its
-    /// own bootstrap sequence before presenting UI, exactly as it must do today for the React
-    /// reducer's own initial state.
+    /// choice of language, theme, or driver. Hosts supply durable UI preferences through the canonical OS config projection.
     fn default() -> Self {
         ShellState {
             revision: 0,
@@ -748,17 +736,8 @@ impl Default for ShellState {
             transient_notice: None,
             open_with_focus_role: None,
             active_tutorial_id: None,
-            ui_appearance: UiAppearance::System,
-            ui_layout: UiChromeLayout::Desktop,
-            ui_driver_id: String::new(),
-            ui_custom_drivers: HashMap::new(),
             ui_driver_draft: None,
-            ui_locale: UiLocale::En,
-            ui_terminology: String::new(),
-            ui_theme_id: String::new(),
-            ui_custom_themes: HashMap::new(),
             ui_theme_draft: None,
-            ui_keybinding_overrides: HashMap::new(),
             sync_backbone_uri: None,
             sync_card_kind: None,
             sync_draft_path: String::new(),
@@ -840,18 +819,9 @@ pub enum ShellCommand {
     // ── Tutorial (semantic subset) — audit SET_TUTORIAL
     SetActiveTutorial { tutorial_id: Option<String> },
 
-    // ── UI preferences — audit SET_UI_APPEARANCE/SET_UI_LAYOUT/SET_UI_DRIVER_ID/SET_UI_CUSTOM_DRIVERS/SET_UI_DRIVER_DRAFT/SET_UI_LOCALE/SET_UI_TERMINOLOGY/SET_UI_THEME_ID/SET_UI_CUSTOM_THEMES/SET_UI_THEME_DRAFT/SET_UI_KEYBINDING_OVERRIDES
-    SetUiAppearance { appearance: UiAppearance },
-    SetUiLayout { layout: UiChromeLayout },
-    SetUiDriver { driver_id: String },
-    SetUiCustomDriver { driver_id: String, driver: Option<UiDriver> },
+    // ── Ephemeral UI editor drafts; durable preferences are canonical OS config mutations.
     SetUiDriverDraft { draft: Option<UiDriver> },
-    SetUiLocale { locale: UiLocale },
-    SetUiTerminology { terminology_id: String },
-    SetUiTheme { theme_id: String },
-    SetUiCustomTheme { theme_id: String, theme: Option<UiTheme> },
     SetUiThemeDraft { draft: Option<UiTheme> },
-    SetUiKeybindingOverride { control_id: String, keys: Option<String> },
 
     // ── Sync — audit SET_SYNC_BACKBONE_URI/SET_SYNC_CARD_KIND/SET_SYNC_DRAFT_PATH/SET_SYNC_STATUS_FOR_DOCUMENT
     SetSyncBackboneUri { uri: Option<String> },
@@ -1153,73 +1123,16 @@ impl dsl_core::ToValue for ShellCommand {
                 entries.push(("tutorialId".to_string(), dsl_core::ToValue::to_value(tutorial_id)));
                 dsl_core::DslValue::Object(entries)
             }
-            Self::SetUiAppearance { appearance } => {
-                let mut entries: Vec<(String, dsl_core::DslValue)> = Vec::new();
-                entries.push(("type".to_string(), dsl_core::DslValue::String("setUiAppearance".to_string())));
-                entries.push(("appearance".to_string(), dsl_core::ToValue::to_value(appearance)));
-                dsl_core::DslValue::Object(entries)
-            }
-            Self::SetUiLayout { layout } => {
-                let mut entries: Vec<(String, dsl_core::DslValue)> = Vec::new();
-                entries.push(("type".to_string(), dsl_core::DslValue::String("setUiLayout".to_string())));
-                entries.push(("layout".to_string(), dsl_core::ToValue::to_value(layout)));
-                dsl_core::DslValue::Object(entries)
-            }
-            Self::SetUiDriver { driver_id } => {
-                let mut entries: Vec<(String, dsl_core::DslValue)> = Vec::new();
-                entries.push(("type".to_string(), dsl_core::DslValue::String("setUiDriver".to_string())));
-                entries.push(("driverId".to_string(), dsl_core::ToValue::to_value(driver_id)));
-                dsl_core::DslValue::Object(entries)
-            }
-            Self::SetUiCustomDriver { driver_id, driver } => {
-                let mut entries: Vec<(String, dsl_core::DslValue)> = Vec::new();
-                entries.push(("type".to_string(), dsl_core::DslValue::String("setUiCustomDriver".to_string())));
-                entries.push(("driverId".to_string(), dsl_core::ToValue::to_value(driver_id)));
-                entries.push(("driver".to_string(), dsl_core::ToValue::to_value(driver)));
-                dsl_core::DslValue::Object(entries)
-            }
             Self::SetUiDriverDraft { draft } => {
                 let mut entries: Vec<(String, dsl_core::DslValue)> = Vec::new();
                 entries.push(("type".to_string(), dsl_core::DslValue::String("setUiDriverDraft".to_string())));
                 entries.push(("draft".to_string(), dsl_core::ToValue::to_value(draft)));
                 dsl_core::DslValue::Object(entries)
             }
-            Self::SetUiLocale { locale } => {
-                let mut entries: Vec<(String, dsl_core::DslValue)> = Vec::new();
-                entries.push(("type".to_string(), dsl_core::DslValue::String("setUiLocale".to_string())));
-                entries.push(("locale".to_string(), dsl_core::ToValue::to_value(locale)));
-                dsl_core::DslValue::Object(entries)
-            }
-            Self::SetUiTerminology { terminology_id } => {
-                let mut entries: Vec<(String, dsl_core::DslValue)> = Vec::new();
-                entries.push(("type".to_string(), dsl_core::DslValue::String("setUiTerminology".to_string())));
-                entries.push(("terminologyId".to_string(), dsl_core::ToValue::to_value(terminology_id)));
-                dsl_core::DslValue::Object(entries)
-            }
-            Self::SetUiTheme { theme_id } => {
-                let mut entries: Vec<(String, dsl_core::DslValue)> = Vec::new();
-                entries.push(("type".to_string(), dsl_core::DslValue::String("setUiTheme".to_string())));
-                entries.push(("themeId".to_string(), dsl_core::ToValue::to_value(theme_id)));
-                dsl_core::DslValue::Object(entries)
-            }
-            Self::SetUiCustomTheme { theme_id, theme } => {
-                let mut entries: Vec<(String, dsl_core::DslValue)> = Vec::new();
-                entries.push(("type".to_string(), dsl_core::DslValue::String("setUiCustomTheme".to_string())));
-                entries.push(("themeId".to_string(), dsl_core::ToValue::to_value(theme_id)));
-                entries.push(("theme".to_string(), dsl_core::ToValue::to_value(theme)));
-                dsl_core::DslValue::Object(entries)
-            }
             Self::SetUiThemeDraft { draft } => {
                 let mut entries: Vec<(String, dsl_core::DslValue)> = Vec::new();
                 entries.push(("type".to_string(), dsl_core::DslValue::String("setUiThemeDraft".to_string())));
                 entries.push(("draft".to_string(), dsl_core::ToValue::to_value(draft)));
-                dsl_core::DslValue::Object(entries)
-            }
-            Self::SetUiKeybindingOverride { control_id, keys } => {
-                let mut entries: Vec<(String, dsl_core::DslValue)> = Vec::new();
-                entries.push(("type".to_string(), dsl_core::DslValue::String("setUiKeybindingOverride".to_string())));
-                entries.push(("controlId".to_string(), dsl_core::ToValue::to_value(control_id)));
-                entries.push(("keys".to_string(), dsl_core::ToValue::to_value(keys)));
                 dsl_core::DslValue::Object(entries)
             }
             Self::SetSyncBackboneUri { uri } => {
@@ -1492,52 +1405,13 @@ impl dsl_core::FromValue for ShellCommand {
                 let tutorial_id = match __entries.iter().find(|(k, _)| k == "tutorialId") { Some((_, v)) => <Option<String> as dsl_core::FromValue>::from_value(v.clone()).map_err(|e| e.under("tutorialId"))?, None => return Err(dsl_core::ValueError::new(format!("missing field `tutorialId`"))) };
                     Ok(Self::SetActiveTutorial { tutorial_id })
                 }
-                "setUiAppearance" => {
-                let appearance = match __entries.iter().find(|(k, _)| k == "appearance") { Some((_, v)) => <UiAppearance as dsl_core::FromValue>::from_value(v.clone()).map_err(|e| e.under("appearance"))?, None => return Err(dsl_core::ValueError::new(format!("missing field `appearance`"))) };
-                    Ok(Self::SetUiAppearance { appearance })
-                }
-                "setUiLayout" => {
-                let layout = match __entries.iter().find(|(k, _)| k == "layout") { Some((_, v)) => <UiChromeLayout as dsl_core::FromValue>::from_value(v.clone()).map_err(|e| e.under("layout"))?, None => return Err(dsl_core::ValueError::new(format!("missing field `layout`"))) };
-                    Ok(Self::SetUiLayout { layout })
-                }
-                "setUiDriver" => {
-                let driver_id = match __entries.iter().find(|(k, _)| k == "driverId") { Some((_, v)) => <String as dsl_core::FromValue>::from_value(v.clone()).map_err(|e| e.under("driverId"))?, None => return Err(dsl_core::ValueError::new(format!("missing field `driverId`"))) };
-                    Ok(Self::SetUiDriver { driver_id })
-                }
-                "setUiCustomDriver" => {
-                let driver_id = match __entries.iter().find(|(k, _)| k == "driverId") { Some((_, v)) => <String as dsl_core::FromValue>::from_value(v.clone()).map_err(|e| e.under("driverId"))?, None => return Err(dsl_core::ValueError::new(format!("missing field `driverId`"))) };
-                let driver = match __entries.iter().find(|(k, _)| k == "driver") { Some((_, v)) => <Option<UiDriver> as dsl_core::FromValue>::from_value(v.clone()).map_err(|e| e.under("driver"))?, None => return Err(dsl_core::ValueError::new(format!("missing field `driver`"))) };
-                    Ok(Self::SetUiCustomDriver { driver_id, driver })
-                }
                 "setUiDriverDraft" => {
                 let draft = match __entries.iter().find(|(k, _)| k == "draft") { Some((_, v)) => <Option<UiDriver> as dsl_core::FromValue>::from_value(v.clone()).map_err(|e| e.under("draft"))?, None => return Err(dsl_core::ValueError::new(format!("missing field `draft`"))) };
                     Ok(Self::SetUiDriverDraft { draft })
                 }
-                "setUiLocale" => {
-                let locale = match __entries.iter().find(|(k, _)| k == "locale") { Some((_, v)) => <UiLocale as dsl_core::FromValue>::from_value(v.clone()).map_err(|e| e.under("locale"))?, None => return Err(dsl_core::ValueError::new(format!("missing field `locale`"))) };
-                    Ok(Self::SetUiLocale { locale })
-                }
-                "setUiTerminology" => {
-                let terminology_id = match __entries.iter().find(|(k, _)| k == "terminologyId") { Some((_, v)) => <String as dsl_core::FromValue>::from_value(v.clone()).map_err(|e| e.under("terminologyId"))?, None => return Err(dsl_core::ValueError::new(format!("missing field `terminologyId`"))) };
-                    Ok(Self::SetUiTerminology { terminology_id })
-                }
-                "setUiTheme" => {
-                let theme_id = match __entries.iter().find(|(k, _)| k == "themeId") { Some((_, v)) => <String as dsl_core::FromValue>::from_value(v.clone()).map_err(|e| e.under("themeId"))?, None => return Err(dsl_core::ValueError::new(format!("missing field `themeId`"))) };
-                    Ok(Self::SetUiTheme { theme_id })
-                }
-                "setUiCustomTheme" => {
-                let theme_id = match __entries.iter().find(|(k, _)| k == "themeId") { Some((_, v)) => <String as dsl_core::FromValue>::from_value(v.clone()).map_err(|e| e.under("themeId"))?, None => return Err(dsl_core::ValueError::new(format!("missing field `themeId`"))) };
-                let theme = match __entries.iter().find(|(k, _)| k == "theme") { Some((_, v)) => <Option<UiTheme> as dsl_core::FromValue>::from_value(v.clone()).map_err(|e| e.under("theme"))?, None => return Err(dsl_core::ValueError::new(format!("missing field `theme`"))) };
-                    Ok(Self::SetUiCustomTheme { theme_id, theme })
-                }
                 "setUiThemeDraft" => {
                 let draft = match __entries.iter().find(|(k, _)| k == "draft") { Some((_, v)) => <Option<UiTheme> as dsl_core::FromValue>::from_value(v.clone()).map_err(|e| e.under("draft"))?, None => return Err(dsl_core::ValueError::new(format!("missing field `draft`"))) };
                     Ok(Self::SetUiThemeDraft { draft })
-                }
-                "setUiKeybindingOverride" => {
-                let control_id = match __entries.iter().find(|(k, _)| k == "controlId") { Some((_, v)) => <String as dsl_core::FromValue>::from_value(v.clone()).map_err(|e| e.under("controlId"))?, None => return Err(dsl_core::ValueError::new(format!("missing field `controlId`"))) };
-                let keys = match __entries.iter().find(|(k, _)| k == "keys") { Some((_, v)) => <Option<String> as dsl_core::FromValue>::from_value(v.clone()).map_err(|e| e.under("keys"))?, None => return Err(dsl_core::ValueError::new(format!("missing field `keys`"))) };
-                    Ok(Self::SetUiKeybindingOverride { control_id, keys })
                 }
                 "setSyncBackboneUri" => {
                 let uri = match __entries.iter().find(|(k, _)| k == "uri") { Some((_, v)) => <Option<String> as dsl_core::FromValue>::from_value(v.clone()).map_err(|e| e.under("uri"))?, None => return Err(dsl_core::ValueError::new(format!("missing field `uri`"))) };
@@ -1749,28 +1623,19 @@ pub(crate) fn capability_id_for(command: &ShellCommand) -> String {
         ShellCommand::DismissTransientNotice => 40,
         ShellCommand::SetOpenWithFocusRole { .. } => 41,
         ShellCommand::SetActiveTutorial { .. } => 42,
-        ShellCommand::SetUiAppearance { .. } => 43,
-        ShellCommand::SetUiLayout { .. } => 44,
-        ShellCommand::SetUiDriver { .. } => 45,
-        ShellCommand::SetUiCustomDriver { .. } => 46,
-        ShellCommand::SetUiDriverDraft { .. } => 47,
-        ShellCommand::SetUiLocale { .. } => 48,
-        ShellCommand::SetUiTerminology { .. } => 49,
-        ShellCommand::SetUiTheme { .. } => 50,
-        ShellCommand::SetUiCustomTheme { .. } => 51,
-        ShellCommand::SetUiThemeDraft { .. } => 52,
-        ShellCommand::SetUiKeybindingOverride { .. } => 53,
-        ShellCommand::SetSyncBackboneUri { .. } => 54,
-        ShellCommand::SetSyncCardKind { .. } => 55,
-        ShellCommand::SetSyncDraftPath { .. } => 56,
-        ShellCommand::SetDocumentSyncStatus { .. } => 57,
-        ShellCommand::SetDocumentInferencePort { .. } => 58,
-        ShellCommand::ClearDocumentInferencePort { .. } => 59,
-        ShellCommand::SetMergePolicy { .. } => 60,
-        ShellCommand::SetConflicts { .. } => 61,
-        ShellCommand::SelectConflict { .. } => 62,
-        ShellCommand::SetStorageScope { .. } => 63,
-        ShellCommand::SetOpeningPreference { .. } => 64,
+        ShellCommand::SetUiDriverDraft { .. } => 43,
+        ShellCommand::SetUiThemeDraft { .. } => 44,
+        ShellCommand::SetSyncBackboneUri { .. } => 45,
+        ShellCommand::SetSyncCardKind { .. } => 46,
+        ShellCommand::SetSyncDraftPath { .. } => 47,
+        ShellCommand::SetDocumentSyncStatus { .. } => 48,
+        ShellCommand::SetDocumentInferencePort { .. } => 49,
+        ShellCommand::ClearDocumentInferencePort { .. } => 50,
+        ShellCommand::SetMergePolicy { .. } => 51,
+        ShellCommand::SetConflicts { .. } => 52,
+        ShellCommand::SelectConflict { .. } => 53,
+        ShellCommand::SetStorageScope { .. } => 54,
+        ShellCommand::SetOpeningPreference { .. } => 55,
     };
     SHELL_COMMAND_CATALOG[index].id.to_string()
 }
@@ -1778,7 +1643,7 @@ pub(crate) fn capability_id_for(command: &ShellCommand) -> String {
 /// 🗂️ One entry per [`ShellCommand`] variant, in declaration order. `id`s reuse the wgpu shell's
 /// existing `shell.*` verb strings where one already exists for this exact mutation (see
 /// `📓️terra-P9-report.md`), and are coined fresh in the same dotted-noun style otherwise.
-const SHELL_COMMAND_CATALOG: [CommandMeta; 65] = [
+const SHELL_COMMAND_CATALOG: [CommandMeta; 56] = [
     CommandMeta { id: "plugin.register", title: "Register Loaded Plugin", description: "Add or replace a plugin's registry entry.", observable_only: false },
     CommandMeta { id: "plugin.unregister", title: "Unregister Loaded Plugin", description: "Remove a plugin's registry entry.", observable_only: false },
     CommandMeta { id: "plugin.setStatus", title: "Set Plugin Status", description: "Set a plugin panel's open/collapsed/error status.", observable_only: false },
@@ -1822,17 +1687,8 @@ const SHELL_COMMAND_CATALOG: [CommandMeta; 65] = [
     CommandMeta { id: "ui.notice.dismiss", title: "Dismiss Transient Notice", description: "Dismiss the current transient notice.", observable_only: false },
     CommandMeta { id: "ui.open.setFocusRole", title: "Set Open-With Focus Role", description: "Set which role group the Open panel focuses.", observable_only: false },
     CommandMeta { id: "ui.tutorial.setActive", title: "Set Active Tutorial", description: "Switch the active video tutorial.", observable_only: false },
-    CommandMeta { id: "os.setAppearance", title: "Set Appearance", description: "Set light/dark/system appearance.", observable_only: false },
-    CommandMeta { id: "os.setLayout", title: "Set UI Layout", description: "Set the desktop/tablet UI chrome layout.", observable_only: false },
-    CommandMeta { id: "os.setDriver", title: "Set UI Driver", description: "Select the active UI driver.", observable_only: false },
-    CommandMeta { id: "ui.driver.setCustom", title: "Set Custom UI Driver", description: "Add, replace, or remove a user-defined UI driver.", observable_only: false },
     CommandMeta { id: "ui.driver.setDraft", title: "Set UI Driver Draft", description: "Set or clear the in-progress driver editor draft.", observable_only: false },
-    CommandMeta { id: "os.setLocale", title: "Set UI Locale", description: "Set the interface language.", observable_only: false },
-    CommandMeta { id: "os.setTerminology", title: "Set UI Terminology", description: "Set the app-specific terminology id.", observable_only: false },
-    CommandMeta { id: "os.setThemeId", title: "Set UI Theme", description: "Select the active theme.", observable_only: false },
-    CommandMeta { id: "ui.theme.setCustom", title: "Set Custom UI Theme", description: "Add, replace, or remove a user-defined theme.", observable_only: false },
     CommandMeta { id: "ui.theme.setDraft", title: "Set UI Theme Draft", description: "Set or clear the in-progress theme editor draft.", observable_only: false },
-    CommandMeta { id: "ui.keybinding.setOverride", title: "Set Keybinding Override", description: "Set or clear a user keybinding customization.", observable_only: false },
     CommandMeta { id: "sync.setBackboneUri", title: "Set Sync Backbone URI", description: "Set or clear the hub document sync backbone URI.", observable_only: false },
     CommandMeta { id: "sync.setCardKind", title: "Set Sync Card Kind", description: "Set or clear the check-in target type.", observable_only: false },
     CommandMeta { id: "sync.setDraftPath", title: "Set Sync Draft Path", description: "Set the work-in-progress check-in path.", observable_only: false },

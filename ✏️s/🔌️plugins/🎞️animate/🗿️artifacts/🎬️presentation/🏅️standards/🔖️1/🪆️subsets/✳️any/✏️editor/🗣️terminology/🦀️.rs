@@ -28,7 +28,6 @@ semio_framework_plugin::app_labels! {
 //#endregion 🔖️Labels
 
 //#region 🔖️Resolvers
-/// 🗣️ B1: resolves the active label set from `cfg.locale` (was the host-pushed `ViewModel.locale`);
 /// unknown/absent locales fall back to native English. `PresentationConfig` carries no terminology axis,
 /// so this app is always `Terminology::Native` — mirrors `sequence_ui`'s identical pair.
 pub fn animate_presentation_locale(view_state: &semio_framework_plugin::ViewModel) -> Locale {

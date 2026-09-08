@@ -7,7 +7,6 @@ type ShootingConfig {
   fitRevision: Int! @state(class: CONFIG)
   cameraDraftLabel: String! @state(class: CONFIG)
   camera: ShootingCamera! @state(class: CONFIG)
-  activeUtilityId: String! @state(class: CONFIG)
 }
 
 type ShootingCamera {

@@ -33,16 +33,13 @@ async fn every_command_round_trips_through_text_and_binary() {
 }
 
 /// ⚖️ LAW: the leading token of every printed op line is the row's `dsl` wire keyword — the
-/// kebab-cased command id, except for the one documented divergence (`setLocale` → `locale`, an
 /// undeclared host-pushed command). This is what a missing `#[dsl(keyword = ..)]` on a payload struct
 /// silently breaks (the record prints with no keyword at all and no longer parses).
 #[semio_framework_async_macros::async_test]
 async fn every_printed_op_line_starts_with_the_rows_wire_keyword() {
     for command in every_command() {
         let id = command.command_id();
-        let expected = if id == "setLocale" {
-            "locale".to_string()
-        } else if id == "noMutation" {
+        let expected = if id == "noMutation" {
             "no-operation".to_string()
         } else {
             id.chars().flat_map(|c| if c.is_ascii_uppercase() { vec!['-', c.to_ascii_lowercase()] } else { vec![c] }).collect()
@@ -64,7 +61,6 @@ pub(super) fn every_command() -> Vec<VcsCommand> {
         VcsCommand::PatchSnapshot(patch_snapshot::PatchSnapshot { field: "title".into(), value: "Renamed".into() }),
         VcsCommand::TextEdit(text_edit::TextEdit { text: "{}".into() }),
         VcsCommand::Edit(edit_command::Edit { text: "{}".into() }),
-        VcsCommand::SetLocale(set_locale::SetLocale { value: "de-DE".into() }),
         VcsCommand::NoMutation(no_operation::NoMutation {}),
         VcsCommand::CanvasPointerDown(canvas_pointer_down::CanvasPointerDown {}),
         VcsCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove {}),
@@ -86,7 +82,7 @@ fn bounded_command_factory_matches_the_language_neutral_maximum_oracle() {
     let snapshot = VcsPlayApp::initial_snapshot();
     let interaction = protocol::InteractionState::default();
     let accepted = VcsCommand::PatchSnapshot(patch_snapshot::PatchSnapshot { field: String::new(), value: "v".repeat(maximum) });
-    let rejected = VcsCommand::SetLocale(set_locale::SetLocale { value: "l".repeat(maximum + additional) });
+    let rejected = VcsCommand::PatchSnapshot(patch_snapshot::PatchSnapshot { field: String::new(), value: "v".repeat(maximum + additional) });
     assert_eq!(vcs_bounded_extent(&accepted, &snapshot, &interaction), Some(expected_items));
     assert_eq!(vcs_bounded_extent(&rejected, &snapshot, &interaction), None);
     let factory = VcsBoundedCommandJobFactory::new("s.vcs.vcs@1/*#editor");
@@ -99,7 +95,7 @@ fn retained_factories_publish_only_their_exact_declared_lanes() {
     use semio_framework_plugin::ArtifactOwnedToolJobFactory;
     let fixture: Value = parse(RETAINED_ROUTES).expect("VCS retained route fixture decodes");
     let routes = fixture.get("routes").and_then(Value::as_array).expect("routes");
-    assert_eq!(routes.len(), 10);
+    assert_eq!(routes.len(), 9);
     assert_eq!(<VcsBoundedCommandJobFactory as ArtifactOwnedToolJobFactory>::PUBLICATION_CONTRACTS, VCS_BOUNDED_PUBLICATION_CONTRACTS);
     assert_eq!(<VcsResumableCommandJobFactory as ArtifactOwnedToolJobFactory>::PUBLICATION_CONTRACTS, VCS_RESUMABLE_PUBLICATION_CONTRACTS);
     for route in routes {
@@ -114,7 +110,6 @@ fn retained_factories_publish_only_their_exact_declared_lanes() {
         };
         assert_eq!(contract.lanes, &[expected]);
     }
-    assert_eq!(VCS_BOUNDED_PUBLICATION_CONTRACTS.iter().find(|row| row.tool_id == "setLocale").map(|row| row.lanes), Some(&[ArtifactToolPublicationLane::Config][..]));
     assert_eq!(VCS_BOUNDED_PUBLICATION_CONTRACTS.iter().find(|row| row.tool_id == "noMutation").map(|row| row.lanes), Some(&[ArtifactToolPublicationLane::HostOnly][..]));
     assert!(VCS_RESUMABLE_PUBLICATION_CONTRACTS.iter().all(|row| row.lanes == [ArtifactToolPublicationLane::Artifact]));
 }
@@ -126,7 +121,6 @@ fn one_item_store_preparation_rejects_non_document_lanes() {
     let config = VcsOneItemPreparationFactory::<VcsDemoConfig, VcsDemoConfigMutation>::new(store::HistoryLane::Document);
     assert!(artifact.preflight(&crate::mutations::change_counter(1), None, store::HistoryLane::Document).is_ok());
     assert!(artifact.preflight(&crate::mutations::change_counter(1), None, store::HistoryLane::Interaction).is_err());
-    assert!(config.preflight(&VcsDemoConfigMutation::SetLocale { value: "de-DE".into() }, None, store::HistoryLane::Document).is_ok());
 }
 
 #[test]
@@ -136,7 +130,6 @@ fn action_bridge_covers_all_vcs_owned_commands_and_rejects_unknown_actions() {
         ("patchSnapshot", action_args([("field", "title".to_string()), ("value", "next".to_string())])),
         ("textEdit", action_args([("text", "{}".to_string())])),
         ("edit", action_args([("text", "{}".to_string())])),
-        ("setLocale", action_args([("value", "de-DE".to_string())])),
         ("noMutation", no_args()),
         ("canvasPointerDown", no_args()),
         ("canvasPointerMove", no_args()),

@@ -14,7 +14,6 @@
     "steps",
     "stepPayloads",
     "toolSolids",
-    "activeUtilityId",
     "selectionMethod",
     "engagementInput",
     "cameraPositionX",
@@ -84,10 +83,6 @@
     },
     "selectedFaceId": {
       "type": "integer",
-      "x-semio-state": "presence"
-    },
-    "activeUtilityId": {
-      "type": "string",
       "x-semio-state": "presence"
     },
     "selectionMethod": {

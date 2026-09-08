@@ -2,7 +2,7 @@
 
 use crate::mutations::change_layer_visible;
 use crate::op::RasterMutation;
-use crate::schema::{find_layer, layer_visible};
+use crate::standards::v1::subsets::any::schema::{find_layer, layer_visible};
 use crate::RasterSnapshot;
 use crate::editor::raster::config::{RasterConfig, RasterConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};

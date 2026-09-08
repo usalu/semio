@@ -123,7 +123,10 @@ function renderedMirrorExportIds(root: string): string[] {
 
 /** 🧬️ Every `parse<ExportId>` the schema module's TypeScript face exports. */
 function typescriptParserExportIds(root: string): string[] {
-  return [...readFileSync(schemaModulePath(root, "🟦️.ts"), "utf8").matchAll(/^export const parse([A-Za-z0-9_]+) = defineParser</gmu)].map((match) => match[1]!);
+  const source = readFileSync(schemaModulePath(root, "🟦️.ts"), "utf8");
+  const local = [...source.matchAll(/^export const parse([A-Za-z0-9_]+) = defineParser</gmu)].map((match) => match[1]!);
+  const reexported = [...source.matchAll(/^export \{([^}]+)\} from /gmu)].flatMap((match) => match[1]!.split(",").map((name) => name.trim()).filter((name) => /^parse[A-Za-z0-9_]+$/u.test(name)).map((name) => name.slice("parse".length)));
+  return [...new Set([...local, ...reexported])];
 }
 
 function reportSetDifference(label: string, expected: string[], actual: string[]): string[] {

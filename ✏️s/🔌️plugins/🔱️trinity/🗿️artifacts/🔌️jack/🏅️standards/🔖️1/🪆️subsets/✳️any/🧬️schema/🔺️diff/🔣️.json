@@ -79,10 +79,6 @@
       "$ref": "https://semio.tech/schema/s/trinity/jack/artifact.json#/$defs/Camera",
       "x-semio-state": "config"
     },
-    "jackResultJson": {
-      "type": "string",
-      "x-semio-state": "config"
-    },
     "editorSelection": {
       "oneOf": [
         {

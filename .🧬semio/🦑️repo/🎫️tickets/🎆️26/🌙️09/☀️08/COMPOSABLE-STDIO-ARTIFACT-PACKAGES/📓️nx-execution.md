@@ -44,16 +44,20 @@ This execution owns the reusable Nx/Bun package boundary, all stdio artifact pac
 - Sequence normalized inputs explicitly include its root TypeScript facade, browser JavaScript, host JavaScript dependency, and adjacent handwritten browser `.d.ts` sidecar.
 - Sequence sidecar hashing and restoration pass. Baseline task hash `2708385174624081084`; a temporary adjacent browser `.d.ts` marker forced a cache miss at `10778854061449214357`. The source was restored to SHA-256 `81985d256abea2c8b944f709a050b4dbd3cbdc4fd22772732f7ce928e4acb400`. After deleting only Sequence `dist`, Nx produced a 100% local hit at the baseline hash and restored the sidecar (`81985d…`), entry declaration (`450e1a…`), and JavaScript (`a6e877…`).
 - The schema-first native-preparation fixture, third-party `jsonschema` oracle, Cargo metadata oracle, artifact-router selector regression, and queued-build progress regression pass. The unsafe-router test was recorded red before the implementation and green afterward.
+- A fresh focused native-preparation run after the final router changes passes the independent Cargo metadata and `jsonschema` dependency/input oracle (`🗑️generated/native-preparation-direct-final.txt`).
+- The ticket-close ledger contains 449 expanded exact repo-relative paths. Every Created/Updated path exists in the current workspace; its only two Removed paths are the package-local Draw FSM implementation files replaced by taxonomy-root sources. The whole owned set also passes `git diff --check` (`🗑️generated/nx-owned-file-ledger-path-check.txt`, `🗑️generated/nx-owned-file-diff-check.txt`).
+- The focused UI built-tree retirement source oracle is green after replacing its obsolete individual-assertion spelling with exact checks for the current nine typed depth witnesses and the exhaustive guarded `while` loop (`🗑️generated/ui-built-tree-retirement-oracle-final.txt`). The original failure is preserved in `🗑️generated/flow-source-fixture-final.txt`.
+- The complete Flow source-fixture suite is green (`🗑️generated/flow-source-fixture-final-11.txt`). Its sequential red receipts identified stale expectations after the framework Flow extraction: host-wire ordinals now match the 36-row command table at 33/34, the parameter intent fixture/schema resolve from the framework artifact and compile their two schema `$defs`, the 14-entry canonical variant schema agrees with its enum and Rust variant oracle, source witnesses point to the mounted snapshot/test modules, Ajv keywords are registered on Ajv instances before compilation, and editor/viewer owner assertions use the leaf-local retirement module. All hostile/rejection checks remain active.
 - The parent duplicate-mount contract was recorded red on Mathematical's package wrapper. All 22 remaining composition-level example mounts, Mathematical's duplicate CAS/polynomial mounts, and Imperative's public artifact extension re-export were removed. The repository-wide package-wrapper scan now reports zero direct taxonomy implementation mounts and zero root-level artifact public re-exports. Canonical example access remains on the artifact leaves; Raster now owns its previously parent-only demo-session mount and test.
-- Current normalized Rust PDF inputs contain the PDF taxonomy root and its real Cargo dependency owners and contain no JPG taxonomy source or `stdio-jpg` owner (`🗑️generated/nx-pdf-rust-current-input-isolation.json`). This is the Rust input boundary; the native task cache mutation/restoration receipt remains pending the shared Cargo queue.
-- A normal `@semio-tech/forms-forms-rs:check` invocation completed its four ordinary prerequisites, including a successful `framework-graph:generate`. The earlier print-latex/report-actor preview-target routing error did not recur; the leaf Cargo check is waiting on the shared build directory with periodic progress output.
+- Current normalized Rust PDF inputs contain 835 positive PDF-owned source paths and no JPG taxonomy source or `stdio-jpg` owner (`🗑️generated/nx-pdf-rust-current-input-isolation.json`). The normalized build replaces `^production` with an explicit 29-project `nativeSources` closure plus the three generator prerequisites. A conservative traversal of every Nx project dependency reachable from those inputs and prerequisites covers 31 internal projects including PDF; none is the JPG project and no configured named-input or target-input string contains JPG. A third-party `minimatch` probe evaluated all 8,914 path patterns across that whole over-approximated closure against an actual JPG Rust source and found zero matches (`🗑️generated/nx-pdf-rust-full-transitive-isolation.json`, `🗑️generated/nx-pdf-rust-full-transitive-glob-proof.json`). The native task cache mutation/restoration receipt remains pending the shared Cargo queue.
+- A normal `@semio-tech/forms-forms-rs:check` invocation completed its four ordinary prerequisites, including a successful `framework-graph:generate`. The earlier print-latex/report-actor preview-target routing error did not recur. Its leaf Cargo process had no compiler child and was cancelled with status 130 after 890 seconds queued on the shared build lock so it can be restarted with `CARGO_BUILD_JOBS=2` after the active compiler finishes. The 24-leaf loop's first Writer process was likewise cancelled with status 130 after 890 seconds queued, with no compiler child; neither cancellation discarded compilation work.
 
 ## Current failures and pending gates
 
 - Draw FSM remount reached rustc and exposed only proc-macro entry integration errors. The duplicate import/public helper errors are fixed; its retry remains pending behind active native work.
 - The 24 owned single-artifact leaves need their final selective compile/test loop against the settled shared source graph.
 - The 13 Flow exact-law runtime receipt remains queued behind active native Cargo writers; package identity and module mounting are already verified statically.
-- One normal Nx target including prerequisites must pass after the earlier unrelated print/report generator `previewTarget` mismatches are rechecked.
+- One normal Nx target's Cargo leaf must pass after its four ordinary prerequisites already passed. The retry will use `CARGO_BUILD_JOBS=2` because the host was actively swapping under the previous fleet load.
 
 ## Relevant generated evidence
 
@@ -95,8 +99,26 @@ This execution owns the reusable Nx/Bun package boundary, all stdio artifact pac
 - `🗑️generated/artifact-build-progress-red.txt`
 - `🗑️generated/artifact-router-progress-green.txt`
 - `🗑️generated/artifact-router-existing-contract.txt`
+- `🗑️generated/ui-built-tree-retirement-oracle-final.txt`
+- `🗑️generated/flow-source-fixture-final.txt`
+- `🗑️generated/flow-source-fixture-final-2.txt`
+- `🗑️generated/flow-source-fixture-final-3.txt`
+- `🗑️generated/flow-source-fixture-final-4.txt`
+- `🗑️generated/flow-source-fixture-final-5.txt`
+- `🗑️generated/flow-source-fixture-final-6.txt`
+- `🗑️generated/flow-source-fixture-final-7.txt`
+- `🗑️generated/flow-source-fixture-final-8.txt`
+- `🗑️generated/flow-source-fixture-final-9.txt`
+- `🗑️generated/flow-source-fixture-final-10.txt`
+- `🗑️generated/flow-source-fixture-final-11.txt`
 - `🗑️generated/parent-artifact-mount-contract-red.txt`
 - `🗑️generated/all-parent-artifact-mounts-after-owned.txt`
 - `🗑️generated/all-parent-artifact-compatibility-after.txt`
 - `🗑️generated/nx-pdf-rust-current-input-isolation.json`
+- `🗑️generated/nx-pdf-rust-final-project.json`
+- `🗑️generated/nx-pdf-rust-transitive-input-isolation.json`
+- `🗑️generated/nx-pdf-rust-prerequisite-inputs.json`
+- `🗑️generated/nx-pdf-rust-full-transitive-isolation.json`
+- `🗑️generated/nx-pdf-rust-full-transitive-glob-proof.json`
 - `🗑️generated/forms-normal-prerequisite-nx-check-2.txt`
+- `🗑️generated/native-preparation-direct-final.txt`

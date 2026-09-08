@@ -16,7 +16,6 @@
     "job",
     "results",
     "selection",
-    "activeUtilityId",
     "reportTable",
     "frameCursor",
     "camera",
@@ -77,10 +76,6 @@
     },
     "selection": {
       "$ref": "#/$defs/RemodelingUiSelection",
-      "x-semio-state": "presence"
-    },
-    "activeUtilityId": {
-      "type": "string",
       "x-semio-state": "presence"
     },
     "reportTable": {

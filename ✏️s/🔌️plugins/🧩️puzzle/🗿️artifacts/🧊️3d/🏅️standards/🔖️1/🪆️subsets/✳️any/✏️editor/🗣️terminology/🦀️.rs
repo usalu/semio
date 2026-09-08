@@ -2,7 +2,6 @@
 //! terminology×locale combination is compile-checked by `semio_framework_plugin::app_labels!`
 //! (see ticket 26/08/03/COMPILE-TIME-CHECKED-UI-LABELS-ACROSS-LOCALE-TERMINOLOGY-AND-BRAND).
 
-use crate::editor::puzzle3d::config::Puzzle3dConfig;
 use semio_framework_plugin::{AppLabels, LabelText, Locale, LocalizedLabel, Terminology};
 
 //#region 🔖️Labels
@@ -101,18 +100,9 @@ semio_framework_plugin::app_labels! {
 //#endregion 🔖️Labels
 
 //#region 🔖️Locale
-fn puzzle3d_locale(value: &str) -> Option<Locale> {
-    match value {
-        "en" | "en-US" => Some(Locale::En),
-        "de" | "de-DE" => Some(Locale::De),
-        _ => None,
-    }
-}
-
-/// 🗣️ Resolves the active label set from `Puzzle3dConfig`'s own persisted locale/terminology strings
-/// through the explicit EN/DE BCP-47 tags and generated terminology axis; unsupported values fail closed.
-pub fn puzzle3d_labels(view_state: &semio_framework_plugin::ViewModel) -> Option<&'static Puzzle3dLabels> {
-    Some(semio_framework_plugin::resolve_labels::<Puzzle3dLabels>(view_state))
+/// 🗣️ Resolves the active label set from the canonical host view axes.
+pub fn puzzle3d_labels(view_state: &semio_framework_plugin::ViewModel) -> &'static Puzzle3dLabels {
+    semio_framework_plugin::resolve_labels::<Puzzle3dLabels>(view_state)
 }
 
 /// 🗺️ Builds a full locale×terminology `LocalizedLabel` from one `Puzzle3dLabels` field, reusing the

@@ -1,0 +1,16 @@
+{
+  "layout": {
+    "root": {
+      "kind": "stack",
+      "activeWindowKindId": "canvas-copy",
+      "children": [
+        { "kind": "window", "windowKindId": "canvas" },
+        { "kind": "window", "windowKindId": "canvas", "instanceId": "canvas-copy" }
+      ]
+    }
+  },
+  "expected": [
+    { "id": "canvas", "windowKindId": "canvas" },
+    { "id": "canvas-copy", "windowKindId": "canvas" }
+  ]
+}

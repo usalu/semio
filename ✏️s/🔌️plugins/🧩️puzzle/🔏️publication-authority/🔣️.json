@@ -90,6 +90,8 @@
           ],
           "routes": [
             "openAddObjectDialog",
+            "transformBegin",
+            "transformEnd",
             "worldPointerDown"
           ]
         },
@@ -175,28 +177,6 @@
             "addTargetVolume",
             "relocateTargetVolume"
           ]
-        },
-        {
-          "status": "batch-only-pending-rewrite",
-          "lanes": [
-            "host-only"
-          ],
-          "routes": [
-            "transformBegin",
-            "transformEnd"
-          ],
-          "blocker": "the current empty/effect-only completion does not reproduce the route's semantic runtime transition"
-        },
-        {
-          "status": "batch-only-pending-rewrite",
-          "lanes": [
-            "artifact",
-            "config"
-          ],
-          "routes": [
-            "setFixtureJson"
-          ],
-          "blocker": "argument is a whole fixture (~129KB for the Nakagin example) against the shared 8,192-byte PUZZLE_COMMAND_RAW_BYTES retained-job wire cap; needs a chunked or resumable wire path, not a wiring change"
         }
       ]
     },

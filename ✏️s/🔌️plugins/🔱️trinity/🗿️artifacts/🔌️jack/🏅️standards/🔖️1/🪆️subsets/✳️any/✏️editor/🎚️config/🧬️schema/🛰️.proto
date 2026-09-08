@@ -7,22 +7,14 @@ message JackConfig {
   // @state config
   string jack_query = 4;
   // @state config
-  string jack_result_json = 5;
   // @state config
   // @state config
   // @state config
   // @state config
-  // @state config
-  optional JackEditorSelection editor_selection = 10;
   // @state config
   map<string, string> lod_mode_by_window = 11;
   // @state config
   // @state config
-}
-
-message JackEditorSelection {
-  int64 start = 1;
-  int64 end = 2;
 }
 
 message Camera {

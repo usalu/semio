@@ -84,8 +84,6 @@ pub struct Generation3dConfig {
     pub selected_generation_id: Option<String>,
     /// 🧬️ The evaluated preview text for the selected generation.
     pub generation_preview_text: Option<String>,
-    /// 🧰️ The active transform-gumball utility for the preview window.
-    pub active_utility_id: String,
     /// 🗣️ BCP-47 locale tag.
     /// 🧮️ The edit-mode 3D preview's persisted flow-graph evaluation output (`FlowEvalSession::eval_json`) —
     /// `flowEvalTick` writes it every tick since the session itself is reconstructed fresh per dispatch
@@ -148,7 +146,6 @@ impl Default for Generation3dConfig {
             sun_json: default_sun_json(),
             selected_generation_id: None,
             generation_preview_text: None,
-            active_utility_id: "move".into(),
             preview_eval_text: None,
         }
     }
@@ -196,8 +193,6 @@ pub enum Generation3dConfigMutation {
     SetSun { json: String },
     #[dsl(key = "generation")]
     SetGeneration { selected_generation_id: Option<String>, generation_preview_text: Option<String> },
-    #[dsl(key = "active-utility")]
-    SetActiveUtility { utility_id: String },
     #[dsl(key = "preview-eval")]
     SetPreviewEval { eval_text: Option<String> },
 }
@@ -271,7 +266,6 @@ impl Mutation<Generation3dConfig> for Generation3dConfigMutation {
         protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/⚙️set-preview-camera", semantic_kind: "set-preview-camera", display_name: "Set Preview Camera", emoji: "⚙️", aggregate_variant: "SetPreviewCamera", payload_schema: "🧬️schema/🔣️.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
         protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/⚙️set-sun", semantic_kind: "set-sun", display_name: "Set Sun", emoji: "⚙️", aggregate_variant: "SetSun", payload_schema: "🧬️schema/🔣️.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
         protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/⚙️set-generation", semantic_kind: "set-generation", display_name: "Set Generation", emoji: "⚙️", aggregate_variant: "SetGeneration", payload_schema: "🧬️schema/🔣️.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
-        protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/⚙️set-active-utility", semantic_kind: "set-active-utility", display_name: "Set Active Utility", emoji: "⚙️", aggregate_variant: "SetActiveUtility", payload_schema: "🧬️schema/🔣️.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
         protocol::MutationLeafDescriptor { schema_version: 1, owner: "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/⚙️set-preview-eval", semantic_kind: "set-preview-eval", display_name: "Set Preview Eval", emoji: "⚙️", aggregate_variant: "SetPreviewEval", payload_schema: "🧬️schema/🔣️.json", text_opcode: None, binary_tag: None, invertibility: protocol::MutationInvertibility::ExplicitMutation, diff_participation: protocol::MutationDiffParticipation::Detect, outcome_classes: &[protocol::MutationOutcomeClass::Applied], composition: protocol::MutationComposition::Atomic, required_language_surfaces: &[protocol::MutationLanguageSurface::Rust, protocol::MutationLanguageSurface::JsonSchema] },
     ];
 
@@ -284,8 +278,7 @@ impl Mutation<Generation3dConfig> for Generation3dConfigMutation {
             Generation3dConfigMutation::SetPreviewCamera { .. } => &Self::DESCRIPTORS[4],
             Generation3dConfigMutation::SetSun { .. } => &Self::DESCRIPTORS[5],
             Generation3dConfigMutation::SetGeneration { .. } => &Self::DESCRIPTORS[6],
-            Generation3dConfigMutation::SetActiveUtility { .. } => &Self::DESCRIPTORS[7],
-            Generation3dConfigMutation::SetPreviewEval { .. } => &Self::DESCRIPTORS[8],
+            Generation3dConfigMutation::SetPreviewEval { .. } => &Self::DESCRIPTORS[7],
         }
     }
 
@@ -304,7 +297,6 @@ impl Mutation<Generation3dConfig> for Generation3dConfigMutation {
                 next.selected_generation_id = selected_generation_id.clone();
                 next.generation_preview_text = generation_preview_text.clone();
             }
-            Generation3dConfigMutation::SetActiveUtility { utility_id } => next.active_utility_id = utility_id.clone(),
             Generation3dConfigMutation::SetPreviewEval { eval_text } => next.preview_eval_text = eval_text.clone(),
         }
         protocol::MutationOutcome::new(next)

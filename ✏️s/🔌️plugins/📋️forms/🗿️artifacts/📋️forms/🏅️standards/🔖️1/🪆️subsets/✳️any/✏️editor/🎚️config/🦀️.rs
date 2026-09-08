@@ -413,7 +413,6 @@ pub struct FormsConfig {
     pub current_step_index: u32,
     /// 👁️ The Try wizard's independently owned in-progress answer overrides.
     pub try_values: FormsTryValues,
-    /// 🗣️ BCP-47 locale tag — was read off `view_state.locale`.
     /// 🧩️ Host-declared plugin contributions (JSON array of `{pluginId, topicContribution}` — only the
     /// `"forms.questionKind"` topic matters) — was read off `view_state.contributions_json`.
     pub contributions_json: String,

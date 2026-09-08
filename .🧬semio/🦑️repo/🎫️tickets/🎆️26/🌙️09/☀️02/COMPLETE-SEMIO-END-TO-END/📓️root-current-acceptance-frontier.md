@@ -1,5 +1,126 @@
 # Current End-to-End Acceptance Frontier
 
+## 2026-09-08 22:20 UTC Runtime Retry Qualified; Alternate Browser Route Open
+
+Root40577 passed the actual production-wrapper/real ShardClient retry law (1 test,
+2 neutral failure rows,71 skipped; terminal0). The first failed attempt preserves
+the exact Retired receipt; a later destroy succeeds with one actual UI retirement
+witness and exactly one native dispose. Recheck68023 failed only on its test
+registry missing cancel; the test registry now exposes that current method.
+Exact PR source selection works with test-long; selecting the extracted test file
+or engine-contract alone does not register these in-source laws.
+
+Home15047 ended native RED after10m50s: group00 strict codec passed again, but
+group01 relay still timed out after both peers received exact Session receipts.
+Home is tracing later routing and adding specific wait diagnostics; no plugin
+binding law has qualified. OS quick42589 passed300 tests including the complete
+worker suite, with3 unrelated extracted EffectBackbone source-TDZ failures; Home
+owns their repair/full recheck. Hub-bound localMutations now shares the admission
+fence and its focused paused-rebootstrap case passed.
+
+Terra retracted both earlier React UI ownership/cancellation-stage findings after
+current-source reread. WGPU's first nonempty composition run59431 failed only on
+its fixture lacking a concrete window context; the exact context is corrected
+and rerun is active. Terra found a separate actual WGPU-browser defect:
+renderer-boot imports plugin-bridge, whose actor wire-turn coercion drops lifecycle
+and patch receipts/original identity and whose plain retained map bypasses exact
+UI authority. WGPU owns this next route unification. React PluginRuntime evidence
+does not certify WGPU. The trusted mounted two-author journey remains unqualified.
+
+## 2026-09-08 22:12 UTC Runtime Final-Acknowledgement Retry Qualification
+
+Terra retracted the wrapper retry finding after re-reading current source:
+retireInstanceLifecycle already prioritizes pending Accepted/Retired receipts over
+generic blocked status. Root added an independent production-wrapper law using
+the actual ShardClient with a controlled worker, covering refused final ACK and
+postMessage failure. The neutral disposal.retirementRetry rows require one actual
+host retirement witness and one terminal native dispose after exact retry. No
+runtime source change was needed for that branch; qualification remains pending.
+
+First9502 was import RED before any law ran: an adjacent shared test assertion
+had a missing object brace. Root fixed the token and started68023 with test-long
+and the exact new pattern. The gate is registered in both launch seed and output.
+This test does not replace WGPU's nonempty real-surface composition law.
+
+Home replaced native fixed300ms session timing with exact Session receipts and
+owns warm rerun15047. Terra found another Hub-document write entry through
+localMutations that must share the bootstrap/rebootstrap/tail admission fence;
+Home owns that addition and focused worker requalification. No other fleet Cargo
+is running. The full actor212 pass remains the last complete root cohort.
+
+## 2026-09-08 21:59 UTC Complete Actor Cohort Qualified
+
+Root30357 passed all212 tests across10 actor files in21.28s; terminal exit0 was
+read. Recheck16439 had reduced failures to5 with207 passes. Final repairs removed
+remaining extracted descriptor shadowing, replaced the response module's Bun-only
+test directory field with fileURLToPath, and corrected the lifetime fixture's outer
+hex bound to152 (32-byte empty envelope plus44-byte maximum lifecycle receipt).
+The neutral bound assertion derives that relationship; Rust outer-vector encoding
+is separately tested natively and is not newly qualified by this TypeScript run.
+
+Both new unused-cleanup gates now live in the authored launch seed as well as the
+generated launch.json, so ordinary launch regeneration preserves them. The full
+cohort includes all3 unused-return laws, not only the earlier focused2. This remains
+unused-admission cleanup only; original posted/returned/page/content/fault discharge
+is unfinished and cannot be inferred from guest Retired or cleared map entries.
+
+Home40797 ended RED after36m38s. Replication group00 passed1; OS raw-sync group01
+advanced past its first law, then its second relay law timed out awaiting an event.
+The plugin group did not run. Home owns diagnosis; its TS rebootstrap P0 focused1
+and neighboring5 are GREEN. WGPU is repairing Terra's actual render-root and
+activation/open cancellation-stage findings before the focused UI qualification.
+The current trusted mounted two-author journey and goal remain uncompleted.
+
+## 2026-09-08 21:53 UTC Full Actor Recheck and UI Ownership Audit
+
+Root91347 completed RED16/GREEN196 across212 tests. Fifteen failures concern
+extracted source-descriptor shadowing, generated-source substitutions, fixture
+validation or relocated dynamic imports; the added in-flight retirement law also
+omitted the required pending-result reason. Root repaired the observed descriptor
+and import failures and the invalid fixture, and started full recheck16439. No full
+actor pass is claimed. The lifetime fixture validator now reports its exact errors.
+
+WGPU's first focused UI launcher33625 selected an extracted module outside the
+current include list and ran no tests; canonical engine-contract retry25002 is
+the qualifying attempt. Terra found an additional actual render-root gap: a plain
+retainedWindowByActor projection still drives rendering while the new host witness
+only covers OwnedUiInstance. WGPU owns eliminating or exactly owning this projection
+before the Retired witness. Root will run broad renderer only after this focused
+composition is coherent. Native40797 remains Home's sole fleet Cargo lane.
+
+## 2026-09-08 21:40 UTC Unused Return Admission Release
+
+Root55785 reproduced2 missing-retireUnusedReturn failures; repair18702 passed2.
+The lease now cooperatively retires only a never-executed original return:
+all13 construction prefixes, an admitted unused response, original resident
+record/cell proofs, stale facade denial and fresh successor admission. Captured
+state instance/client/facade aliases are detached before resident refund; the
+activation pointer is cleared only for that exact original owner.
+Any origin, events, page, content, retry, in-flight or faulted state remains
+blocked. No guest cancel, native retired receipt or whole returned-data release
+is fabricated. New running/content/finalizer-fault tests and the complete actor
+suite are now in91347. Both cleanup gates are registered in launch.json.
+
+## 2026-09-08 21:31 UTC Exact Empty Output Qualification
+
+Root76705 passed11 output-empty-retirement, admission and fault tests after
+95604 exposed one extracted AST test's source-variable TDZ. The source oracle
+now reads its actual module without shadowing the passed source descriptor.
+Three new empty-retirement laws cover all12 admission prefixes, multiple linked
+unused outputs, stale facade denial and unchanged pending/returned/faulted roots.
+Terra independently found no prefix loss, stale-record alias or raw-root release
+in this intentionally narrow API. Root is now testing a matching original
+never-executed return admission release; no completed/failed/page-owned return
+release is inferred.
+
+Home40797 has passed the strict replication native codec law1/1 and continues
+the OS raw-sync and plugin binding cohort. WGPU's full worker1525 reached Vitest
+but was killed by its outer15s quick budget, so it has no suite result. WGPU now
+owns the live exact UI lifecycle composition/type frontier. Terra found a further
+worker P0: local raw ingress/Session flushing can bypass bootstrap/rebootstrap/tail
+readiness. Home owns that TS gate repair while its native cohort compiles; old
+admitted bytes must be retained, but newly stale ingress must not allocate.
+
 ## 2026-09-08 21:23 UTC Focused Rechecks and Return Cleanup Foundation
 
 Renderer35886 passed all87 tests across current PluginRuntime, actor-backbone and

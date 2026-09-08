@@ -134,10 +134,10 @@ pub fn next_shooting_id(prefix: &str) -> String {
 
 /// 📄️ Parses the handcrafted DSL fixture once per call — used both for the in-plugin default document
 /// and to bridge into the framework's still-JSON-only `App::example` surface, so
-/// `crate::dsl::SHOOTING_EXAMPLE_TEXT` stays the single source of truth for the
+/// `crate::standards::v1::subsets::any::schema::snapshot::text::SHOOTING_EXAMPLE_TEXT` stays the single source of truth for the
 /// snapshot.
 pub fn default_snapshot() -> ShootingSnapshot {
-    crate::dsl::parse_dsl(crate::dsl::SHOOTING_EXAMPLE_TEXT).unwrap_or_else(|_| crate::empty_shooting_snapshot())
+    crate::standards::v1::subsets::any::schema::snapshot::text::parse_dsl(crate::standards::v1::subsets::any::schema::snapshot::text::SHOOTING_EXAMPLE_TEXT).unwrap_or_else(|_| crate::empty_shooting_snapshot())
 }
 
 /// 🌉️ JSON bridge for `semio_framework_plugin`'s `App::example` override, which hardcodes
@@ -393,9 +393,9 @@ pub fn shooting_artifact_schema_descriptor() -> schema::ArtifactSchemaDescriptor
 //#endregion 🔖️Descriptor
 //#region 🏗️DerivedConstruction
 pub mod derived_construction {
-    use crate::schema::diff::ShootingDiff;
-    use crate::schema::mutations::ShootingMutation;
-    use crate::schema::snapshot::ShootingSnapshot;
+    use crate::standards::v1::subsets::any::schema::diff::ShootingDiff;
+    use crate::standards::v1::subsets::any::schema::mutations::ShootingMutation;
+    use crate::standards::v1::subsets::any::schema::snapshot::ShootingSnapshot;
     use semio_framework_plugin::ArtifactBuilder;
 
     #[derive(Clone, Debug, Default)]

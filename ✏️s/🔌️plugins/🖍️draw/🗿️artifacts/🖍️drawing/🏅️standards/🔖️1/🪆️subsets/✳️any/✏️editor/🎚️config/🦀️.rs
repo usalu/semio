@@ -34,7 +34,6 @@ pub struct DrawingConfig {
     pub trace_pointer_completed_work: u64,
     /// ⏳ Pending bounded trace work units for observable progress.
     pub trace_pointer_pending_work: u64,
-    /// 🗣️ BCP-47 locale tag — was read off `view_state.locale`.
 }
 
 //#region 🔖️ArtifactCodec

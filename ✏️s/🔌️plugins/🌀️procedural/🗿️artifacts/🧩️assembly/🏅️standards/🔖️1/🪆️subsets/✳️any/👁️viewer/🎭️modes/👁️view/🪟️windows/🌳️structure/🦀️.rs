@@ -7,7 +7,7 @@
 use crate::AssemblySnapshot;
 use crate::schema::snapshot::{AssemblyRule, AssemblySlot, AssemblySlotEdge};
 use semio_framework_plugin::app::{TreeNodeView, TreeView, TreeWindowKit, WindowKit};
-use semio_framework_plugin::{LocalizedLabel, UiNode, WindowKindDefinition};
+use semio_framework_plugin::{BuiltNode, LocalizedLabel, UiAssemblyResult, WindowKindDefinition};
 
 //#region 🔖️Constants
 pub const WINDOW_KIND_ID: &str = TreeWindowKit::KIND_ID;
@@ -22,8 +22,8 @@ pub fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Render
-/// 👁️ Pure `AssemblySnapshot -> UiNode` read: one branch per collection, no mutation affordance.
-pub fn render(document: &AssemblySnapshot) -> UiNode {
+/// 👁️ Builds the read-only assembly collection tree and propagates assembly failures.
+pub fn render(document: &AssemblySnapshot) -> UiAssemblyResult<BuiltNode> {
     fn leaf(id: String, label: String) -> TreeNodeView {
         TreeNodeView { id, label, children: Vec::new() }
     }

@@ -6,50 +6,11 @@ use crate::lexer::{Token, TokenClass, lex, tokenize};
 use crate::{Camera, Manifest};
 
 fn mini_graph() -> Graph {
-    let fixture = JackSnapshot::with_content(
-        JackSnapshot::SCHEMA.into(),
-        "mini".into(),
-        Some("nakagin".into()),
-        Manifest::nakagin_default(),
-        Camera::default(),
-        vec![
-            Node {
-                id: "root".into(),
-                kind: "Piece".into(),
-                name: "core".into(),
-                x: 0.0,
-                y: 0.0,
-                width: 80.0,
-                height: 40.0,
-                properties: PropertyBag::new(),
-                ports: vec![Port { id: "out".into(), kind: "Connector".into(), direction: PortDirection::Out, properties: PropertyBag::new() }],
-            },
-            Node {
-                id: "child".into(),
-                kind: "Piece".into(),
-                name: "capsule".into(),
-                x: 120.0,
-                y: 0.0,
-                width: 80.0,
-                height: 40.0,
-                properties: PropertyBag::new(),
-                ports: vec![Port { id: "in".into(), kind: "Connector".into(), direction: PortDirection::In, properties: PropertyBag::new() }],
-            },
-        ],
-        vec![Edge {
-            id: "e1".into(),
-            kind: "Connection".into(),
-            source: "root@out".into(),
-            target: "child@in".into(),
-            properties: {
-                let mut p = PropertyBag::new();
-                p.insert("u".into(), PropertyValue::Number(1.0));
-                p.insert("v".into(), PropertyValue::Number(2.0));
-                p
-            },
-        }],
-        Some("root".into()),
-    );
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🪜️resumable-query/🔣️.json")).unwrap();
+    let graph = &fixture["graph"];
+    let nodes = dsl::FromValue::from_value(dsl::DslValue::from(graph["nodes"].clone())).unwrap();
+    let edges = dsl::FromValue::from_value(dsl::DslValue::from(graph["edges"].clone())).unwrap();
+    let fixture = JackSnapshot::with_content(JackSnapshot::SCHEMA.into(), graph["name"].as_str().unwrap().into(), Some(graph["manifestId"].as_str().unwrap().into()), Manifest::nakagin_default(), Camera::default(), nodes, edges, Some(graph["rootNodeId"].as_str().unwrap().into()));
     Graph::from_fixture(fixture).unwrap()
 }
 
@@ -212,4 +173,38 @@ async fn run_merge_creates_disconnected_pattern() {
 async fn lex_not_equal() {
     let tokens = lex("WHERE a.name != 'core'").unwrap();
     assert!(tokens.iter().any(|t| matches!(t, Token::Ne)));
+}
+
+#[semio_framework_async_macros::async_test]
+async fn query_ownership_resumable_matches_neutral_results_and_single_mutation_publication() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🪜️resumable-query/🔣️.json")).unwrap();
+    for case in fixture["cases"].as_array().unwrap() {
+        let graph = mini_graph();
+        let query = parse(case["query"].as_str().unwrap()).unwrap();
+        let expected = execute(&graph, &query).unwrap();
+        let mut execution = QueryExecution::new(graph, query);
+        let mut steps = 0;
+        let actual = loop {
+            steps += 1;
+            assert!(steps < 10_000);
+            if let Some(result) = execution.step().unwrap() { break result; }
+        };
+        assert_eq!(actual, expected);
+        let json: serde_json::Value = serde_json::from_str(&pack::to_json_string(&actual.0)).unwrap();
+        assert_eq!(json["columns"], case["columns"]);
+        assert_eq!(json["rows"], case["rows"]);
+        if let Some(node_ids) = case.get("nodeIds") {
+            let graph = actual.0.graph_fixture.as_ref().expect("typed graph result retains its local fixture owner");
+            let mut actual_nodes: Vec<_> = graph.nodes().iter().map(|node| node.id.clone()).collect();
+            let mut actual_edges: Vec<_> = graph.edges().iter().map(|edge| edge.id.clone()).collect();
+            actual_nodes.sort();
+            actual_edges.sort();
+            assert_eq!(serde_json::to_value(actual_nodes).unwrap(), *node_ids);
+            assert_eq!(serde_json::to_value(actual_edges).unwrap(), case["edgeIds"]);
+        }
+        assert_eq!(actual.1.len(), case["mutations"].as_u64().unwrap() as usize);
+        assert!(execution.step().is_err());
+        assert!(steps > 1);
+        eprintln!("[DEBUG] resumable query completed in {steps} steps with {} document mutations", actual.1.len());
+    }
 }

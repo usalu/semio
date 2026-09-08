@@ -38,7 +38,6 @@ pub struct LayoutConfig {
     /// 📷️ The Preview surface's ephemeral camera pose — was `LayoutPlayRuntime::preview_camera`.
     #[dsl(block)]
     pub preview_camera: LayoutCamera,
-    /// 🗣️ BCP-47 locale tag — was read off `view_state.locale`.
 }
 
 //#region 🔖️ArtifactCodec

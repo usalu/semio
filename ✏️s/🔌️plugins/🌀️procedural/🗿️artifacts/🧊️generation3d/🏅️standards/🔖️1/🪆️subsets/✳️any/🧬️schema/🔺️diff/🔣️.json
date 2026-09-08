@@ -79,10 +79,6 @@
         }
       ],
       "x-semio-state": "artifact"
-    },
-    "activeUtilityId": {
-      "type": "string",
-      "x-semio-state": "presence"
     }
   },
   "$defs": {
@@ -99,8 +95,7 @@
         "selectionMethod",
         "graphCamera",
         "previewCamera",
-        "sunJson",
-        "activeUtilityId"
+        "sunJson"
       ],
       "properties": {
         "fixture": {
@@ -141,9 +136,6 @@
           "type": "string"
         },
         "generationPreviewText": {
-          "type": "string"
-        },
-        "activeUtilityId": {
           "type": "string"
         }
       }

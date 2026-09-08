@@ -4,7 +4,7 @@
 
 use crate::{Frame, FramePatch, LayoutDiff, LayoutSnapshot, PageFramePatched, PagePatch};
 use crate::mutations::LayoutMutation;
-use crate::schema::diff::{LayoutPagePatchEntry, LayoutPagesDelta};
+use crate::standards::v1::subsets::any::schema::diff::{LayoutPagePatchEntry, LayoutPagesDelta};
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 

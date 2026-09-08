@@ -610,8 +610,8 @@ impl ArtifactApp for ModuleApp {
         }
     }
 
-    async fn render(body_key: &str, doc: &ArtifactView<'_, ModuleRenderPayload>, _cfg: &ConfigView<'_, NoConfig>, view_state: &semio_framework_plugin::ViewModel) -> UiAssemblyResult<ComponentTree> {
-        let labels = semio_framework_plugin::resolve_labels::<ModuleLabels>(view_state);
+    async fn render(body_key: &str, doc: &ArtifactView<'_, ModuleRenderPayload>, _cfg: &ConfigView<'_, NoConfig>, view_state: &ViewModel) -> UiAssemblyResult<ComponentTree> {
+        let labels = resolve_labels::<ModuleLabels>(view_state);
         match body_key {
             BODY_PARAMS => render_params_body(doc.snapshot, labels),
             BODY_PREVIEW => render_preview_body(doc.snapshot),

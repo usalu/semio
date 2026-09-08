@@ -44,7 +44,6 @@ pub struct WriterConfig {
     /// 🎥️ Editor viewport pan/zoom — session-only, never a document field. Was `WriterPlayRuntime::camera`.
     #[dsl(block)]
     pub camera: WriterCamera,
-    /// 🗣️ BCP-47 locale tag — was read off `view_state.locale`.
 }
 
 //#region 🔖️ArtifactCodec

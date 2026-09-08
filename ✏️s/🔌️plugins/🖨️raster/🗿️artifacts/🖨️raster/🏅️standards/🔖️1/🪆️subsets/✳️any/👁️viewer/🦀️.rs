@@ -53,7 +53,7 @@ impl ArtifactViewer for RasterViewer {
     /// render real layers instead of a blank canvas — the same artifact-side `default_raster_document`
     /// the editor boots on (no editor import: this is `crate::schema`).
     fn initial_snapshot() -> RasterSnapshot {
-        crate::schema::default_raster_document()
+        crate::standards::v1::subsets::any::schema::default_raster_document()
     }
 
     /// 👁️ Structurally read-only: the sole `RasterViewCommand::Noop` variant never carries a config
@@ -65,12 +65,13 @@ impl ArtifactViewer for RasterViewer {
         _doc: &ArtifactView<'_, Self::Snapshot>,
         _cfg: &ConfigView<'_, Self::Config>,
         _interaction: &semio_framework_plugin::app::InteractionView<'_>,
+        _view_state: Option<&semio_framework_plugin::ViewModel>,
         _engines: &EngineHandles,
     ) -> Result<ViewEmit<Self::ConfigMutation>, Fault> {
         Ok(ViewEmit::default())
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         let node = match body_key {
             composite::RASTER_VIEW_BODY_COMPOSITE => composite::render(doc.snapshot)?,
             navigator::RASTER_VIEW_BODY_NAVIGATOR => navigator::render(doc.snapshot)?,

@@ -11,7 +11,7 @@ use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 /// 🧾️ Resets the ephemeral generation-preview to match a freshly-loaded example, keeping every other
-/// display option (preview camera, LOD, show mode, sun, active utility)
+/// display option (preview camera, LOD, show mode, and sun)
 /// unchanged. `graph`'s selection resets on its own — the framework prunes it against the new
 /// fixture's `interaction_topology` (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM).
 fn config_after_example_load(previous: &Generation3dConfig, flow_camera: &CameraJson) -> Generation3dConfig {
@@ -23,7 +23,6 @@ fn config_after_example_load(previous: &Generation3dConfig, flow_camera: &Camera
         lod_mode: previous.lod_mode.clone(),
         show_mode: previous.show_mode.clone(),
         sun_json: previous.sun_json.clone(),
-        active_utility_id: previous.active_utility_id.clone(),
         preview_eval_text: None,
     }
 }

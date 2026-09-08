@@ -68,9 +68,6 @@ impl JackDiff {
             if let Some(value) = &self.viewport_camera {
                 next.viewport_camera = value.clone();
             }
-            if let Some(value) = &self.jack_result_json {
-                next.jack_result_json = value.clone();
-            }
             if let Some(value) = &self.editor_selection {
                 next.editor_selection = value.clone();
             }
@@ -125,7 +122,6 @@ impl MutationDiff<JackSnapshot> for JackDiff {
         take!(jack_query);
         take!(lod_mode_by_window);
         take!(viewport_camera);
-        take!(jack_result_json);
         take!(editor_selection);
     }
 }

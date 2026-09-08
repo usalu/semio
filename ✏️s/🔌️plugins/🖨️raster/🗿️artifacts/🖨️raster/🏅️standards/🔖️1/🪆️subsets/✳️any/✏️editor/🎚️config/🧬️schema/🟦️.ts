@@ -25,8 +25,6 @@ export interface RasterConfig {
   /** @state config */
   camera: RasterCamera;
   /** @state config */
-  activeUtilityId: string;
-  /** @state config */
 }
 
 //#region 🚪️Parsers
@@ -83,7 +81,6 @@ export function parseRasterConfig(value: unknown, at = "$"): RasterConfig {
     brushOpacity: rasterRasterConfigGuardNumber(row["brushOpacity"], `${at}.brushOpacity`),
     compositeViewport: row["compositeViewport"] === undefined ? undefined : parseRasterConfigViewportSize(row["compositeViewport"], `${at}.compositeViewport`),
     camera: parseRasterCamera(row["camera"], `${at}.camera`),
-    activeUtilityId: rasterRasterConfigGuardString(row["activeUtilityId"], `${at}.activeUtilityId`),
   };
 }
 

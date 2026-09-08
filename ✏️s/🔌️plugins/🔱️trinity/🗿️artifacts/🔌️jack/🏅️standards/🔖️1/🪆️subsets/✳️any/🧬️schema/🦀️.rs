@@ -34,8 +34,6 @@ pub struct JackArtifact {
     #[state(config)]
     pub viewport_camera: Camera,
     #[state(config)]
-    pub jack_result_json: String,
-    #[state(config)]
     pub editor_selection: Option<JackEditorSelection>,
 }
 //#endregion 🔖️Artifact
@@ -60,7 +58,6 @@ impl dsl::ToValue for JackArtifact {
             ("jackQuery".to_string(), dsl::ToValue::to_value(&self.jack_query)),
             ("lodModeByWindow".to_string(), dsl::ToValue::to_value(&self.lod_mode_by_window)),
             ("viewportCamera".to_string(), dsl::ToValue::to_value(&self.viewport_camera)),
-            ("jackResultJson".to_string(), dsl::ToValue::to_value(&self.jack_result_json)),
             ("editorSelection".to_string(), dsl::ToValue::to_value(&self.editor_selection)),
         ])
     }
@@ -81,7 +78,6 @@ impl dsl::FromValue for JackArtifact {
             jack_query: dsl::FromValue::from_value(field("jackQuery")?)?,
             lod_mode_by_window: dsl::FromValue::from_value(field("lodModeByWindow")?)?,
             viewport_camera: dsl::FromValue::from_value(field("viewportCamera")?)?,
-            jack_result_json: dsl::FromValue::from_value(field("jackResultJson")?)?,
             editor_selection: dsl::FromValue::from_value(field("editorSelection")?)?,
         })
     }
@@ -112,7 +108,6 @@ impl Default for JackArtifact {
             jack_query: String::new(),
             lod_mode_by_window: BTreeMap::new(),
             viewport_camera: Camera::default(),
-            jack_result_json: String::new(),
             editor_selection: None,
         }
     }

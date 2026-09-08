@@ -16,6 +16,10 @@ pub struct Binding {
     pub edges: BTreeMap<String, String>,
 }
 
+#[path = "🪜️execution/🦀️.rs"]
+mod execution;
+pub use execution::QueryExecution;
+
 /// ▶️ Execute a jack query against a graph and emit CQRS operations for mutations.
 pub fn execute(graph: &Graph, query: &Query) -> Result<(QueryResult, Vec<TrinityGraphMutation>), String> {
     let mut fixture = graph.to_fixture();

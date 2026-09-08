@@ -1,5 +1,4 @@
 //! 🧬️ schema leaf
-use super::JackEditorSelection;
 use crate::Camera;
 use ::semio_framework_schema::ArtifactSchema;
 use std::collections::BTreeMap;
@@ -12,10 +11,6 @@ pub struct JackConfig {
     pub camera: Camera,
     #[state(config)]
     pub jack_query: String,
-    #[state(config)]
-    pub jack_result_json: String,
-    #[state(config)]
-    pub editor_selection: Option<JackEditorSelection>,
     #[state(config)]
     pub lod_mode_by_window: BTreeMap<String, String>,
 }

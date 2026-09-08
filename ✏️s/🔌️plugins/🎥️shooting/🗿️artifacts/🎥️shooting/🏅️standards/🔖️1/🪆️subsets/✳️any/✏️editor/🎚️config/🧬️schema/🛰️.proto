@@ -17,9 +17,6 @@ message ShootingConfig {
   string camera_draft_label = 10;
   // @state config
   ShootingCamera camera = 11;
-  // @state config
-  string active_utility_id = 12;
-  // @state config
 }
 
 message ShootingCamera {

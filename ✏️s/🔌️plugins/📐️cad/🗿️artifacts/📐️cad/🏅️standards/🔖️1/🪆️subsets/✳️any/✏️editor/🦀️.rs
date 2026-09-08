@@ -1128,7 +1128,7 @@ fn cad_retained_reduce(
     history: &semio_framework_plugin::HistoryView,
     interaction: &protocol::InteractionState,
     _hover: &semio_framework_plugin::app::InteractionHoverState,
-    context: Option<&semio_framework_plugin::ArtifactOwnedToolJobContext<EditorApp<CadPlayApp>>>,
+    context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<CadPlayApp>>>,
     operation: &AppOperationContext,
 ) -> Result<Emit<CadMutation, CadConfigMutation, NoDraftMutation>, Fault> {
     let doc = ArtifactView::with_operation(snapshot, history, operation.clone());
@@ -1933,7 +1933,7 @@ impl ArtifactEditor for CadPlayApp {
     /// (`cfg.snapshot.selected_object_ids`, now framework-owned and unreachable here) — always shows
     /// the section; a bare right-click with nothing selected is a documented reduced-fidelity gap
     /// (each action already no-ops on an empty selection at dispatch time)?.
-    fn context_menu(_request: &ContextMenuRequest, _doc: &ArtifactView<'_, CadSnapshot>, _cfg: &ConfigView<'_, CadConfig>, _view_state: &semio_framework_plugin::ViewModel, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
+    fn context_menu(_request: &ContextMenuRequest, _doc: &ArtifactView<'_, CadSnapshot>, _cfg: &ConfigView<'_, CadConfig>, _view_state: &ViewModel, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
         Menu::of(registry).action("translateSelection").action("rotateSelection").action("scaleSelection").action("duplicateObject").destructive("deleteObject").build()
     }
 }

@@ -1,11 +1,6 @@
 
 use super::*;
 
-#[test]
-fn labels_resolve_native_english_and_german_from_the_config_locale() {
-    assert_eq!(animate_presentation_labels(&PresentationConfig::default()).tiles_section.as_str(), "Tiles");
-    assert_eq!(animate_presentation_labels(&PresentationConfig { locale: "de-DE".into(), ..PresentationConfig::default() }).tiles_section.as_str(), "Kacheln");
-}
 
 /// 🌱️ Relocated from the deleted `set-selected-ids` command's test mod (ticket
 /// 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM) — exercises the same app-wide label
@@ -25,11 +20,9 @@ async fn animate_presentation_labels_resolve_native_by_default() {
 
 #[semio_framework_async_macros::async_test]
 async fn animate_presentation_labels_translate_panels_in_german() {
-    use crate::editor::animate::commands::set_locale;
     use crate::editor::animate::testkit::{dispatch, presentation_app, render};
     use crate::editor::animate::{PRESENTATION_PLAY_BODY_CATALOGUE, PRESENTATION_PLAY_BODY_DOCUMENT, PresentationCommand};
     let mut app = presentation_app().await;
-    dispatch(&mut app, PresentationCommand::SetLocale(set_locale::SetLocale { value: "de".into() })).await;
     let catalogue_json = render(&mut app, PRESENTATION_PLAY_BODY_CATALOGUE).await;
     assert!(catalogue_json.contains("Kachelvorlagen"));
     assert!(catalogue_json.contains("2×2-Raster teilen"));

@@ -5549,6 +5549,3 @@ pub mod viewer {
     }
 }
 
-//#region 📚️Examples
-pub use standards::v1::subsets::any::examples;
-//#endregion 📚️Examples

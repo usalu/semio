@@ -10,7 +10,7 @@
 //! same `RasterLayerPatch` — stays untouched.
 
 use crate::mutations::{apply_raster_mutation, inverse_raster_mutation, RasterMutation};
-use crate::schema::{find_layer, layer_visible};
+use crate::standards::v1::subsets::any::schema::{find_layer, layer_visible};
 use crate::{RasterDiff, RasterSnapshot};
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");

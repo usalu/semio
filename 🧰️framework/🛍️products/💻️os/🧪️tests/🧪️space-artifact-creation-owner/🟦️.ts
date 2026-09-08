@@ -2242,6 +2242,15 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       });
     }
 
+    function installVerifiedDocumentBackbonePair(state: ArtifactState): WireFrontierSummary {
+      const frontier = { document_id: state.config.documentId, head_edit_ordinal: 0, head_edit_id: "", last_commit_seq: 0, chain_hash: new Array(32).fill(0) };
+      state.currentPack = new Uint8Array([1]);
+      state.currentSpr = new Uint8Array([1]);
+      state.frontier = frontier;
+      state.verifiedColdPair = { assertCurrent() {}, drop() {} };
+      return frontier;
+    }
+
     type BrowserDocumentOpenFixture = {
       nowMs: number;
       intent: DocumentOpenIntentV1;
@@ -4221,7 +4230,10 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         }),
       });
       try {
-        for (const documentId of ["doc-a", "doc-b"]) openArtifact({ documentId, schema: "demo/v1", bindings: [{ kind: "hub", baseUrl: "http://hub.test", spaceId: "space-1" }], actor: "caller-selected-actor" });
+        for (const documentId of ["doc-a", "doc-b"]) {
+          openArtifact({ documentId, schema: "demo/v1", bindings: [{ kind: "hub", baseUrl: "http://hub.test", spaceId: "space-1" }], actor: "caller-selected-actor" });
+          installVerifiedDocumentBackbonePair(artifactState(documentId, "space-1")!);
+        }
         await flushSocketGrantTurns();
         const [socketA, socketB] = FakeHubWebSocket.instances;
         socketA!.open();
@@ -4297,6 +4309,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         const socket = FakeHubWebSocket.instances[0]!;
         socket.open();
         const state = artifactState(documentId, "space-1")!;
+        installVerifiedDocumentBackbonePair(state);
         await handleHubFrame(state, { Session: { actor, color: 1 } });
         const targets = [262_144, 262_144, 262_144, 262_143] as const;
         targets.forEach((target, index) => handleTsRequest({ kind: "send", documentId, clientInstanceId: state.openClientInstanceId, message: { kind: "documentBackbone", message: messageOfSize(`edit-${index}`, target) } }));
@@ -4315,6 +4328,136 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         expect(state.pendingDocumentBackboneMessages).toBe(0);
       } finally {
         closeArtifact(documentId, "space-1");
+        (globalThis as unknown as { WebSocket: unknown }).WebSocket = originalWebSocket;
+        (globalThis as unknown as { BroadcastChannel: unknown }).BroadcastChannel = originalBroadcastChannel;
+      }
+    });
+
+    it("fences rebootstrap before mirror retirement and replays only the retained preexisting raw batch after exact catchup", async () => {
+      FakeHubWebSocket.instances = [];
+      const originalWebSocket = globalThis.WebSocket;
+      const originalBroadcastChannel = globalThis.BroadcastChannel;
+      const originalFetch = globalThis.fetch;
+      class BoundPortBroadcastChannel {
+        onmessage: ((event: MessageEvent) => void) | null = null;
+        postMessage(): void { throw new Error("bound document backbone must not echo before server authority"); }
+        close(): void {}
+      }
+      (globalThis as unknown as { WebSocket: unknown }).WebSocket = FakeHubWebSocket;
+      (globalThis as unknown as { BroadcastChannel: unknown }).BroadcastChannel = BoundPortBroadcastChannel;
+      testSeams.socketGrantTestIssue = async () => ({
+        schema: "semio.hub.socket-grant/v1",
+        protocol: "semio.socket.v1",
+        grant: `socket.v1.${"1".repeat(32)}.${"2".repeat(64)}`,
+        actorId: `hub.v1.${"3".repeat(64)}`,
+        expiresAtMs: Number.MAX_SAFE_INTEGER,
+      });
+      const documentId = "doc-rebootstrap-raw";
+      const first: MutationEnvelope = {
+        id: "edit-before-rebootstrap",
+        actor: "caller",
+        document: documentId,
+        schemaVersion: "demo/v1",
+        deps: [],
+        payloadHash: "unused",
+        diff: { schemaId: "demo/v1", payload: { n: 1 } },
+        inverse: { targetOperation: "edit-before-rebootstrap", inverseDiff: { schemaId: "demo/v1", payload: { n: 0 } }, baseVersion: 0, dependencies: [], undoPolicy: "exactBaseOnly" },
+      };
+      const second = { ...first, id: "edit-during-rebootstrap" };
+      const duringBootstrap = { ...first, id: "edit-during-bootstrap" };
+      const posted: BackboneWorkerResponse[] = [];
+      testSeams.workerPostTestSink = (message) => posted.push(message);
+      let releaseMirrorRetirement: (() => void) | null = null;
+      try {
+        openArtifact({ documentId, schema: "demo/v1", bindings: [{ kind: "hub", baseUrl: "http://hub.test", spaceId: "space-1" }], actor: "caller" });
+        await flushSocketGrantTurns();
+        const state = artifactState(documentId, "space-1")!;
+        const frontier = installVerifiedDocumentBackbonePair(state);
+        const oldSocket = FakeHubWebSocket.instances.at(-1)!;
+        oldSocket.open();
+        await handleHubFrame(state, { Session: { actor: `hub.v1.${"3".repeat(64)}`, color: 1 } });
+        state.artifactBootstrap = {} as ArtifactState["artifactBootstrap"];
+        handleTsRequest({ kind: "send", documentId, clientInstanceId: state.openClientInstanceId, message: { kind: "documentBackbone", message: exactDocumentBackboneMessage(duringBootstrap) } });
+        expect(state.pendingDocumentBackboneBytes).toBe(0);
+        expect(state.pendingMutations).toHaveLength(0);
+        expect(state.outbox).toHaveLength(0);
+        expect(oldSocket.sent).toHaveLength(1);
+        state.artifactBootstrap = null;
+        const firstMessage = exactDocumentBackboneMessage(first);
+        handleTsRequest({ kind: "send", documentId, clientInstanceId: state.openClientInstanceId, message: { kind: "documentBackbone", message: firstMessage } });
+        expect(state.pendingBatches.size).toBe(1);
+        expect(state.pendingDocumentBackboneBytes).toBe(firstMessage.byteLength);
+        state.canonicalFolderMirror = { binding: { kind: "folder", path: "/tmp/rebootstrap-raw" }, documentId, epoch: 1, capability: "a".repeat(64) };
+        (globalThis as unknown as { fetch: unknown }).fetch = async () => {
+          await new Promise<void>((resolve) => { releaseMirrorRetirement = resolve; });
+          return new Response(null, { status: 204 });
+        };
+        const rebootstrap = handleHubFrame(
+          state,
+          { RebootstrapRequired: { control: { space_id: "space-1", document_id: documentId, checkpoint_id: Array(32).fill(1), descriptor_hash: Array(32).fill(2), baseline_frontier: frontier } } },
+          null,
+          oldSocket,
+        );
+        await vi.waitFor(() => expect(state.artifactRebootstrapRequired).toBe(true));
+        expect(state.pendingBatches.size).toBe(0);
+        expect(state.outbox.map((envelope) => envelope.id)).toEqual([first.id]);
+
+        const sentBeforeRefusal = oldSocket.sent.length;
+        handleTsRequest({ kind: "send", documentId, clientInstanceId: state.openClientInstanceId, message: { kind: "documentBackbone", message: exactDocumentBackboneMessage(second) } });
+        expect(state.pendingDocumentBackboneBytes).toBe(firstMessage.byteLength);
+        expect(state.pendingMutations.map((envelope) => envelope.id)).toEqual([first.id]);
+        expect(state.outbox.map((envelope) => envelope.id)).toEqual([first.id]);
+        expect(oldSocket.sent).toHaveLength(sentBeforeRefusal);
+        expect(posted.at(-1)).toMatchObject({ kind: "event", event: { kind: "commandOutcome", outcome: { kind: "rejected", reason: "document backbone canonical pair unavailable" } } });
+        handleTsRequest({ kind: "send", documentId, clientInstanceId: state.openClientInstanceId, message: { kind: "localMutations", envelopes: [second] } });
+        expect(state.pendingDocumentBackboneBytes).toBe(firstMessage.byteLength);
+        expect(state.pendingMutations.map((envelope) => envelope.id)).toEqual([first.id]);
+        expect(state.outbox.map((envelope) => envelope.id)).toEqual([first.id]);
+        expect(oldSocket.sent).toHaveLength(sentBeforeRefusal);
+        expect(posted.at(-1)).toMatchObject({ kind: "event", event: { kind: "commandOutcome", outcome: { kind: "rejected", reason: "document backbone canonical pair unavailable", messages: [0] } } });
+
+        await handleHubFrame(state, { Ack: { batch_id: 0, stages: [{ Applied: { outcome: "Accepted" } }], frontier } });
+        expect(state.pendingDocumentBackboneBytes).toBe(firstMessage.byteLength);
+        expect(state.outbox.map((envelope) => envelope.id)).toEqual([first.id]);
+        const oldSocketFrontier = {
+          ...frontier,
+          head_edit_id: "old-socket-command",
+          head_edit_ordinal: frontier.head_edit_ordinal + 1,
+          last_commit_seq: frontier.last_commit_seq + 1,
+          chain_hash: Array(32).fill(9),
+        };
+        await handleHubFrame(state, { Commands: { envelopes: [], origin: state.actor, frontier: oldSocketFrontier } }, null, oldSocket);
+        expect(state.frontier).toEqual(frontier);
+        expect(state.outbox.map((envelope) => envelope.id)).toEqual([first.id]);
+
+        releaseMirrorRetirement?.();
+        await rebootstrap;
+        expect(state.currentPack).toBeNull();
+        expect(state.currentSpr).toBeNull();
+        const freshSocket = new FakeHubWebSocket("ws://fresh");
+        freshSocket.open();
+        state.socket = freshSocket;
+        state.hubActorReady = false;
+        state.pendingSocketActorId = `hub.v1.${"3".repeat(64)}`;
+        await handleHubFrame(state, { Session: { actor: state.pendingSocketActorId, color: 2 } }, null, freshSocket);
+        expect(freshSocket.sent).toHaveLength(0);
+        expect(state.outbox.map((envelope) => envelope.id)).toEqual([first.id]);
+        state.artifactRebootstrapRequired = false;
+        state.artifactRebootstrapOwner = null;
+        const freshFrontier = installVerifiedDocumentBackbonePair(state);
+        state.requiredTailFrontier = freshFrontier;
+        await handleHubFrame(state, { Commands: { envelopes: [], origin: state.actor, frontier: freshFrontier } }, null, freshSocket);
+        expect(state.outbox).toHaveLength(0);
+        expect(state.pendingBatches.size).toBe(1);
+        expect(freshSocket.sent).toHaveLength(1);
+        const replay = decodeClientFrame(freshSocket.sent[0]!).frame;
+        if (typeof replay === "string" || !("Commands" in replay)) throw new Error("expected replayed Commands frame");
+        expect(replay.Commands.envelopes.map((envelope) => envelope.mutation_id)).toEqual([first.id]);
+      } finally {
+        releaseMirrorRetirement?.();
+        closeArtifact(documentId, "space-1");
+        testSeams.workerPostTestSink = null;
+        (globalThis as unknown as { fetch: unknown }).fetch = originalFetch;
         (globalThis as unknown as { WebSocket: unknown }).WebSocket = originalWebSocket;
         (globalThis as unknown as { BroadcastChannel: unknown }).BroadcastChannel = originalBroadcastChannel;
       }
@@ -4515,6 +4658,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         openArtifact(config);
         await flushSocketGrantTurns();
         const state = artifactState("doc-hub-flush")!;
+        installVerifiedDocumentBackbonePair(state);
         const socket = FakeHubWebSocket.instances.at(-1)!;
         expect(socket.readyState).toBe(FakeHubWebSocket.CONNECTING);
 
@@ -4583,6 +4727,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         openArtifact(config);
         await flushSocketGrantTurns();
         const state = artifactState("doc-hub-stranded")!;
+        installVerifiedDocumentBackbonePair(state);
         const socket = FakeHubWebSocket.instances.at(-1)!;
         socket.open();
         await handleHubFrame(state, { Session: { actor: `hub.v1.${"3".repeat(64)}`, color: 5 } });

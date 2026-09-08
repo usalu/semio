@@ -7,7 +7,6 @@ export interface RasterArtifact {
   layers: RasterLayerNode[];
   assets: Record<string, RasterImageAsset>;
   selectedIds: string[];
-  activeUtilityId: string;
   brushSize: number;
   brushOpacity: number;
   compositeViewport?: RasterViewportSize;
@@ -88,7 +87,6 @@ export function parseRasterArtifact(value: unknown, at = "$"): RasterArtifact {
     layers: rasterRasterArtifactGuardArray(row["layers"], `${at}.layers`).map((item, index) => parseRasterLayerNode(item, `${at}.layers[${index}]`)),
     assets: rasterRasterArtifactGuardObject(row["assets"], `${at}.assets`),
     selectedIds: rasterRasterArtifactGuardArray(row["selectedIds"], `${at}.selectedIds`).map((item, index) => rasterRasterArtifactGuardString(item, `${at}.selectedIds[${index}]`)),
-    activeUtilityId: rasterRasterArtifactGuardString(row["activeUtilityId"], `${at}.activeUtilityId`),
     brushSize: rasterRasterArtifactGuardNumber(row["brushSize"], `${at}.brushSize`),
     brushOpacity: rasterRasterArtifactGuardNumber(row["brushOpacity"], `${at}.brushOpacity`),
     compositeViewport: row["compositeViewport"] === undefined ? undefined : parseRasterViewportSize(row["compositeViewport"], `${at}.compositeViewport`),

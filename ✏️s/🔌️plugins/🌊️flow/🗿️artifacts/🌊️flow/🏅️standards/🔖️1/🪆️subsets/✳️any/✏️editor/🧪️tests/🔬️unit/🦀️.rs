@@ -140,7 +140,7 @@ fn action_cohort_fixtures_match_the_exact_route_census() {
 
 async fn context_menu_items(app: &mut FlowApp, surface: Option<semio_framework_plugin::ContextMenuSurfaceTarget>) -> Value {
     let request = ContextMenuRequest { menu: semio_framework_plugin::UiMenuRef { id: "nodeGraph".into(), args: None }, surface, window_instance_id: None, point: None };
-    serde_json::to_value(app.context_menu(&request).await).unwrap_or(Value::Null)
+    serde_json::to_value(app.context_menu(&request, &semio_framework_plugin::ViewModel::default()).await).unwrap_or(Value::Null)
 }
 
 //#region 🔖️CommandSurface
@@ -166,14 +166,12 @@ async fn every_command_round_trips_through_text_and_binary() {
 }
 
 /// ⚖️ LAW: the leading token of every printed op line is the row's `dsl` wire keyword — the
-/// kebab-cased command id, except for the one documented divergence (`setLocale` → `locale`, an
 /// undeclared host-pushed command). This is what a missing `#[dsl(keyword = ..)]` on a payload struct
 /// silently breaks (the record prints with no keyword at all and no longer parses).
 #[semio_framework_async_macros::async_test]
 async fn every_printed_op_line_starts_with_the_rows_wire_keyword() {
     for command in every_command() {
         let id = command.command_id();
-        let expected = if id == "setLocale" { "locale".to_string() } else { id.chars().flat_map(|c| if c.is_ascii_uppercase() { vec!['-', c.to_ascii_lowercase()] } else { vec![c] }).collect() };
         let printed = protocol::OpText::print_op(&command);
         assert_eq!(printed.split(' ').next().unwrap_or_default(), expected, "wire keyword drifted for command {id}: {printed:?}");
     }
@@ -246,7 +244,6 @@ pub(super) fn every_command() -> Vec<FlowCommand> {
         FlowCommand::SelectGeneration(select_generation::SelectGeneration { id: "g1".into() }),
         FlowCommand::RenameGeneration(rename_generation::RenameGeneration { id: "g1".into(), name: "Copy".into() }),
         FlowCommand::UpdateGenerationValues(update_generation_values::UpdateGenerationValues { generation_id: Some("g1".into()), question_id: "q1".into(), value: dsl::DslValue::float(5.0) }),
-        FlowCommand::SetLocale(set_locale::SetLocale { value: "de-DE".into() }),
         FlowCommand::FlowEvalTick(flow_eval_tick::FlowEvalTick {}),
         FlowCommand::FlowEvalResolve(flow_eval_resolve::FlowEvalResolve { node_hash: 42, output_json: "{}".into() }),
         FlowCommand::DuplicateWidgetStep(duplicate_widget_step::DuplicateWidgetStep { generation: 7, phase: "widget".into(), scan_index: 64, suffix: 2, candidate_id: "n1-copy-2".into(), ..Default::default() }),
@@ -488,7 +485,7 @@ async fn context_menu_grouped_disclosure_stays_within_budget_and_keeps_destructi
         window_instance_id: None,
         point: None,
     };
-    let menu = app.context_menu(&request).await;
+    let menu = app.context_menu(&request, &semio_framework_plugin::ViewModel::default()).await;
     assert!(menu.len() <= 9, "top-level menu (leaves+groups+separator) should stay within the row budget: {menu:?}");
     let last = menu.last().expect("grouped disclosure menu should not be empty");
     let last_is_destructive_leaf = last.id == "delete-selection" && last.destructive == Some(true) && last.action.as_deref() == Some("deleteSelection");

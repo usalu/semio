@@ -25,9 +25,9 @@ extern crate self as semio_s_artifact_animate_presentation;
 use protocol::{Identified, Patchable};
 use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
 
-pub use crate::schema::mutations::PresentationMutation;
+pub use crate::standards::v1::subsets::any::schema::mutations::PresentationMutation;
 
-pub use crate::schema::diff::PresentationDiff;
+pub use crate::standards::v1::subsets::any::schema::diff::PresentationDiff;
 
 pub const PRESENTATION_DOCUMENT_SCHEMA: &str = "animate.presentation";
 pub use crate::snapshot::schema::{default_snapshot, PresentationSnapshot};
@@ -793,17 +793,11 @@ where
         }
 
         // ---- Shims: keep pre-migration module paths resolving for external callers ----
-        pub mod schema {
-            pub use super::standards::v1::subsets::any::schema::*;
-        }
         pub mod io {
             pub use super::standards::v1::subsets::any::io::*;
         }
         pub mod op {
             pub use crate::standards::v1::subsets::any::io::mutations::text::*;
-        }
-        pub mod dsl {
-            pub use crate::standards::v1::subsets::any::io::snapshot::text::*;
         }
         pub mod spr {
             pub use crate::standards::v1::subsets::any::io::mutations::binary::*;
@@ -1019,6 +1013,3 @@ pub mod viewer {
     }
 }
 
-//#region 📚️Examples
-pub use standards::v1::subsets::any::examples;
-//#endregion 📚️Examples

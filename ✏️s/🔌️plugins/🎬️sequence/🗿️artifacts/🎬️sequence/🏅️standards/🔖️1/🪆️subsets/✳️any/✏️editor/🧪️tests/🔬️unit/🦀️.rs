@@ -181,7 +181,6 @@ pub(super) fn every_command() -> Vec<SequenceCommand> {
         SequenceCommand::Run(run_command::Run {}),
         SequenceCommand::Stop(stop_command::Stop {}),
         SequenceCommand::SetViewport(set_viewport::SetViewport { camera: SequenceCamera { x: 1.0, y: 2.0, zoom: 3.0 } }),
-        SequenceCommand::SetLocale(set_locale::SetLocale { value: "de-DE".into() }),
     ]
 }
 

@@ -24,7 +24,7 @@ pub(crate) fn render(labels: &TrinityJackLabels) -> semio_framework_plugin::UiAs
     }))?;
     let example_items = crate::editor::jack::ui_node_list(examples.iter().map(|(id, label, query)| {
         let args = crate::editor::jack::ui_value_map([("query", crate::editor::jack::ui_value_text(query)?)])?;
-        tree_item_with_action(builder.item_id("example", id)?, crate::editor::jack::ui_label(label)?, Some((*query).into()), jack_action("loadExampleQuery", Some(args))?)
+        tree_item_with_action(builder.item_id("example", id)?, crate::editor::jack::ui_label(label)?, Some((*query).into()), jack_action("runQuery", Some(args))?)
     }))?;
     let kind_items = crate::editor::jack::ui_node_list([
         tree_item("trinity-jack-catalogue.piece", crate::editor::jack::ui_label(labels.piece.as_str())?),

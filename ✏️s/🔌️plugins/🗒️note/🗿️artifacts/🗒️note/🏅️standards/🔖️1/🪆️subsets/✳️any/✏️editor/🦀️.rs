@@ -356,7 +356,6 @@ pub fn create_note_app() -> AppDefinition {
             .action_with(note_internal_action("setCamera", LocalizedLabel::native("Set Camera", "Kamera festlegen"), ActionKind::View))
             .action_with(note_internal_action("setCameraZoom", LocalizedLabel::native("Set Camera Zoom", "Kamerazoom festlegen"), ActionKind::View))
             .action_with(note_internal_action(SET_ACTIVE_UTILITY_ACTION_ID, LocalizedLabel::native("Set Active Utility", "Aktives Werkzeug festlegen"), ActionKind::View))
-            .action_with(note_internal_action(LocalizedLabel::native("Set Locale", "Sprache festlegen"), ActionKind::View))
             // 📝️ Staged argument forms for the palette-eligible actions.
             .action_args("addBlock", vec![
                 ActionArgDef::select("kind", LocalizedLabel::native("Kind", "Typ"), vec![

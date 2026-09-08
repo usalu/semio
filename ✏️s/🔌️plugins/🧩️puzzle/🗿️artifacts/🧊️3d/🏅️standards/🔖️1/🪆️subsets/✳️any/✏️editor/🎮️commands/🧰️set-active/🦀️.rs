@@ -16,7 +16,6 @@ pub fn set_active(ctx: &mut Puzzle3dActionCtx<'_>, action: &str, args: Option<&V
         ctx.scene.runtime.active_tool_id = tool_id.map(str::to_string);
         ctx.scene.active_utility = puzzle3d_scene_active_utility(&ctx.scene.runtime, Some(ctx.window_id));
     }
-    ctx.app.clear_transform_session();
     ctx.scene.runtime.suggestion_menu = None;
     ctx.scene.runtime.engagement_input = String::new();
     ctx.scene.runtime.brush_candidate_index = 0;

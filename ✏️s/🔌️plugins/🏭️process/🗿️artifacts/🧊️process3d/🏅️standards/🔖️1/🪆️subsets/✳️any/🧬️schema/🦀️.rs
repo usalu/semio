@@ -43,8 +43,6 @@ pub struct Process3dArtifact {
     pub selected_id: Option<String>,
     #[state(presence)]
     pub selected_face_id: Option<usize>,
-    #[state(presence)]
-    pub active_utility_id: String,
     #[state(config)]
     pub selection_method: String,
     #[state(config)]
@@ -97,7 +95,6 @@ impl Default for Process3dArtifact {
             resolved_up_to: None,
             selected_id: None,
             selected_face_id: None,
-            active_utility_id: "select".into(),
             selection_method: "rectangle".into(),
             engagement_input: String::new(),
             camera_position_x: 3.0,

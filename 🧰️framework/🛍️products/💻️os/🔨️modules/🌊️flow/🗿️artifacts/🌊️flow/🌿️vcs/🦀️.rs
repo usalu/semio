@@ -15,12 +15,6 @@ use crate::retained::{FlowOwner, FlowRetirement};
 
 // #region 🔖️ArtifactVcs
 use crate::os_spr::{Identified, MutationApplyError, MutationApplyResult, MutationDiff, Patchable};
-#[cfg(test)]
-use crate::os_spr::{ArtifactId, Edit, SchemaId};
-#[cfg(test)]
-use crate::os_store::create_document_envelope;
-#[cfg(test)]
-use crate::os_store::ArtifactCommand;
 use crate::os_store::{ArtifactEnvelope, ArtifactOwnedValueRetirementFactory, ArtifactStore, ArtifactStoreCursorDisposer, ErasedSnapshotRetirement, MemberStoreOwner, MemberStoreOwners, SnapshotRetirementFactory, SnapshotRetirementStep};
 
 pub const FLOW_DOCUMENT_SCHEMA: &str = "flow.fixture";

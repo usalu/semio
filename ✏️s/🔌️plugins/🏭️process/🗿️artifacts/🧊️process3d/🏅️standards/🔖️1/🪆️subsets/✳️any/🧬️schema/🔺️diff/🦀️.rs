@@ -48,8 +48,6 @@ pub struct Process3dDiff {
     pub selected_id: Option<Option<String>>,
     #[state(presence)]
     pub selected_face_id: Option<Option<usize>>,
-    #[state(presence)]
-    pub active_utility_id: Option<String>,
     #[state(config)]
     pub selection_method: Option<String>,
     #[state(config)]

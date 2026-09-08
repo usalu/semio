@@ -10,7 +10,7 @@
 
 use crate::op::ShootingMutation;
 use crate::{ShootingSnapshot, SHOOTING_DOCUMENT_SCHEMA};
-use crate::editor::shooting::commands::{asset, camera, export, fixture, gumball, locale, scene, selection, shot};
+use crate::editor::shooting::commands::{asset, camera, export, fixture, gumball, scene, selection, shot};
 use crate::editor::shooting::config::{ShootingConfig, ShootingConfigMutation};
 use crate::editor::shooting::modes::edit;
 use crate::editor::shooting::modes::edit::windows::icon as icon_window;
@@ -203,11 +203,11 @@ pub fn shooting_photos_out_port() -> semio_framework_plugin::MediaPortSpec {
 }
 
 /// 🖼️ Exports the active shot's rendered scene as a `2d.image` `Media` payload for the `photos:out`
-/// port — reuses the same SVG-then-rasterize pipeline (`crate::schema::shooting_scene_svg` +
+/// port — reuses the same SVG-then-rasterize pipeline (`crate::standards::v1::subsets::any::schema::shooting_scene_svg` +
 /// `rasterize_svg_to_png_base64`) as the `exportActiveShot`/PNG shell action, so there is exactly one
 /// photo renderer.
 pub fn shooting_photo_media(snapshot: &ShootingSnapshot) -> Result<Media, MediaError> {
-    let (svg, width, height) = crate::schema::shooting_scene_svg(snapshot).map_err(|error| MediaError::Payload("photos:out".into(), error))?;
+    let (svg, width, height) = crate::standards::v1::subsets::any::schema::shooting_scene_svg(snapshot).map_err(|error| MediaError::Payload("photos:out".into(), error))?;
     let png_base64 = semio_framework_os::rasterize_svg_to_png_base64(&svg, width, height).map_err(|error| MediaError::Payload("photos:out".into(), error))?;
     Ok(Media { media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Raster }, payload: MediaPayload::Structured { schema: "2d.image".into(), json: png_base64 } })
 }
@@ -261,7 +261,6 @@ semio_framework_plugin::app_commands! {
         "loadSavedCamera" as "load-saved-camera" => load_saved_camera::LoadSavedCamera,
         "setCameraDraftLabel" as "camera-draft-label" => set_camera_draft_label::SetCameraDraftLabel,
         "setCenterModel" as "center-model" => set_center_model::SetCenterModel,
-        "setActiveUtility" as "active-utility" => set_active_utility::SetActiveUtility,
         "setShotSelection" as "set-shot-selection" => set_shot_selection::SetShotSelection,
         "worldPointerDown" as "world-pointer-down" => world_pointer_down::WorldPointerDown,
         "worldPointerMove" as "world-pointer-move" => world_pointer_move::WorldPointerMove,
@@ -282,7 +281,7 @@ use export::export_shots;
 use fixture::{import_snapshot_json, load_request, reset_snapshot, save_download, set_active_example};
 use gumball::{rotate_selection, scale_selection, translate_selection};
 use scene::{set_ambient_intensity, set_material_roughness, set_shadow_enabled, set_sun_azimuth, set_sun_elevation, set_sun_intensity, toggle_sun};
-use selection::{set_active_utility, set_center_model, set_shot_selection, world_pointer_down, world_pointer_move};
+use selection::{set_center_model, set_shot_selection, world_pointer_down, world_pointer_move};
 use shot::{add_shot, patch_shots, set_active_shot, set_active_shot_format, set_active_shot_label, set_active_shot_shape};
 //#endregion 🔖️Commands
 
@@ -326,7 +325,7 @@ fn shooting_bounded_reduce(
     history: &semio_framework_plugin::HistoryView,
     _interaction: &protocol::InteractionState,
     _hover: &semio_framework_plugin::app::InteractionHoverState,
-    _context: Option<&semio_framework_plugin::ArtifactOwnedToolJobContext<EditorApp<ShootingPlayApp>>>,
+    _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<ShootingPlayApp>>>,
     operation: &AppOperationContext,
 ) -> Result<Emit<ShootingMutation, ShootingConfigMutation, NoDraftMutation>, Fault> {
     if !SHOOTING_BOUNDED_TOOL_IDS.contains(&shooting_command_id(command)) {
@@ -464,7 +463,7 @@ impl ArtifactEditor for ShootingPlayApp {
     }
 
     fn initial_snapshot() -> ShootingSnapshot {
-        crate::schema::default_snapshot()
+        crate::standards::v1::subsets::any::schema::default_snapshot()
     }
 
     fn io() -> Option<AppIo> {
@@ -557,7 +556,7 @@ impl ArtifactEditor for ShootingPlayApp {
         let snapshot = doc.snapshot;
         let labels = shooting_play_labels(view_state);
         match body_key {
-            SHOOTING_PLAY_BODY_SCENE => scene_window::render(snapshot, cfg.snapshot),
+            SHOOTING_PLAY_BODY_SCENE => scene_window::render(snapshot, cfg.snapshot, view_state.active_utility_id.as_deref().unwrap_or("move")),
             SHOOTING_PLAY_BODY_ICON => icon_window::render(snapshot, cfg.snapshot),
             SHOOTING_PLAY_BODY_DOCUMENT => document_panel::render(snapshot, labels),
             SHOOTING_PLAY_BODY_CATALOGUE => catalogue_panel::render(labels),

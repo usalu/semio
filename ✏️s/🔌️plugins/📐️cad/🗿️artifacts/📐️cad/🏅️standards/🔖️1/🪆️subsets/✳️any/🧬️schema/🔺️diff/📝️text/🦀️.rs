@@ -78,9 +78,6 @@ impl CadDiff {
             if let Some(value) = &self.selected_primitive_kind {
                 next.selected_primitive_kind = value.clone();
             }
-            if let Some(value) = &self.active_utility_id {
-                next.active_utility_id = value.clone();
-            }
             if let Some(value) = &self.active_example_id {
                 next.active_example_id = value.clone();
             }
@@ -315,7 +312,6 @@ impl MutationDiff<CadSnapshot> for CadDiff {
         take!(selected_reference_id);
         take!(selected_primitive_id);
         take!(selected_primitive_kind);
-        take!(active_utility_id);
         take!(active_example_id);
         take!(selection_method);
         take!(engagement_input);

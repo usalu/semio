@@ -124,7 +124,7 @@ fn home_retained_reduce(
     history: &semio_framework_plugin::HistoryView,
     _interaction: &protocol::InteractionState,
     _hover: &semio_framework_plugin::app::InteractionHoverState,
-    _context: Option<&semio_framework_plugin::ArtifactOwnedToolJobContext<EditorApp<HomeApp>>>,
+    _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<HomeApp>>>,
     operation: &AppOperationContext,
 ) -> Result<Emit<crate::standards::v1::subsets::any::schema::mutations::text::SHomeMutation, HomeConfigMutation, NoDraftMutation>, Fault> {
     if home_retained_extent(command, snapshot, _interaction).is_none() {

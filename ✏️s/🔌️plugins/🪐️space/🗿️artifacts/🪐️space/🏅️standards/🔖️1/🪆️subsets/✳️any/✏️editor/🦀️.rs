@@ -162,7 +162,7 @@ fn space_index_retained_reduce(
     history: &semio_framework_plugin::HistoryView,
     interaction: &protocol::InteractionState,
     _hover: &semio_framework_plugin::app::InteractionHoverState,
-    _context: Option<&semio_framework_plugin::ArtifactOwnedToolJobContext<EditorApp<SpaceIndexEditor>>>,
+    _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<semio_framework_plugin::EditorApp<SpaceIndexEditor>>>,
     operation: &semio_framework_plugin::AppOperationContext,
 ) -> Result<Emit<SSpaceMutation, SpaceIndexConfigMutation, NoDraftMutation>, Fault> {
     if space_index_retained_extent(command, snapshot, interaction).is_none() {

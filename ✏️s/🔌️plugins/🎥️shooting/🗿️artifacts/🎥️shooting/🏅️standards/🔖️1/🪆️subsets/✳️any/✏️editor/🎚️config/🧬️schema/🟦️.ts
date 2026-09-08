@@ -16,9 +16,6 @@ export interface ShootingConfig {
   cameraDraftLabel: string;
   /** @state config */
   camera: ShootingCamera;
-  /** @state config */
-  activeUtilityId: string;
-  /** @state config */
 }
 
 export interface ShootingCamera {

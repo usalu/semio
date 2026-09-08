@@ -52,7 +52,7 @@ impl ArtifactViewer for LayoutViewer {
     const DOCUMENT_SCHEMA: &'static str = LAYOUT_DOCUMENT_SCHEMA;
 
     fn initial_snapshot() -> LayoutSnapshot {
-        crate::schema::default_document()
+        crate::standards::v1::subsets::any::schema::default_document()
     }
 
     /// 👁️ Structurally read-only: the sole `LayoutViewCommand::Noop` variant never carries a config

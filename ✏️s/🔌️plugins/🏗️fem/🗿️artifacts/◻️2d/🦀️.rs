@@ -351,16 +351,16 @@ pub fn computation_artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
 #[cfg(feature = "component-app-assembly")]
 pub trait ArtifactApps:
     semio_framework_plugin::PluginApp
-    + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::EditorApp<crate::editor::fem2d::Fem2dPlayApp>>>
-    + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::ViewerApp<crate::viewer::fem2d::Fem2dViewer>>>
+    + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::EditorApp<editor::fem2d::Fem2dPlayApp>>>
+    + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::ViewerApp<viewer::fem2d::Fem2dViewer>>>
 {
 }
 
 #[cfg(feature = "component-app-assembly")]
 impl<PA> ArtifactApps for PA where
     PA: semio_framework_plugin::PluginApp
-        + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::EditorApp<crate::editor::fem2d::Fem2dPlayApp>>>
-        + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::ViewerApp<crate::viewer::fem2d::Fem2dViewer>>>
+        + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::EditorApp<editor::fem2d::Fem2dPlayApp>>>
+        + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::ViewerApp<viewer::fem2d::Fem2dViewer>>>
 {
 }
 
@@ -414,10 +414,10 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
 /// the ONLY registration channel for schema/io/viewer/editor rows. `definition()` (old
 /// `ArtifactDefinition`/capability rows, above) is kept per debt D1.
 #[cfg(feature = "component-app-assembly")]
-pub fn artifact<PA: crate::ArtifactApps>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<PA> {
+pub fn artifact<PA: ArtifactApps>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<PA> {
     use semio_framework_plugin::app::declarations::ArtifactDeclaration;
     use store::os_io::ArtifactKindId;
-    ArtifactDeclaration { kind: ArtifactKindId::parse("s.fem.fem2d").expect("canonical fem2d kind"), localization: &[], standards: vec![crate::standards::v1::standard::<PA>()] }
+    ArtifactDeclaration { kind: ArtifactKindId::parse("s.fem.fem2d").expect("canonical fem2d kind"), localization: &[], standards: vec![standards::v1::standard::<PA>()] }
 }
 
 /// 📌️ Handcrafted facet grammars (text) and protocols (binary) for in-process execution — built once
@@ -432,28 +432,28 @@ pub fn pilot_languages() -> &'static [dsl::LanguageSpec] {
                     id: "fem.fem2d",
                     extension: Some("fem2d"),
                     role: dsl::LanguageRole::Document,
-                    grammar: Some(crate::standards::v1::subsets::any::schema::snapshot::text::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(crate::standards::v1::subsets::any::schema::snapshot::text::COMPONENT_GRAMMAR_PATH),
-                    protocol: Some(crate::standards::v1::subsets::any::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(crate::standards::v1::subsets::any::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
+                    grammar: Some(standards::v1::subsets::any::schema::snapshot::text::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(standards::v1::subsets::any::schema::snapshot::text::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(standards::v1::subsets::any::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(standards::v1::subsets::any::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
                     hooks: dsl::passthrough_hooks("fem.fem2d"),
                 },
                 dsl::LanguageSpec {
                     id: "fem.fem2d.op",
                     extension: None,
                     role: dsl::LanguageRole::Ops,
-                    grammar: Some(crate::standards::v1::subsets::any::schema::mutations::text::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(crate::standards::v1::subsets::any::schema::mutations::text::COMPONENT_GRAMMAR_PATH),
-                    protocol: Some(crate::standards::v1::subsets::any::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(crate::standards::v1::subsets::any::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
+                    grammar: Some(standards::v1::subsets::any::schema::mutations::text::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(standards::v1::subsets::any::schema::mutations::text::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(standards::v1::subsets::any::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(standards::v1::subsets::any::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
                     hooks: dsl::passthrough_hooks("fem.fem2d.op"),
                 },
                 dsl::LanguageSpec {
                     id: "fem.fem2d.diff",
                     extension: None,
                     role: dsl::LanguageRole::Diff,
-                    grammar: Some(crate::standards::v1::subsets::any::schema::diff::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(crate::standards::v1::subsets::any::schema::diff::COMPONENT_GRAMMAR_PATH),
+                    grammar: Some(standards::v1::subsets::any::schema::diff::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(standards::v1::subsets::any::schema::diff::COMPONENT_GRAMMAR_PATH),
                     protocol: None,
                     protocol_path: None,
                     hooks: dsl::passthrough_hooks("fem.fem2d.diff"),
@@ -464,8 +464,8 @@ pub fn pilot_languages() -> &'static [dsl::LanguageSpec] {
                     role: dsl::LanguageRole::Pack,
                     grammar: None,
                     grammar_path: None,
-                    protocol: Some(crate::standards::v1::subsets::any::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(crate::standards::v1::subsets::any::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
+                    protocol: Some(standards::v1::subsets::any::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(standards::v1::subsets::any::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
                     hooks: dsl::passthrough_hooks("fem2d.pack"),
                 },
                 dsl::LanguageSpec {
@@ -474,8 +474,8 @@ pub fn pilot_languages() -> &'static [dsl::LanguageSpec] {
                     role: dsl::LanguageRole::Spr,
                     grammar: None,
                     grammar_path: None,
-                    protocol: Some(crate::standards::v1::subsets::any::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(crate::standards::v1::subsets::any::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
+                    protocol: Some(standards::v1::subsets::any::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(standards::v1::subsets::any::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
                     hooks: dsl::passthrough_hooks("fem2d.spr"),
                 },
             ]

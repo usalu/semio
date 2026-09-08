@@ -322,7 +322,7 @@ pub use slide::{PresentationScene, PresentationSection, PresentationSlide, PRESE
 //#region 🔖️Error
 /// 🎬️ Errors from headless video export (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES:
 /// split from the former engine-tree `PresentationError`, which mixed this app-tier video-export concern
-/// with a schema-tier envelope-replay concern — see `crate::schema::PresentationError`
+/// with a schema-tier envelope-replay concern — see `crate::standards::v1::subsets::any::schema::PresentationError`
 /// for that half, kept where the artifact's own `materialize_presentation_projection_json` can reach it
 /// without an artifact-depends-on-app violation).
 #[derive(Debug)]

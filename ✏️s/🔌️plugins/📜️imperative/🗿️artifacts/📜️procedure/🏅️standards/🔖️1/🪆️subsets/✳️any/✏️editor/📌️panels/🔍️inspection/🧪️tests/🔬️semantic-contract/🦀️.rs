@@ -11,7 +11,7 @@ fn imperative_semantic_panels_match_the_json_oracle() {
     let vectors: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️panels.json")).expect("neutral UI vectors");
     let document = ProcedureSnapshot::default();
     for row in vectors["cases"].as_array().expect("locales") {
-        let labels = semio_framework_plugin::resolve_labels_for_locale::<ImperativeLabels>(row["locale"].as_str().expect("locale"));
+        let labels = semio_framework_plugin::resolve_labels::<ImperativeLabels>(&semio_framework_plugin::ViewModel { locale: semio_framework_plugin::locale_from_str(row["locale"].as_str().expect("locale")), ..Default::default() });
         let tree = project(crate::editor::procedure::panels::document::render(&document, labels).expect("document"));
         assert_eq!(tree["children"][0]["component"]["label"], row["document"]);
         let catalogue = crate::editor::procedure::panels::catalogue::render(labels).expect("catalogue");

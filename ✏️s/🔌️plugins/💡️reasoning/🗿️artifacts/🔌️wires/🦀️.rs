@@ -102,14 +102,14 @@ use semio_s_artifact_stdio_semio::standards::v1::subsets::value::schema::snapsho
 const WIRES_NODE_JSON_PROPERTY: &str = "wires.node";
 
 fn semio_node_from_board_node(node: &DslValue) -> SemioGraphNode {
-    let (x, y) = crate::schema::node_position(node);
+    let (x, y) = schema::node_position(node);
     SemioGraphNode {
-        id: SemioGraphNodeId::new(crate::schema::entity_id(node, "id").unwrap_or("").to_string()),
+        id: SemioGraphNodeId::new(schema::entity_id(node, "id").unwrap_or("").to_string()),
         kind: node.get("nodeKind").and_then(|value| value.as_str()).unwrap_or("").to_string(),
         label: node.get("text").and_then(|value| value.as_str()).unwrap_or("").to_string(),
         position: SemioPoint2 { x, y },
         ports: Vec::new(),
-        properties: vec![SemioValueEntry { key: WIRES_NODE_JSON_PROPERTY.into(), value: SemioValue::Str { value: crate::schema::fixture_json_string(node) } }],
+        properties: vec![SemioValueEntry { key: WIRES_NODE_JSON_PROPERTY.into(), value: SemioValue::Str { value: schema::fixture_json_string(node) } }],
     }
 }
 
@@ -144,11 +144,11 @@ fn board_node_from_semio_node(node: &SemioGraphNode) -> DslValue {
 /// graph-shape tooling.
 fn semio_edge_from_board_edge(edge: &DslValue) -> SemioGraphEdge {
     SemioGraphEdge {
-        id: SemioGraphEdgeId::new(crate::schema::entity_id(edge, "id").unwrap_or("").to_string()),
+        id: SemioGraphEdgeId::new(schema::entity_id(edge, "id").unwrap_or("").to_string()),
         source: SemioGraphNodeId::new(edge.get("source").and_then(|value| value.as_str()).unwrap_or("").to_string()),
         target: SemioGraphNodeId::new(edge.get("target").and_then(|value| value.as_str()).unwrap_or("").to_string()),
         kind: edge.get("edgeKind").and_then(|value| value.as_str()).unwrap_or("").to_string(),
-        label: crate::schema::fixture_json_string(edge),
+        label: schema::fixture_json_string(edge),
     }
 }
 
@@ -333,7 +333,7 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
 pub fn artifact<A: WiresApplication>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<A> {
     use semio_framework_plugin::app::declarations::ArtifactDeclaration;
     use store::os_io::ArtifactKindId;
-    ArtifactDeclaration { kind: ArtifactKindId::parse("s.reasoning.wires").expect("canonical reasoning.wires kind"), localization: &[], standards: vec![crate::standards::v1::standard()] }
+    ArtifactDeclaration { kind: ArtifactKindId::parse("s.reasoning.wires").expect("canonical reasoning.wires kind"), localization: &[], standards: vec![standards::v1::standard()] }
 }
 
 /// 🧩️ App fleet capable of hosting this artifact's editor and viewer.
@@ -916,6 +916,3 @@ pub mod viewer {
     }
 }
 
-//#region 📚️Examples
-pub use standards::v1::subsets::any::examples;
-//#endregion 📚️Examples

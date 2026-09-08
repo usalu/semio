@@ -33,7 +33,6 @@ pub struct NoteConfig {
     /// 🧰️ The active canvas utility (select/pencil/eraser/…) — was read off
     /// `view_state.active_utility_id` (host-pushed `ViewModel`, deleted by the pure-trait migration).
     pub active_utility_id: String,
-    /// 🗣️ BCP-47 locale tag — was read off `view_state.locale`.
 }
 
 //#region 🔖️ArtifactCodec

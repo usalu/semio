@@ -2,17 +2,74 @@
   "view": {
     "locale": "de",
     "terminology": "reuse",
-    "windowInstances": [{"id": "left", "windowKindId": "graph"}, {"id": "right", "windowKindId": "graph"}],
-    "activeUtilityByWindowId": {"left": "pan", "right": "measure"}
+    "windowInstances": [
+      {
+        "id": "left",
+        "windowKindId": "graph"
+      },
+      {
+        "id": "right",
+        "windowKindId": "graph"
+      }
+    ],
+    "activeUtilityByWindowId": {
+      "left": "pan",
+      "right": "measure"
+    }
   },
   "surfaces": [
-    {"id": "7:left", "bodyKey": "graph", "windowId": "left", "activeUtilityId": "pan"},
-    {"id": "7:right", "bodyKey": "graph", "windowId": "right", "activeUtilityId": "measure"},
-    {"id": "7:panel", "bodyKey": "properties", "windowId": null, "activeUtilityId": null}
+    {
+      "id": "7:left",
+      "bodyKey": "graph",
+      "windowId": "left",
+      "activeUtilityId": "pan"
+    },
+    {
+      "id": "7:right",
+      "bodyKey": "graph",
+      "windowId": "right",
+      "activeUtilityId": "measure"
+    },
+    {
+      "id": "7:panel",
+      "bodyKey": "properties",
+      "windowId": null,
+      "activeUtilityId": null
+    }
   ],
-  "update": {"locale": "en", "terminology": "native", "windowId": "right", "activeWindowKindId": "graph", "activeUtilityId": "pan", "activeUtilityByWindowId": {"right": "pan"}},
+  "update": {
+    "locale": "en",
+    "terminology": "native",
+    "windowId": "right",
+    "activeWindowKindId": "graph",
+    "activeUtilityId": "pan",
+    "activeUtilityByWindowId": {
+      "right": "pan"
+    }
+  },
   "hidden": "7:left",
   "survivor": "7:right",
-  "closedWindowIds": ["left", "right"],
-  "panelSurvivor": "7:panel"
+  "closedWindowIds": [
+    "left",
+    "right"
+  ],
+  "panelSurvivor": "7:panel",
+  "presence": {
+    "domainId": "items",
+    "nodeKey": "item-1",
+    "expected": {
+      "nodeKey": "item-1",
+      "own": {},
+      "peers": [
+        {
+          "actor": "user:alice#s1",
+          "color": 3,
+          "selected": true,
+          "label": "user:alice#s1"
+        }
+      ],
+      "ttlMs": 4000
+    },
+    "actor": "user:alice#s1"
+  }
 }

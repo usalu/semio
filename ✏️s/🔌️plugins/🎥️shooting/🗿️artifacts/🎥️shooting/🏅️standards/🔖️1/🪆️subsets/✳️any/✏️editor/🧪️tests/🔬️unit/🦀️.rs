@@ -143,8 +143,6 @@ pub(super) fn every_command() -> Vec<ShootingCommand> {
         ShootingCommand::LoadSavedCamera(load_saved_camera::LoadSavedCamera { id: "cam1".into() }),
         ShootingCommand::SetCameraDraftLabel(set_camera_draft_label::SetCameraDraftLabel { value: "Hero".into() }),
         ShootingCommand::SetCenterModel(set_center_model::SetCenterModel { pressed: Some(true) }),
-        ShootingCommand::SetActiveUtility(set_active_utility::SetActiveUtility { utility_id: "rotate".into() }),
-        ShootingCommand::SetLocale(set_locale::SetLocale { value: "de-DE".into() }),
         ShootingCommand::SetShotSelection(set_shot_selection::SetShotSelection { shot_ids: vec!["s1".into()] }),
         ShootingCommand::WorldPointerDown(world_pointer_down::WorldPointerDown {}),
         ShootingCommand::WorldPointerMove(world_pointer_move::WorldPointerMove {}),
@@ -277,7 +275,7 @@ async fn two_instances_converge_disjoint_edits_via_backbone() {
         ShootingCommand::TranslateSelection(translate_selection::TranslateSelection { asset_ids: vec!["base".into()], dx: 5.0, dy: 6.0, dz: 7.0 }),
         |app| {
             let snapshot = app.snapshot().expect("snapshot");
-            (crate::schema::active_shot(&snapshot).unwrap().label.clone(), snapshot.assets[0].origin)
+            (crate::standards::v1::subsets::any::schema::active_shot(&snapshot).unwrap().label.clone(), snapshot.assets[0].origin)
         },
     )
     .await;
@@ -286,7 +284,7 @@ async fn two_instances_converge_disjoint_edits_via_backbone() {
 #[semio_framework_async_macros::async_test]
 async fn ingest_operations_is_idempotent_for_shooting() {
     testkit::assert_ingest_idempotent::<EditorApp<ShootingPlayApp>, String>(ShootingCommand::SetActiveShotLabel(set_active_shot_label::SetActiveShotLabel { value: "Hero".into() }), |app| {
-        crate::schema::active_shot(&app.snapshot().expect("snapshot")).unwrap().label.clone()
+        crate::standards::v1::subsets::any::schema::active_shot(&app.snapshot().expect("snapshot")).unwrap().label.clone()
     })
     .await;
 }
@@ -331,7 +329,7 @@ async fn shooting_io_declares_the_photos_out_port() {
 /// 🖼️ `shooting_photo_media` renders the same scene as `exportActiveShot`'s PNG (base64, non-empty).
 #[semio_framework_async_macros::async_test]
 async fn shooting_photo_media_exports_a_raster_2d_image() {
-    let snapshot = crate::schema::default_snapshot();
+    let snapshot = crate::standards::v1::subsets::any::schema::default_snapshot();
     let media = shooting_photo_media(&snapshot).expect("photo export succeeds");
     assert_eq!(media.media_type.class, MediaClass::TwoD);
     assert_eq!(media.media_type.form, MediaForm::Raster);

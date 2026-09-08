@@ -14,8 +14,7 @@
       "required": [
         "cameraX",
         "cameraY",
-        "cameraZoom",
-        "locale"
+        "cameraZoom"
       ],
       "properties": {
         "cameraX": {
@@ -26,9 +25,6 @@
         },
         "cameraZoom": {
           "type": "number"
-        },
-        "locale": {
-          "type": "string"
         }
       }
     }

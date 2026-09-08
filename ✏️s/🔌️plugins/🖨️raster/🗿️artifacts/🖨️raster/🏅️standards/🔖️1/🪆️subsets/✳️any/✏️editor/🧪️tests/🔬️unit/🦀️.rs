@@ -2,7 +2,7 @@
 use super::testkit::*;
 use super::*;
 use crate::editor::raster::panels::{catalogue, document, inspection, masks};
-use crate::schema::{empty_raster_document, layer_name, layer_visible};
+use crate::standards::v1::subsets::any::schema::{empty_raster_document, layer_name, layer_visible};
 use semio_framework_plugin::{PluginApp, SET_ACTIVE_UTILITY_ACTION_ID, testkit};
 use store::MemoryBackbone;
 
@@ -14,7 +14,7 @@ use store::MemoryBackbone;
 fn raster_envelope_wire() -> Vec<u8> {
     use store::ArtifactPack;
 
-    let snapshot = crate::schema::empty_raster_snapshot();
+    let snapshot = crate::standards::v1::subsets::any::schema::empty_raster_snapshot();
     let snapshot_pack = snapshot.encode_pack();
     let snapshot_hex = snapshot_pack.iter().map(|byte| format!("{byte:02x}")).collect::<String>();
     let wire = dsl::json::to_string(&dsl::json::object([
@@ -158,7 +158,7 @@ async fn renders_navigator_scene() {
 
 #[semio_framework_async_macros::async_test]
 async fn parses_semio_example_document() {
-    let document = crate::schema::semio_example_document();
+    let document = crate::standards::v1::subsets::any::schema::semio_example_document();
     assert!(!document.layers.is_empty());
 }
 
@@ -220,7 +220,7 @@ async fn composite_scene_syncs_document_and_assets() {
     assert!(json.contains("\"componentKind\":\"paint-2d\""));
     assert!(json.contains("\"viewMode\":\"composite\""));
     assert!(!json.contains("\"assetsJson\":\"{}\""), "semio fixture has embedded assets");
-    let document = crate::schema::semio_example_document();
+    let document = crate::standards::v1::subsets::any::schema::semio_example_document();
     let sync_json = document_sync_json(&document);
     assert!(!sync_json.contains("\"assets\""), "sync json must omit assets");
     assert!(sync_json.contains("\"params\""), "adjustment params must survive document→sync roundtrip for the paint host");
@@ -232,7 +232,7 @@ async fn composite_scene_syncs_document_and_assets() {
 
 #[semio_framework_async_macros::async_test]
 async fn semio_example_preserves_adjustment_params() {
-    let document = crate::schema::semio_fixture_snapshot();
+    let document = crate::standards::v1::subsets::any::schema::semio_fixture_snapshot();
     let RasterLayerNode::Adjustment { params, adjustment_kind, .. } = document.layers.iter().find(|layer| matches!(layer, RasterLayerNode::Adjustment { id, .. } if id == "brighten")).expect("brighten adjustment") else {
         panic!("expected adjustment");
     };
@@ -300,7 +300,7 @@ async fn add_layer_action_appends_and_undo_removes() {
 #[semio_framework_async_macros::async_test]
 async fn patch_layer_renames_and_toggles_visibility_round_trip() {
     let mut app = app().await;
-    let layer_id = crate::schema::layer_node_id(&app.snapshot().expect("snapshot").layers[0]).to_string();
+    let layer_id = crate::standards::v1::subsets::any::schema::layer_node_id(&app.snapshot().expect("snapshot").layers[0]).to_string();
     dispatch(&mut app, RasterCommand::PatchLayer(patch_layer::PatchLayer { layer_id: layer_id.clone(), field: "name".into(), value: "Renamed".into() })).await;
     assert_eq!(layer_name(&app.snapshot().expect("snapshot").layers[0]), "Renamed");
     dispatch(&mut app, RasterCommand::ToggleLayerVisible(toggle_layer_visible::ToggleLayerVisible { layer_id })).await;
@@ -317,16 +317,16 @@ async fn move_layer_into_group() {
         let projection = app.snapshot().expect("snapshot");
         let group = projection.layers.iter().find(|layer| matches!(layer, RasterLayerNode::Group { .. })).unwrap();
         let pixel = projection.layers.iter().find(|layer| matches!(layer, RasterLayerNode::Pixel { .. })).unwrap();
-        (crate::schema::layer_node_id(group).to_string(), crate::schema::layer_node_id(pixel).to_string())
+        (crate::standards::v1::subsets::any::schema::layer_node_id(group).to_string(), crate::standards::v1::subsets::any::schema::layer_node_id(pixel).to_string())
     };
     let target_row = format!("{RASTER_TREE_PREFIX}.group.{group_id}");
     dispatch(&mut app, RasterCommand::MoveLayer(move_layer::MoveLayer { layer_id: pixel_id.clone(), target_row_id: target_row, drop_position: "after".into() })).await;
     let projection = app.snapshot().expect("snapshot");
-    let RasterLayerNode::Group { children, .. } = projection.layers.iter().find(|layer| crate::schema::layer_node_id(layer) == group_id).unwrap() else {
+    let RasterLayerNode::Group { children, .. } = projection.layers.iter().find(|layer| crate::standards::v1::subsets::any::schema::layer_node_id(layer) == group_id).unwrap() else {
         panic!("expected group");
     };
     assert_eq!(children.len(), 1);
-    assert_eq!(crate::schema::layer_node_id(&children[0]), pixel_id);
+    assert_eq!(crate::standards::v1::subsets::any::schema::layer_node_id(&children[0]), pixel_id);
 }
 
 /// 🧪️ The definitional merge proof: A adds a layer while B renames the background layer — disjoint
@@ -337,7 +337,7 @@ async fn two_instances_converge_disjoint_layer_edits_via_backbone() {
     let mut instance_b = app().await;
     // Seed both from an identical base projection (a background layer with a fixed id) so B's
     // rename targets the same layer A holds — per-instance `initial_snapshot` mints fresh ids.
-    let mut base = crate::schema::empty_raster_snapshot();
+    let mut base = crate::standards::v1::subsets::any::schema::empty_raster_snapshot();
     base.layers = vec![RasterLayerNode::Pixel {
         id: "bg".into(),
         name: "Background".into(),
@@ -449,7 +449,7 @@ fn every_command() -> Vec<RasterCommand> {
         RasterCommand::SetCameraZoom(set_camera_zoom::SetCameraZoom { zoom: 2.0 }),
         RasterCommand::SetActiveUtility(set_active_utility::SetActiveUtility { utility_id: "paintBrush".into() }),
         RasterCommand::SetLocale(set_locale::SetLocale { value: "de-DE".into() }),
-        RasterCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: crate::examples::demo::ID.into() }),
+        RasterCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: crate::examples::art_raster_demo::ID.into() }),
     ]
 }
 

@@ -22,12 +22,12 @@ use dsl::DslRecord;
 use protocol::{Identified, Patchable};
 use semio_framework_plugin::{ArtifactKindSpec, Dialect, MediaClass, MediaForm, MediaType, OsMediaCapability, StandardId, SubsetId};
 
-pub use crate::schema::mutations::ShootingMutation;
+pub use crate::standards::v1::subsets::any::schema::mutations::ShootingMutation;
 
-pub use crate::schema::diff::ShootingDiff;
+pub use crate::standards::v1::subsets::any::schema::diff::ShootingDiff;
 
 pub const SHOOTING_DOCUMENT_SCHEMA: &str = "shooting.shooting";
-pub use crate::schema::snapshot::ShootingSnapshot;
+pub use crate::standards::v1::subsets::any::schema::snapshot::ShootingSnapshot;
 
 /// 🪪️ This artifact's dialect (ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET contract §1
 /// canonical surface id grammar) — lives at the ARTIFACT level (not under `editor`/`viewer`) so a
@@ -73,8 +73,8 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
                     id: "shooting.document",
                     extension: Some("shooting"),
                     role: dsl::LanguageRole::Document,
-                    grammar: Some(crate::dsl::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(crate::dsl::COMPONENT_GRAMMAR_PATH),
+                    grammar: Some(crate::standards::v1::subsets::any::schema::snapshot::text::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::standards::v1::subsets::any::schema::snapshot::text::COMPONENT_GRAMMAR_PATH),
                     protocol: Some(crate::pack::COMPONENT_PROTOCOL_SEMIO),
                     protocol_path: Some(crate::pack::COMPONENT_PROTOCOL_PATH),
                     hooks: dsl::passthrough_hooks("shooting.document"),
@@ -1488,17 +1488,11 @@ mod tests;
         }
 
         // ---- Shims: keep pre-migration module paths resolving for external callers ----
-        pub mod schema {
-            pub use super::standards::v1::subsets::any::schema::*;
-        }
         pub mod io {
             pub use super::standards::v1::subsets::any::io::*;
         }
         pub mod op {
             pub use crate::standards::v1::subsets::any::schema::mutations::text::*;
-        }
-        pub mod dsl {
-            pub use crate::standards::v1::subsets::any::schema::snapshot::text::*;
         }
         pub mod spr {
             pub use crate::standards::v1::subsets::any::schema::mutations::binary::*;

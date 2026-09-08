@@ -1,6 +1,6 @@
 type TestSource = { readonly directory: string; readonly url: string };
 
-export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: any, source: TestSource): Promise<void> {
+export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: any, testSource: TestSource): Promise<void> {
   const { ACTOR_BYTE_PAGE_BYTES, MAINTENANCE_LANE_DEFAULT_BUDGET, MAX_SEGMENTED_DOWNLOAD_OPERATION_ID, NO_RESIDENT_FAULT, OwnedActorTurnOutput, OwnedActorTurnOutputs, OwnedKernelReturnContent, OwnedNativeUiPatchAuthority, OwnedNativeUiPatchSubmissionReceipt, OwnedResidentLedger, OwnedResidentRetirement, OwnedShardReturn, OwnedShardReturnPage, OwnedUiInstance, OwnedUiInstanceRetirement, OwnedUiPatchAcknowledgement, OwnedUiPatchInputRetirement, OwnedUiResidentPool, SHARD_FRAME_VARIANT_FIELDS, SHARD_JSPI_FAULT_CODE, SHARD_LIVENESS_POLICY, ShardClient, ShardJspiUnavailableError, assertShardJspiAvailable, capturedReturnState, createActorBytePage, createGrantedBudgetTracker, createShardCommandIngressPages, describeShardWorkerError, encodeActorInstanceLifecycle, encodeActorUiPatchReceipt, interpretShardFrame, isShardLostError, orderEnvelopesByLane, poolControllerEnvelope, poolUiEnvelope, shardJspiAvailable, uiResidentMetadataEnvelope } = dependencies;
   type ActorInstanceLifecycleReceipt = any;
   type ActorInstanceLifetime = any;
@@ -80,7 +80,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     expect(held).toHaveLength(2); for (const entry of held) { expect(entry.cell.result?.record).toBe(entry.record); expect(entry.record.matchesLiveShell(client)).toBe(true); expect(entry.record.retirement).toBeNull(); }
     expect(client.prepareWorkerBootstrap({ maxItems: 1, maxBytes: 64 })).toMatchObject({ kind: "ready", items: 0, bytes: 0 });
     expect(fixture.worker.combined).toEqual(produce({ ...fixture.shared.retained }, value => { value.bytes += fixture.worker.retained.bytes; value.slots += fixture.worker.retained.slots; value.owners += fixture.worker.retained.owners; }));
-    const source = ts.createSourceFile("shard.ts", await readFile(new URL("./🟦️.ts", source.url), "utf8"), ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
+    const source = ts.createSourceFile("shard.ts", await readFile(new URL("./🟦️.ts", testSource.url), "utf8"), ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
     const declaration = source.statements.find(statement => ts.isClassDeclaration(statement) && statement.name?.text === "ShardClient"); if (!declaration || !ts.isClassDeclaration(declaration)) throw new Error("Original Shard class missing");
     const fields = declaration.members.filter(ts.isPropertyDeclaration).map(member => member.name.getText(source).replace(/^#/, ""));
     expect(fields.filter(name => name.startsWith("uiResident") || name === "clientAdmissionPurpose")).toEqual(fixture.shared.fields);
@@ -321,7 +321,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     for (const name of row.clientRefusals) expect(ShardClient.matchesActivation(clients[name], lease), name).toBe(false);
     expect(reads).toBe(row.trapReads); expect(ledger.usage).toEqual(usage);
     expect(() => Reflect.construct(Object.getPrototypeOf(lease).constructor, [Symbol("foreign"), local.client, lease.actorId, lease.activationGeneration, lease.assertActive, lease.turn])).toThrow("actor-activation.private-lease");
-    const source = ts.createSourceFile("shard.ts", await readFile(new URL("./🟦️.ts", source.url), "utf8"), ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
+    const source = ts.createSourceFile("shard.ts", await readFile(new URL("./🟦️.ts", testSource.url), "utf8"), ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
     const declaration = source.statements.find(statement => ts.isClassDeclaration(statement) && statement.name?.text === row.metadata.className); if (!declaration || !ts.isClassDeclaration(declaration)) throw new Error("Actual captured activation declaration missing");
     const fields = declaration.members.filter(ts.isPropertyDeclaration).map(member => member.name.getText(source)); expect(fields).toEqual(row.metadata.fields);
     expect(row.metadata.facadeBytes).toBe(row.metadata.recordBytes + row.metadata.fieldBytes * fields.length); expect(row.metadata.addedPrivateReferences).toBe(fields.filter(name => name.startsWith("#")).length);
@@ -360,7 +360,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     expect(ledger.usage.data).toEqual({ bytes: 0, slots: 0, owners: 0 }); prepareResidentFixture(client, ledger, row.prepareBytes);
     expect(ledger.usage.data).toEqual(row.total); expect(uiResidentMetadataEnvelope("pool")).toEqual(row.uiEnvelope);
     const expected = produce({ bytes: 0, slots: 0, owners: 0 }, value => { for (const envelope of [row.controllerEnvelope, row.uiEnvelope, row.intrinsicEnvelope, row.cellEnvelope, row.intrinsicEnvelope, row.cellEnvelope]) { value.bytes += envelope.bytes; value.slots += envelope.slots; value.owners += envelope.owners; } }); expect(expected).toEqual(row.total);
-    const source = ts.createSourceFile("shard.ts", await readFile(new URL("./🟦️.ts", source.url), "utf8"), ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
+    const source = ts.createSourceFile("shard.ts", await readFile(new URL("./🟦️.ts", testSource.url), "utf8"), ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
     const declaration = source.statements.find(statement => ts.isClassDeclaration(statement) && statement.name?.text === "ShardClient"); if (!declaration || !ts.isClassDeclaration(declaration)) throw new Error("Actual Shard declaration missing");
     const fields = declaration.members.filter(ts.isPropertyDeclaration).map(member => member.name.getText(source)).filter(name => name.startsWith("#uiResident") || name === "#clientAdmissionPurpose").map(name => name.slice(1));
     expect(fields).toEqual(row.controllerFields); expect(row.controllerEnvelope.bytes).toBe(row.controllerModel.recordBytes + row.controllerModel.fieldBytes * fields.length);
@@ -714,6 +714,88 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   });
 
   describe("ShardClient captured return authority", () => {
+    it("CapturedUnusedReturnRetirement releases each original admission prefix without posting or retaining stale authority", async () => {
+      const { default: fixture } = await import("../../../🪪️activation/📤️return/🚪️retirement/🧪️fixture/🔣️.json");
+      const { default: schema } = await import("../../../🪪️activation/📤️return/🚪️retirement/🧬️schema/🔣️.json");
+      const { default: admission } = await import("../../../🪪️activation/📤️return/🏘️admission/🧪️fixture/🔣️.json");
+      const { default: Ajv } = await import("ajv"); const { produce } = await import("immer");
+      expect(new Ajv({ strict: true }).validate(schema, fixture)).toBe(true);
+      for (const prefix of fixture.prefixes) {
+        const { client, residentLedger, worker, instance } = await captured();
+        const owner = Reflect.get(client, "instanceLifecycles").get(instance.openRequest.requestSequence);
+        const before = residentLedger.usage.data, posts = worker.sent.length;
+        for (const row of admission.phases.slice(0, prefix)) instance.reserveReturn(admission.capacity, { maxItems: 1, maxBytes: row.grant });
+        const source = instance.pendingReturn;
+        if (prefix === admission.phases.length && source) await fixtureResponse(source);
+        const held = residentLedger.usage.data;
+        expect(instance.retireUnusedReturn({ maxItems: 0, maxBytes: 4096 }).kind).toBe("blocked");
+        expect(residentLedger.usage.data).toEqual(held);
+        let complete = false;
+        for (let index = 0; index < fixture.maximumSteps; index++) {
+          const step = instance.retireUnusedReturn(fixture.grant);
+          expect(step.items).toBeLessThanOrEqual(fixture.grant.maxItems); expect(step.bytes).toBeLessThanOrEqual(fixture.grant.maxBytes);
+          expect(step.kind, step.phase).not.toBe("rejected"); expect(step.kind, step.phase).not.toBe("blocked");
+          if (step.kind === "complete") { complete = true; break; }
+        }
+        expect(complete, String(prefix)).toBe(true);
+        expect({ phase: owner.returnPhase, capacity: owner.returnCapacity, pendingReturn: instance.pendingReturn, posts: worker.sent.length - posts }).toEqual(fixture.terminal);
+        expect(residentLedger.usage.data).toEqual(produce(before, () => {}));
+        expect(owner.returnCell).toBeNull(); expect(owner.returnRecord).toBeNull(); expect(owner.activation.returned).toBeNull();
+        if (source) {
+          expect(source.reserveResponse(fixture.grant).kind).toBe("rejected");
+          await expect(source.execute([], BUDGET)).rejects.toThrow("actor-return.closed");
+          const successor = await fixtureCapturedReturn(instance, admission.capacity); expect(successor).not.toBe(source);
+          expect(instance.pendingReturn).toBe(successor);
+        }
+        client.disposeAll();
+      }
+      console.log("[DEBUG] CapturedUnusedReturnRetirement: 13 admission prefixes, exact resident refunds, no native execute/cancel/post");
+    });
+
+    it("CapturedUnusedReturnRetirement does not discard an executed original return or its private page", async () => {
+      const { default: fixture } = await import("../../../🪪️activation/📤️return/🚪️retirement/🧪️fixture/🔣️.json");
+      const { client, residentLedger, worker, instance, source, response } = await deliveredInput();
+      const before = residentLedger.usage, page = source.page, posts = worker.sent.length;
+      for (let index = 0; index < 3; index++) expect(instance.retireUnusedReturn(fixture.grant).kind).toBe("blocked");
+      expect(instance.pendingReturn).toBe(source); expect(source.page).toBe(page); expect(source.retainedResponses).toBe(1);
+      expect(residentLedger.usage).toEqual(before); expect(worker.sent.length).toBe(posts);
+      expect(capturedReturnState(source).latest.responseEnvelope).toBe(response); client.disposeAll();
+    });
+
+    it("CapturedUnusedReturnRetirement retains executing, content and construction-fault owners", async () => {
+      const { default: fixture } = await import("../../../🪪️activation/📤️return/🚪️retirement/🧪️fixture/🔣️.json");
+      const { default: admission } = await import("../../../🪪️activation/📤️return/🏘️admission/🧪️fixture/🔣️.json");
+      for (const phase of ["in-flight", "content-owned", "faulted"]) {
+        const { client, residentLedger, worker, instance, row } = await captured();
+        const owner = Reflect.get(client, "instanceLifecycles").get(instance.openRequest.requestSequence);
+        if (phase === "faulted") {
+          const fault = { payload: new Uint8Array(8192) };
+          const freeze = Object.freeze;
+          const spy = vi.spyOn(Object, "freeze").mockImplementation(value => { if (value instanceof OwnedShardReturn) throw fault; return freeze(value); });
+          try { for (const item of admission.phases) instance.reserveReturn(admission.capacity, { maxItems: 1, maxBytes: item.grant }); } finally { spy.mockRestore(); }
+          const before = residentLedger.usage;
+          expect(instance.retireUnusedReturn(fixture.grant).kind).toBe("blocked"); expect(owner.returnFault).toBe(fault);
+          expect(residentLedger.usage).toEqual(before); client.disposeAll(); continue;
+        }
+        const source = await fixtureCapturedReturn(instance, admission.capacity);
+        if (phase === "content-owned") {
+          const content = new OwnedKernelReturnContent(source, owner.host, instance.activation, instance.lifetime!);
+          const before = residentLedger.usage;
+          expect(instance.retireUnusedReturn(fixture.grant).kind).toBe("blocked"); expect(source.content).toBe(content);
+          expect(instance.pendingReturn).toBe(source); expect(residentLedger.usage).toEqual(before); client.disposeAll(); continue;
+        }
+        await fixtureResponse(source);
+        const pending = source.execute([], BUDGET); const request = worker.sent.at(-1) as { requestId: string };
+        const before = residentLedger.usage;
+        expect(instance.retireUnusedReturn(fixture.grant).kind).toBe("blocked"); expect(instance.pendingReturn).toBe(source);
+        expect(residentLedger.usage).toEqual(before);
+        const { encodeActorReturnResult } = await import("../../../📤️return/🟦️.ts");
+        worker.deliver({ kind: "result", requestId: request.requestId, ok: true, value: encodeActorReturnResult({ kind: "pending", identity: { origin: source.origin!, returnSequence: BigInt(row.returnSequence) }, reason: "working" }) });
+        await pending;
+        expect(instance.retireUnusedReturn(fixture.grant).kind).toBe("blocked"); expect(instance.pendingReturn).toBe(source); client.disposeAll();
+      }
+    });
+
     it("CapturedReturnAdmission validates its exact parent phases and independent fixed ledger inventory", async () => {
       const { default: contract } = await import("../../../🪪️activation/📤️return/🏘️admission/🤝️contract.json"); const { default: schema } = await import("../../../🪪️activation/📤️return/🏘️admission/🧬️schema/🔣️.json");
       const { default: fixture } = await import("../../../🪪️activation/📤️return/🏘️admission/🧪️fixture/🔣️.json"); const fixtureSchema = schema;
@@ -732,11 +814,11 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
 
     it("CapturedReturnAdmission binds the parent, state, roster and facade inventory to actual source", async () => {
       const { default: contract } = await import("../../../🪪️activation/📤️return/🏘️admission/🤝️contract.json"); const ts = await import("typescript"); const { readFile } = await import("node:fs/promises");
-      const ast = ts.createSourceFile("shard-client.ts", await readFile(new URL("./🟦️.ts", source.url), "utf8"), ts.ScriptTarget.Latest, true);
+      const ast = ts.createSourceFile("shard-client.ts", await readFile(new URL("./🟦️.ts", testSource.url), "utf8"), ts.ScriptTarget.Latest, true);
       const fields = (name: string) => { const node = ast.statements.find(item => ts.isTypeAliasDeclaration(item) && item.name.text === name); if (!node || !ts.isTypeAliasDeclaration(node) || !ts.isTypeLiteralNode(node.type)) throw new Error("Missing return owner declaration"); return node.type.members.map(item => item.name?.getText(ast)); };
       const instance = fields("ShardInstanceOwner"); expect(instance.slice(-contract.parentFields.length)).toEqual(contract.parentFields); expect(fields("CapturedReturn")).toEqual(contract.stateFields);
       const facade = ast.statements.find(item => ts.isClassDeclaration(item) && item.name?.text === "OwnedShardReturn"); if (!facade || !ts.isClassDeclaration(facade)) throw new Error("Missing return facade"); expect(facade.members.filter(ts.isPropertyDeclaration).map(item => item.name.getText(ast).slice(1))).toEqual(contract.facadeFields);
-      const output = ts.createSourceFile("output.ts", await readFile(new URL("../🪪️activation/🚪️instance/📥️output/🟦️.ts", source.url), "utf8"), ts.ScriptTarget.Latest, true);
+      const output = ts.createSourceFile("output.ts", await readFile(new URL("../🪪️activation/🚪️instance/📥️output/🟦️.ts", testSource.url), "utf8"), ts.ScriptTarget.Latest, true);
       const roster = output.statements.find(item => ts.isClassDeclaration(item) && item.name?.text === "OwnedActorTurnOutputs"); if (!roster || !ts.isClassDeclaration(roster)) throw new Error("Missing output roster"); expect(roster.members.filter(ts.isPropertyDeclaration).map(item => item.name.getText(output).slice(1))).toEqual(contract.rosterFields);
       const constructor = roster.members.find(ts.isConstructorDeclaration); expect(constructor?.body?.getText(output)).not.toContain("Object.freeze");
       const lease = ast.statements.find(item => ts.isInterfaceDeclaration(item) && item.name.text === "ShardInstanceLifecycleLease"); if (!lease || !ts.isInterfaceDeclaration(lease)) throw new Error("Missing captured lease");
@@ -909,7 +991,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         expect({ retained: instance.pendingReturn === source, failed: state.failed }).toEqual(oracle);
         client.disposeAll(); expect(instance.pendingReturn).toBe(source); expect(Object.is(state.fault, fault)).toBe(true);
       }
-      const ast = ts.createSourceFile("shard-client.ts", await readFile(new URL("./🟦️.ts", source.url), "utf8"), ts.ScriptTarget.Latest, true);
+      const ast = ts.createSourceFile("shard-client.ts", await readFile(new URL("./🟦️.ts", testSource.url), "utf8"), ts.ScriptTarget.Latest, true);
       const declaration = ast.statements.find(node => ts.isTypeAliasDeclaration(node) && node.name.text === "CapturedReturn");
       if (!declaration || !ts.isTypeAliasDeclaration(declaration) || !ts.isTypeLiteralNode(declaration.type)) throw new Error("Captured return state declaration missing");
       expect(declaration.type.members.map(member => member.name?.getText(ast))).toEqual(fixture.construction.stateFields);
@@ -1074,8 +1156,8 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
 
     it("OwnedKernelReturnBuilderBinding reuses the actual field word and original two-field UI witness", async () => {
       const { default: contract } = await import("../../../../🎠️kernel/📤️return/📦️content/📥️input/🏗️builder/📜️contract/🔣️.json"); const ts = await import("typescript"); const { readFile } = await import("node:fs/promises");
-      const text = await readFile(new URL("../../🎠️kernel/📤️return/📦️content/📥️input/🟦️.ts", source.url), "utf8"); const input = ts.createSourceFile("input.ts", text, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
-      const uiText = await readFile(new URL("../../🖱️ui/🧬️contract/🧵️retained/💾️resident/🟦️.ts", source.url), "utf8"); const ui = ts.createSourceFile("resident.ts", uiText, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
+      const text = await readFile(new URL("../../🎠️kernel/📤️return/📦️content/📥️input/🟦️.ts", testSource.url), "utf8"); const input = ts.createSourceFile("input.ts", text, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
+      const uiText = await readFile(new URL("../../🖱️ui/🧬️contract/🧵️retained/💾️resident/🟦️.ts", testSource.url), "utf8"); const ui = ts.createSourceFile("resident.ts", uiText, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
       const field = input.statements.find(item => ts.isClassDeclaration(item) && item.name?.text === "OwnedKernelReturnInputField"); const witness = ui.statements.find(item => ts.isClassDeclaration(item) && item.name?.text === "BuilderWitness");
       if (!field || !ts.isClassDeclaration(field) || !witness || !ts.isClassDeclaration(witness)) throw new Error("Actual private field/witness missing");
       expect(field.members.filter(ts.isPropertyDeclaration).map(item => item.name.getText(input).slice(1))).toEqual(contract.fieldFields); expect(witness.members.filter(ts.isPropertyDeclaration).map(item => item.name.getText(ui).slice(1))).toEqual(contract.witnessFields);
@@ -1139,7 +1221,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
 
     it("OwnedKernelReturnInputEvidence binds its declared metadata to the actual source fields", async () => {
       const { default: contract } = await import("../../../../🎠️kernel/📤️return/📦️content/📥️input/🧾️release/📜️contract/🔣️.json"); const ts = await import("typescript"); const { readFile } = await import("node:fs/promises");
-      const text = await readFile(new URL("../../🎠️kernel/📤️return/📦️content/📥️input/🟦️.ts", source.url), "utf8"); const source = ts.createSourceFile("input.ts", text, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
+      const text = await readFile(new URL("../../🎠️kernel/📤️return/📦️content/📥️input/🟦️.ts", testSource.url), "utf8"); const source = ts.createSourceFile("input.ts", text, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
       for (const [name, fields] of [["OwnedKernelReturnInputField", contract.fieldFields], ["OwnedKernelReturnInputFragment", contract.fragmentFields], ["OwnedKernelReturnInputRelease", contract.releaseFields]] as const) {
         const declaration = source.statements.find(item => ts.isClassDeclaration(item) && item.name?.text === name);
         if (!declaration || !ts.isClassDeclaration(declaration)) throw new Error("Actual input class missing");
@@ -1208,7 +1290,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect(Reflect.apply(field.settleResidentPayload, field, [{}, {}, { maxItems: 1, maxBytes: 64 }])).toEqual({ kind: "rejected", items: 0, bytes: 0 });
       expect(OwnedKernelReturnPayloadDetachment.matches({}, field, {})).toBe(false); expect(OwnedKernelReturnPayloadDetachment.matchesSettled({}, {})).toBe(false);
       expect(() => Reflect.construct(OwnedKernelReturnPayloadDetachment, [{}, field])).toThrow("return-input.private-payload-detachment");
-      const text = await readFile(new URL("../../🎠️kernel/📤️return/📦️content/📥️input/🟦️.ts", source.url), "utf8"); const parsed = ts.createSourceFile("input.ts", text, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
+      const text = await readFile(new URL("../../🎠️kernel/📤️return/📦️content/📥️input/🟦️.ts", testSource.url), "utf8"); const parsed = ts.createSourceFile("input.ts", text, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
       for (const [name, expected] of [["OwnedKernelReturnInputField", contract.sourceFields], ["OwnedKernelReturnPayloadDetachment", contract.observationFields]] as const) { const declaration = parsed.statements.find(item => ts.isClassDeclaration(item) && item.name?.text === name); if (!declaration || !ts.isClassDeclaration(declaration)) throw new Error("Actual source class missing"); expect(declaration.members.filter(ts.isPropertyDeclaration).map(item => item.name.getText(parsed).slice(1))).toEqual(expected); }
       const ownerType = parsed.statements.find(item => ts.isTypeAliasDeclaration(item) && item.name.text === "InputOwner"); if (!ownerType || !ts.isTypeAliasDeclaration(ownerType) || !ts.isTypeLiteralNode(ownerType.type)) throw new Error("Actual input owner type missing");
       expect(ownerType.type.members.filter(ts.isPropertySignature).map(item => item.name.getText(parsed))).toEqual(fixture.construction.inputOwnerFields);
@@ -1702,8 +1784,8 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     it("joins canonical captured accepted retired and exact ACK with host retirement", async () => {
       const { readFileSync } = await import("node:fs");
       const { default: Ajv } = await import("ajv");
-      const fixture = JSON.parse(readFileSync(new URL("../🪪️activation/🚪️instance/🧪️fixture/🔣️.json", source.url), "utf8"));
-      const schema = JSON.parse(readFileSync(new URL("../🪪️activation/🚪️instance/🧬️schema/🔣️.json", source.url), "utf8"));
+      const fixture = JSON.parse(readFileSync(new URL("../🪪️activation/🚪️instance/🧪️fixture/🔣️.json", testSource.url), "utf8"));
+      const schema = JSON.parse(readFileSync(new URL("../🪪️activation/🚪️instance/🧬️schema/🔣️.json", testSource.url), "utf8"));
       const oracle = new Ajv({ strict: true });
       expect(oracle.validate(schema, fixture)).toBe(true);
       const { client, workers } = harness(1);
@@ -1823,7 +1905,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     });
     it("requires the exact producer UI patch receipt and retains original claims on malformed or duplicate turns", async () => {
       const { readFileSync } = await import("node:fs");
-      const fixture = JSON.parse(readFileSync(new URL("../🚪️lifetime/🩹️patch/🧫️fixture/🔣️.json", source.url), "utf8"));
+      const fixture = JSON.parse(readFileSync(new URL("../🚪️lifetime/🩹️patch/🧫️fixture/🔣️.json", testSource.url), "utf8"));
       const { client, workers } = harness(1); const worker = workers[0]!; const lease = await activateCaptured(client, worker); await openCaptured(worker, lease);
       const receipt = { lifetime: lease.lifetime!, patchSequence: BigInt(fixture.vectors[1].value.patchSequence) };
       const patch = { surface: { instance: 7, surface: fixture.feedback.surface }, revision: 1n, baseRevision: 0n, ops: [] };
@@ -1854,7 +1936,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     });
     it("retains ordinary turn output on its exact captured instance through settlement revocation", async () => {
       const { readFileSync } = await import("node:fs");
-      const fixture = JSON.parse(readFileSync(new URL("../🪪️activation/🚪️instance/🧪️fixture/🔣️.json", source.url), "utf8"));
+      const fixture = JSON.parse(readFileSync(new URL("../🪪️activation/🚪️instance/🧪️fixture/🔣️.json", testSource.url), "utf8"));
       for (const outcome of fixture.ordinaryOutput) {
         const { client, workers } = harness(1); const worker = workers[0]!; const lease = await activateCaptured(client, worker); await openCaptured(worker, lease);
         const result = { uiPatches: [{ surface: { instance: fixture.instanceId, surface: "main" }, revision: 1n, baseRevision: 0n, ops: [] }], uiPatchReceipt: encodeActorUiPatchReceipt({ lifetime: lease.lifetime!, patchSequence: 1n }), effects: [], status: { tag: "idle" } };
@@ -1871,7 +1953,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
 
     it("retains exact receipt authority on faulted refused clock-fault and malformed ACK turns", async () => {
       const { readFileSync } = await import("node:fs");
-      const fixture = JSON.parse(readFileSync(new URL("../🪪️activation/🚪️instance/🧪️fixture/🔣️.json", source.url), "utf8"));
+      const fixture = JSON.parse(readFileSync(new URL("../🪪️activation/🚪️instance/🧪️fixture/🔣️.json", testSource.url), "utf8"));
       for (const status of fixture.invalidAckStatuses) {
         const { client, workers } = harness(1);
         const worker = workers[0]!;
@@ -1892,7 +1974,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     it("cancels only the captured activation one effect per lifecycle turn", async () => {
       const { readFileSync } = await import("node:fs");
       const { default: Ajv } = await import("ajv");
-      const fixture = JSON.parse(readFileSync(new URL("../🪪️activation/🚪️instance/🧪️fixture/🔣️.json", source.url), "utf8"));
+      const fixture = JSON.parse(readFileSync(new URL("../🪪️activation/🚪️instance/🧪️fixture/🔣️.json", testSource.url), "utf8"));
       const signals: AbortSignal[] = [];
       const { client, workers } = harness(1, { onHostEffect: (_actor, _effect, _params, signal) => { signals.push(signal); return new Promise(() => {}); } });
       const worker = workers[0]!;
@@ -1937,7 +2019,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   describe("ShardClient activation lease", () => {
     async function fixture() {
       const { readFileSync } = await import("node:fs");
-      return JSON.parse(readFileSync(new URL("../🪪️activation/🧪️fixture/🔣️.json", source.url), "utf8")) as { actorId: string; instanceId: number; revocations: Array<{ action: string; expected: { activeBefore: boolean; activeAfter: boolean; newTurns: number } }> };
+      return JSON.parse(readFileSync(new URL("../🪪️activation/🧪️fixture/🔣️.json", testSource.url), "utf8")) as { actorId: string; instanceId: number; revocations: Array<{ action: string; expected: { activeBefore: boolean; activeAfter: boolean; newTurns: number } }> };
     }
 
     async function activate(client: ShardClient, worker: FakeShardWorker, actorId: string) {
@@ -1952,7 +2034,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const { default: Ajv } = await import("ajv");
       const { readFileSync } = await import("node:fs");
       const row = await fixture();
-      const schema = JSON.parse(readFileSync(new URL("../🪪️activation/🧬️schema/🔣️.json", source.url), "utf8"));
+      const schema = JSON.parse(readFileSync(new URL("../🪪️activation/🧬️schema/🔣️.json", testSource.url), "utf8"));
       expect(new Ajv().validate(schema, row)).toBe(true);
       const { client, workers } = harness(1);
       expect(() => client.captureActorActivation(row.actorId)).toThrow("actor-activation.not-ready");
@@ -2164,7 +2246,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   describe("ShardClient exact instance close transport", () => {
     it("retains and retries the same close authority after transport refusal", async () => {
       const { readFileSync } = await import("node:fs");
-      const fixture = JSON.parse(readFileSync(new URL("../🚪️lifetime/🧪️fixture/🔣️.json", source.url), "utf8"));
+      const fixture = JSON.parse(readFileSync(new URL("../🚪️lifetime/🧪️fixture/🔣️.json", testSource.url), "utf8"));
       for (const failure of fixture.leaseFailures) {
         const { client, workers } = harness(1);
         const worker = workers[0]!;
@@ -2200,7 +2282,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
 
     it("waits for the captured worker's exact accepted and retired receipts", async () => {
       const { readFileSync } = await import("node:fs");
-      const fixture = JSON.parse(readFileSync(new URL("../🚪️lifetime/🧪️fixture/🔣️.json", source.url), "utf8"));
+      const fixture = JSON.parse(readFileSync(new URL("../🚪️lifetime/🧪️fixture/🔣️.json", testSource.url), "utf8"));
       for (const row of fixture.leaseReceipts) {
         const { client, workers } = harness(2);
         const worker = workers[0]!;
@@ -2503,7 +2585,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       // module Worker rejects as a message-less `error` event — the 2026-09-05 four-dead-shard boot.
       const { readFileSync } = await import("node:fs");
       for (const spawner of ["../../../🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔌️PluginRuntime/🟦️.tsx", "../../../🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/🟦️typescript/🐚️plugin-bridge.ts"]) {
-        const source = readFileSync(new URL(spawner, source.url), "utf8");
+        const source = readFileSync(new URL(spawner, testSource.url), "utf8");
         expect(source, spawner).not.toContain("/plugin-modules/_shard/");
         if (source.includes("new Worker(")) expect(source, spawner).toContain("SHARD_WORKER_URL");
       }
@@ -2599,7 +2681,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const { default: ts } = await import("typescript");
       const { readFileSync } = await import("node:fs");
       const vm = await import("node:vm");
-      const path = new URL("../../../🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/🟦️.ts", source.url);
+      const path = new URL("../../../🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/🟦️.ts", testSource.url);
       const parsed = ts.createSourceFile(path.pathname, readFileSync(path, "utf8"), ts.ScriptTarget.Latest, true);
       const declaration = parsed.statements.find((node) => ts.isFunctionDeclaration(node) && node.name?.text === "shardWorkerSource");
       const returned = declaration && ts.isFunctionDeclaration(declaration) ? declaration.body?.statements.find(ts.isReturnStatement)?.expression : null;
@@ -2981,7 +3063,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   describe("ShardFrame parity with Rust component.rs", () => {
     it("TS ShardFrame variant/field names match the live Rust enum in 🖥️host/🧵️shard/🦀️.rs", async () => {
       const { readFileSync } = await import("node:fs");
-      const rustUrl = new URL("../../../🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧵️shard/🦀️.rs", source.url);
+      const rustUrl = new URL("../../../🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧵️shard/🦀️.rs", testSource.url);
       const source = readFileSync(rustUrl, "utf8");
       const enumMatch = source.match(/pub enum ShardFrame \{([\s\S]*?)\n\}\s*\n\s*impl ShardFrame/);
       expect(enumMatch).not.toBeNull(); // [DEBUG] `pub enum ShardFrame { ... } impl ShardFrame` shape not found — Rust source changed, update this test's regex
@@ -3144,8 +3226,8 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     it("matches the neutral stale-source matrix without consuming exact close receipts", async () => {
       const { default: Ajv } = await import("ajv");
       const { readFileSync } = await import("node:fs");
-      const fixture = JSON.parse(readFileSync(new URL("../🪪️activation/📨️inbound/🧪️fixture/🔣️.json", source.url), "utf8")) as { actorId: string; requestId: string; cases: Array<{ name: string; effects: number; traps: number }> };
-      const schema = JSON.parse(readFileSync(new URL("../🪪️activation/📨️inbound/🧬️schema/🔣️.json", source.url), "utf8"));
+      const fixture = JSON.parse(readFileSync(new URL("../🪪️activation/📨️inbound/🧪️fixture/🔣️.json", testSource.url), "utf8")) as { actorId: string; requestId: string; cases: Array<{ name: string; effects: number; traps: number }> };
+      const schema = JSON.parse(readFileSync(new URL("../🪪️activation/📨️inbound/🧬️schema/🔣️.json", testSource.url), "utf8"));
       const oracle = new Ajv();
       expect(oracle.validate(schema, fixture)).toBe(true);
       for (const row of fixture.cases) {

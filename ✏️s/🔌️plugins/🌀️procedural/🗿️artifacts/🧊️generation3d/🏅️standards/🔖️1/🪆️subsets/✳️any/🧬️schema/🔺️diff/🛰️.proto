@@ -31,7 +31,6 @@ message Generation3dDiff {
   // @state artifact
   optional string generation_preview_text = 13;
   // @state presence
-  optional string active_utility_id = 14;
   // @state config
 }
 

@@ -22,8 +22,6 @@ pub struct Generation3dConfig {
     #[state(config)]
     pub generation_preview_text: Option<String>,
     #[state(config)]
-    pub active_utility_id: String,
-    #[state(config)]
     pub preview_eval_text: Option<String>,
 }
 

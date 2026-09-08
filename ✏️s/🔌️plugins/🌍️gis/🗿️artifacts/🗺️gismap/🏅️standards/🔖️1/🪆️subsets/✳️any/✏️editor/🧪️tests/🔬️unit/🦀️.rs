@@ -137,7 +137,6 @@ fn every_command() -> Vec<Gis2dCommand> {
         Gis2dCommand::SetLodMode(set_lod_mode::SetLodMode { value: "automatic".into() }),
         Gis2dCommand::FocusFeature(focus_feature::FocusFeature { feature_id: "p1".into(), feature_kind: "position".into() }),
         Gis2dCommand::SetLayerStrokeScale(set_layer_stroke_scale::SetLayerStrokeScale { layer_id: "roads".into(), value: 1.5 }),
-        Gis2dCommand::SetLocale(set_locale::SetLocale { value: "de-DE".into() }),
         Gis2dCommand::OpenSource(open_source::OpenSource { feature_id: "p1".into() }),
         Gis2dCommand::ProposeBoundsRegion(propose_bounds_region::ProposeBoundsRegion {}),
     ]
@@ -158,7 +157,6 @@ const WIRE_KEYWORDS: &[&str] = &[
     "lod-mode",
     "focus-feature",
     "layer-stroke-scale",
-    "locale",
     "open-source",
     "propose-bounds-region",
 ];
@@ -171,7 +169,7 @@ async fn command_ids_are_unique_and_cover_every_row() {
     sorted.sort_unstable();
     sorted.dedup();
     assert_eq!(sorted.len(), ids.len(), "duplicate command ids in {ids:?}");
-    assert_eq!(ids.len(), 15, "every Gis2dCommand row must be covered by every_command()");
+    assert_eq!(ids.len(), 14, "every Gis2dCommand row must be covered by every_command()");
 }
 
 #[test]
@@ -299,7 +297,7 @@ async fn gis2d_map_media_exports_the_document_descriptor() {
 async fn context_menu_stays_within_budget_and_keeps_clear_selection_destructive_last() {
     let mut app = app_with_registry().await;
     let request = ContextMenuRequest { menu: semio_framework_plugin::UiMenuRef { id: "gis2dMap".into(), args: None }, surface: None, window_instance_id: None, point: None };
-    let menu = app.context_menu(&request).await;
+    let menu = app.context_menu(&request, &semio_framework_plugin::ViewModel::default()).await;
     assert!(menu.len() <= 9, "top-level menu (leaves+groups+separator) should stay within the row budget: {menu:?}");
     let last = menu.last().expect("empty-canvas context menu should not be empty");
     assert_eq!(last.id, "clearSelection", "known destructive clearSelection must be last: {menu:?}");

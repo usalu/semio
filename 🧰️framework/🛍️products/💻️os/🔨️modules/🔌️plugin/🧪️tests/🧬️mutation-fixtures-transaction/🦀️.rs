@@ -1,4 +1,4 @@
-#[path = "../🧬️mutation-fixtures-transaction-mutations/🦀️.rs"]
+#[path = "../../🧫️fixtures/🧬️mutation-fixtures/🔀️transaction/🧬️mutations/🦀️.rs"]
 pub mod mutations;
 pub(crate) use mutations::{SetTransactionCount, SetTransactionCountAndNotify, SetTransactionCountWithoutPreflight, TxnMutation};
 
@@ -253,7 +253,7 @@ impl ArtifactApp for TxnApp {
     type Command = TxnCommand;
 
     crate::bounded_first_step_tool_proofs! {
-        owner: TxnApp, owner_file: "plugin/🧪️tests/🧬️mutation-fixtures/🔀️transaction/🦀️.rs", controller: "testkit-txn", document_schema: "semio.testkit-txn/v1",
+        owner: TxnApp, owner_file: "plugin/🧪️tests/🧬️mutation-fixtures-transaction/🦀️.rs", controller: "testkit-txn", document_schema: "semio.testkit-txn/v1",
         factory: "TxnFixtureFactory", factory_type: TxnFixtureFactory,
         contract: ToolExecutionContract::resumable(4_096, 1, 1, 4_096, 500, 1, 1), tools: ["increment", "coalesced-increment", "increment-and-notify"]
     }
@@ -276,6 +276,7 @@ impl ArtifactApp for TxnApp {
         doc: &ArtifactView<'_, TxnSnapshot>,
         _cfg: &ConfigView<'_, NoConfig>,
         _interaction: &crate::app::InteractionView<'_>,
+        _view_state: Option<&ViewModel>,
         _draft: &DraftView<'_, NoDraft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<TxnMutation>, Fault> {

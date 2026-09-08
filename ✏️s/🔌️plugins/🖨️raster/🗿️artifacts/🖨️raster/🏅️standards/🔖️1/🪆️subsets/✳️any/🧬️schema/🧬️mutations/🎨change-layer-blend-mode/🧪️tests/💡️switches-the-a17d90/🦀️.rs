@@ -9,7 +9,7 @@
 //! fixture pins that a plain `Pixel` layer really does take that shared path.
 
 use crate::mutations::{apply_raster_mutation, inverse_raster_mutation, RasterMutation};
-use crate::schema::{find_layer, layer_blend_mode, layer_opacity};
+use crate::standards::v1::subsets::any::schema::{find_layer, layer_blend_mode, layer_opacity};
 use crate::{RasterDiff, RasterSnapshot};
 
 const BEFORE: &str = include_str!("📸️snapshot/⬅️before/🔣️.json");

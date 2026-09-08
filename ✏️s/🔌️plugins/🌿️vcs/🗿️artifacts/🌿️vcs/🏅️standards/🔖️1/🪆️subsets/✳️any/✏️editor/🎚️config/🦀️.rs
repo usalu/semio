@@ -20,7 +20,6 @@ use protocol::Mutation;
 #[dsl(id = "vcs.config")]
 #[dsl(layout = "lines")]
 pub struct VcsDemoConfig {
-    /// 🗣️ BCP-47 locale tag — was read off `view_state.locale`.
 }
 
 //#region 🔖️ArtifactCodec

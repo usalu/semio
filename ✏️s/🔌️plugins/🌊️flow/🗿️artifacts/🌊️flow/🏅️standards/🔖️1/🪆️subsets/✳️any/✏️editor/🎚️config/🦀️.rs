@@ -59,7 +59,6 @@ pub struct FlowConfig {
     pub generation_json: String,
     /// 📋️ JSON checkpoint for observable duplicate-widget progress; empty when idle.
     pub duplicate_widget_progress_json: String,
-    /// 🗣️ BCP-47 locale tag.
 }
 
 //#region 🔖️ArtifactCodec

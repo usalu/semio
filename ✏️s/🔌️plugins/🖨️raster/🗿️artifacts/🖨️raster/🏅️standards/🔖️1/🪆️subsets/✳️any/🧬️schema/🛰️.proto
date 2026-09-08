@@ -9,7 +9,6 @@ message RasterArtifact {
   repeated RasterLayerNode layers = 4;
   map<string, RasterImageAsset> assets = 5;
   repeated string selected_ids = 6;
-  string active_utility_id = 7;
   double brush_size = 8;
   double brush_opacity = 9;
   optional RasterViewportSize composite_viewport = 10;

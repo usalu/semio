@@ -105,7 +105,7 @@ fn dag_edge_from_semio_edge(edge: &SemioGraphEdge) -> DagFixtureEdge {
 }
 
 fn split_endpoint(endpoint: &str) -> (String, String) {
-    crate::schema::split_endpoint(endpoint)
+    schema::split_endpoint(endpoint)
 }
 
 /// 🌉 REAL bidirectional converter between the app's live `DagNodeSpec`/`DagFixtureEdge` editing
@@ -272,7 +272,7 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
 pub fn artifact<A: DagApplication>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<A> {
     use semio_framework_plugin::app::declarations::ArtifactDeclaration;
     use store::os_io::ArtifactKindId;
-    ArtifactDeclaration { kind: ArtifactKindId::parse("s.dag.dag").expect("canonical dag kind"), localization: &[], standards: vec![crate::standards::v1::standard()] }
+    ArtifactDeclaration { kind: ArtifactKindId::parse("s.dag.dag").expect("canonical dag kind"), localization: &[], standards: vec![standards::v1::standard()] }
 }
 
 /// 🧩️ App fleet capable of hosting this artifact's editor and viewer.
@@ -889,6 +889,3 @@ pub mod viewer {
     }
 }
 
-//#region 📚️Examples
-pub use standards::v1::subsets::any::examples;
-//#endregion 📚️Examples

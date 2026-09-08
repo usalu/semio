@@ -2,19 +2,9 @@
 use super::*;
 
 #[test]
-fn label_resolution_has_no_locale_or_terminology_default() {
-    for (locale, terminology) in [("en-US", "native"), ("en", "reuse"), ("de-DE", "native"), ("de", "reuse")] {
-        let mut config = Puzzle3dConfig::default();
-        config.locale = locale.into();
-        config.terminology = terminology.into();
-        assert!(puzzle3d_labels(&config).is_some());
+fn labels_resolve_every_host_locale_and_terminology_axis() {
+    for (locale, terminology) in [(Locale::En, Terminology::Native), (Locale::En, Terminology::Reuse), (Locale::De, Terminology::Native), (Locale::De, Terminology::Reuse)] {
+        let view_state = semio_framework_plugin::ViewModel { locale, terminology, ..Default::default() };
+        assert!(!puzzle3d_labels(&view_state).objects.as_str().is_empty());
     }
-    for locale in ["fr", "de-AT"] {
-        let mut unsupported_locale = Puzzle3dConfig::default();
-        unsupported_locale.locale = locale.into();
-        assert!(puzzle3d_labels(&unsupported_locale).is_none());
-    }
-    let mut unsupported_terminology = Puzzle3dConfig::default();
-    unsupported_terminology.terminology = "legacy".into();
-    assert!(puzzle3d_labels(&unsupported_terminology).is_none());
 }

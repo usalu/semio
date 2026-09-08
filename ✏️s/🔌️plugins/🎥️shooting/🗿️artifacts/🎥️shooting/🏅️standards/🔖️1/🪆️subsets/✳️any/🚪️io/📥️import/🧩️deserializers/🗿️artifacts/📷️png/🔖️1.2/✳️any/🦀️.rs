@@ -1,5 +1,5 @@
 //! shooting <- png
-use crate::schema::snapshot::ShootingSnapshot;
+use crate::standards::v1::subsets::any::schema::snapshot::ShootingSnapshot;
 use semio_s_artifact_stdio_png::{PngSnapshot, STDIO_PNG_DOCUMENT_SCHEMA};
 
 pub fn register() {}

@@ -14,7 +14,7 @@ use crate::editor::sourcing::testkit::{new_app, render as render_body};
 async fn preview_renders_selected_mesh_id() {
     let document = crate::schema::default_document();
     let object_id = crate::stock_of(&document)[0].id.clone();
-    let node = render(&document, &[object_id.clone()], crate::editor::sourcing::terminology::sourcing_curation_labels(&SourcingCurationConfig::default())).expect("bounded preview");
+    let node = render(&document, &[object_id.clone()], crate::editor::sourcing::terminology::sourcing_curation_labels(&semio_framework_plugin::ViewModel::default())).expect("bounded preview");
     let semio_framework_plugin::Component::Surface(props) = node.component else { panic!("preview must build a World3d surface") };
     let scene: semio_framework_ui_scene::World3dScene = semio_framework_ui_scene::decode(&props).expect("decode world3d scene");
     assert!(scene.meshes_json.contains(&object_id), "the selected kind's mesh must be in the scene");
@@ -24,7 +24,7 @@ async fn preview_renders_selected_mesh_id() {
 #[semio_framework_async_macros::async_test]
 async fn preview_shows_placeholder_without_selection() {
     let document = crate::schema::default_document();
-    let node = render(&document, &[], crate::editor::sourcing::terminology::sourcing_curation_labels(&SourcingCurationConfig::default())).expect("bounded placeholder");
+    let node = render(&document, &[], crate::editor::sourcing::terminology::sourcing_curation_labels(&semio_framework_plugin::ViewModel::default())).expect("bounded placeholder");
     let json = serde_json::to_string(&node).unwrap();
     assert!(json.contains("No selection"));
 }

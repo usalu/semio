@@ -362,7 +362,7 @@ fn space_bounded_reduce(
     history: &semio_framework_plugin::HistoryView,
     interaction: &protocol::InteractionState,
     _hover: &semio_framework_plugin::app::InteractionHoverState,
-    _context: Option<&semio_framework_plugin::ArtifactOwnedToolJobContext<SpaceApp>>,
+    _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<SpaceApp>>,
     operation: &AppOperationContext,
 ) -> Result<Emit<WorkflowMutation, SpaceConfigMutation, NoDraftMutation>, Fault> {
     if !SPACE_BOUNDED_TOOL_IDS.contains(&command.command_id()) {

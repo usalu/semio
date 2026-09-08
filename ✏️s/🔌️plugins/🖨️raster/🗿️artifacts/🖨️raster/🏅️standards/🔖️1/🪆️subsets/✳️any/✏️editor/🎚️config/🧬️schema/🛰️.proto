@@ -28,6 +28,4 @@ message RasterConfig {
   // @state config
   RasterCamera camera = 6;
   // @state config
-  string active_utility_id = 7;
-  // @state config
 }

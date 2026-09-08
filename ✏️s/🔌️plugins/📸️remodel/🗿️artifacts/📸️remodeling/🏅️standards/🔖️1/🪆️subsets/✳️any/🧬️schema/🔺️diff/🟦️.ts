@@ -71,7 +71,6 @@ export interface RemodelingDiff {
   job: ReconstructionJob | null;
   results: ReconstructionResults | null;
   selection: RemodelingUiSelection | null;
-  activeUtilityId: string | null;
   reportTable: string | null;
   frameCursor: RemodelingUiFrameCursor | null;
   camera: RemodelingUiCamera | null;
@@ -116,7 +115,6 @@ export const REMODELING_DIFF_SPEC: RecordSpec = {
     f("job", opt(rec(() => RECONSTRUCTION_JOB_SPEC)), nothing),
     f("results", opt(rec(() => RECONSTRUCTION_RESULTS_SPEC)), nothing),
     f("selection", opt(rec(() => REMODELING_UI_SELECTION_SPEC)), nothing),
-    f("active_utility_id", opt(text), nothing),
     f("report_table", opt(text), nothing),
     f("frame_cursor", opt(rec(() => REMODELING_UI_FRAME_CURSOR_SPEC)), nothing),
     f("camera", opt(rec(() => REMODELING_UI_CAMERA_SPEC)), nothing),
@@ -240,7 +238,6 @@ export interface RemodelingArtifact {
   readonly job: ReconstructionJob;
   readonly results: ReconstructionResults;
   readonly selection: RemodelingUiSelection;
-  readonly activeUtilityId: string;
   readonly reportTable: string;
   readonly frameCursor: RemodelingUiFrameCursor;
   readonly camera: RemodelingUiCamera;

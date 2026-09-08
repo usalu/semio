@@ -239,25 +239,24 @@ function resolvePlaygroundDevApp(segments: string[]): { readonly app: string; re
   return { app: resolved.plugin, rest: [...resolved.rest] };
 }
 
-/** 🍽️ `served` boots the REACT OS shell over Vite against whatever `🔌️plugin-modules/` and the
- * engine `🕸️bindings/` already hold, skipping the ~59-crate plugin build and the engine wasm builds —
- * the `SEMIO_RENDERER=react` + `SKIP_PLUGIN_BUILD=1` pair `collabStartUserDevServer` spawns each
- * collab user with, plus `SKIP_ENGINE_BUILD=1` so a peer holding the shared `target/` Cargo lock
- * cannot stall a serve-only boot for the length of their build.
+/** 🍽️ A bare `dev <variant>` under `SEMIO_RENDERER=react` runs the variant's whole Nx activation
+ * chain — every selected plugin's `component-<profile>`/`materialize-<profile>`, the browser support
+ * bundle, the guest fonts, the engine `wasm` producers, the generated playground session, then
+ * `prepare` and `activate` — before Vite serves the receipt (os-dev `DevScript`).
  *
- * Both halves are load-bearing. `frameworkOsPlaygroundDevEnv` defaults `SEMIO_RENDERER` to `wgpu`,
- * so a bare `dev s` builds all 59 crates and then hands off to `trunk serve`, never to Vite on
- * `S_OS_PORT`; and streaming plugin builds are gated on `renderer === "react"`, so the skip only
- * takes effect once react is selected.
+ * `served` opts out of that chain and serves whatever `dist/<profile>/🔌️plugin-modules/` and
+ * `dist/runtime/<profile>/<variant>/activation/` already hold, for a boot that must not wait on (or
+ * contend for) the shared Cargo lock. It also forces react, because
+ * `frameworkOsPlaygroundDevEnv` defaults `SEMIO_RENDERER` to `wgpu` — a bare `dev s` otherwise builds
+ * the whole catalog and hands off to `trunk serve`, never to Vite on `S_OS_PORT`.
  *
  * It is a command segment rather than an env var so it stays reachable from `launch.json`, which is
  * how every dev here starts things and which carries no `env` field. */
 function runFrameworkOsPlaygroundDev(plugin: string, rest: string[] = []): void {
   const served = rest.includes("served");
-  const args = rest.filter((segment) => segment !== "served");
-  runCmd("bun", ["nx", "run", "@semio-tech/framework-os-dev:dev", "--", plugin, ...args], {
+  runCmd("bun", ["nx", "run", "@semio-tech/framework-os-dev:dev", "--", plugin, ...rest], {
     cwd: WORKSPACE_ROOT,
-    env: frameworkOsPlaygroundDevEnv(ensureFrameworkOsPlaygroundCatalog(), plugin, served ? { SEMIO_RENDERER: "react", SKIP_PLUGIN_BUILD: "1", SKIP_ENGINE_BUILD: "1" } : {}),
+    env: frameworkOsPlaygroundDevEnv(ensureFrameworkOsPlaygroundCatalog(), plugin, served ? { SEMIO_RENDERER: "react" } : {}),
     ...daemonBudgetOpts(),
   });
 }
@@ -7181,6 +7180,13 @@ export class VerifyScript extends Script {
       testResolvedHostContext();
       return;
     }
+    if (segments[0] === "jack-query-ownership") {
+      const { runCargo } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
+      const { testResumableQueryOracle } = await import("./✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧮️executor/🧪️tests/🪜️resumable-query/🟦️.ts");
+      testResumableQueryOracle();
+      await runCargo(["test", "--manifest-path", "Cargo.toml", "--features", "component-app-assembly", "--lib", "query_ownership", "--", "--nocapture"], join(this.root, "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/📦️packages/🦀️rust"));
+      return;
+    }
     if (segments[0] === "surface-view-context") {
       const { runCargo } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
       await runCargo(["test", "--manifest-path", "Cargo.toml", "--lib", segments[1] === "menu" ? "context_menu_wire" : "surface_context", "--", "--nocapture"], join(this.root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust"));
@@ -8828,16 +8834,16 @@ function interactivityPuzzleFillEnvelopeFailures(precomputeSource: string, fillS
   const fixedOwnerEnd = geometry.indexOf("//#region 🔒️GeometryAdapter", fixedOwnerStart);
   const fixedOwners = geometry.slice(fixedOwnerStart, fixedOwnerEnd);
   const fillFixedFields = [
-    "placed_lookup: FixedOwnerMap<String, usize>",
+    "placed_lookup: FixedOwnerMap<String, usize, DOCUMENT_OBJECT_SLOTS>",
     "candidate_cache: FixedOwnerMap<String, Vec<BrushCompatibleCandidate>>",
-    "seed_object_ids: FixedOwnerSet<String>",
-    "object_weights: FixedOwnerMap<String, f64>",
-    "vortex_weights: FixedOwnerMap<String, f64>",
-    "meshes: FixedOwnerMap<String, CollisionBody>",
-    "blocked_vortex_ids: FixedOwnerSet<String>",
-    "candidate_seen: FixedOwnerSet<String>",
-    "candidate_cross: FixedOwnerMap<String, BrushCompatibleCandidate>",
-    "candidate_same: FixedOwnerMap<String, BrushCompatibleCandidate>",
+    "seed_object_ids: FixedOwnerSet<String, DOCUMENT_OBJECT_SLOTS>",
+    "object_weights: FixedOwnerMap<String, f64, DOCUMENT_KIND_SLOTS>",
+    "vortex_weights: FixedOwnerMap<String, f64, DOCUMENT_KIND_SLOTS>",
+    "meshes: FixedOwnerMap<String, CollisionBody, DOCUMENT_KIND_SLOTS>",
+    "blocked_vortex_ids: FixedOwnerSet<String, DOCUMENT_VORTEX_SLOTS>",
+    "candidate_seen: FixedOwnerSet<String, DOCUMENT_CANDIDATE_SLOTS>",
+    "candidate_cross: FixedOwnerMap<String, BrushCompatibleCandidate, DOCUMENT_CANDIDATE_SLOTS>",
+    "candidate_same: FixedOwnerMap<String, BrushCompatibleCandidate, DOCUMENT_CANDIDATE_SLOTS>",
   ];
   const fillFixedCredits = ["fill.placed_lookup.backing_credit()", "fill.candidate_cache.backing_credit()", "fill.seed_object_ids.backing_credit()", "fill.weights.object_weights.backing_credit()", "fill.weights.vortex_weights.backing_credit()", "fill.meshes.backing_credit()", "fill.blocked_vortex_ids.backing_credit()", "fill.candidate_seen.backing_credit()", "fill.candidate_cross.backing_credit()", "fill.candidate_same.backing_credit()"];
   const failures: string[] = [];
@@ -8850,7 +8856,7 @@ function interactivityPuzzleFillEnvelopeFailures(precomputeSource: string, fillS
   ]) if (!precompute.includes(cap)) failures.push(`Puzzle fill envelope fixed admission changed or disappeared: ${cap}`);
   if (!precompute.includes("slots: [Option<FillEnvelopeAuthority>; FILL_ENVELOPE_MAX_OPERATIONS]") || !precompute.includes("generations: [u64; FILL_ENVELOPE_MAX_OPERATIONS]") || !precompute.includes("requested_items.checked_add(FILL_ENVELOPE_AUTHORITY_ITEMS)") || !precompute.includes("requested_bytes.checked_add(FILL_ENVELOPE_AUTHORITY_BYTES)") || !precompute.includes("self.aggregate_bytes.checked_add(bytes)") || !precompute.includes("self.slots[slot] = Some(FillEnvelopeAuthority")) failures.push("Puzzle fill envelope is not admitted into fixed generation slots before handoff");
   if (!sessionBridge.includes("let fill = self.engine.fill.take()?") || !sessionBridge.includes("registry.begin_measurement(job, operation, fill, worker") || !sessionBridge.includes("Err(owners) =>") || !sessionBridge.includes("self.engine.fill_worker = Some(owners.worker)") || !sessionBridge.includes("self.engine.fill = Some(owners.fill)") || !sessionBridge.includes("registry.finish_measurement(&admission.request, credit.items, credit.bytes)")) failures.push("Puzzle fill UI admission does not move the exact source and mounted worker owners into a registered measurement authority before census and exact credit");
-  if (censusStart < 0 || censusEnd < 0 || fixedOwnerStart < 0 || fixedOwnerEnd < 0 || !fill.includes("FILL_BUILDER_NESTED_ITEMS: usize = 32") || !geometry.includes("FIXED_OWNER_SLOTS: usize = 32") || !geometry.includes("FIXED_OWNER_PAGE_BYTES: usize = 16 * 1024") || !fixedOwners.includes("page: Option<Box<[Option<(K, V)>; N]>>") || !fixedOwners.includes("std::mem::size_of::<[Option<(K, V)>; N]>()") || !fixedOwners.includes("if self.len == N") || !fixedOwners.includes("return Err((key, value));") || !fixedOwners.includes("Occupied { input_key: K, input_value: V }") || !fixedOwners.includes("return Ok(FixedOwnerMapInsert::Occupied { input_key: key, input_value: value });") || (fixedOwners.match(/pub\(crate\) fn remove_entry/g) ?? []).length !== 2 || geometry.includes("#[derive(Clone, Debug)]\npub(crate) struct FixedOwnerMap") || geometry.includes("CollectionBackings") || !fillFixedFields.every((field) => fill.includes(field)) || !fillFixedCredits.every((credit) => census.includes(credit)) || !geometry.includes("entries: FixedOwnerMap<String, CollisionAabb>") || !geometry.includes("cells: FixedOwnerMap<(i32, i32, i32), FixedOwnerSet<String>>") || !geometry.includes("oversized: FixedOwnerSet<String>") || !geometry.includes("0 => self.entries.backing_credit()") || !geometry.includes("2 => self.cells.backing_credit()") || !geometry.includes("4 => self.oversized.backing_credit()") || !census.includes("path: [usize; 16]") || !census.includes("phase: [u8; 17]") || !census.includes("child: [usize; 17]") || !census.includes("self.credit.items.checked_add") || !census.includes("self.credit.bytes.checked_add") || !census.includes("(occupied <= FILL_BUILDER_NESTED_ITEMS).then_some(FillBuilderOwnerCredit::default())") || !census.includes("match fill.candidate_seen.iter().nth(self.index)") || census.includes("fn measure_") || census.includes(".iter().all(") || !geometry.includes("pub(crate) fn census_one_owner") || !sessionBridge.includes("admission.census.step(&fill, FILL_ENVELOPE_MAX_ITEMS, FILL_ENVELOPE_MAX_BYTES)")) failures.push("Puzzle fill admission does not advance one fixed nested allocation/entry backed by the exact credited slot pages before reservation");
+  if (censusStart < 0 || censusEnd < 0 || fixedOwnerStart < 0 || fixedOwnerEnd < 0 || !fill.includes("FILL_BUILDER_NESTED_ITEMS: usize = 32") || !geometry.includes("FIXED_OWNER_SLOTS: usize = 32") || !geometry.includes("FIXED_OWNER_PAGE_BYTES: usize = 16 * 1024") || !geometry.includes("DOCUMENT_OWNER_PAGE_BYTES: usize = 64 * FIXED_OWNER_PAGE_BYTES") || !geometry.includes("DOCUMENT_OBJECT_SLOTS: usize = 2048") || !geometry.includes("DOCUMENT_VORTEX_SLOTS: usize = 2 * DOCUMENT_OBJECT_SLOTS") || !geometry.includes("DOCUMENT_ATTRACTION_SLOTS: usize = DOCUMENT_OBJECT_SLOTS") || !geometry.includes("DOCUMENT_KIND_SLOTS: usize = 256") || !geometry.includes("DOCUMENT_CANDIDATE_SLOTS: usize = 4 * DOCUMENT_KIND_SLOTS") || !geometry.includes("DOCUMENT_CELL_SLOTS: usize = 4 * DOCUMENT_OBJECT_SLOTS") || !fixedOwners.includes("page: Option<Box<[Option<(K, V)>; N]>>") || !fixedOwners.includes("std::mem::size_of::<[Option<(K, V)>; N]>()") || !fixedOwners.includes("if self.len == N") || !fixedOwners.includes("return Err((key, value));") || !fixedOwners.includes("Occupied { input_key: K, input_value: V }") || !fixedOwners.includes("return Ok(FixedOwnerMapInsert::Occupied { input_key: key, input_value: value });") || (fixedOwners.match(/pub\(crate\) fn remove_entry/g) ?? []).length !== 2 || geometry.includes("#[derive(Clone, Debug)]\npub(crate) struct FixedOwnerMap") || geometry.includes("CollectionBackings") || !fillFixedFields.every((field) => fill.includes(field)) || !fillFixedCredits.every((credit) => census.includes(credit)) || !geometry.includes("entries: FixedOwnerMap<String, CollisionAabb, DOCUMENT_OBJECT_SLOTS>") || !geometry.includes("cells: FixedOwnerMap<(i32, i32, i32), FixedOwnerSet<String>, DOCUMENT_CELL_SLOTS>") || !geometry.includes("oversized: FixedOwnerSet<String, DOCUMENT_KIND_SLOTS>") || !geometry.includes("candidates: FixedOwnerSet<String, DOCUMENT_OBJECT_SLOTS>") || !geometry.includes("0 => self.entries.backing_credit()") || !geometry.includes("2 => self.cells.backing_credit()") || !geometry.includes("4 => self.oversized.backing_credit()") || !census.includes("path: [usize; 16]") || !census.includes("phase: [u8; 17]") || !census.includes("child: [usize; 17]") || !census.includes("self.credit.items.checked_add") || !census.includes("self.credit.bytes.checked_add") || !census.includes("(occupied <= FILL_BUILDER_NESTED_ITEMS).then_some(FillBuilderOwnerCredit::default())") || !census.includes("match fill.candidate_seen.iter().nth(self.index)") || census.includes("fn measure_") || census.includes(".iter().all(") || !geometry.includes("pub(crate) fn census_one_owner") || !sessionBridge.includes("admission.census.step(&fill, FILL_ENVELOPE_MAX_ITEMS, FILL_ENVELOPE_MAX_BYTES)")) failures.push("Puzzle fill admission does not advance one fixed nested allocation/entry backed by the exact credited slot pages before reservation");
   if (sessionBridge.includes("serde_json::") || sessionBridge.includes("checkpoint_bytes()") || precompute.includes("FillWorkerState") || precompute.includes("restore_fill_worker_state")) failures.push("Puzzle fill UI/worker route contains whole-state serialization or compatibility restoration");
   if (!precompute.includes("struct FillEnvelopeTokenCursor") || !precompute.includes("match self.field") || !precompute.includes("self.field += 1") || ingressGuardAt < 0 || !precompute.includes("Self { context_job, terminal_guard, token: FillEnvelopeTokenCursor::new(input) }") || !precompute.includes("let context_job = context.id().await") || !precompute.includes("let mut admitted_cursor = FillEnvelopeJobEntryCursor::new(context_job, input)") || !precompute.includes("request.job != self.context_job") || !precompute.includes("self.terminal_guard.request.as_ref() != Some(request)") || !precompute.includes("authority.request == *request") || !precompute.includes('return Err("fill worker envelope owner is stale");') || precompute.includes("request_fill_envelope_terminal_by_job") || ingressBindAt < ingressGuardAt || ingressDriveAt < ingressBindAt || !precompute.includes("context.tick().await;\n            match admitted_cursor.step()")) failures.push("Puzzle fill token ingress does not resolve the exact raw owner and bind context job to the decoded live request before transition");
   if ((drive.match(/\.pump_one\(/g) ?? []).length !== 1 || !drive.includes("take_checked_out_outcome()") || !drive.includes("worker_outcome") || drive.includes("drive_step") || drive.includes("StepBudget") || !drive.includes("is_cancelled_now()") || !drive.includes("base_revision.0 != request.base_revision") || !drive.includes("FillEnvelopeDrive::Blocked") || drive.includes("while ") || drive.includes("for ")) failures.push("Puzzle fill worker grant does not advance exactly one fresh cancellable mounted opportunity");
@@ -8905,16 +8911,16 @@ function interactivityPuzzleFillP4eFailures(precomputeSource: string, fillSource
     "roots.scene.weights.vortex_weights.len()",
   ];
   const fixedPreparationOwners = [
-    "pub(crate) objects: FixedOwnerVec<FixtureObject>",
-    "pub(crate) attractions: FixedOwnerVec<AttractionProps>",
-    "pub(crate) target_volumes: FixedOwnerVec<WorldVolumeProps>",
-    "objects: FixedOwnerVec<ObjectKind>",
-    "vortices: FixedOwnerVec<VortexKindCatalog>",
-    "cables: FixedOwnerVec<CableKindCatalog>",
-    "kind_compatibility: FixedOwnerVec<KindCompatEntry>",
-    "meshes: FixedOwnerMap<String, CollisionBody>",
-    "object_weights: FixedOwnerMap<String, f64>",
-    "vortex_weights: FixedOwnerMap<String, f64>",
+    "pub(crate) objects: FixedOwnerVec<FixtureObject, DOCUMENT_OBJECT_SLOTS>",
+    "pub(crate) attractions: FixedOwnerVec<AttractionProps, DOCUMENT_ATTRACTION_SLOTS>",
+    "pub(crate) target_volumes: FixedOwnerVec<WorldVolumeProps, DOCUMENT_VOLUME_SLOTS>",
+    "objects: FixedOwnerVec<ObjectKind, DOCUMENT_KIND_SLOTS>",
+    "vortices: FixedOwnerVec<VortexKindCatalog, DOCUMENT_KIND_SLOTS>",
+    "cables: FixedOwnerVec<CableKindCatalog, DOCUMENT_KIND_SLOTS>",
+    "kind_compatibility: FixedOwnerVec<KindCompatEntry, DOCUMENT_KIND_SLOTS>",
+    "meshes: FixedOwnerMap<String, CollisionBody, DOCUMENT_KIND_SLOTS>",
+    "object_weights: FixedOwnerMap<String, f64, DOCUMENT_KIND_SLOTS>",
+    "vortex_weights: FixedOwnerMap<String, f64, DOCUMENT_KIND_SLOTS>",
   ];
   const hostilePreparationBranches = [
     '(HostileRoot::FixtureObjects, "fixture-objects")',
@@ -8943,8 +8949,12 @@ function interactivityPuzzleFillP4eFailures(precomputeSource: string, fillSource
     fill.includes("self.kind_compatibility.push(") ||
     !fillSource.includes("preparation_refusal_owner_for_test") ||
     !hostilePreparationBranches.every((branch) => fillSource.includes(branch)) ||
-    !fillSource.includes("roots(branch, FIXED_OWNER_SLOTS)") ||
-    !fillSource.includes("roots(branch, FIXED_OWNER_SLOTS + 1)")
+    !fillSource.includes("roots(branch, cap)") ||
+    !fillSource.includes("roots(branch, cap + 1)") ||
+    !fillSource.includes("fn nakagin_scale_fill_is_not_refused_and_places_at_least_one_object") ||
+    !fillSource.includes("fn document_capacities_match_the_language_neutral_capacity_law") ||
+    !fill.includes("(len > capacity).then_some((branch, capacity))") ||
+    !fill.includes('format!("preparation-capacity:{}:{}", self.branch.label(), self.omitted_index)')
   ) failures.push("P4e preparation preflight/storage omits a fixture, mesh, catalog, or compatibility fixed owner or lacks exact cap/+1 handback evidence");
   const refusalStart = fill.indexOf("if let Some(refusal) = self.preparation_capacity_refusal.as_mut()");
   const refusalEnd = fill.indexOf("if self.collection_over_capacity", refusalStart);
@@ -8962,7 +8972,7 @@ function interactivityPuzzleFillP4eFailures(precomputeSource: string, fillSource
     !rendererSource.includes("let fillDiagnostic: WorldFillDiagnosticRecord | null = null")
   ) failures.push("P4e capacity refusal does not publish an active generation-qualified no-ghost diagnostic before terminal fault/removal");
   if (
-    !geometry.includes("cells: FixedOwnerMap<(i32, i32, i32), FixedOwnerSet<String>>") ||
+    !geometry.includes("cells: FixedOwnerMap<(i32, i32, i32), FixedOwnerSet<String>, DOCUMENT_CELL_SLOTS>") ||
     !geometry.includes("struct CollisionCellSpan") ||
     !geometry.includes("pub(crate) struct CollisionIndexMutation") ||
     !geometry.includes("pub(crate) struct CollisionIndexRemoval") ||

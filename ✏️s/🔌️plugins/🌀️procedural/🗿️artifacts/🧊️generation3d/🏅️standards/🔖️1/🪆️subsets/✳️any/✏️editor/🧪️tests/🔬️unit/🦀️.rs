@@ -316,8 +316,6 @@ pub(super) fn every_command() -> Vec<Generation3dCommand> {
         Generation3dCommand::SetSunIntensity(set_sun_intensity::SetSunIntensity { value: 1.0 }),
         Generation3dCommand::SetCamera(set_camera::SetCamera { camera: crate::editor::generation3d::config::Generation3dPreviewCamera::default() }),
         Generation3dCommand::SelectGeneration(select_generation::SelectGeneration { id: "generation-1".into() }),
-        Generation3dCommand::SetActiveUtility(set_active_utility::SetActiveUtility { utility_id: "rotate".into() }),
-        Generation3dCommand::SetLocale(set_locale::SetLocale { value: "de-DE".into() }),
         Generation3dCommand::FlowEvalTick(flow_eval_tick::FlowEvalTick {}),
     ]
 }

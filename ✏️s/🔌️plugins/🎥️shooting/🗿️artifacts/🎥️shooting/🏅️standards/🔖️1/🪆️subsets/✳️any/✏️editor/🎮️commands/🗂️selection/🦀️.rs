@@ -85,26 +85,6 @@ pub mod set_center_model {
 }
 //#endregion 🔖️SetCenterModel
 
-//#region 🔖️SetActiveUtility
-pub mod set_active_utility {
-    use super::*;
-
-    #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
-    #[dsl(keyword = "active-utility")]
-    pub struct SetActiveUtility {
-        pub utility_id: String,
-    }
-
-    /// 🕹️ Used to also clear the (now framework-owned) `"assets"` domain hover here — an app command's
-    /// `Emit` has no channel into `InteractionState` any more (only the framework's own injected
-    /// `interactionHover` dispatch writes it), so switching the transform utility no longer clears
-    /// hover. Documented behavior change, matching this wave's other apps (e.g. `raster`'s `add-layer`).
-    pub fn handle(payload: &SetActiveUtility, _doc: &ArtifactView<'_, ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>, _ctx: &mut ShootingDispatchCtx) -> Result<Emit<ShootingMutation, ShootingConfigMutation>, Fault> {
-        Ok(Emit::config(vec![ShootingConfigMutation::SetActiveUtility(crate::editor::shooting::config::SetActiveUtility { utility_id: payload.utility_id.clone() })]))
-    }
-}
-//#endregion 🔖️SetActiveUtility
-
 //#region 🧪️Tests
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]

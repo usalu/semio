@@ -13,8 +13,7 @@
     "selectionMethod",
     "graphCamera",
     "previewCamera",
-    "sunJson",
-    "activeUtilityId"
+    "sunJson"
   ],
   "properties": {
     "fixture": {
@@ -68,10 +67,6 @@
     "generationPreviewText": {
       "type": "string",
       "x-semio-state": "artifact"
-    },
-    "activeUtilityId": {
-      "type": "string",
-      "x-semio-state": "presence"
     }
   },
   "$defs": {

@@ -9971,6 +9971,20 @@ pub mod app {
         async fn window_measures(_doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _view_state: &ViewModel) -> HashMap<String, Vec<WindowMeasure>> {
             HashMap::new()
         }
+        /// 🕹️ `window_measures`' interaction-aware twin — the same per-window-instance chrome, plus the
+        /// framework-owned hover/selection an option group needs to gate itself on what the user picked
+        /// (e.g. puzzle3d's Brush "Placement" picker, which only exists for a hovered/selected vortex).
+        /// Default discards `interaction` and falls through to `window_measures`, exactly like
+        /// `render_with_request_context` does — see `26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM`.
+        async fn window_measures_with_request_context(
+            doc: &ArtifactView<'_, Self::Snapshot>,
+            cfg: &ConfigView<'_, Self::Config>,
+            view_state: &ViewModel,
+            interaction: &InteractionView<'_>,
+        ) -> HashMap<String, Vec<WindowMeasure>> {
+            let _ = interaction;
+            Self::window_measures(doc, cfg, view_state).await
+        }
         /// 🛠️ Keyed by TOOL id (`AppDefinition.tools[].id`), not window instance — a tool's live options
         /// (e.g. puzzle3d fill's count slider) rendered in the mode-level tool panel rather than a
         /// window's utility-options rail. Reuses `WindowMeasure` as the shared control vocabulary; the
@@ -9989,6 +10003,23 @@ pub mod app {
         /// instead of hand-building rows.
         async fn context_menu(_request: &ContextMenuRequest, _doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _view_state: &ViewModel, _registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
             Vec::new()
+        }
+        /// 🕹️ `context_menu`'s interaction-aware twin. `ContextMenuRequest.surface.selection` is
+        /// CLIENT-supplied and only ever carries what that surface itself painted, so a granularity the
+        /// surface does not model (a vortex marker, a target volume) never reaches a menu through it;
+        /// `interaction` is the authoritative framework-owned selection for every declared domain.
+        /// Default discards it and falls through to `context_menu` — see
+        /// `26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM`.
+        async fn context_menu_with_request_context(
+            request: &ContextMenuRequest,
+            doc: &ArtifactView<'_, Self::Snapshot>,
+            cfg: &ConfigView<'_, Self::Config>,
+            view_state: &ViewModel,
+            interaction: &InteractionView<'_>,
+            registry: &AppActionRegistry,
+        ) -> Vec<ContextMenuItemSpec> {
+            let _ = interaction;
+            Self::context_menu(request, doc, cfg, view_state, registry).await
         }
         /// 🌱️ Initial mutations applied through normal dispatch right after the store is constructed —
         /// replaces the old `seed(&mut ArtifactStore)` direct-store-touch hook (ticket
@@ -10320,7 +10351,7 @@ pub mod app {
         async fn take_last_emit_wire(&mut self) -> Option<(Vec<u8>, Vec<u8>, Vec<u8>)>;
         /// 👥️ M2 (ticket 26/08/17 `design-unified.md`): drains the render-plane presence outbox
         /// `stamp_and_cache_interaction_ui` fills every render (`VcsArtifactApp::pending_presence`) —
-        /// `plugin_runtime::plugin_take_presence`'s object-safe entry point (mirrors
+        /// `plugin_runtime::plugin_render_surface`'s object-safe entry point (mirrors
         /// `take_last_emit_wire`'s own shape: an owned drain, never a borrow, since `PluginApp` is the
         /// dyn-enum-closed boundary and `pending_presence` is a private field on the concrete app).
         async fn take_pending_presence(&mut self) -> Vec<PresenceUpdate>;
@@ -16141,7 +16172,7 @@ pub mod app {
         /// 👥️ M2 (ticket 26/08/17 `design-unified.md`): the render-plane presence outbox —
         /// `stamp_and_cache_interaction_ui` pushes one `PresenceUpdate` per `(surface, node_key)` whose
         /// own/peer selection or hover it derived off `protocol::InteractionState`/`peer_presence` this
-        /// render; `plugin_runtime::plugin_take_presence` drains it once per poll. NEVER a document
+        /// render; `plugin_runtime::plugin_render_surface` drains it within the same surface render. NEVER a document
         /// revision — this lane has no op log, no undo group, no command-log row, mirroring
         /// `presence_store`/`transient_store`'s own ephemeral treatment above.
         pub(crate) pending_presence: Vec<PresenceUpdate>,
@@ -18729,7 +18760,7 @@ pub mod app {
         /// 👥️ M2 (ticket 26/08/17 `design-unified.md`): ALSO derives one `PresenceUpdate` per node
         /// whose id is selected/hovered — own state off `state`/`self.interaction_hover`, peers off
         /// `InteractionView::peers_selecting`/`peers_hovering` — pushed onto `self.pending_presence`
-        /// for `plugin_runtime::plugin_take_presence` to drain. This closes the gap the prior packet's
+        /// for `plugin_runtime::plugin_render_surface` to drain. This closes the gap the prior packet's
         /// own report named ("nothing in this function currently reads `state`" — see git history):
         /// selection/hover is `ui_contract::PresenceUpdate` now, never written back onto the tree
         /// itself (`TreeNode`/`Component::TreeItem` carry no presence field — the render-plane
@@ -18811,10 +18842,6 @@ pub mod app {
                 }
             }
             self.pending_presence.push(PresenceUpdate {
-                // 🪪️ Bare `body_key` — `VcsArtifactApp` never knows its own instance id (see
-                // `render`'s own signature); `plugin_runtime::plugin_take_presence` prefixes it to the
-                // reactor's `"<instance>:<body-key>"` surface convention on drain (the SAME split
-                // `parse_surface_instance`/`wit_event_to_kernel` already use for every other surface).
                 surface: SurfaceId::try_from(body_key).map_err(|_| ui_assembly_error("presence.surface"))?,
                 node_key: node.key.to_string(),
                 own: OwnPresence { hovered: own_hovered, selected: own_selected, previewed: false, color: own_color },
@@ -23742,11 +23769,28 @@ pub mod app {
         fn window_measures(_doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _view_state: &ViewModel) -> HashMap<String, Vec<WindowMeasure>> {
             HashMap::new()
         }
+        /// 🕹️ See `ArtifactApp::window_measures_with_request_context` — same additive default.
+        fn window_measures_with_request_context(doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>, view_state: &ViewModel, interaction: &InteractionView<'_>) -> HashMap<String, Vec<WindowMeasure>> {
+            let _ = interaction;
+            Self::window_measures(doc, cfg, view_state)
+        }
         fn tool_measures(_doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _view_state: &ViewModel) -> HashMap<String, Vec<WindowMeasure>> {
             HashMap::new()
         }
         fn context_menu(_request: &ContextMenuRequest, _doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _view_state: &ViewModel, _registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
             Vec::new()
+        }
+        /// 🕹️ See `ArtifactApp::context_menu_with_request_context` — same additive default.
+        fn context_menu_with_request_context(
+            request: &ContextMenuRequest,
+            doc: &ArtifactView<'_, Self::Snapshot>,
+            cfg: &ConfigView<'_, Self::Config>,
+            view_state: &ViewModel,
+            interaction: &InteractionView<'_>,
+            registry: &AppActionRegistry,
+        ) -> Vec<ContextMenuItemSpec> {
+            let _ = interaction;
+            Self::context_menu(request, doc, cfg, view_state, registry)
         }
         fn genesis() -> Vec<Self::Mutation> {
             Vec::new()
@@ -25061,7 +25105,7 @@ pub mod app {
         // 🚫️async: E1 pure registration helper (no I/O) — see R9
         fn register_boot_scope_schema_exports() {
             semio_framework::interaction::schema::register_scope_exports();
-            semio_framework_ui_contract::schema_metadata::register_scope_exports();
+            schema_metadata::register_scope_exports();
         }
 
         pub(crate) fn commit_artifact_declarations<PA: PluginApp>(plugin_id: &str, declarations: &[ArtifactDeclaration<PA>]) -> Result<(), PluginAssemblyError> {
@@ -25221,7 +25265,7 @@ pub mod plugin_runtime {
         AssetDeclaration, ExecutionMode, ExtensionPointDeclaration, Fault, FaultCode, FaultFrom, FaultOrigin, PluginManifest, TopicContribution, ViewModel,
     };
     /// 🎯️ M1/M2 (ticket 26/08/17 `design-unified.md`): `UiIntent`/`PresenceUpdate` for
-    /// `plugin_dispatch_intents`/`plugin_take_presence` — this module (a sibling of `pub mod app`, not
+    /// `plugin_dispatch_intents`/`plugin_render_surface` — this module (a sibling of `pub mod app`, not
     /// nested inside it) has no glob import of the contract crate the way `mod app` does.
     use semio_framework_ui_contract as ui_contract;
     /// 🧬️ SEMANTIC-UI-CONTRACT-AND-RENDERER-FAMILY (`sdk-helpers`): `sdk-flip` flipped `plugin_render`/
@@ -27621,11 +27665,16 @@ pub mod plugin_runtime {
         .await
     }
 
-    pub(crate) async fn plugin_render_surface<PA: PluginApp>(runtime: &PluginRuntime<PA>, instance_id: u32, surface: &str) -> Result<ComponentTree, Fault> {
+    pub(crate) async fn plugin_render_surface<PA: PluginApp>(runtime: &PluginRuntime<PA>, instance_id: u32, surface: &str) -> Result<(ComponentTree, Vec<ui_contract::PresenceUpdate>), Fault> {
         with_instances_mut(runtime, |list| {
             let mut instance = find_instance(list, instance_id)?;
             let context = instance.surface_contexts.get(surface).ok_or_else(|| plugin_internal_fault(format!("surface {surface} has no host context")))?;
-            resolve_ready(instance.app.render(&context.body_key, None, &context.view_state))
+            let rendered = resolve_ready(instance.app.render(&context.body_key, None, &context.view_state));
+            let mut presence = resolve_ready(instance.app.take_pending_presence());
+            let tree = rendered?;
+            let target = ui_contract::SurfaceId::try_from(surface).map_err(|_| plugin_internal_fault("presence surface exceeds fixed capacity"))?;
+            for update in &mut presence { update.surface = target.clone(); }
+            Ok((tree, presence))
         })
         .await
     }
@@ -27813,8 +27862,9 @@ pub mod plugin_runtime {
                 let (hash, value) = resolve_ready(ui_refresh_section(&node.root, entry.hash.as_deref()));
                 response.windows.push(SectionResponse { key: entry.key.clone(), hash, value });
             }
+            let panel_view_state = request.view_state.for_panel();
             for entry in &request.panels {
-                let node = resolve_ready(instance.app.render(&entry.body_key, None, &request.view_state))?;
+                let node = resolve_ready(instance.app.render(&entry.body_key, None, &panel_view_state))?;
                 let (hash, value) = resolve_ready(ui_refresh_section(&node.root, entry.hash.as_deref()));
                 response.panels.push(SectionResponse { key: entry.key.clone(), hash, value });
             }
@@ -28312,30 +28362,6 @@ pub mod plugin_runtime {
             presence_terminal_fault: None,
             typed_operation_result: None,
         })
-    }
-
-    /// 👥️ M2 (ticket 26/08/17 `design-unified.md`): drains `instance_id`'s render-plane presence
-    /// outbox (`VcsArtifactApp::pending_presence`, filled by `stamp_and_cache_interaction_ui` every
-    /// render) — called once per dirty render in the reactor's `poll`, right after `plugin_render`,
-    /// so the SAME turn that presented the tree also derives its presence. Stamps each drained
-    /// update's bare `body_key` surface (see `stamp_and_cache_interaction_ui`'s own doc for why
-    /// `VcsArtifactApp` cannot know its own instance id) into the reactor's `"<instance>:<body-key>"`
-    /// surface convention — the SAME split `parse_surface_instance`/`wit_event_to_kernel` already use
-    /// for every other surface — so the caller's `PresenceHub` keys it identically to `PatchTracker`.
-    pub async fn plugin_take_presence<PA: PluginApp>(runtime: &PluginRuntime<PA>, instance_id: u32) -> Result<Vec<ui_contract::PresenceUpdate>, Fault> {
-        let drained = with_instances_mut(runtime, |list| {
-            let mut instance = find_instance(list, instance_id)?;
-            Ok(resolve_ready(instance.app.take_pending_presence()))
-        })
-        .await
-        .unwrap_or_default();
-        let mut qualified = Vec::with_capacity(drained.len());
-        for mut update in drained {
-            let surface = ui_contract::UiText::try_format(format_args!("{instance_id}:{}", update.surface.0)).ok_or_else(|| plugin_internal_fault("qualified presence surface exceeds fixed capacity"))?;
-            update.surface = ui_contract::SurfaceId(surface);
-            qualified.push(update);
-        }
-        Ok(qualified)
     }
 
     pub async fn plugin_reserve_presence_ingress<PA: PluginApp>(runtime: &PluginRuntime<PA>, instance_id: u32, seq: u64) -> Result<PresenceRosterAdmission, Fault> {
@@ -30503,6 +30529,7 @@ pub mod engagement {
 
 /// 🧩️ Cross-crate closure vocabulary required by `dyn_enum_close!` for `PluginApp`.
 pub mod plugin_app_close_prelude {
+    pub use semio_framework_os_kernel as protocol;
     pub use crate::app::*;
     pub use crate::app::{tree_item, PeerMark};
     pub use semio_framework::kernel::ActionId;

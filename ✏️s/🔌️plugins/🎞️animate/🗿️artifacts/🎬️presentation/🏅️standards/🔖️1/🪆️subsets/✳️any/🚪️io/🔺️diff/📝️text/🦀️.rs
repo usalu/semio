@@ -1,6 +1,6 @@
 //! 🔺️ Animate presentation artifact — sparse field-delta diff codec and apply/absorb.
 
-use crate::schema::PresentationArtifact;
+use crate::standards::v1::subsets::any::schema::PresentationArtifact;
 use crate::PresentationSnapshot;
 use protocol::MutationDiff;
 
@@ -10,7 +10,7 @@ pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.grammar.semio");
 //#endregion 📖️SemioGrammar
 
-use crate::schema::diff::*;
+use crate::standards::v1::subsets::any::schema::diff::*;
 
 //#region 🔖️Apply
 impl PresentationDiff {

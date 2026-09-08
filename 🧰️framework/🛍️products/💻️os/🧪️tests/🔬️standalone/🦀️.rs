@@ -1,3 +1,4 @@
+/// 🚨️ Checks that every path mount in the OS crate root resolves to an existing file.
 #[test]
 fn every_path_mount_in_this_glue_resolves_to_an_existing_file() {
     let here = std::path::Path::new(env!("CARGO_MANIFEST_DIR"));

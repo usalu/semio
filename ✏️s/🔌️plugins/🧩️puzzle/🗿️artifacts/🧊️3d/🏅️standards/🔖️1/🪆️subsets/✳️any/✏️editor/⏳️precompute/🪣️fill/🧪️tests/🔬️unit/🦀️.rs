@@ -1,6 +1,7 @@
 
 use super::*;
-use crate::editor::puzzle3d::precompute::geometry::collision_body_from_buffers;
+use crate::editor::puzzle3d::precompute::geometry::{collision_body_from_buffers, FIXED_OWNER_PAGE_BYTES, FIXED_OWNER_SLOTS};
+use crate::editor::puzzle3d::precompute::{FILL_ENVELOPE_MAX_BYTES, FILL_ENVELOPE_MAX_ITEMS};
 use crate::standards::v1::subsets::any::schema::{BrushKindWeights, KindCatalogBundle, ObjectKind, ObjectKindRepresentation, ObjectKindVortexTemplate, VortexProps};
 use semio_framework_job::{Generation, OperationId, RevisionId, StepBudget, root_cancel_token};
 use std::time::{Duration, Instant};
@@ -616,7 +617,7 @@ fn retained_owner_census_advances_one_fixed_unit_and_rejects_collection_cap_plus
         match cursor.step(&builder, usize::MAX, usize::MAX) {
             FillBuilderOwnerCensusStep::Pending => {
                 assert!(cursor.credit.items.saturating_sub(before.items) <= 7, "one grant visits one entry or fixed schema unit");
-                assert!(cursor.credit.bytes.saturating_sub(before.bytes) <= FILL_BUILDER_OWNER_PAGE_BYTES, "one grant accounts at most one exact page");
+                assert!(cursor.credit.bytes.saturating_sub(before.bytes) <= DOCUMENT_OWNER_PAGE_BYTES, "one grant accounts at most one exact page");
                 grants += 1;
             }
             FillBuilderOwnerCensusStep::Complete(_) => break,
@@ -682,42 +683,44 @@ fn constructor_cap_and_plus_one_take_bounded_turns_and_refuse_permanently() {
             HostileRoot::KindCompatibility => {
                 scene.kind_compatibility.extend((0..count).map(|index| KindCompatEntry { source: format!("compat-{index:02}"), target: format!("target-{index:02}"), bidirectional: false, important: false, specificity: None }))
             }
-            HostileRoot::ObjectWeights => scene.weights.object_weights.extend((0..count).map(|index| (format!("object-weight-{index:02}"), index as f64 + 0.25))),
-            HostileRoot::VortexWeights => scene.weights.vortex_weights.extend((0..count).map(|index| (format!("vortex-weight-{index:02}"), index as f64 + 0.5))),
+            HostileRoot::ObjectWeights => scene.weights.object_weights.extend((0..count).map(|index| (format!("object-weight-{index:04}"), index as f64 + 0.25))),
+            HostileRoot::VortexWeights => scene.weights.vortex_weights.extend((0..count).map(|index| (format!("vortex-weight-{index:04}"), index as f64 + 0.5))),
         }
         FillPreparationRoots::new(Arc::new(scene), Arc::new(meshes))
     };
     let branches = [
-        (HostileRoot::FixtureObjects, "fixture-objects"),
-        (HostileRoot::FixtureAttractions, "fixture-attractions"),
-        (HostileRoot::FixtureTargetVolumes, "fixture-target-volumes"),
-        (HostileRoot::Meshes, "meshes"),
-        (HostileRoot::CatalogObjects, "catalog-objects"),
-        (HostileRoot::CatalogVortices, "catalog-vortices"),
-        (HostileRoot::CatalogCables, "catalog-cables"),
-        (HostileRoot::KindCompatibility, "kind-compatibility"),
-        (HostileRoot::ObjectWeights, "object-weights"),
-        (HostileRoot::VortexWeights, "vortex-weights"),
+        (HostileRoot::FixtureObjects, "fixture-objects", DOCUMENT_OBJECT_SLOTS),
+        (HostileRoot::FixtureAttractions, "fixture-attractions", DOCUMENT_ATTRACTION_SLOTS),
+        (HostileRoot::FixtureTargetVolumes, "fixture-target-volumes", DOCUMENT_VOLUME_SLOTS),
+        (HostileRoot::Meshes, "meshes", DOCUMENT_KIND_SLOTS),
+        (HostileRoot::CatalogObjects, "catalog-objects", DOCUMENT_KIND_SLOTS),
+        (HostileRoot::CatalogVortices, "catalog-vortices", DOCUMENT_KIND_SLOTS),
+        (HostileRoot::CatalogCables, "catalog-cables", DOCUMENT_KIND_SLOTS),
+        (HostileRoot::KindCompatibility, "kind-compatibility", DOCUMENT_KIND_SLOTS),
+        (HostileRoot::ObjectWeights, "object-weights", DOCUMENT_KIND_SLOTS),
+        (HostileRoot::VortexWeights, "vortex-weights", DOCUMENT_KIND_SLOTS),
     ];
-    for (offset, (branch, expected_branch)) in branches.into_iter().enumerate() {
+    for (offset, (branch, expected_branch, cap)) in branches.into_iter().enumerate() {
         let operation = Operation::new(OperationId(31 + offset as u64), RevisionId(1), Generation(1), 31);
-        let mut accepted = FillBuilder::begin_preparation(roots(branch, FIXED_OWNER_SLOTS), operation);
+        let mut accepted = FillBuilder::begin_preparation(roots(branch, cap), operation);
         let mut turns = 0;
         while accepted.stage != FillJobStage::PrepareTargets {
             accepted.prepare_one();
             turns += 1;
-            assert!(turns < 4_096, "{expected_branch} cap preparation must advance in bounded turns");
+            assert!(turns < 16 * DOCUMENT_OBJECT_SLOTS, "{expected_branch} cap preparation must advance in bounded turns");
         }
-        assert!(turns >= FIXED_OWNER_SLOTS, "{expected_branch} cap must be installed cooperatively");
+        assert!(turns >= cap, "{expected_branch} cap must be installed cooperatively");
 
-        let mut rejected = FillBuilder::begin_preparation(roots(branch, FIXED_OWNER_SLOTS + 1), operation);
+        let mut rejected = FillBuilder::begin_preparation(roots(branch, cap + 1), operation);
         let (actual_branch, exact_index, exact_owner, exact_weight) = rejected.preparation_refusal_owner_for_test().expect("attributable omitted owner");
         assert_eq!(actual_branch, expected_branch);
-        assert_eq!(exact_index, FIXED_OWNER_SLOTS);
+        assert_eq!(exact_index, cap);
         assert!(!exact_owner.is_empty());
+        let omitted_object_weight = format!("object-weight-{cap:04}");
+        let omitted_vortex_weight = format!("vortex-weight-{cap:04}");
         match branch {
-            HostileRoot::ObjectWeights => assert_eq!((exact_owner.as_str(), exact_weight), ("object-weight-32", Some(32.25))),
-            HostileRoot::VortexWeights => assert_eq!((exact_owner.as_str(), exact_weight), ("vortex-weight-32", Some(32.5))),
+            HostileRoot::ObjectWeights => assert_eq!((exact_owner.as_str(), exact_weight), (omitted_object_weight.as_str(), Some(cap as f64 + 0.25))),
+            HostileRoot::VortexWeights => assert_eq!((exact_owner.as_str(), exact_weight), (omitted_vortex_weight.as_str(), Some(cap as f64 + 0.5))),
             _ => assert_eq!(exact_weight, None),
         }
         assert_eq!(
@@ -738,7 +741,7 @@ fn constructor_cap_and_plus_one_take_bounded_turns_and_refuse_permanently() {
         let mut preview_sequence = 0;
         let mut context = test_context(&rejected, root_cancel_token(), &mut preview_sequence);
         assert!(matches!(rejected.step(&mut context), StepOutcome::PreviewReady(_)));
-        assert_eq!(rejected.preview.rejection_reason.as_deref(), Some(format!("preparation-capacity:{expected_branch}").as_str()));
+        assert_eq!(rejected.preview.rejection_reason.as_deref(), Some(format!("preparation-capacity:{expected_branch}:{cap}").as_str()));
         assert!(rejected.preview.candidate_ghost.is_none());
         assert!(matches!(rejected.step(&mut context), StepOutcome::Fault(_)));
         assert_eq!(
@@ -761,8 +764,8 @@ fn constructor_cap_and_plus_one_take_bounded_turns_and_refuse_permanently() {
 
 #[test]
 fn capacity_refusal_publishes_generation_qualified_no_ghost_diagnostic_before_fault() {
-    let objects = (0..=FIXED_OWNER_SLOTS)
-        .map(|index| FixtureObject { id: format!("rejected-{index:02}"), object_kind: None, anchor: Default::default(), mesh_url: None, origin: [0.0; 3], orientation: None, scale: None, vortices: Vec::new(), reveal_index: None })
+    let objects = (0..=DOCUMENT_OBJECT_SLOTS)
+        .map(|index| FixtureObject { id: format!("rejected-{index:04}"), object_kind: None, anchor: Default::default(), mesh_url: None, origin: [0.0; 3], orientation: None, scale: None, vortices: Vec::new(), reveal_index: None })
         .collect();
     let scene = Arc::new(SceneConfig {
         fixture: Fixture { objects, attractions: Vec::new(), target_volumes: Vec::new() },
@@ -779,7 +782,7 @@ fn capacity_refusal_publishes_generation_qualified_no_ghost_diagnostic_before_fa
     let mut context = test_context(&builder, root_cancel_token(), &mut sequence);
     assert!(matches!(builder.step(&mut context), StepOutcome::PreviewReady(_)));
     assert_eq!((builder.preview.operation, builder.preview.base_revision, builder.preview.registry_generation, builder.preview.generation), (37, 9, 13, 11));
-    assert_eq!(builder.preview.rejection_reason.as_deref(), Some("preparation-capacity:fixture-objects"));
+    assert_eq!(builder.preview.rejection_reason.as_deref(), Some(format!("preparation-capacity:fixture-objects:{DOCUMENT_OBJECT_SLOTS}").as_str()));
     assert!(builder.preview.candidate_ghost.is_none());
     assert!(builder.preview.sequence > 0);
     assert!(matches!(builder.step(&mut context), StepOutcome::Fault(_)));
@@ -817,7 +820,7 @@ fn retained_owner_census_credits_each_actual_fixed_slot_page_not_a_layout_heuris
         assert_eq!(cursor.step(&builder, usize::MAX, usize::MAX), FillBuilderOwnerCensusStep::Pending);
         assert_eq!(cursor.credit.items - before.items, 1, "fixed backing page {page} has one exact owner");
         assert_eq!(cursor.credit.bytes - before.bytes, expected_bytes, "fixed backing credit equals the actual slot array allocation");
-        assert!(expected_bytes <= FILL_BUILDER_OWNER_PAGE_BYTES);
+        assert!(expected_bytes <= DOCUMENT_OWNER_PAGE_BYTES);
     }
 }
 
@@ -1078,4 +1081,125 @@ fn adversarial_broad_phase_fill_is_end_to_end_resumable_below_eight_ms() {
     assert!(first_candidate.is_some_and(|elapsed| elapsed < Duration::from_millis(50)), "adversarial fill did not publish its first candidate within 50ms: {first_candidate:?}");
     assert_eq!(builder.stage, FillJobStage::Complete);
     assert_eq!(builder.sequence.len(), 1);
+}
+
+#[test]
+fn document_capacities_match_the_language_neutral_capacity_law() {
+    let law: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).expect("language-neutral law fixture");
+    let capacities = &law["documentCapacities"];
+    let declared = |field: &str| capacities[field].as_u64().unwrap_or_else(|| panic!("{field} capacity")) as usize;
+    assert_eq!(
+        [declared("bookkeepingSlots"), declared("bookkeepingPageBytes"), declared("documentPageBytes"), declared("fillCountMax")],
+        [FIXED_OWNER_SLOTS, FIXED_OWNER_PAGE_BYTES, DOCUMENT_OWNER_PAGE_BYTES, FILL_COUNT_MAX]
+    );
+    assert_eq!(
+        [declared("objectSlots"), declared("attractionSlots"), declared("vortexSlots"), declared("volumeSlots"), declared("kindSlots"), declared("candidateSlots"), declared("cellSlots")],
+        [DOCUMENT_OBJECT_SLOTS, DOCUMENT_ATTRACTION_SLOTS, DOCUMENT_VORTEX_SLOTS, DOCUMENT_VOLUME_SLOTS, DOCUMENT_KIND_SLOTS, DOCUMENT_CANDIDATE_SLOTS, DOCUMENT_CELL_SLOTS]
+    );
+    let nakagin = |field: &str| capacities["nakagin"][field].as_u64().unwrap_or_else(|| panic!("nakagin {field}")) as usize;
+    assert!(nakagin("objects") + FILL_COUNT_MAX <= DOCUMENT_OBJECT_SLOTS, "the flagship fixture plus a full plan must fit the object capacity");
+    assert!(nakagin("attractions") + FILL_COUNT_MAX <= DOCUMENT_ATTRACTION_SLOTS);
+    assert!(nakagin("vortices") <= DOCUMENT_VORTEX_SLOTS && nakagin("objects") <= nakagin("vortices"), "the measured vortices-per-object ratio backs the vortex capacity");
+    assert!(nakagin("objectKinds").max(nakagin("vortexKinds")).max(nakagin("compatibilityRows")) <= DOCUMENT_KIND_SLOTS);
+    assert!(DOCUMENT_CELL_SLOTS > FIXED_OWNER_SLOTS && DOCUMENT_OBJECT_SLOTS > FIXED_OWNER_SLOTS, "document capacities are never the bookkeeping batch");
+}
+
+#[test]
+fn document_scale_fixed_pages_are_admitted_by_the_fill_envelope_reservation() {
+    let builder = empty_builder();
+    for (page, (_, bytes, _)) in builder.fixed_backing_witness_for_test().into_iter().enumerate() {
+        assert!(bytes <= DOCUMENT_OWNER_PAGE_BYTES, "document page {page} claims {bytes} bytes beyond the declared page ceiling");
+    }
+    let mut cursor = FillBuilderOwnerCensusCursor::default();
+    let credit = loop {
+        match cursor.step(&builder, FILL_ENVELOPE_MAX_ITEMS, FILL_ENVELOPE_MAX_BYTES) {
+            FillBuilderOwnerCensusStep::Pending => {}
+            FillBuilderOwnerCensusStep::Complete(credit) => break credit,
+            FillBuilderOwnerCensusStep::Rejected => panic!("a document-scale builder must fit one fill envelope reservation"),
+        }
+    };
+    assert!(credit.items <= FILL_ENVELOPE_MAX_ITEMS && credit.bytes <= FILL_ENVELOPE_MAX_BYTES);
+    assert!(credit.bytes > 10 * FIXED_OWNER_PAGE_BYTES, "document pages are actually credited, not silently absent: {credit:?}");
+}
+
+#[test]
+fn nakagin_scale_fill_is_not_refused_and_places_at_least_one_object() {
+    const OBJECTS: usize = 180;
+    const OBJECT_KINDS: usize = 12;
+    const VORTEX_KINDS: usize = 18;
+    const COMPATIBILITY_ROWS: usize = 14;
+    const MESH_URL: &str = "/nakagin/capsule.glb";
+    let template = ObjectKindVortexTemplate { vortex_kind: Some("port-00".into()), point: [0.0, 0.0, 0.0], direction: Some([0.0, 0.0, -1.0]), ..Default::default() };
+    let catalogs = KindCatalogBundle {
+        objects: (0..OBJECT_KINDS)
+            .map(|index| ObjectKind {
+                id: format!("capsule-kind-{index:02}"),
+                representations: vec![ObjectKindRepresentation { id: format!("capsule-representation-{index:02}"), name: String::new(), url: MESH_URL.into(), mime: String::new(), tags: Vec::new(), lod: None, description: String::new() }],
+                scale: None,
+                vortices: vec![template.clone()],
+            })
+            .collect(),
+        vortices: (0..VORTEX_KINDS).map(|index| VortexKindCatalog { id: format!("port-{index:02}"), ..Default::default() }).collect(),
+        cables: Vec::new(),
+    };
+    let objects: Vec<FixtureObject> = (0..OBJECTS)
+        .map(|index| FixtureObject {
+            id: format!("capsule-{index:03}"),
+            object_kind: Some(format!("capsule-kind-{:02}", index % OBJECT_KINDS)),
+            anchor: Default::default(),
+            mesh_url: Some(MESH_URL.into()),
+            origin: [(index % 12) as f64 * 64.0, (index / 12) as f64 * 64.0, 0.0],
+            orientation: Some([0.0, 0.0, 0.0, 1.0]),
+            scale: None,
+            vortices: vec![
+                VortexProps { id: "v0".into(), vortex_kind: Some("port-00".into()), position: [0.0, 0.0, 0.0], direction: Some([0.0, 0.0, -1.0]) },
+                VortexProps { id: "v1".into(), vortex_kind: Some("port-00".into()), position: [0.0, 0.0, 0.0], direction: Some([0.0, 0.0, 1.0]) },
+            ],
+            reveal_index: None,
+        })
+        .collect();
+    let attraction = |index: usize, vortex: &str| AttractionProps {
+        id: format!("cable-{vortex}-{index:03}"),
+        attracting: puzzle3d_vortex_full_id(&format!("capsule-{index:03}"), vortex),
+        attracted: puzzle3d_vortex_full_id(&format!("capsule-{:03}", (index + 1) % OBJECTS), vortex),
+        gap: 0.0,
+        shift: 0.0,
+        rise: 0.0,
+        rotation: 0.0,
+        turn: 0.0,
+        tilt: 0.0,
+        x: 0.0,
+        y: 0.0,
+    };
+    let attractions: Vec<AttractionProps> = (0..OBJECTS).map(|index| attraction(index, "connected-a")).chain((0..OBJECTS).map(|index| attraction(index, "connected-b"))).collect();
+    let kind_compatibility: Vec<KindCompatEntry> = (0..COMPATIBILITY_ROWS)
+        .map(|index| KindCompatEntry { source: format!("port-{index:02}"), target: format!("port-{index:02}"), bidirectional: true, important: false, specificity: Some("vortex".into()) })
+        .collect();
+    let body = collision_body_from_buffers(&[-4.0, -4.0, 0.0, 4.0, -4.0, 0.0, 0.0, 4.0, 0.0, 0.0, 0.0, 8.0], &[0, 1, 2, 0, 1, 3, 1, 2, 3, 2, 0, 3]).expect("capsule body");
+    let scene = Arc::new(SceneConfig {
+        fixture: Fixture { objects, attractions, target_volumes: Vec::new() },
+        kind_catalogs: Some(catalogs),
+        kind_compatibility,
+        overlap_budget: 0.0,
+        seed: 43,
+        host_rules: BrushHostRules::default(),
+        weights: BrushKindWeights::default(),
+    });
+    let mut builder = FillBuilder::begin_preparation(FillPreparationRoots::new(scene, Arc::new(HashMap::from([(MESH_URL.to_string(), body)]))), Operation::new(OperationId(43), RevisionId(1), Generation(1), 43));
+    assert_eq!(builder.preview.rejection_reason, None, "a Nakagin-scale document must not be refused before preparation starts");
+    let mut sequence = 0;
+    let mut turns = 0;
+    while builder.sequence.is_empty() {
+        let mut context = test_context(&builder, root_cancel_token(), &mut sequence);
+        let outcome = builder.step(&mut context);
+        turns += 1;
+        assert!(!matches!(outcome, StepOutcome::Fault(_)), "Nakagin-scale fill faulted at stage {:?} after {turns} turns: {:?}", builder.stage, builder.preview.rejection_reason);
+        assert!(builder.preview.rejection_reason.as_deref().is_none_or(|reason| !reason.starts_with("preparation-capacity")), "document scale must not publish a capacity refusal: {:?}", builder.preview.rejection_reason);
+        assert!(!outcome.is_terminal() || !builder.sequence.is_empty(), "Nakagin-scale fill ended after {turns} turns without placing an object: {:?}", builder.preview.rejection_reason);
+        assert!(turns < 400_000, "Nakagin-scale fill did not place an object in bounded turns");
+    }
+    assert_eq!((builder.base.objects.len(), builder.base.attractions.len()), (OBJECTS, 2 * OBJECTS));
+    assert_eq!((builder.catalogs.objects.len(), builder.catalogs.vortices.len(), builder.kind_compatibility.len()), (OBJECT_KINDS, VORTEX_KINDS, COMPATIBILITY_ROWS));
+    assert_eq!(builder.placed_lookup.len(), OBJECTS + 1);
+    assert_eq!(builder.appended_objects.len(), 1);
 }

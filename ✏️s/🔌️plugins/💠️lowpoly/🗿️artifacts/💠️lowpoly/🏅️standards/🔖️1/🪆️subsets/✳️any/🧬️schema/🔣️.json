@@ -11,7 +11,6 @@
     "selectedObjectIds",
     "paintUtility",
     "activePaintLayer",
-    "activeUtilityId",
     "showEdges",
     "sunEnabled",
     "sunAzimuth",
@@ -72,10 +71,6 @@
       "type": "integer",
       "format": "uint32",
       "minimum": 0,
-      "x-semio-state": "presence"
-    },
-    "activeUtilityId": {
-      "type": "string",
       "x-semio-state": "presence"
     },
     "showEdges": {

@@ -33,7 +33,6 @@ pub struct Fem2dConfig {
     /// 🎥️ The canvas camera (pan/zoom) — was `Fem2dPlayApp::camera`.
     #[dsl(block)]
     pub camera: FemCamera,
-    /// 🗣️ BCP-47 locale tag — was read off the deleted `ViewModel::locale`.
 }
 
 //#region 🔖️ArtifactCodec
@@ -115,7 +114,6 @@ pub enum Fem2dConfigMutation {
         #[dsl(block)]
         camera: FemCamera,
     },
-    /// 🗣️ Was read off the deleted `ViewModel::locale`.
 }
 
 //#region 🔖️OpCodec

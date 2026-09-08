@@ -22,7 +22,6 @@ use protocol::Mutation;
 pub struct PresentationConfig {
     /// ⌨️ In-progress engagement-bar input draft — was `AnimatePresentationPlayRuntime::engagement_input`.
     pub engagement_input: String,
-    /// 🗣️ BCP-47 locale tag — was read off the host-pushed `ViewModel.locale`.
 }
 
 //#region 🔖️ArtifactCodec

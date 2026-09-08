@@ -1,7 +1,7 @@
 mod tests {
     use super::*;
     use crate::default_presentation_snapshot;
-    use crate::schema::{FigureTileGridSeedSpec, populate_tile_drafts_from_grid};
+    use crate::standards::v1::subsets::any::schema::{FigureTileGridSeedSpec, populate_tile_drafts_from_grid};
 
     #[semio_framework_async_macros::async_test]
     async fn compile_presentation_site_writes_static_bundle() {

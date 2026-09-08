@@ -1,6 +1,6 @@
 //! 🖼️ Shooting play app — the icon-render preview window: the active shot's rendered output.
 
-use crate::schema::shooting_icon_render_request_json;
+use crate::standards::v1::subsets::any::schema::shooting_icon_render_request_json;
 use crate::ShootingSnapshot;
 use crate::editor::shooting::config::ShootingConfig;
 use crate::editor::shooting::modes::edit::windows::icon::options;
@@ -42,7 +42,7 @@ pub fn window_measures(snapshot: &ShootingSnapshot, labels: &ShootingLabels) -> 
 }
 
 pub fn engagement(snapshot: &ShootingSnapshot, labels: &ShootingLabels) -> WindowEngagement {
-    let shot = crate::schema::active_shot(snapshot);
+    let shot = crate::standards::v1::subsets::any::schema::active_shot(snapshot);
     WindowEngagement {
         session_active: Some(true),
         options: None,
@@ -66,7 +66,7 @@ pub fn engagement(snapshot: &ShootingSnapshot, labels: &ShootingLabels) -> Windo
 
 //#region 🔖️Render
 pub fn render(snapshot: &ShootingSnapshot, cfg: &ShootingConfig) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
-    let (request_json, footer) = match (crate::schema::active_shot(snapshot), crate::schema::active_asset(snapshot)) {
+    let (request_json, footer) = match (crate::standards::v1::subsets::any::schema::active_shot(snapshot), crate::standards::v1::subsets::any::schema::active_asset(snapshot)) {
         (Some(shot), Some(asset)) => (shooting_icon_render_request_json(snapshot, shot, asset, &cfg.camera), Some(format!("{} · {}×{} · {}", shot.label, shot.width, shot.height, shot.format.to_uppercase()))),
         _ => ("null".into(), None),
     };

@@ -52,8 +52,6 @@ pub struct CadDiff {
     #[state(presence)]
     pub selected_primitive_kind: Option<Option<String>>,
     #[state(presence)]
-    pub active_utility_id: Option<String>,
-    #[state(presence)]
     pub active_example_id: Option<Option<String>>,
     #[state(config)]
     pub selection_method: Option<String>,

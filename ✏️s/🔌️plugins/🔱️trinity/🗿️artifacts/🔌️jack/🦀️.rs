@@ -694,28 +694,28 @@ pub fn pilot_languages() -> &'static [dsl::LanguageSpec] {
                     id: "jack.document",
                     extension: Some("trinity"),
                     role: dsl::LanguageRole::Document,
-                    grammar: Some(crate::standards::v1::subsets::any::schema::snapshot::text::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(crate::standards::v1::subsets::any::schema::snapshot::text::COMPONENT_GRAMMAR_PATH),
-                    protocol: Some(crate::standards::v1::subsets::any::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(crate::standards::v1::subsets::any::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
+                    grammar: Some(standards::v1::subsets::any::schema::snapshot::text::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(standards::v1::subsets::any::schema::snapshot::text::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(standards::v1::subsets::any::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(standards::v1::subsets::any::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
                     hooks: dsl::passthrough_hooks("jack.document"),
                 },
                 dsl::LanguageSpec {
                     id: "jack.op",
                     extension: None,
                     role: dsl::LanguageRole::Ops,
-                    grammar: Some(crate::standards::v1::subsets::any::schema::mutations::text::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(crate::standards::v1::subsets::any::schema::mutations::text::COMPONENT_GRAMMAR_PATH),
-                    protocol: Some(crate::standards::v1::subsets::any::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(crate::standards::v1::subsets::any::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
+                    grammar: Some(standards::v1::subsets::any::schema::mutations::text::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(standards::v1::subsets::any::schema::mutations::text::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(standards::v1::subsets::any::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(standards::v1::subsets::any::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
                     hooks: dsl::passthrough_hooks("jack.op"),
                 },
                 dsl::LanguageSpec {
                     id: "jack.diff",
                     extension: None,
                     role: dsl::LanguageRole::Diff,
-                    grammar: Some(crate::standards::v1::subsets::any::schema::diff::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(crate::standards::v1::subsets::any::schema::diff::COMPONENT_GRAMMAR_PATH),
+                    grammar: Some(standards::v1::subsets::any::schema::diff::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(standards::v1::subsets::any::schema::diff::COMPONENT_GRAMMAR_PATH),
                     protocol: None,
                     protocol_path: None,
                     hooks: dsl::passthrough_hooks("jack.diff"),
@@ -726,8 +726,8 @@ pub fn pilot_languages() -> &'static [dsl::LanguageSpec] {
                     role: dsl::LanguageRole::Pack,
                     grammar: None,
                     grammar_path: None,
-                    protocol: Some(crate::standards::v1::subsets::any::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(crate::standards::v1::subsets::any::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
+                    protocol: Some(standards::v1::subsets::any::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(standards::v1::subsets::any::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
                     hooks: dsl::passthrough_hooks("jack.pack"),
                 },
                 dsl::LanguageSpec {
@@ -736,8 +736,8 @@ pub fn pilot_languages() -> &'static [dsl::LanguageSpec] {
                     role: dsl::LanguageRole::Spr,
                     grammar: None,
                     grammar_path: None,
-                    protocol: Some(crate::standards::v1::subsets::any::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(crate::standards::v1::subsets::any::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
+                    protocol: Some(standards::v1::subsets::any::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(standards::v1::subsets::any::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
                     hooks: dsl::passthrough_hooks("jack.spr"),
                 },
             ]
@@ -756,16 +756,16 @@ pub fn pilot_languages() -> &'static [dsl::LanguageSpec] {
 #[cfg(feature = "component-app-assembly")]
 pub trait ArtifactApps:
     semio_framework_plugin::PluginApp
-    + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::EditorApp<crate::editor::jack::TrinityJackPlayApp>>>
-    + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::ViewerApp<crate::viewer::jack::TrinityJackViewer>>>
+    + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::EditorApp<editor::jack::TrinityJackPlayApp>>>
+    + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::ViewerApp<viewer::jack::TrinityJackViewer>>>
 {
 }
 
 #[cfg(feature = "component-app-assembly")]
 impl<PA> ArtifactApps for PA where
     PA: semio_framework_plugin::PluginApp
-        + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::EditorApp<crate::editor::jack::TrinityJackPlayApp>>>
-        + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::ViewerApp<crate::viewer::jack::TrinityJackViewer>>>
+        + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::EditorApp<editor::jack::TrinityJackPlayApp>>>
+        + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::ViewerApp<viewer::jack::TrinityJackViewer>>>
 {
 }
 
@@ -817,10 +817,10 @@ use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, Artifac
 /// is kept per debt D1, and `artifact_kind()` is kept because this crate's own plugin-root
 /// `.activation(...)` still reads `artifact_kind().id`; neither has any caller left in this function.
 #[cfg(feature = "component-app-assembly")]
-pub fn artifact<PA: crate::ArtifactApps>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<PA> {
+pub fn artifact<PA: ArtifactApps>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<PA> {
     use semio_framework_plugin::app::declarations::ArtifactDeclaration;
     use store::os_io::ArtifactKindId;
-    ArtifactDeclaration { kind: ArtifactKindId::parse("s.trinity.jack").expect("canonical jack kind"), localization: &[], standards: vec![crate::standards::v1::standard::<PA>()] }
+    ArtifactDeclaration { kind: ArtifactKindId::parse("s.trinity.jack").expect("canonical jack kind"), localization: &[], standards: vec![standards::v1::standard::<PA>()] }
 }
 //#endregion 🔖️Register
 
@@ -1284,6 +1284,13 @@ pub mod editor {
         }
 
         #[path = "."]
+        pub mod transient {
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🫧️transient/🦀️.rs"]
+            mod component;
+            pub use component::*;
+        }
+
+        #[path = "."]
         pub mod terminology {
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🗣️terminology/🦀️.rs"]
             mod component;
@@ -1296,19 +1303,13 @@ pub mod editor {
 
         #[path = "."]
         pub mod commands {
-            // 🕹️ `query` stays a named submodule (rather than flattened) — `seeded_jack_config` and
-            // the catalogue panel both reach into it via `commands::query::{run_jack_query,preset_query}`.
             #[path = "."]
             pub(crate) mod query {
                 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/▶️run-query/🦀️.rs"]
                 mod component;
                 pub(crate) use component::*;
             }
-            pub(crate) use query::run_query;
 
-            // 🕹️ Every other command file is self-contained (its own private copy of any shared
-            // helpers) and exposes exactly one `pub(crate) fn` matching its directory's verb —
-            // re-exported here by name, flat, matching how `TrinityJackCommand::handle` calls them.
             #[path = "."]
             mod set_fixture_json_leaf {
                 #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧫️set-fixture-json/🦀️.rs"]
@@ -1341,13 +1342,6 @@ pub mod editor {
             }
             pub(crate) use reorganize_leaf::reorganize;
 
-            #[path = "."]
-            mod load_example_query_leaf {
-                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📚️load-example-query/🦀️.rs"]
-                mod component;
-                pub(crate) use component::*;
-            }
-            pub(crate) use load_example_query_leaf::load_example_query;
 
             #[path = "."]
             mod set_active_example_leaf {
@@ -1380,14 +1374,6 @@ pub mod editor {
                 pub(crate) use component::*;
             }
             pub(crate) use text_edit_leaf::text_edit;
-
-            #[path = "."]
-            mod text_select_leaf {
-                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🖱️text-select/🦀️.rs"]
-                mod component;
-                pub(crate) use component::*;
-            }
-            pub(crate) use text_select_leaf::text_select;
 
             #[path = "."]
             mod set_lod_mode_leaf {

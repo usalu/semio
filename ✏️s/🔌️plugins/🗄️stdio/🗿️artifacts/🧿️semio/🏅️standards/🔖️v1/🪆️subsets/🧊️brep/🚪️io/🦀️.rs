@@ -10,10 +10,9 @@ pub mod derived_composition {
     use crate::standards::v1::subsets::brep::io::import::deserializers::artifacts::step::v_ap214::any::SemioBrepFromStep;
     use crate::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot;
     use crate::standards::v1::subsets::brep::schema::SemioBrepAnalyzer;
-    use semio_framework_plugin::{
-        deserializer_entry_of, register_composer_entries, register_subset_validator, serializer_entry_of, subset_validator_entry_of, AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, ComposerEntry, Composition, Dialect, IoPayload,
-        StandardId, SubsetId, SubsetValidator, SubsetValidatorEntry,
-    };
+    #[cfg(feature = "conversion-brep")]
+    use semio_framework_plugin::{deserializer_entry_of, register_composer_entries, serializer_entry_of, ComposerEntry};
+    use semio_framework_plugin::{register_subset_validator, subset_validator_entry_of, AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, IoPayload, StandardId, SubsetId, SubsetValidator, SubsetValidatorEntry};
     use std::collections::HashSet;
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("brep") };
@@ -140,9 +139,8 @@ pub mod derived_composition {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn register() {
         ::framework_schema::register_artifact_schema_descriptor(crate::standards::v1::subsets::brep::schema::semio_brep_artifact_schema_descriptor());
-        store::register_document_codec(store::ArtifactCodec::of::<SemioBrepSnapshot, crate::standards::v1::subsets::brep::schema::mutations::SemioBrepMutation>(
-            crate::standards::v1::subsets::brep::schema::snapshot::STDIO_SEMIOBREP_DOCUMENT_SCHEMA,
-        )).expect("static Stdio registration must be available and conflict-free");
+        store::register_document_codec(store::ArtifactCodec::of::<SemioBrepSnapshot, crate::standards::v1::subsets::brep::schema::mutations::SemioBrepMutation>(crate::standards::v1::subsets::brep::schema::snapshot::STDIO_SEMIOBREP_DOCUMENT_SCHEMA))
+            .expect("static Stdio registration must be available and conflict-free");
         register_subset_validator(validator_entry()).expect("static Stdio registration must be available and conflict-free");
         #[cfg(feature = "conversion-brep")]
         register_composer_entries(io_bridge_entries()).expect("static Stdio registration must be available and conflict-free");
@@ -181,26 +179,26 @@ pub use derived_composition::*;
 #[cfg(feature = "conversion-brep")]
 pub mod dwg {
     use crate::standards::v1::subsets::brep::schema::engine::{BrepError, BrepKernel, GeometryHandle};
-struct DwgExporter;
-impl semio_framework_mesh_engine::MeshExporter for DwgExporter {
-    fn format_kind(&self) -> &'static str {
-        "dwg"
+    struct DwgExporter;
+    impl semio_framework_mesh_engine::MeshExporter for DwgExporter {
+        fn format_kind(&self) -> &'static str {
+            "dwg"
+        }
+        fn export(&self, mesh: &semio_framework_mesh_engine::MeshData) -> Result<Vec<u8>, String> {
+            let drawing = semio_s_artifact_stdio_dwg::mesh_to_dwg_drawing(mesh);
+            semio_s_artifact_stdio_dwg::dwg_to_bytes(&drawing)
+        }
     }
-    fn export(&self, mesh: &semio_framework_mesh_engine::MeshData) -> Result<Vec<u8>, String> {
-        let drawing = semio_s_artifact_stdio_dwg::mesh_to_dwg_drawing(mesh);
-        semio_s_artifact_stdio_dwg::dwg_to_bytes(&drawing)
+    struct DwgImporter;
+    impl semio_framework_mesh_engine::MeshImporter for DwgImporter {
+        fn format_kind(&self) -> &'static str {
+            "dwg"
+        }
+        fn import(&self, bytes: &[u8]) -> Result<semio_framework_mesh_engine::MeshData, String> {
+            let drawing = semio_s_artifact_stdio_dwg::dwg_from_bytes(bytes)?;
+            Ok(semio_s_artifact_stdio_dwg::dwg_drawing_to_mesh(&drawing))
+        }
     }
-}
-struct DwgImporter;
-impl semio_framework_mesh_engine::MeshImporter for DwgImporter {
-    fn format_kind(&self) -> &'static str {
-        "dwg"
-    }
-    fn import(&self, bytes: &[u8]) -> Result<semio_framework_mesh_engine::MeshData, String> {
-        let drawing = semio_s_artifact_stdio_dwg::dwg_from_bytes(bytes)?;
-        Ok(semio_s_artifact_stdio_dwg::dwg_drawing_to_mesh(&drawing))
-    }
-}
 
     /// 📤️ Encodes tessellated BREP geometry through the DWG artifact codec.
     pub fn export(kernel: &dyn BrepKernel, shapes: &[GeometryHandle], deflection: f64) -> Result<Vec<u8>, BrepError> {

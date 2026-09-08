@@ -1,5 +1,5 @@
 //! shooting -> svg
-use crate::schema::snapshot::ShootingSnapshot;
+use crate::standards::v1::subsets::any::schema::snapshot::ShootingSnapshot;
 use semio_s_artifact_stdio_svg::{SvgSnapshot, STDIO_SVG_DOCUMENT_SCHEMA};
 
 pub fn register() {}

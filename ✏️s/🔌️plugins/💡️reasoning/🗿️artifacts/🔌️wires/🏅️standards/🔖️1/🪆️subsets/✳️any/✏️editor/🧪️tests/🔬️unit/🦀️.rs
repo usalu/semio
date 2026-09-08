@@ -20,14 +20,6 @@ fn retained_route_fixture_matches_the_exact_factory_and_fail_closed_census() {
     assert!(routes.iter().filter(|route| route.get("disposition").and_then(Value::as_str) == Some("batch-only-pending-rewrite")).all(|route| route.get("lanes").and_then(Value::as_array).is_some_and(Vec::is_empty)));
 }
 
-#[test]
-fn config_preparation_rejects_wrong_lane_and_oversized_locale() {
-    use store::ArtifactStoreOneItemPreparationFactory;
-    let factory = WiresConfigPreparationFactory;
-    assert!(factory.preflight(&WiresConfigMutation::SetLocale(crate::editor::wires::config::SetLocale { value: "de-DE".into() }), None, store::HistoryLane::Document).is_ok());
-    assert!(factory.preflight(&WiresConfigMutation::SetLocale(crate::editor::wires::config::SetLocale { value: "de-DE".into() }), None, store::HistoryLane::Interaction).is_err());
-    assert!(factory.preflight(&WiresConfigMutation::SetLocale(crate::editor::wires::config::SetLocale { value: "x".repeat(WIRES_RETAINED_RAW_BYTES + 1) }), None, store::HistoryLane::Document).is_err());
-}
 
 //#region 🔖️CommandSurface
 /// 🏷️ Every declared manifest action id must be reachable as exactly one command row, and every
@@ -53,7 +45,6 @@ async fn every_command_round_trips_through_text_and_binary() {
 
 /// ⚖️ LAW: the leading token of every printed op line is the row's `dsl` wire keyword — pinned
 /// per-row from the `app_commands!` table's `"id" as "wire-key"` declarations rather than derived
-/// (several rows genuinely diverge from a naive kebab-case of the id: `setLocale` → `locale`,
 /// `setActiveExample` → `active-example`, and all three `canvasPointer*` rows drop the `canvas-`
 /// prefix). This is what a missing `#[dsl(keyword = ..)]` on a payload struct silently breaks (the
 /// record prints with no keyword at all and no longer parses).
@@ -69,7 +60,6 @@ async fn every_printed_op_line_starts_with_the_rows_wire_keyword() {
         ("canvasPointerMove", "pointer-move"),
         ("canvasPointerDown", "pointer-down"),
         ("canvasPointerUp", "pointer-up"),
-        ("setLocale", "locale"),
     ];
     for command in every_command() {
         let id = command.command_id();
@@ -83,7 +73,6 @@ async fn every_printed_op_line_starts_with_the_rows_wire_keyword() {
 /// `🧪️wire-baseline-before.txt`) — a regression here is a real format break, not a fixture mismatch.
 /// `setSelection`/`documentSelect` dissolved into the framework's own "graph" interaction domain
 /// (ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM) and no longer exist as `WiresCommand`
-/// rows, which shifts every later row's binary ordinal by 2 — `CanvasPointerUp`'s and `SetLocale`'s
 /// pinned hex below are updated for the new ordinals (8 and 9); `SetActiveExample` is unaffected
 /// (ordinal 0, before the deleted rows).
 #[semio_framework_async_macros::async_test]
@@ -93,7 +82,6 @@ async fn commands_keep_their_pre_migration_wire_bytes() {
     let cases: [(WiresCommand, &str, &str); 3] = [
         (WiresCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: "metabolism".into() }), "active-example active-example example-id=metabolism", "0100010a6d657461626f6c69736d01000600"),
         (WiresCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp {}), "pointer-up pointer-up", "01080000"),
-        (WiresCommand::SetLocale(set_locale::SetLocale { value: "de-DE".into() }), "locale locale value=de-DE", "0109010564652d444501000600"),
     ];
     for (command, text, hex) in cases {
         assert_eq!(protocol::OpText::print_op(&command), text);
@@ -114,7 +102,6 @@ pub(super) fn every_command() -> Vec<WiresCommand> {
         WiresCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove { x: 1.5, y: -2.5 }),
         WiresCommand::CanvasPointerDown(canvas_pointer_down::CanvasPointerDown { id: Some("node-1".into()), x: 10.0, y: 20.0 }),
         WiresCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp {}),
-        WiresCommand::SetLocale(set_locale::SetLocale { value: "de-DE".into() }),
     ]
 }
 //#endregion 🔖️CommandSurface

@@ -4735,7 +4735,7 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
         delta: [after.position[0] - startPose.position[0], after.position[1] - startPose.position[1], after.position[2] - startPose.position[2]],
       });
       void enqueueGumballDispatch(async () => {
-        // One absolute start→end tick onto the transform scratch, then a single commit.
+        // One absolute start→end delta — the app commits it directly; `transformEnd` only closes the host bracket.
         await dispatchGumballPoseDelta(kind, startPose, after);
         await Promise.resolve(dispatch("transformEnd"));
       });

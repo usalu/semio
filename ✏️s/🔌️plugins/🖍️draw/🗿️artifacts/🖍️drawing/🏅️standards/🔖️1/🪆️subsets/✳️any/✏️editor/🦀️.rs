@@ -852,7 +852,7 @@ fn drawing_bounded_reduce(
     history: &semio_framework_plugin::HistoryView,
     interaction: &::protocol::InteractionState,
     _hover: &semio_framework_plugin::app::InteractionHoverState,
-    _context: Option<&semio_framework_plugin::ArtifactOwnedToolJobContext<EditorApp<DrawingPlayApp>>>,
+    _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<semio_framework_plugin::EditorApp<DrawingPlayApp>>>,
     operation: &semio_framework_plugin::AppOperationContext,
 ) -> Result<Emit<DrawingMutation, DrawingConfigMutation, NoDraftMutation>, Fault> {
     if !DRAWING_BOUNDED_TOOL_IDS.contains(&command.command_id()) {
@@ -1271,6 +1271,7 @@ fn render_drawing_body(
     document: &DrawingSnapshot,
     config: &DrawingConfig,
     preview: &DrawingGesturePreview,
+    view_state: &semio_framework_plugin::ViewModel,
 ) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
     let labels = semio_framework_plugin::resolve_labels::<DrawingPlayLabels>(view_state);
     let active_utility = config.active_utility_id.as_str();
@@ -1439,7 +1440,7 @@ impl ArtifactEditor for DrawingPlayApp {
     }
 
     fn render(body_key: &str, doc: &ArtifactView<'_, DrawingSnapshot>, cfg: &ConfigView<'_, DrawingConfig>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
-        render_drawing_body(body_key, doc.snapshot, cfg.snapshot, &DrawingSession::default().preview())
+        render_drawing_body(body_key, doc.snapshot, cfg.snapshot, &DrawingSession::default().preview(), view_state)
     }
 
     fn render_with_instance_operation_owner(
@@ -1447,7 +1448,7 @@ impl ArtifactEditor for DrawingPlayApp {
         body_key: &str,
         doc: &ArtifactView<'_, DrawingSnapshot>,
         cfg: &ConfigView<'_, DrawingConfig>,
-        _view_state: &semio_framework_plugin::ViewModel,
+        view_state: &semio_framework_plugin::ViewModel,
     ) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         let preview = match doc.render_operation() {
             Some(operation) => owner
@@ -1456,7 +1457,7 @@ impl ArtifactEditor for DrawingPlayApp {
                 .unwrap_or_default(),
             None => DrawingGesturePreview::default(),
         };
-        render_drawing_body(body_key, doc.snapshot, cfg.snapshot, &preview)
+        render_drawing_body(body_key, doc.snapshot, cfg.snapshot, &preview, view_state)
     }
 }
 //#endregion 🔖️DrawingPlayApp
@@ -1594,7 +1595,6 @@ pub fn create_drawing_app() -> semio_framework_plugin::AppDefinition {
             // 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM).
             .action_with(drawing_internal_action("engagementInput", LocalizedLabel::native("Engagement Input", "Eingabe"), ActionKind::View))
             .action_interactive_job("engagementInput", semio_framework_plugin::InteractiveJobClassification::Migrated)
-            .action_with(drawing_internal_action(LocalizedLabel::native("Set Locale", "Sprache festlegen"), ActionKind::View))
             // 📷️ Camera — session-only runtime pose, never a document operation.
             .action_with(drawing_internal_action("setCamera", LocalizedLabel::native("Set Camera", "Kamera festlegen"), ActionKind::View))
             .action_interactive_job("setCamera", semio_framework_plugin::InteractiveJobClassification::Migrated)

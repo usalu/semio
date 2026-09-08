@@ -1,6 +1,6 @@
 type TestSource = { readonly directory: string; readonly url: string };
 
-export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: any, source: TestSource): Promise<void> {
+export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: any, testSource: TestSource): Promise<void> {
   const { ACTOR_RETURN_CONTROL_MAXIMUM_BYTES, ACTOR_RETURN_DRIVE_MAXIMUM_BYTES, ACTOR_RETURN_IDENTITY_MAXIMUM_BYTES, ACTOR_RETURN_ORIGIN_MAXIMUM_BYTES, ACTOR_RETURN_PAGE_RECEIPT_MAXIMUM_BYTES, ACTOR_RETURN_RESULT_MAXIMUM_BYTES, ActorReturnResultFraming, createActorBytePage, decodeActorReturnDrive, decodeActorReturnResult, encodeActorReturnDrive, encodeActorReturnResult, readActorBytePage } = dependencies;
   type ActorReturnControl = any;
   type ActorReturnDrive = any;
@@ -41,7 +41,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
 
   it("ActorReturn codecs load natively in Node strip-only mode and preserve every shared vector", async () => {
     const { spawnSync } = await import("node:child_process");
-    const source = new URL(source.url).href;
+    const source = new URL(testSource.url).href;
     const fixture = new URL("./🧫️fixture/🔣️.json", source).href;
     const page = new URL("../📃️page/🟦️.ts", source).href;
     const program = `

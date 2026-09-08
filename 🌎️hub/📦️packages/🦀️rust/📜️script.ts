@@ -11465,11 +11465,10 @@ async function startGisMapShellPeerV1(options: {
   const peerDataRoot = mkdtempSync(join(options.artifactRoot, "shell-peer-" + options.profileId + "-"));
   if (process.platform !== "win32") chmodSync(peerDataRoot, 0o700);
   const devRoot = join(options.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript");
-  const daemon = spawnDaemon("bun", [join(devRoot, "📜️script.ts"), "dev"], {
+  const daemon = spawnDaemon("bun", [join(devRoot, "📜️script.ts"), "dev", "served"], {
     cwd: devRoot,
     env: {
       ...process.env,
-      SKIP_PLUGIN_BUILD: "1",
       SEMIO_TEST_ARTIFACT_DIR: options.browserHost.artifactRoot,
       SEMIO_TEST_BROWSER_MODULE_ROOT: options.browserHost.moduleRoot,
       SEMIO_TEST_BROWSER_ACTIVATION_ROOT: options.browserHost.activationRoot,

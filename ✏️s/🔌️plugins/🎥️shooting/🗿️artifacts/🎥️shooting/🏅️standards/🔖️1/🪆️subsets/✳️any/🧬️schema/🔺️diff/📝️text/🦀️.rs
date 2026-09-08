@@ -1,6 +1,6 @@
 //! 🔺️ Shooting artifact — sparse field-delta diff codec and apply/absorb.
 
-use crate::schema::ShootingArtifact;
+use crate::standards::v1::subsets::any::schema::ShootingArtifact;
 use crate::{ShootingAsset, ShootingSavedCamera, ShootingShot, ShootingSnapshot};
 use protocol::{MutationDiff, Patchable};
 
@@ -10,7 +10,7 @@ pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.grammar.semio");
 //#endregion 📖️SemioGrammar
 
-use crate::schema::diff::*;
+use crate::standards::v1::subsets::any::schema::diff::*;
 
 //#region 🔖️Apply
 /// 🧩 Applies an identified-collection delta to an asset list.

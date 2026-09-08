@@ -3,6 +3,6 @@ use super::*;
 
 #[semio_framework_async_macros::async_test]
 async fn labels_resolve_native_english_and_german_from_the_config_locale() {
-    assert_eq!(imperative_labels(&ImperativeConfig::default()).action_control_while.as_str(), "While");
-    assert_eq!(imperative_labels(&ImperativeConfig { locale: "de-DE".into(), ..ImperativeConfig::default() }).action_control_while.as_str(), "Solange");
+    assert_eq!(imperative_labels(&semio_framework_plugin::ViewModel::default()).action_control_while.as_str(), "While");
+    assert_eq!(imperative_labels(&semio_framework_plugin::ViewModel { locale: semio_framework_plugin::Locale::De, ..Default::default() }).action_control_while.as_str(), "Solange");
 }

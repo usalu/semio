@@ -1,6 +1,6 @@
 type TestSource = { readonly directory: string; readonly url: string };
 
-export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: any, source: TestSource): Promise<void> {
+export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: any, testSource: TestSource): Promise<void> {
   const { ACTOR_RETURN_RESPONSE_MAXIMUM_BYTES, ActorReturnResponseFraming, createActorBytePage, decodeActorReturnResponse, encodeActorReturnResponse, fault, readActorReturnResponseHeader, uint } = dependencies;
 
   const { it, expect, vi } = vitest;
@@ -72,7 +72,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     }
   });
   it("ActorReturnResponseFraming actual module has no strict TypeScript diagnostics", async () => {
-    const { default: ts } = await import("typescript"); const { fileURLToPath } = await import("node:url"); const path = fileURLToPath(source.url);
+    const { default: ts } = await import("typescript"); const { fileURLToPath } = await import("node:url"); const path = fileURLToPath(testSource.url);
     const program = ts.createProgram([path], { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext, moduleResolution: ts.ModuleResolutionKind.Bundler, strict: true, noEmit: true, skipLibCheck: true, allowImportingTsExtensions: true, resolveJsonModule: true, esModuleInterop: true, types: ["node", "vitest/importMeta"] });
     const source = program.getSourceFile(path); expect(source).toBeDefined();
     expect([...program.getSyntacticDiagnostics(source), ...program.getSemanticDiagnostics(source)].map(item => ts.flattenDiagnosticMessageText(item.messageText, "\n"))).toEqual([]);
@@ -81,7 +81,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     const { default: schema } = await import("../../🎟️credit/📋️metadata/📥️inbox/🧬️schema/🔣️.json"); const { default: fixture } = await import("../../🎟️credit/📋️metadata/📥️inbox/🧪️fixture/🔣️.json");
     const { default: Ajv } = await import("ajv"); const { default: ts } = await import("typescript"); const { readFileSync } = await import("node:fs");
     const validate = new Ajv({ strict: true }).compile(schema); expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
-    const shardPath = new URL("../../📮️shard-client/🟦️.ts", source.url);
+    const shardPath = new URL("../../📮️shard-client/🟦️.ts", testSource.url);
     const shard = ts.createSourceFile(shardPath.pathname, readFileSync(shardPath, "utf8"), ts.ScriptTarget.Latest, true);
     const totals = new Map<string, { bytes: bigint; slots: bigint; owners: bigint }>();
     for (const row of fixture.layouts) {
@@ -104,7 +104,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       });
     };
     expect(variants("OutboundMessage")).toEqual(fixture.outbound); expect(variants("InboundMessage")).toEqual(fixture.inbound);
-    const producerPath = new URL("../../../../🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/🟦️.ts", source.url);
+    const producerPath = new URL("../../../../🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/🟦️.ts", testSource.url);
     const producer = ts.createSourceFile(producerPath.pathname, readFileSync(producerPath, "utf8"), ts.ScriptTarget.Latest, true);
     const producers = await import("../../../../../../🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/🟦️.ts");
     // 🫀️ Inventoried from the EMITTED bytes, not the template's raw text: `shardWorkerSource` now
@@ -143,7 +143,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   });
   it("ActorWorkerInboxInventory executes generated heartbeat, ordinary reply and awaited effect traffic together", async () => {
     const { default: fixture } = await import("../../🎟️credit/📋️metadata/📥️inbox/🧪️fixture/🔣️.json"); const { default: ts } = await import("typescript"); const { readFileSync } = await import("node:fs"); const vm = await import("node:vm");
-    const path = new URL("../../../../🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/🟦️.ts", source.url);
+    const path = new URL("../../../../🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/🟦️.ts", testSource.url);
     const source = ts.createSourceFile(path.pathname, readFileSync(path, "utf8"), ts.ScriptTarget.Latest, true);
     const producers = await import("../../../../../../🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/🟦️.ts");
     const generated = (name: "shardWorkerSource" | "hostShimSource") => {
@@ -153,7 +153,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     };
     const messages: any[] = []; const receive = (message: unknown) => messages.push(message);
     const shim = vm.createContext({ exports: {}, URL, self: { postMessage: receive } });
-    const shimCode = generated("hostShimSource").replace("source.url", JSON.stringify("https://fixture.invalid/host.js?actor=a&activation=1"));
+    const shimCode = generated("hostShimSource").replace("import.meta.url", JSON.stringify("https://fixture.invalid/host.js?actor=a&activation=1"));
     new vm.Script(ts.transpileModule(shimCode, { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.CommonJS } }).outputText).runInContext(shim);
     let dispatch: ((event: { data: Record<string, unknown> }) => Promise<void>) | null = null;
     const checkpoint = Object.freeze({ ordinary: "checkpoint" }); const effectResult = Object.freeze({ effect: "completed" });
@@ -200,7 +200,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     const paths = { output: "../../🪪️activation/🚪️instance/📥️output/🟦️.ts", shard: "../../📮️shard-client/🟦️.ts", response: "./🟦️.ts", result: "../🟦️.ts" };
     const totals = new Map<string, { bytes: bigint; slots: bigint; owners: bigint }>();
     for (const layout of fixture.layouts) {
-      const path = paths[layout.source as keyof typeof paths]; const parsed = ts.createSourceFile(path, readFileSync(new URL(path, source.url), "utf8"), ts.ScriptTarget.Latest, true);
+      const path = paths[layout.source as keyof typeof paths]; const parsed = ts.createSourceFile(path, readFileSync(new URL(path, testSource.url), "utf8"), ts.ScriptTarget.Latest, true);
       const declaration = parsed.statements.find(node => (ts.isClassDeclaration(node) || ts.isTypeAliasDeclaration(node)) && node.name?.text === layout.declaration);
       const members = declaration && ts.isClassDeclaration(declaration) ? declaration.members.filter(ts.isPropertyDeclaration) : declaration && ts.isTypeAliasDeclaration(declaration) && ts.isTypeLiteralNode(declaration.type) ? declaration.type.members : null;
       if (!members) throw new Error("Missing declared metadata source " + layout.declaration);
@@ -380,7 +380,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       const cases = { wholeFixed: raw, offsetView: new Uint8Array(raw, 1), wholeView: new Uint8Array(raw), shared, resizable, detached, proxy: new Proxy(raw, {}), oversized: new ArrayBuffer(api.ACTOR_RETURN_RESPONSE_MAXIMUM_BYTES + 1) };
       process.stdout.write(JSON.stringify(Object.fromEntries(Object.entries(cases).map(([name, value]) => { try { api.decodeActorReturnResponse(value); return [name, true]; } catch { return [name, false]; } }))));
     `;
-    const actual = JSON.parse(execFileSync("node", ["--experimental-transform-types", "--input-type=module", "--eval", source, source.url, fixture.vectors[0]!.hex], { encoding: "utf8", timeout: 10000 }));
+    const actual = JSON.parse(execFileSync("node", ["--experimental-transform-types", "--input-type=module", "--eval", source, testSource.url, fixture.vectors[0]!.hex], { encoding: "utf8", timeout: 10000 }));
     expect(actual).toEqual(fixture.backings);
   });
 

@@ -22,5 +22,4 @@ type RemodelingConfig {
   layers: RemodelingLayerVisibility! @state(class: CONFIG)
   frameCursor: RemodelingFrameCursor! @state(class: CONFIG)
   reportTable: String! @state(class: CONFIG)
-  activeUtilityId: String! @state(class: CONFIG)
 }

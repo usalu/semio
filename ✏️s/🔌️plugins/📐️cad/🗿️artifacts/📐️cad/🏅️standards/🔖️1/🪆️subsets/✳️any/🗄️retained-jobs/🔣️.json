@@ -1,5 +1,5 @@
 {
-  "$schema": "./🧬️.schema.json",
+  "$schema": "../🧬️schema/🔣️.json#/$defs/CadRetainedJobs",
   "owner": "CadPlayApp",
   "documentSchema": "cad.scene",
   "payloadSchema": "cad.scene.tool-command.v1",
@@ -382,11 +382,6 @@
     {
       "id": "publicationLaneBroadened",
       "mutation": "replace HostOnly with Config for loadRawRequest",
-      "expected": "rejected"
-    },
-    {
-      "id": "frameworkRoutePublicationRemoved",
-      "mutation": "remove setActiveUtility from the app-owned retained factory",
       "expected": "rejected"
     },
     {

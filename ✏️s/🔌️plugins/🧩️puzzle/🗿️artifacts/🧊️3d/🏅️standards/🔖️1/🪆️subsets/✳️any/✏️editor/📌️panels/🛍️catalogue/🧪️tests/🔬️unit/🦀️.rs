@@ -7,7 +7,7 @@ use crate::editor::puzzle3d::{PUZZLE3D_DEFAULT_UTILITY, Puzzle3dScene, nakagin_f
 #[test]
 fn kinds_tree_object_drag_data_carries_object_kind_and_mesh_url() {
     let envelope = Puzzle3dScene { fixture: nakagin_fixture(), runtime: Puzzle3dRuntime::default(), active_utility: PUZZLE3D_DEFAULT_UTILITY.into() };
-    let labels = puzzle3d_labels(&Puzzle3dConfig::default()).expect("default puzzle3d axes are explicit");
+    let labels = puzzle3d_labels(&semio_framework_plugin::ViewModel::default());
     let node = render(&envelope, labels).expect("catalogue tree");
     assert!(matches!(node.component, semio_framework_ui_contract::Component::Tree(_)));
     let objects = node.children.iter().find(|section| section.key.as_str() == "puzzle3d-play-kinds.objects").expect("objects section");

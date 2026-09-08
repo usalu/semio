@@ -128,13 +128,6 @@
       ],
       "x-semio-state": "presence"
     },
-    "activeUtilityId": {
-      "type": [
-        "string",
-        "null"
-      ],
-      "x-semio-state": "presence"
-    },
     "reportTable": {
       "type": [
         "string",
@@ -193,7 +186,6 @@
         "job",
         "results",
         "selection",
-        "activeUtilityId",
         "reportTable",
         "frameCursor",
         "camera",
@@ -244,9 +236,6 @@
         },
         "selection": {
           "$ref": "https://semio.tech/schema/s/remodel/remodeling/artifact.json#/$defs/RemodelingUiSelection"
-        },
-        "activeUtilityId": {
-          "type": "string"
         },
         "reportTable": {
           "type": "string"

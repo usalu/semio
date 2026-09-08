@@ -26,7 +26,6 @@ pub struct EquationConfig {
     /// `MathPlayRuntime::camera`.
     #[dsl(block)]
     pub camera: EquationCamera,
-    /// 🗣️ BCP-47 locale tag — was read off `view_state.locale`.
 }
 
 //#region 🔖️ArtifactCodec

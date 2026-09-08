@@ -38,7 +38,7 @@ pub mod part_1_2 {
 //#region 🔖️ArtifactKind
 /// 🗿️ The computed-compliance artifact this standard publishes on its app's `report:out` port.
 pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
-    crate::app_surface::artifact_kind_spec("en1991", "EN 1991")
+    app_surface::artifact_kind_spec("en1991", "EN 1991")
 }
 //#endregion 🔖️ArtifactKind
 
@@ -82,11 +82,11 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
 
 pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
     semio_framework_plugin::ArtifactDeclaration::builder(definition)
-        .schema(crate::document_schema::en1991_artifact_schema_descriptor())
-        .inferences([crate::standards::v1::subsets::any::schema::inferences::en1991_artifact_inference_descriptor()])
-        .composers(crate::standards::v1::subsets::any::io::io_registry::entries())
+        .schema(document_schema::en1991_artifact_schema_descriptor())
+        .inferences([standards::v1::subsets::any::schema::inferences::en1991_artifact_inference_descriptor()])
+        .composers(standards::v1::subsets::any::io::io_registry::entries())
         .languages(pilot_languages())
-        .document_codec::<semio_framework_plugin::EditorApp<crate::editor::en1991::En1991PlayApp>>()
+        .document_codec::<semio_framework_plugin::EditorApp<editor::en1991::En1991PlayApp>>()
         .try_build()
 }
 

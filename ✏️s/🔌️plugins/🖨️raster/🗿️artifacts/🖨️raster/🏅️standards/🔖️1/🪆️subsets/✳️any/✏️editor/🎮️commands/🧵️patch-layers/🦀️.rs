@@ -3,7 +3,7 @@
 use crate::mutations::move_layer as spatial_move_layer;
 use crate::mutations::{change_layer_adjustment_kind, change_layer_blend_mode, change_layer_opacity, change_layer_visible, rename_layer, resize_layer};
 use crate::op::RasterMutation;
-use crate::schema::{find_layer, layer_opacity, layer_transform, layer_visible};
+use crate::standards::v1::subsets::any::schema::{find_layer, layer_opacity, layer_transform, layer_visible};
 use crate::{RasterLayerNode, RasterSnapshot};
 use crate::editor::raster::config::{RasterConfig, RasterConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};

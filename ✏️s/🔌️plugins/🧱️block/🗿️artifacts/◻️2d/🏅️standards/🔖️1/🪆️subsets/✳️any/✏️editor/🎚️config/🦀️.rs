@@ -17,7 +17,6 @@ use protocol::Mutation;
 #[dsl(id = "block2d.config")]
 #[dsl(layout = "lines")]
 pub struct Block2dConfig {
-    /// 🗣️ BCP-47 locale tag — was read off the deleted `ViewModel.locale`.
 }
 
 //#region 🔖️ArtifactCodec

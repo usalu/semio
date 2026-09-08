@@ -28,7 +28,6 @@ export interface Generation3dDiff {
   /** @state artifact */
   generationPreviewText?: string | null;
   /** @state presence */
-  activeUtilityId?: string;
   /** @state config */
 }
 

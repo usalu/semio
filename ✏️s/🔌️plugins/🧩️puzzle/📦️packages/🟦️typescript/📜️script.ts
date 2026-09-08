@@ -54,7 +54,7 @@ function publicationContracts(source: string): Map<string, string[]> {
 }
 
 function exactContracts(actual: Map<string, string[]>, groups: PublicationGroup[]): boolean {
-  const expected = new Map(groups.flatMap((group) => group.routes.map((route) => [route, group.lanes] as const)));
+  const expected = new Map(groups.flatMap((group) => group.routes.map((route) => [route, group.lanes.map(variant)] as const)));
   return exactArray([...actual.keys()], [...expected.keys()])
     && [...expected].every(([route, lanes]) => exactArray(actual.get(route) ?? [], lanes));
 }
@@ -84,13 +84,40 @@ function implementsFor(production: string, traitName: string, typeName: string):
   return new RegExp(`impl (?:[A-Za-z_][A-Za-z0-9_]*::)*${traitName} for ${typeName}\\b`).test(production);
 }
 
+/** @emoji 🌍️ Locale and terminology are OS-owned state projected through
+ * `semio_framework_plugin::ViewModel`, never artifact-local settings: no puzzle owner may publish a
+ * `setLocale`/`setTerminology` route nor carry a `SetLocale`/`SetTerminology` config mutation. The
+ * editors read the locale out of the projected view state (`puzzle2d_config_locale(view_state)`), so
+ * an app-local copy would be a second, divergent authority over the same user setting. */
+function localeIsOsOwned(production: string): boolean {
+  return !/"setLocale"|"setTerminology"|ConfigMutation::Set(?:Locale|Terminology)/.test(production);
+}
+
+/** 🗡️ Every hostile source mutation `Puzzle3dPlayApp`'s publication authority must refuse, keyed by
+ * the invariant it attacks. The stale-authority and bounded-progress entries use `replaceAll` because
+ * both guards are duplicated verbatim across the Config and the Artifact preparation; a
+ * single-occurrence replace would leave the other copy intact and the oracle's `.includes` clause
+ * would still see the pattern in the mutated source. */
+function puzzle3dHostileSources(source: string): Map<string, string> {
+  return new Map([
+    ["missing Config Store preparation", source.replace("Some(std::sync::Arc::new(Puzzle3dConfigStorePreparationFactory))", "None")],
+    ["missing Artifact Store preparation", source.replace("Some(std::sync::Arc::new(Puzzle3dArtifactStorePreparationFactory))", "None")],
+    ["widened Config mutation envelope", source.replace(
+      "        Puzzle3dConfigMutation::Snapshot { config } => puzzle3d_config_store_bounded_bytes(config).ok(),\n        _ => None,\n",
+      "        _ => Some(0),\n",
+    )],
+    ["stale publication authority", source.replaceAll("            || request.generation != request.authority.generation()\n", "")],
+    ["unbounded preparation progress", source.replaceAll("ArtifactStoreOneItemPreparationStep::Progress", "ArtifactStoreOneItemPreparationStep::Prepared")],
+  ]);
+}
+
 function ownerOracle(owner: PublicationOwner, source: string): boolean {
   const production = source.split("//#region 🧪️Testkit")[0]!;
   const pairs = manifestPairs(production);
   const appGroups = owner.groups.map((group) => ({ ...group, routes: group.routes.filter((route) => (owner.owner !== "Puzzle5dPlayApp" || !reserved5d.has(route)) && (owner.owner !== "Puzzle2dPlayApp" || !reserved2d.has(route))) }));
   const appRoutes = appGroups.flatMap((group) => group.routes);
   const migrated = appGroups.filter((group) => group.status === "migrated").flatMap((group) => group.routes);
-  const expectedPairs = new Map(appGroups.flatMap((group) => group.routes.map((route) => [route, group.status])));
+  const expectedPairs = new Map(appGroups.flatMap((group) => group.routes.map((route) => [route, variant(group.status)])));
   if (!exactArray([...pairs.keys()], appRoutes)) return false;
   if (!appRoutes.every((route) => pairs.get(route) === expectedPairs.get(route))) return false;
   if (!exactArray(retainedIds(production, owner.owner), migrated)) return false;
@@ -111,7 +138,8 @@ function ownerOracle(owner: PublicationOwner, source: string): boolean {
     && production.includes("fn build_config_store_one_item_preparation_factory()")
     && !production.includes("build_draft_store_one_item_preparation_factory")
     && !production.includes("build_presence_store_one_item_preparation_factory")
-    && !production.includes("build_transient_store_one_item_preparation_factory");
+    && !production.includes("build_transient_store_one_item_preparation_factory")
+    && localeIsOsOwned(production);
   if (!exactFactory || !exactContracts(contracts, appGroups.filter((group) => group.status === "migrated")) || !exactArray(proofIds, migrated)) return false;
   if (owner.owner === "Puzzle3dPlayApp") {
     return production.includes("struct Puzzle3dConfigStorePreparationFactory")
@@ -119,8 +147,9 @@ function ownerOracle(owner: PublicationOwner, source: string): boolean {
       && production.includes("impl store::ArtifactStoreOneItemPreparation<Puzzle3dConfig, Puzzle3dConfigMutation> for Puzzle3dConfigStorePreparation")
       && production.includes("fn build_config_store_one_item_preparation_factory()")
       && production.includes("Some(std::sync::Arc::new(Puzzle3dConfigStorePreparationFactory))")
-      && production.includes('matches!(value.as_str(), "en" | "en-US" | "de" | "de-DE")')
-      && production.includes('matches!(value.as_str(), "native" | "reuse")')
+      && production.includes("PUZZLE3D_CONFIG_STORE_MAXIMUM_BYTES: usize = 32_768")
+      && production.includes("Puzzle3dConfigMutation::Snapshot { config } => puzzle3d_config_store_bounded_bytes(config).ok(),")
+      && production.includes('return Err("Puzzle3d Config preparation rejected its exact mutation envelope".into());')
       && production.includes("request.operation != request.authority.operation()")
       && production.includes("request.generation != request.authority.generation()")
       && production.includes("request.base_revision != request.authority.base_revision()")
@@ -160,8 +189,8 @@ function ownerOracle(owner: PublicationOwner, source: string): boolean {
       // 🎬️ The one dispatch pipeline `handle` and every generic retained reduce share — a second,
       // divergent copy of the scene/host/delta body is exactly what this audit exists to refuse.
       && production.includes("fn puzzle2d_dispatch_emit(")
-      && production.includes("Ok(puzzle2d_dispatch_emit(command, snapshot.0.clone(), config, &selection, None))")
-      && production.includes("Ok(puzzle2d_dispatch_emit(command, before, config, interaction.selection(PUZZLE2D_INTERACTION_DOMAIN), doc.operation_optional().cloned()))")
+      && production.includes("Ok(puzzle2d_dispatch_emit(command, &snapshot.0, config, &selection, None))")
+      && production.includes("Ok(puzzle2d_dispatch_emit(command, &doc.snapshot.0, config, interaction.selection(PUZZLE2D_INTERACTION_DOMAIN), doc.operation_optional().cloned()))")
       && production.includes("PUZZLE2D_SELECTION_BATCH_LIMIT: usize = 1_024")
       && production.includes("(addressed <= PUZZLE2D_SELECTION_BATCH_LIMIT).then_some(addressed.max(1))");
   }
@@ -217,16 +246,9 @@ class PublicationAuthorityAuditScript extends BundleScript {
       const missingContract = source.replace(/\s*ArtifactToolPublicationContract \{ tool_id: "(?:openAddObjectDialog|setCamera|canvasPointerDown)", lanes: &\[ArtifactToolPublicationLane::(?:HostOnly|Config)\] \},/, "");
       if (missingContract !== source && ownerOracle(owner, missingContract)) throw new Error(`${owner.owner} accepted a missing publication contract`);
       if (owner.owner === "Puzzle3dPlayApp") {
-        const missingPreparation = source.replace("Some(std::sync::Arc::new(Puzzle3dConfigStorePreparationFactory))", "None");
-        const missingArtifactPreparation = source.replace("Some(std::sync::Arc::new(Puzzle3dArtifactStorePreparationFactory))", "None");
-        const widenedTerminology = source.replace('matches!(value.as_str(), "native" | "reuse")', 'matches!(value.as_str(), "native" | "reuse" | "other")');
-        // 🧯️ `replaceAll` — the stale-authority guard is duplicated verbatim across the Config and
-        // Artifact preparations; a single-occurrence `.replace` would leave the other copy's guard
-        // intact, and the plain `.includes` check below would then still see the pattern in source.
-        const staleAuthority = source.replaceAll("            || request.generation != request.authority.generation()\n", "");
-        const missingProgress = source.replaceAll("ArtifactStoreOneItemPreparationStep::Progress", "ArtifactStoreOneItemPreparationStep::Prepared");
-        if (ownerOracle(owner, missingPreparation) || ownerOracle(owner, missingArtifactPreparation) || ownerOracle(owner, widenedTerminology) || ownerOracle(owner, staleAuthority) || ownerOracle(owner, missingProgress)) {
-          throw new Error("Puzzle3d accepted missing Store preparation, a widened mutation envelope, or stale publication authority");
+        for (const [invariant, hostile] of puzzle3dHostileSources(source)) {
+          if (hostile === source) throw new Error(`Puzzle3d hostile mutation for ${invariant} did not apply`);
+          if (ownerOracle(owner, hostile)) throw new Error(`Puzzle3d accepted a hostile mutation for ${invariant}`);
         }
       }
       if (owner.owner === "Puzzle5dPlayApp") {

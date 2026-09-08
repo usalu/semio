@@ -30,7 +30,6 @@ semio_framework_plugin::app_labels! {
 //#endregion 🔖️Labels
 
 //#region 🔖️Resolvers
-/// 🗣️ Resolves the active label set from `cfg.locale`; falls back to native English.
 pub fn imperative_labels(view_state: &semio_framework_plugin::ViewModel) -> &'static ImperativeLabels {
     semio_framework_plugin::resolve_labels::<ImperativeLabels>(view_state)
 }

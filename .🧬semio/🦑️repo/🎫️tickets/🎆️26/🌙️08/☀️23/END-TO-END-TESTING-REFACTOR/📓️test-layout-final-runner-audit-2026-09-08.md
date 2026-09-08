@@ -1,6 +1,6 @@
 # Canonical Test Layout and Runner Audit
 
-> **Superseded migration snapshot.** This report records the 21:58 CEST migration queue, including the then-current 30 findings and 480 non-feature directories. Those residuals were repaired. The final full scanner inspected 29,224 authored sources with zero findings. Read [the current final audit](./📓️test-layout-final-current-audit-2026-09-08.md) for the resolved source result and non-feature runner samples; a separate current runner-classification inventory will replace this pointer when its TypeScript audit is published.
+> **Superseded migration snapshot.** This report records the 21:58 CEST migration queue, including the then-current 30 findings and 480 non-feature directories. Those residuals were repaired. The final full scanner inspected 29,224 authored sources with zero findings. Read [the current final audit](./📓️test-layout-final-current-audit-2026-09-08.md) for the resolved source result and non-feature runner samples. The published [runner map](./📓️test-layout-runner-map-2026-09-08.md) and [snapshot reconciliation](./📓️runner-inventory-scope-audit-2026-09-08.md) supersede this migration queue for current JavaScript and TypeScript runner classification.
 
 
 ## Scope and Evidence Time

@@ -4,7 +4,7 @@ use super::*;
 #[test]
 fn shooting_window_actions_match_the_json_oracle() {
     let vectors: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️window-actions.json")).expect("neutral window vectors");
-    let document = crate::schema::default_snapshot();
+    let document = crate::standards::v1::subsets::any::schema::default_snapshot();
     let config = ShootingConfig::default();
     for locale in ["en-US", "de-DE"] {
         let labels = semio_framework_plugin::resolve_labels_for_locale::<crate::editor::shooting::terminology::ShootingLabels>(locale);

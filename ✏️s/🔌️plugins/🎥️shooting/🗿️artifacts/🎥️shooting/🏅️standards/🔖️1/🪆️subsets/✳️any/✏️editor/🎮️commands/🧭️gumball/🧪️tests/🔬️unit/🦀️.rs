@@ -13,7 +13,7 @@ async fn gumball_transform_drag_coalesces_into_one_edit() {
     }
     app.handle_action("undo", None, &semio_framework_plugin::testkit::meta("local")).await.expect("undo");
     let restored = app.snapshot().expect("snapshot");
-    let original = crate::schema::default_snapshot().assets.iter().find(|asset| asset.id == asset_id).map(|asset| asset.origin).expect("original origin");
+    let original = crate::standards::v1::subsets::any::schema::default_snapshot().assets.iter().find(|asset| asset.id == asset_id).map(|asset| asset.origin).expect("original origin");
     assert_eq!(restored.assets.iter().find(|asset| asset.id == asset_id).unwrap().origin, original, "undoing the coalesced drag restores the pre-drag origin");
 }
 

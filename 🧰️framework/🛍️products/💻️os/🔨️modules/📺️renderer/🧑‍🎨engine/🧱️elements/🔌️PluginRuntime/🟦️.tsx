@@ -54,7 +54,7 @@ import {
   type ArtifactPresencePeer,
   type LocalInteractionCapture,
 } from "@semio-tech/framework-replication";
-import { type BuiltNode, type UiNodeRecord, type UiPatchOp, type UiSnapshot } from "@semio-tech/framework";
+import { type BuiltNode, type Component, type UiNodeRecord, type UiPatchOp, type UiSnapshot } from "@semio-tech/framework";
 import { applyUiPatch, DEFAULT_UI_DOCUMENT_LIMITS, emptyUiDocumentState, type UiDocumentState } from "../📃️UiDocumentStore/🟦️.tsx";
 import { OwnedUiPatchIntake } from "../📃️UiDocumentStore/📥️intake/🟦️.ts";
 import {
@@ -88,6 +88,7 @@ import { decodeActorUiPatchReceipt, encodeActorUiPatchReceipt } from "../../../.
 import { OwnedResidentLedger } from "../../../../../../../🔨️modules/🌱️value/💾️resident/🟦️.ts";
 import { rendererResidentLedger } from "../../💾️resident/🟦️.ts";
 import { OwnedUiInstance, type OwnedUiInstanceRetirement, type OwnedUiInstanceSurface, type OwnedUiPatchAcknowledgement } from "../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🏘️instance/🟦️.ts";
+import type { RetainedUiNodeRecord } from "../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/📦️wire/🧾️typed/🟦️.ts";
 import { TurnScheduler, type Lane } from "../../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🟦️.ts";
 import { wireExtensionInvocation } from "../../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🖼️wire-turn.ts";
 import { type PluginManifest, type ViewModel } from "../🐚️Shell/🟦️.tsx";
@@ -643,6 +644,12 @@ function retainedSurfaceToBuiltNode(surface: RetainedSurface): BuiltNode | null 
   };
   return build(surface.root);
 }
+
+/** 🪟️ Copies only an opaque surface payload whose native byte view cannot cross the host response boundary. */
+function ownedUiComponentToBuilt(component: RetainedUiNodeRecord["component"]): Component {
+  if (component.type !== "surface") return component;
+  return { ...component, doc: { bytes: Array.from({ length: component.doc.bytes.length }, (_, index) => component.doc.bytes.byteAt(index)) } };
+}
 //#endregion 🔖️RetainedUiPatch
 
 /** 🚧️ Best-effort conversion of a raw WIT `effect` variant (`{tag, val}`, see `WireVariant`'s doc for
@@ -994,6 +1001,7 @@ type PluginPatchAcceptance = Readonly<{
   acknowledgements: readonly ShardEventEnvelope[];
   turns: readonly WireTurnResult[];
 }>;
+function isPluginPatchAcceptance(value: readonly ShardEventEnvelope[] | PluginPatchAcceptance): value is PluginPatchAcceptance { return !Array.isArray(value); }
 
 async function yieldPluginUiContinuation(): Promise<void> {
   await new Promise<void>((resolve) => setTimeout(resolve, 0));
@@ -1009,8 +1017,9 @@ async function settlePluginTurn(actorId: string, initial: WireTurnResult, lane: 
   const acknowledge = async (result: WireTurnResult): Promise<readonly ShardEventEnvelope[]> => {
     activation?.assertActive();
     const accepted = await acceptPatches?.(result) ?? [];
-    if (!Array.isArray(accepted)) results.push(...accepted.turns);
-    return [...(Array.isArray(accepted) ? accepted : accepted.acknowledgements), ...typedOperationAcknowledgements(result)];
+    if (!isPluginPatchAcceptance(accepted)) return [...accepted, ...typedOperationAcknowledgements(result)];
+    results.push(...accepted.turns);
+    return [...accepted.acknowledgements, ...typedOperationAcknowledgements(result), ...accepted.turns.flatMap(typedOperationAcknowledgements)];
   };
   const hasWork = () => (drainOperations || !hasRequiredUiPatches(results, requiredSurfaceIds)) && wireTurnStatusTag(results.at(-1)?.status) === "more-work";
   let acknowledgements = await acknowledge(initial);
@@ -1044,7 +1053,7 @@ async function settlePluginTurn(actorId: string, initial: WireTurnResult, lane: 
     commandIngress: results.at(-1)?.commandIngress,
   };
 }
-async function settleAcknowledgedPluginTurns(actorId: string, results: readonly WireTurnResult[], acknowledgements: readonly ShardEventEnvelope[], activation?: ShardActorActivationLease): Promise<WireTurnResult> {
+async function settleAcknowledgedPluginTurns(actorId: string, results: readonly WireTurnResult[], acknowledgements: readonly ShardEventEnvelope[], acceptPatches?: (result: WireTurnResult) => PluginPatchAcceptance | Promise<PluginPatchAcceptance>, activation?: ShardActorActivationLease): Promise<WireTurnResult> {
   const initial: WireTurnResult = {
     uiPatches: [],
     effects: [],
@@ -1052,7 +1061,7 @@ async function settleAcknowledgedPluginTurns(actorId: string, results: readonly 
     commandIngress: results.at(-1)?.commandIngress,
     status: results.at(-1)?.status,
   };
-  const continued = await settlePluginTurn(actorId, initial, "Interactive", new Set(), (turn) => turn === initial ? acknowledgements : patchAckEvents(turn, retainTurnUiPatches(actorId, turn)), true, activation);
+  const continued = await settlePluginTurn(actorId, initial, "Interactive", new Set(), (turn) => turn === initial ? acknowledgements : acceptPatches?.(turn) ?? [], true, activation);
   return {
     ...continued,
     uiPatches: [...results.flatMap((turn) => turn.uiPatches), ...continued.uiPatches],
@@ -1062,8 +1071,8 @@ async function settleAcknowledgedPluginTurns(actorId: string, results: readonly 
 }
 //#endregion 🔖️PluginTurnScheduler
 
-/** 🖼️ Last reconciled UI document per actor and exact `(instance, concrete surface)` identity. Keyed by
- * `actorId` so a suspend+resume (fresh checkpoint restore) naturally starts a new entry. */
+/** 🧪️ Language-neutral retained-patch oracle used by the in-source contract tests. Production
+ * rendering is owned exclusively by `OwnedUiInstanceSurface` inside `loadPluginModule`. */
 const retainedWindowByActor = new Map<string, Map<string, RetainedSurface>>();
 
 function pluginSurfaceRef(instance: number, bodyKey: string): { readonly instance: number; readonly surface: string } {
@@ -1075,37 +1084,33 @@ function retainedSurfaceId(instance: number, surface: string): string {
 }
 
 function uiRefreshBodyKeys(request: PluginUiRefreshRequest): string[] {
-  return [...new Set([...(request.windows ?? []), ...(request.panels ?? [])].map((target) => target.bodyKey ?? target.key))];
+  return [...new Set([...(request.windows ?? []), ...(request.panels ?? [])].flatMap((target) => target.bodyKey ? [target.bodyKey] : []))];
 }
 
 /** 🪟️ Binds each concrete host surface to its authored body and projected ViewModel. */
 function uiRefreshSurfaceEvents(instanceId: number, request: PluginUiRefreshRequest): ShardEventEnvelope[] {
   const windows = (request.windows ?? []).flatMap((target) => {
+    if (!target.bodyKey) return [];
     const viewState = windowViewContext(request.viewState, target.key);
     if (!viewState) return [];
     return [{
       kind: "surface-visible",
-      payload: { surface: pluginSurfaceRef(instanceId, target.key), bodyKey: target.bodyKey ?? target.key, viewState: encodePackValue(viewState) },
+      payload: { surface: pluginSurfaceRef(instanceId, target.key), bodyKey: target.bodyKey, viewState: encodePackValue(viewState) },
     } satisfies ShardEventEnvelope];
   });
-  const panels = (request.panels ?? []).map((target) => ({
-    kind: "surface-visible",
-    payload: {
-      surface: pluginSurfaceRef(instanceId, target.key),
-      bodyKey: target.bodyKey ?? target.key,
-      viewState: encodePackValue(panelViewContext(request.viewState)),
-    },
-  }) satisfies ShardEventEnvelope);
+  const panels = (request.panels ?? []).flatMap((target) => target.bodyKey ? [{
+      kind: "surface-visible",
+      payload: {
+        surface: pluginSurfaceRef(instanceId, target.key),
+        bodyKey: target.bodyKey,
+        viewState: encodePackValue(panelViewContext(request.viewState)),
+      },
+    } satisfies ShardEventEnvelope] : []);
   return [...windows, ...panels];
 }
 
-/** 📬️ Projects retained bodies back to their requested window and panel keys. */
-function retainedUiRefreshResponse(instanceId: number, request: PluginUiRefreshRequest, retained: ReadonlyMap<string, RetainedSurface>, effects: readonly WireVariant[] = []): PluginUiRefreshResponse {
-  const project = (targets: PluginUiRefreshRequest["windows"]) => (targets ?? []).flatMap((target) => {
-    const surface = retained.get(retainedSurfaceId(instanceId, target.key));
-    const value = surface && retainedSurfaceToBuiltNode(surface);
-    return surface && value ? [{ key: target.key, hash: retainedSurfaceHash(retainedSurfaceToSnapshot(surface)), value }] : [];
-  });
+/** 🏛️ Projects one turn's host effects without borrowing any retained UI owner. */
+function retainedUiRefreshEffects(instanceId: number, effects: readonly WireVariant[]): Effect[] {
   const requestedEffects: Effect[] = [];
   for (const effect of effects) {
     const bytes = shellFrameBytes(effect, instanceId);
@@ -1121,7 +1126,17 @@ function retainedUiRefreshResponse(instanceId: number, request: PluginUiRefreshR
       if (requested) requestedEffects.push(requested);
     }
   }
-  return { windows: project(request.windows), panels: project(request.panels), requestedEffects };
+  return requestedEffects;
+}
+
+/** 📬️ Projects retained bodies back to their requested window and panel keys. */
+function retainedUiRefreshResponse(instanceId: number, request: PluginUiRefreshRequest, retained: ReadonlyMap<string, RetainedSurface>, effects: readonly WireVariant[] = []): PluginUiRefreshResponse {
+  const project = (targets: PluginUiRefreshRequest["windows"]) => (targets ?? []).flatMap((target) => {
+    const surface = retained.get(retainedSurfaceId(instanceId, target.key));
+    const value = surface && retainedSurfaceToBuiltNode(surface);
+    return surface && value ? [{ key: target.key, hash: retainedSurfaceHash(retainedSurfaceToSnapshot(surface)), value }] : [];
+  });
+  return { windows: project(request.windows), panels: project(request.panels), requestedEffects: retainedUiRefreshEffects(instanceId, effects) };
 }
 
 function retainedSurfacesForActor(actorId: string): Map<string, RetainedSurface> {
@@ -1165,14 +1180,17 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
    * receives the `activation-generation`/`request-sequence` authority its own wire decoder demands. */
   const lifecycleByInstance = new Map<number, ShardInstanceLifecycleLease>();
   const uiOwnerByInstance = new Map<number, OwnedUiInstance>();
+  const uiRetirementByInstance = new Map<number, OwnedUiInstanceRetirement>();
   const uiSurfaceByInstance = new Map<number, Map<string, OwnedUiInstanceSurface>>();
   const uiIntakesByInstance = new Map<number, Set<OwnedUiPatchIntake>>();
+  const uiReadsByInstance = new Map<number, Set<Promise<unknown>>>();
   let eventSeq = 0;
   const uiGrant = Object.freeze({ maxItems: 1, maxBytes: 4096 });
   const yieldUi = async (step: number): Promise<void> => { if (step % PLUGIN_UI_CONTINUATION_BATCH_SIZE === 0) await yieldPluginUiContinuation(); };
   const closeIntake = async (instanceId: number, intake: OwnedUiPatchIntake): Promise<void> => {
     intake.beginClose();
     for (let step = 1; !intake.terminalIsEmpty(); step += 1) {
+      if (step > PLUGIN_UI_CONTINUATION_LIMIT) throw new Error("plugin-ui.intake-close-budget-exhausted");
       const current = intake.closeStep(uiGrant);
       if (current.kind === "blocked" || current.kind === "rejected") throw new Error(`plugin-ui.intake-close-${current.kind}:${current.phase}`);
       await yieldUi(step);
@@ -1181,18 +1199,21 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
   };
   const acceptUiPatches = async (instanceId: number, turn: WireTurnResult): Promise<PluginPatchAcceptance> => {
     if (turn.uiPatches.length === 0) return { acknowledgements: [], turns: [] };
-    const actorId = requireActorId(instanceId);
+    requireActorId(instanceId);
     const lease = lifecycleByInstance.get(instanceId);
     const owner = uiOwnerByInstance.get(instanceId);
     if (!lease || !owner || !turn.original || !turn.uiPatchReceipt) throw new Error("plugin-ui.native-owner-required");
     const supplemental: WireTurnResult[] = [];
     for (const [index, patch] of turn.uiPatches.entries()) {
       const source = lease.captureUiPatchAuthority(turn.original, index);
+      const surfaceId = wirePatchSurfaceId(patch);
+      if (!surfaceId) throw new Error("plugin-ui.projection-surface-required");
       const intake = new OwnedUiPatchIntake(owner, source);
       const intakes = uiIntakesByInstance.get(instanceId) ?? new Set<OwnedUiPatchIntake>();
       intakes.add(intake); uiIntakesByInstance.set(instanceId, intakes);
       let token: OwnedUiPatchAcknowledgement | null = null;
       for (let step = 1; token === null; step += 1) {
+        if (step > PLUGIN_UI_CONTINUATION_LIMIT) throw new Error("plugin-ui.intake-budget-exhausted");
         const current = intake.advance(uiGrant);
         token = intake.peekAcknowledgement();
         if (current.kind === "rejected") throw new Error(`plugin-ui.intake-rejected:${current.phase}:${intake.failure ?? "unknown"}`);
@@ -1202,6 +1223,7 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
       const acknowledged = await submitPluginLifecycleTurn(lease, { kind: "issued-ui-ack", source, token }, "Interactive");
       if (!intake.acceptAcknowledgement(acknowledged.submission)) throw new Error("plugin-ui.acknowledgement-refused");
       for (let step = 1; ; step += 1) {
+        if (step > PLUGIN_UI_CONTINUATION_LIMIT) throw new Error("plugin-ui.publication-close-budget-exhausted");
         const current = intake.advance(uiGrant);
         if (current.kind === "ready") break;
         if (current.kind === "blocked" || current.kind === "rejected") throw new Error(`plugin-ui.intake-${current.kind}:${current.phase}`);
@@ -1210,33 +1232,144 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
       const surface = intake.takeSurface();
       if (!surface) throw new Error("plugin-ui.surface-missing");
       const surfaces = uiSurfaceByInstance.get(instanceId) ?? new Map<string, OwnedUiInstanceSurface>();
-      surfaces.set(source.value.surface, surface); uiSurfaceByInstance.set(instanceId, surfaces);
+      surfaces.set(surfaceId, surface); uiSurfaceByInstance.set(instanceId, surfaces);
       await closeIntake(instanceId, intake);
       supplemental.push(acknowledged.turn);
       const nested = await acceptUiPatches(instanceId, acknowledged.turn);
       supplemental.push(...nested.turns);
       if (nested.acknowledgements.length > 0) throw new Error("plugin-ui.unexpected-generic-acknowledgement");
-      if (applyRetainedWindowPatches(actorId, [patch]).length !== 1) throw new Error("plugin-ui.projection-rejected-after-native-admission");
     }
     return { acknowledgements: [], turns: supplemental };
   };
+  const advanceUiMaintenance = async (owner: OwnedUiInstance, budget: { steps: number }, phase: string): Promise<void> => {
+    while (owner.maintenancePending) {
+      if (++budget.steps > DEFAULT_UI_DOCUMENT_LIMITS.maxNodes * 64) throw new Error(`plugin-ui.${phase}-budget-exhausted`);
+      const current = owner.advanceMaintenance(uiGrant);
+      if (current.kind === "blocked" || current.kind === "rejected") throw new Error(`plugin-ui.${phase}-${current.kind}:${current.phase}`);
+      await yieldUi(budget.steps);
+    }
+  };
+  const projectOwnedUiSurface = async (instanceId: number, actorId: string, lease: ShardInstanceLifecycleLease, owner: OwnedUiInstance, surface: OwnedUiInstanceSurface): Promise<{ readonly hash: string; readonly value: BuiltNode } | null> => {
+    const current = () => !disposing && !closingInstances.has(instanceId) && actorIdByInstance.get(instanceId) === actorId && lifecycleByInstance.get(instanceId) === lease && uiOwnerByInstance.get(instanceId) === owner;
+    const view = surface.view;
+    if (view.root === null) return null;
+    if (!view.hash) throw new Error("plugin-ui.surface-hash-required");
+    const visited = new Set<number>();
+    const budget = { steps: 0 };
+    const build = async (id: number, depth: number): Promise<BuiltNode> => {
+      if (!current()) throw new Error("plugin-ui.read-stale");
+      if (depth > DEFAULT_UI_DOCUMENT_LIMITS.maxDepth || visited.size >= DEFAULT_UI_DOCUMENT_LIMITS.maxNodes || visited.has(id)) throw new Error("plugin-ui.read-graph-invalid");
+      visited.add(id);
+      const subscription = surface.subscribeNode(id, () => {});
+      let record: RetainedUiNodeRecord | null = null;
+      try {
+        await advanceUiMaintenance(owner, budget, "read");
+        const snapshot = subscription.snapshot;
+        if (!snapshot || snapshot.version !== view.revision || !snapshot.record) throw new Error("plugin-ui.read-snapshot-missing");
+        record = snapshot.record;
+        surface.acknowledgeRead(subscription, snapshot);
+      } finally {
+        surface.unsubscribeNode(subscription);
+        await advanceUiMaintenance(owner, budget, "read-retirement");
+      }
+      if (!record) throw new Error("plugin-ui.read-snapshot-missing");
+      const children: BuiltNode[] = [];
+      for (const child of record.children) children.push(await build(child, depth + 1));
+      return { key: record.key, component: ownedUiComponentToBuilt(record.component), layout: record.layout, style: record.style, activity: record.activity, disabled: record.disabled, accessibility: record.accessibility, bindings: record.bindings, menu: record.menu, children };
+    };
+    const value = await build(view.root, 1);
+    if (!current() || surface.view !== view) throw new Error("plugin-ui.read-stale");
+    return { hash: view.hash, value };
+  };
+  const ownedUiRefreshResponse = async (instanceId: number, actorId: string, request: PluginUiRefreshRequest, effects: readonly WireVariant[]): Promise<PluginUiRefreshResponse> => {
+    const lease = lifecycleByInstance.get(instanceId);
+    const owner = uiOwnerByInstance.get(instanceId);
+    const surfaces = uiSurfaceByInstance.get(instanceId);
+    if (!lease || !owner || !surfaces) throw new Error("plugin-ui.native-owner-required");
+    const project = async (targets: PluginUiRefreshRequest["windows"]): Promise<Array<{ readonly key: string; readonly hash: string; readonly value: BuiltNode }>> => {
+      const result: Array<{ readonly key: string; readonly hash: string; readonly value: BuiltNode }> = [];
+      for (const target of targets ?? []) {
+        const surface = surfaces.get(retainedSurfaceId(instanceId, target.key));
+        if (!surface) continue;
+        const projected = await projectOwnedUiSurface(instanceId, actorId, lease, owner, surface);
+        if (projected) result.push({ key: target.key, ...projected });
+      }
+      return result;
+    };
+    const read = (async () => ({ windows: await project(request.windows), panels: await project(request.panels) }))();
+    const reads = uiReadsByInstance.get(instanceId) ?? new Set<Promise<unknown>>();
+    reads.add(read); uiReadsByInstance.set(instanceId, reads);
+    try {
+      const projected = await read;
+      return { ...projected, requestedEffects: retainedUiRefreshEffects(instanceId, effects) };
+    } finally {
+      reads.delete(read);
+    }
+  };
   const closeUiOwner = async (instanceId: number, owner: OwnedUiInstance): Promise<OwnedUiInstanceRetirement> => {
+    const retained = uiRetirementByInstance.get(instanceId);
+    if (retained) return retained;
+    if ((uiReadsByInstance.get(instanceId)?.size ?? 0) !== 0) throw new Error("plugin-ui.read-retirement-pending");
     for (const intake of uiIntakesByInstance.get(instanceId) ?? []) await closeIntake(instanceId, intake);
+    uiSurfaceByInstance.get(instanceId)?.clear();
     owner.beginClose();
     for (let step = 1; !owner.terminalIsEmpty(); step += 1) {
+      if (step > PLUGIN_UI_CONTINUATION_LIMIT) throw new Error("plugin-ui.owner-close-budget-exhausted");
       const current = owner.closeStep(uiGrant);
       if (current.kind === "blocked" || current.kind === "rejected") throw new Error(`plugin-ui.owner-close-${current.kind}:${current.phase}`);
       await yieldUi(step);
     }
     const witness = owner.takeRetirementWitness();
     if (!witness) throw new Error("plugin-ui.retirement-witness-missing");
+    uiRetirementByInstance.set(instanceId, witness);
     return witness;
+  };
+  const assertClosingTurn = (turn: WireTurnResult): void => {
+    if (turn.uiPatches.length > 0 || turn.uiPatchReceipt !== undefined) throw new Error("plugin-ui.patch-after-lifecycle-close");
+  };
+  const retireInstanceLifecycle = async (instanceId: number, lease: ShardInstanceLifecycleLease, owner: OwnedUiInstance): Promise<void> => {
+    lease.beginClose();
+    for (let step = 1; lease.progress().kind !== "complete"; step += 1) {
+      if (step > PLUGIN_UI_CONTINUATION_LIMIT) throw new Error("plugin-ui.lifecycle-close-budget-exhausted");
+      const receipt = lease.pendingReceipt;
+      if (receipt?.kind === "accepted") {
+        const acknowledged = await submitPluginLifecycleTurn(lease, { kind: "receipt-ack", receipt }, "Interactive");
+        assertClosingTurn(acknowledged.turn);
+      } else if (receipt?.kind === "retired") {
+        const retirement = await closeUiOwner(instanceId, owner);
+        const acknowledged = await submitPluginLifecycleTurn(lease, { kind: "receipt-ack", receipt, retirement }, "Interactive");
+        assertClosingTurn(acknowledged.turn);
+      } else {
+        const progress = lease.progress();
+        if (progress.kind === "blocked") throw new Error(`plugin-ui.lifecycle-close-blocked:${progress.failure ?? "unknown"}`);
+        const current = progress.kind === "closing"
+          ? await submitPluginLifecycleTurn(lease, { kind: "close" }, "Interactive")
+          : await submitPluginLifecycleTurn(lease, { kind: "poll" }, "Interactive");
+        assertClosingTurn(current.turn);
+      }
+      await yieldUi(step);
+    }
+    lease.dispose();
   };
   const requireActorId = (instanceId: number): string => {
     const actorId = actorIdByInstance.get(instanceId);
     if (disposing) throw new Error("plugin-handle.closed");
     if (!actorId || closingInstances.has(instanceId)) throw new Error(`[DEBUG] program ${pluginId}: no actor for instance ${instanceId} (createApp not called, or already destroyed)`);
     return actorId;
+  };
+  const releaseInstanceMaps = (instanceId: number, actorId: string): void => {
+    documentBindings.delete(instanceId);
+    documentBindingGenerations.delete(instanceId);
+    actorIdByInstance.delete(instanceId);
+    lifecycleByInstance.delete(instanceId);
+    uiOwnerByInstance.delete(instanceId);
+    uiRetirementByInstance.delete(instanceId);
+    uiSurfaceByInstance.delete(instanceId);
+    uiIntakesByInstance.delete(instanceId);
+    uiReadsByInstance.delete(instanceId);
+    pendingTurnEffects.delete(instanceId);
+    teardownPluginActor(actorId);
+    closingInstances.delete(instanceId);
   };
   /** 🚦 `lane`/`coalesceKey` forward to {@link submitPluginTurn} — see that function's own doc for the
    * lane-assignment reasoning. `registry.touch(actorId)` refreshes this actor's LRU position on every
@@ -1285,9 +1418,11 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
         activation.assertActive();
         const results: WireTurnResult[] = [];
         let acknowledgements: readonly ShardEventEnvelope[] = [];
-        const acceptTurn = (turn: WireTurnResult) => {
+        const acceptTurn = async (turn: WireTurnResult): Promise<void> => {
           results.push(turn);
-          acknowledgements = [...patchAckEvents(turn, retainTurnUiPatches(actorId, turn)), ...typedOperationAcknowledgements(turn)];
+          const accepted = await acceptUiPatches(instanceId, turn);
+          results.push(...accepted.turns);
+          acknowledgements = [...accepted.acknowledgements, ...typedOperationAcknowledgements(turn), ...accepted.turns.flatMap(typedOperationAcknowledgements)];
         };
         for (let commandIndex = 0; commandIndex < events.length; commandIndex += 1) {
           eventSeq += 1;
@@ -1300,20 +1435,20 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
             seq: BigInt(eventSeq),
             command: events[commandIndex]!,
           });
-          for (const commandPage of pages) acceptTurn(await submitTurn(actorId, acknowledgements, { commandPage, activation }));
+          for (const commandPage of pages) await acceptTurn(await submitTurn(actorId, acknowledgements, { commandPage, activation }));
           let terminal = results.at(-1)?.commandIngress?.tag;
           const observedStatuses = new Set([terminal ?? "missing"]);
           for (let continuation = 0; terminal !== "command-complete" && continuation < 1_024; continuation += 1) {
             if (terminal === "fault") throw new Error(`[DEBUG] plugin ${pluginId}: command ingress fault: ${commandIngressFaultDisplay(results.at(-1)?.commandIngress)}`);
             if (terminal === "backpressure") throw new Error(`[DEBUG] plugin ${pluginId}: command ingress backpressure after serialized submission`);
             const continued = await submitTurn(actorId, acknowledgements, { activation });
-            acceptTurn(continued);
+            await acceptTurn(continued);
             terminal = continued.commandIngress?.tag;
             observedStatuses.add(terminal ?? "missing");
           }
           if (terminal !== "command-complete") throw new Error(`[DEBUG] plugin ${pluginId}: command ingress did not complete within 1024 continuations (observed statuses: ${[...observedStatuses].join(", ")})`);
         }
-        return settleAcknowledgedPluginTurns(actorId, results, acknowledgements, activation);
+        return settleAcknowledgedPluginTurns(actorId, results, acknowledgements, (turn) => acceptUiPatches(instanceId, turn), activation);
       });
       requireActorId(instanceId);
       activation.assertActive();
@@ -1355,11 +1490,19 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
           { kind: "open", input: { appId, actor: currentPluginRuntimeActor, config: [], assets: [], capabilities: [], quotas: Array.from(encodePackValue({})) } },
           "Interactive",
         );
-        requireOpening();
         const captured = lease.pendingReceipt;
-        if (captured) await submitPluginLifecycleTurn(lease, { kind: "receipt-ack", receipt: captured }, "Interactive");
+        const lifetime = lease.lifetime;
+        if (!captured || captured.kind !== "captured" || !lifetime) throw new Error("plugin-ui.native-lifetime-required");
+        const owner = new OwnedUiInstance(lease.activation, lifetime, DEFAULT_UI_DOCUMENT_LIMITS, { usizeBits: 32 });
+        lease.bindHostRetirement(owner);
+        uiOwnerByInstance.set(instanceId, owner);
+        uiSurfaceByInstance.set(instanceId, new Map());
+        uiIntakesByInstance.set(instanceId, new Set());
         requireOpening();
-        await settlePluginTurn(actorId, opened.turn, "Interactive", new Set(), (turn) => patchAckEvents(turn, retainTurnUiPatches(actorId, turn)));
+        await settlePluginTurn(actorId, opened.turn, "Interactive", new Set(), (turn) => acceptUiPatches(instanceId, turn));
+        requireOpening();
+        const acknowledged = await submitPluginLifecycleTurn(lease, { kind: "receipt-ack", receipt: captured }, "Interactive");
+        await settlePluginTurn(actorId, acknowledged.turn, "Interactive", new Set(), (turn) => acceptUiPatches(instanceId, turn));
         requireOpening();
         return instanceId;
       });
@@ -1382,15 +1525,18 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
       const retiring = Promise.resolve().then(async () => {
         await Promise.all([opening?.then(() => {}, () => {}), retirement]);
         if (actorIdByInstance.get(instanceId) === actorId) {
-          shardClient.dispose(actorId);
-          documentBindings.delete(instanceId);
-          documentBindingGenerations.delete(instanceId);
-          actorIdByInstance.delete(instanceId);
-          lifecycleByInstance.delete(instanceId);
-          retainedWindowByActor.delete(actorId);
-          pendingTurnEffects.delete(instanceId);
-          teardownPluginActor(actorId);
-          closingInstances.delete(instanceId);
+          const lease = lifecycleByInstance.get(instanceId);
+          const owner = uiOwnerByInstance.get(instanceId);
+          if (!lease) {
+            registry.cancel(actorId);
+            releaseInstanceMaps(instanceId, actorId);
+            return;
+          }
+          if (!owner) throw new Error("plugin-ui.native-owner-required");
+          await Promise.allSettled([...(uiReadsByInstance.get(instanceId) ?? [])]);
+          await retireInstanceLifecycle(instanceId, lease, owner);
+          registry.cancel(actorId);
+          releaseInstanceMaps(instanceId, actorId);
         }
       });
       retiringInstances.set(instanceId, retiring);
@@ -1432,8 +1578,11 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
     const activation = shardClient.captureActorActivation(actorId);
     const documentPort = documentBindings.get(instanceId)?.port;
     eventSeq += 1;
-    const retainedBeforeRefresh = retainedWindowByActor.get(actorId);
-    const missingSurfaceIds = new Set(events.map((event) => retainedSurfaceId(instanceId, (event.payload as { readonly surface: { readonly surface: string } }).surface.surface)).filter((surfaceId) => !retainedBeforeRefresh?.has(surfaceId)));
+    const surfaces = uiSurfaceByInstance.get(instanceId);
+    const missingSurfaceIds = new Set(events.map((event) => retainedSurfaceId(instanceId, (event.payload as { readonly surface: { readonly surface: string } }).surface.surface)).filter((surfaceId) => {
+      const surface = surfaces?.get(surfaceId);
+      return !surface || surface.view.root === null;
+    }));
     const result = await serializeCommandIngressForActor(actorId, async () => {
       const settled = await settlePluginTurn(
         actorId,
@@ -1444,16 +1593,15 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
         ),
         "UserVisible",
         missingSurfaceIds,
-        (turn) => patchAckEvents(turn, retainTurnUiPatches(actorId, turn)),
+        (turn) => acceptUiPatches(instanceId, turn),
         true,
         activation,
       );
       return settled;
     });
-    const retained = retainedWindowByActor.get(actorId);
     requireActorId(instanceId);
     activation.assertActive();
-    return retainedUiRefreshResponse(instanceId, request, retained ?? new Map(), routeDocumentEffects(result.effects, documentPort));
+    return ownedUiRefreshResponse(instanceId, actorId, request, routeDocumentEffects(result.effects, documentPort));
   };
 
   /** 🔁️ Retains one completion's exact activation across evaluation, queueing and publication. */
@@ -1475,7 +1623,7 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
           await submitTurn(actorId, [{ kind: "completed", payload: { req, outcome: "ok" in outcome ? { tag: "ok", val: Array.from(outcome.ok) } : { tag: "fault", val: Array.from(outcome.fault) } } }], { activation }),
           "Interactive",
           new Set(),
-          (turn) => { assertActive(); return patchAckEvents(turn, retainTurnUiPatches(actorId, turn)); },
+          (turn) => { assertActive(); return acceptUiPatches(instanceId, turn); },
           true,
           activation,
         );
@@ -1509,7 +1657,7 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
     const current = () => !closingInstances.has(instanceId) && actorIdByInstance.get(instanceId) === actorId && sourceCurrent();
     const settle = (events: readonly ShardEventEnvelope[]) => serializeCommandIngressForActor(actorId, async () => {
       activation.assertActive();
-      return settlePluginTurn(actorId, await submitTurn(actorId, events, { activation }), "Interactive", new Set(), turn => patchAckEvents(turn, retainTurnUiPatches(actorId, turn)), true, activation);
+      return settlePluginTurn(actorId, await submitTurn(actorId, events, { activation }), "Interactive", new Set(), turn => acceptUiPatches(instanceId, turn), true, activation);
     });
     const binding = new ActorDocumentBindingV1({ ...identity, actorId, activationGeneration: activation.activationGeneration, instanceId }, bindingGeneration, {
       current,

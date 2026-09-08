@@ -1,5 +1,5 @@
 use super::*;
-use store::{BackboneMessage, OpBinary};
+use store::{BackboneChannelPort, BackboneMessage, OpBinary};
 
 fn hex(bytes: &[u8]) -> String {
     bytes.iter().map(|byte| format!("{byte:02x}")).collect()
@@ -25,13 +25,13 @@ fn document_backbone_op_binary_is_exact_canonical_and_bounded() {
     }
 }
 
-#[test]
-fn document_backbone_binding_reducer_preserves_generation_and_live_owner() {
+#[semio_framework_async_macros::async_test]
+async fn document_backbone_binding_reducer_preserves_generation_and_live_owner() {
     let uri = "actor://v1:7:3:space-amap";
-    let (_, owner) = store::ActorBackboneChannelOwner::pair(uri);
+    let (port, owner) = store::ActorBackboneChannelOwner::pair(uri);
     let message = BackboneMessage::Ack { op_ids: Vec::new() }.encode_op().expect("hot backbone acknowledgment encodes");
     owner.push_inbound(uri, &message).expect("live binding admits an addressed message");
-    owner.push_outbound_for_test(uri, &message).expect("live binding retains one pending acknowledgment");
+    port.send(uri, &message).await.expect("live binding retains one pending acknowledgment");
     owner.begin_retire().expect("retirement closes admission synchronously");
     assert!(owner.push_inbound(uri, &message).is_err(), "retiring binding must refuse ingress before detach can await");
     assert!(owner.take_outbound().expect("retired binding exposes its discarded outbox").is_none(), "retirement must discard stale data before its receipt");

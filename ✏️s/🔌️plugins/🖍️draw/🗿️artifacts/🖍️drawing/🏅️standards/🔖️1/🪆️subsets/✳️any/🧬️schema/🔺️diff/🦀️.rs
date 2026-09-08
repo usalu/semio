@@ -33,8 +33,6 @@ pub struct DrawingDiff {
     pub artboard: Option<Option<DrawingArtboard>>,
     #[state(presence)]
     pub selected_ids: Option<DrawingStringList>,
-    #[state(presence)]
-    pub active_utility_id: Option<String>,
     #[state(config)]
     pub engagement_input: Option<String>,
     #[state(config)]
@@ -154,9 +152,6 @@ impl DrawingDiff {
             }
             if let Some(list) = &self.selected_ids {
                 next.selected_ids = list.values.clone();
-            }
-            if let Some(value) = &self.active_utility_id {
-                next.active_utility_id = value.clone();
             }
             if let Some(value) = &self.engagement_input {
                 next.engagement_input = value.clone();
@@ -415,7 +410,6 @@ impl MutationDiff<DrawingSnapshot> for DrawingDiff {
         take!(title);
         take!(artboard);
         take!(selected_ids);
-        take!(active_utility_id);
         take!(engagement_input);
         take!(camera_x);
         take!(camera_y);

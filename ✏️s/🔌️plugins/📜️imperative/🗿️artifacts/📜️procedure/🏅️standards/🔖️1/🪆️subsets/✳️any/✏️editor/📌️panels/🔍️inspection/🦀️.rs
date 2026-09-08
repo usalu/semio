@@ -24,7 +24,7 @@ pub fn definition() -> PanelTabDefinition {
 /// ⚠️ Ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: the per-selected-step field group
 /// (id/kind/params, resolved from `ImperativeConfig::selected_step_ids`) this panel used to build is
 /// deleted along with that field — selection is framework-owned state now and
-/// `ArtifactApp::render(body_key, doc, cfg)` is never given an `InteractionView` (only
+/// `ArtifactApp::render(body_key, doc, cfg, view_state)` is never given an `InteractionView` (only
 /// `handle`/`copy_fragment`/`cut_operations` are). Documented reduced-fidelity gap, same shape as
 /// `🖍️draw`'s `📌️panels/🔍️properties/🦀️.rs`: falls through to a step-count summary until a
 /// resolved-selection render path exists.

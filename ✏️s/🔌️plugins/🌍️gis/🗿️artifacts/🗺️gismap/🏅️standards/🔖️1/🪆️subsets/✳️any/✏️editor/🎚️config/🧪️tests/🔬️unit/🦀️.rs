@@ -8,7 +8,6 @@ async fn gis2d_config_default_matches_the_existing_action_arg_sticky_defaults() 
     assert_eq!(config.render_mode, "combined");
     assert_eq!(config.vector_style, "colored");
     assert_eq!(config.lod_mode, "automatic");
-    assert_eq!(config.locale, "en-US");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -76,5 +75,4 @@ async fn gis2d_config_operation_lines_round_trip() {
     store::os_store::test_support::assert_op_line_round_trip(&Gis2dConfigMutation::SetVectorStyle(SetVectorStyle { value: "figureGround".into() }));
     store::os_store::test_support::assert_op_line_round_trip(&Gis2dConfigMutation::SetLodMode(SetLodMode { value: "automatic".into() }));
     store::os_store::test_support::assert_op_line_round_trip(&Gis2dConfigMutation::SetLayerStrokeScale(SetLayerStrokeScale { layer_id: "roads".into(), value: Some(1.5) }));
-    store::os_store::test_support::assert_op_line_round_trip(&Gis2dConfigMutation::SetLocale(SetLocale { value: "de-DE".into() }));
 }

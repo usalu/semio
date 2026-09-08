@@ -30,5 +30,5 @@ pub async fn render(app: &mut Gis2dApp, body_key: &str) -> String {
 }
 
 pub async fn main_window_measures(app: &mut Gis2dApp) -> Vec<WindowMeasure> {
-    app.window_measures().await.get(map::GIS2D_PLAY_WINDOW_MAIN).cloned().unwrap_or_default()
+    app.window_measures(&semio_framework_plugin::ViewModel::default()).await.get(map::GIS2D_PLAY_WINDOW_MAIN).cloned().unwrap_or_default()
 }

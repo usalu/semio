@@ -51,6 +51,6 @@ impl protocol::MutationDiff<PublicationPresence> for PublicationPresenceDiff {
     }
 }
 
-#[path = "../📢️publication-fixtures-presence-mutations/🦀️.rs"]
+#[path = "../../🧫️fixtures/📢️publication-fixtures/👥️presence/🧬️mutations/🦀️.rs"]
 pub mod mutations;
 pub use mutations::*;

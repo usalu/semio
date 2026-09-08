@@ -1,7 +1,7 @@
 
 use super::*;
 use crate::mutations::{add_layer_asset, change_layer_adjustment_kind, change_layer_blend_mode, change_layer_opacity, change_layer_visible, create_layer, delete_layer, move_layer, remove_layer_asset, rename_layer, reorder_layers, resize_layer};
-use crate::schema::empty_raster_document;
+use crate::standards::v1::subsets::any::schema::empty_raster_document;
 use crate::{RASTER_DOCUMENT_SCHEMA, RasterLayerNode, RasterTransform};
 
 static RASTER_INITIALIZER_TEST_LOCK: std::sync::Mutex<()> = std::sync::Mutex::new(());
@@ -865,8 +865,8 @@ fn raster_populated_snapshot_output_max_plus_one_nested_cancel_fault_panic_and_c
 
     let layer = RasterLayerNode::Adjustment { id: "retained-output".into(), name: "Retained Output".into(), visible: true, opacity: 1.0, blend_mode: "normal".into(), transform: RasterTransform::default(), adjustment_kind: "deep".into(), params };
     let snapshot = RasterSnapshot { schema: String::new(), id: String::new(), title: None, layers: vec![layer], assets };
-    assert_eq!(snapshot.require_empty_output_shell(), Err(crate::schema::snapshot::RASTER_POPULATED_OUTPUT_ERROR));
-    let panic = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| snapshot.require_empty_output_shell().expect(crate::schema::snapshot::RASTER_POPULATED_OUTPUT_ERROR)));
+    assert_eq!(snapshot.require_empty_output_shell(), Err(crate::standards::v1::subsets::any::schema::snapshot::RASTER_POPULATED_OUTPUT_ERROR));
+    let panic = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| snapshot.require_empty_output_shell().expect(crate::standards::v1::subsets::any::schema::snapshot::RASTER_POPULATED_OUTPUT_ERROR)));
     assert!(panic.is_err(), "public DSL panic path contains the fail-closed populated output before allocation");
     let params = match &snapshot.layers[0] {
         RasterLayerNode::Adjustment { params, .. } => params,

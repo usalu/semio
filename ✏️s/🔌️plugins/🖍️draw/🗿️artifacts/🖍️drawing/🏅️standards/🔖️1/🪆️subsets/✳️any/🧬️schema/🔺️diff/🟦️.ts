@@ -27,7 +27,6 @@ export interface DrawingDiff {
   /** @state presence */
   selectedIds?: DrawingStringList;
   /** @state presence */
-  activeUtilityId?: string;
   /** @state config */
   engagementInput?: string;
   /** @state config */

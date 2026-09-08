@@ -426,7 +426,7 @@ pub fn forms_steps(snapshot: &FormsSnapshot) -> Vec<FormStep> {
 
 /// 🔎 Twin of [`forms_steps`] for the UI-inclusive [`crate::schema::FormsArtifact`]
 /// (its own `structure`/`results` fields mirror the snapshot's — see that struct's own doc).
-pub fn forms_artifact_steps(artifact: &crate::schema::FormsArtifact) -> Vec<FormStep> {
+pub fn forms_artifact_steps(artifact: &schema::FormsArtifact) -> Vec<FormStep> {
     artifact.structure.local_owner::<FormsWorkingScene>().map(|scene| scene.steps.clone()).unwrap_or_default()
 }
 
@@ -512,21 +512,21 @@ pub fn artifact<A: FormsApplication>() -> semio_framework_plugin::app::declarati
     use semio_framework_plugin::app::declarations::ArtifactDeclaration;
     use store::os_io::ArtifactKindId;
 
-    ArtifactDeclaration { kind: ArtifactKindId::parse("s.forms.forms").expect("canonical forms kind"), localization: &[], standards: vec![crate::standards::v1::standard()] }
+    ArtifactDeclaration { kind: ArtifactKindId::parse("s.forms.forms").expect("canonical forms kind"), localization: &[], standards: vec![standards::v1::standard()] }
 }
 
 /// 📋️ Application variants required to assemble the Forms artifact.
 pub trait FormsApplication:
     semio_framework_plugin::PluginApp
-    + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::EditorApp<crate::editor::forms::FormsPlayApp>>>
-    + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::ViewerApp<crate::viewer::forms::FormsViewer>>>
+    + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::EditorApp<editor::forms::FormsPlayApp>>>
+    + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::ViewerApp<viewer::forms::FormsViewer>>>
 {
 }
 
 impl<A> FormsApplication for A where
     A: semio_framework_plugin::PluginApp
-        + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::EditorApp<crate::editor::forms::FormsPlayApp>>>
-        + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::ViewerApp<crate::viewer::forms::FormsViewer>>>
+        + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::EditorApp<editor::forms::FormsPlayApp>>>
+        + From<semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::app::ViewerApp<viewer::forms::FormsViewer>>>
 {
 }
 //#endregion 🔖️Declaration
@@ -1048,6 +1048,3 @@ pub mod viewer {
     }
 }
 
-//#region 📚️Examples
-pub use standards::v1::subsets::any::examples;
-//#endregion 📚️Examples

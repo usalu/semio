@@ -35,7 +35,7 @@ async fn composite_flattens_a_pixel_layer_back_to_its_own_canvas() {
 #[semio_framework_async_macros::async_test]
 async fn composite_refuses_a_visible_adjustment_layer_with_a_reason() {
     let mut document = document_with_solid_layer(1, 2, 3, 255, 2, 2);
-    document.layers.push(crate::schema::create_layer_of_kind("adjustment"));
+    document.layers.push(crate::standards::v1::subsets::any::schema::create_layer_of_kind("adjustment"));
     let error = raster_composite_image(&document).expect_err("adjustment layers must refuse");
     assert!(error.contains("adjustment layer"), "{error}");
 }
@@ -52,7 +52,7 @@ async fn composite_refuses_an_unknown_blend_mode_with_a_reason() {
 
 #[semio_framework_async_macros::async_test]
 async fn composite_refuses_a_document_with_nothing_to_flatten() {
-    let error = raster_composite_image(&crate::schema::empty_raster_snapshot()).expect_err("an empty document has no composite");
+    let error = raster_composite_image(&crate::standards::v1::subsets::any::schema::empty_raster_snapshot()).expect_err("an empty document has no composite");
     assert!(error.contains("nothing to flatten"), "{error}");
 }
 

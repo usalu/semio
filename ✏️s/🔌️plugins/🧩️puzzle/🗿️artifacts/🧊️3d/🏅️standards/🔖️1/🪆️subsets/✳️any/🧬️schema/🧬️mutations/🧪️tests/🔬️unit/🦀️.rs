@@ -144,7 +144,7 @@ fn connect_disconnect_vortices_inverse_law_and_cascade() {
     semio_framework::io::resolve_ready(assert_mutation_inverse_law(&connected, &disconnect_vortices("t1".into())));
     semio_framework::io::resolve_ready(assert_mutation_inverse_law(
         &connected,
-        &replace_attraction_geometry(crate::standards::v1::subsets::any::schema::mutations::ReplaceAttractionGeometry { id: "t1".into(), new_gap: 1.0, new_shift: 2.0, new_rise: 3.0, new_rotation: 4.0, new_turn: 5.0, new_tilt: 6.0, new_x: 7.0, new_y: 8.0 }),
+        &replace_attraction_geometry(ReplaceAttractionGeometry { id: "t1".into(), new_gap: 1.0, new_shift: 2.0, new_rise: 3.0, new_rotation: 4.0, new_turn: 5.0, new_tilt: 6.0, new_x: 7.0, new_y: 8.0 }),
     ));
     let deleted = delete_object("a".into());
     let after_delete = MutationDiff::<Puzzle3dSnapshot>::apply(deleted.diff(&connected).diff(), &connected).expect("valid mutation diff");

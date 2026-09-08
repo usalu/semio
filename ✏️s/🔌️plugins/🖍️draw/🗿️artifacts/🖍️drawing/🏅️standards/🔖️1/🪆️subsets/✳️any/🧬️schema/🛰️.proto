@@ -19,7 +19,6 @@ message DrawingArtifact {
   // @state presence
   repeated string selected_ids = 7;
   // @state presence
-  string active_utility_id = 8;
   // @state config
   string engagement_input = 9;
   // @state config

@@ -6,7 +6,7 @@ fn semantic_question_controls_match_the_language_neutral_vectors() {
     for vector in vectors["cases"].as_array().unwrap() {
         let question = &vector["question"];
         let question = crate::editor::forms::commands::add_question::question_shell(question["id"].as_str().unwrap().into(), question["label"].as_str().unwrap().into(), question["kind"].as_str().unwrap().into());
-        let node = render_try_question(&question, &Object::new(), &[], None, crate::editor::forms::terminology::forms_play_labels(&FormsConfig::default())).unwrap();
+        let node = render_try_question(&question, &Object::new(), &[], None, crate::editor::forms::terminology::forms_play_labels(&semio_framework_plugin::ViewModel::default())).unwrap();
         let control = if question.kind == "note" { &node } else { node.children.get(0).unwrap() };
         let actual = serde_json::to_value(control).unwrap();
         assert_eq!(actual["component"]["type"], vector["component"], "{}", question.kind);

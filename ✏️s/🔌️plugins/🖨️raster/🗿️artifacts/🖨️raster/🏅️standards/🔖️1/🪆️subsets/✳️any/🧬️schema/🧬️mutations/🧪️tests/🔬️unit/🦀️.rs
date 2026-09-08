@@ -1,6 +1,6 @@
 
 use super::*;
-use crate::schema::{empty_raster_snapshot, layer_name, layer_visible};
+use crate::standards::v1::subsets::any::schema::{empty_raster_snapshot, layer_name, layer_visible};
 use crate::{RASTER_DOCUMENT_SCHEMA, RasterImageAsset, RasterLayerMask, RasterLayerNode, RasterOwnedMap, RasterTransform};
 use protocol::Mutation;
 
@@ -111,7 +111,7 @@ async fn reorder_layer_into_group_round_trip() {
     let moved = round_trip(&snapshot, &RasterMutation::ReorderLayers(reorder_layers::ReorderLayers { layer_id: "l1".into(), parent_id: Some("g1".into()), index: 0 }));
     let RasterLayerNode::Group { children, .. } = &moved.layers[0] else { panic!("expected group") };
     assert_eq!(children.len(), 1);
-    assert_eq!(crate::schema::layer_node_id(&children[0]), "l1");
+    assert_eq!(crate::standards::v1::subsets::any::schema::layer_node_id(&children[0]), "l1");
 }
 
 #[semio_framework_async_macros::async_test]

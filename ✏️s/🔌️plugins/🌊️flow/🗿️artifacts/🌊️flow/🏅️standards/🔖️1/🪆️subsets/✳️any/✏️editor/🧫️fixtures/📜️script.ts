@@ -151,13 +151,13 @@ console.log("[DEBUG] Flow artifact recipe fixtures=4 hostileRejections=4 semanti
 //#endregion 🧬️ArtifactRecipes
 
 //#region 🎚️ParameterIntent
-const parameter = await Bun.file(new URL("../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🎚️parameter/📨️intent/🧪️fixture/🔣️.json", import.meta.url)).json();
-const parameterSchema = await Bun.file(new URL("../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🎚️parameter/📨️intent/🔣️.schema.json", import.meta.url)).json();
-const parameterFixtureSchema = await Bun.file(new URL("../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🎚️parameter/📨️intent/🧪️fixture/🧬️.schema.json", import.meta.url)).json();
+const parameter = await Bun.file(new URL("../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🎚️parameter/📨️intent/🧪️fixture/🔣️.json", import.meta.url)).json();
+const parameterSchema = await Bun.file(new URL("../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🎚️parameter/📨️intent/🧬️schema/🔣️.json", import.meta.url)).json();
 const parameterAjv = new Ajv({ strict: true, allErrors: true });
 parameterAjv.addKeyword({ keyword: "x-semio-formats", metaSchema: { type: "array", items: { type: "string" } } });
-const validateParameter = parameterAjv.compile(parameterSchema);
-const validateParameterFixture = parameterAjv.compile(parameterFixtureSchema);
+parameterAjv.addSchema(parameterSchema);
+const validateParameter = parameterAjv.compile({ $ref: `${parameterSchema.$id}#/$defs/SetGraphParameterCommandV1` });
+const validateParameterFixture = parameterAjv.compile({ $ref: `${parameterSchema.$id}#/$defs/SetGraphParameterFixtureV1` });
 assert(validateParameterFixture(parameter));
 for (const row of parameter.cases) { assert(validateParameter(row)); assert.deepEqual(JSON.parse(stableStringify(row)), row); }
 for (const row of parameter.rejected) assert(!validateParameter(row));
@@ -253,7 +253,7 @@ for (const mutate of [
   mutate(mutant);
   assert(!validateLabels(mutant));
 }
-const artifactSource = await Bun.file(new URL("../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifact/🦀️.rs", import.meta.url)).text();
+const artifactSource = await Bun.file(new URL("../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🧬️schema/📸️snapshot/🦀️.rs", import.meta.url)).text();
 assert.match(artifactSource, /InputSlider\s*\{\s*id: String,\s*label: String,/);
 assert.match(artifactSource, /Widget::InputSlider \{ label, \.\. \} => \(label\.clone\(\), label\.clone\(\)/);
 //#endregion 🏷️AuthoredSliderLabels
@@ -338,7 +338,6 @@ assetSnapshots.push(JSON.parse(demo.slice(demo.indexOf("\n") + 1)));
 for (const snapshot of assetSnapshots) {
   assert.equal(typeof snapshot.content.childId, "string");
   const exactTarget = new Ajv({ strict: true }).compile({ const: { artifactId: snapshot.content.childId, dialect: identity.dialect } });
-  exactTarget.addKeyword({ keyword: "x-semio-formats", metaSchema: { type: "array", items: { type: "string" } } });
   assert(exactTarget(snapshot.content.target), JSON.stringify(exactTarget.errors));
 }
 console.log(`[DEBUG] Flow persisted parent child/target equality: ${assetSnapshots.length} source assets checked with AJV; payload availability unverified`);
@@ -346,7 +345,6 @@ for (const row of identity.cases) {
   const childId = identity.childIdPrefix + row.expectedSha256;
   const exact = { artifactId: childId, dialect: identity.dialect };
   const validator = new Ajv({ strict: true }).compile({ const: exact });
-  validator.addKeyword({ keyword: "x-semio-formats", metaSchema: { type: "array", items: { type: "string" } } });
   assert(validator(exact));
   assert(!validator({ ...exact, artifactId: "flow-content" }));
   assert(!validator({ ...exact, dialect: { ...identity.dialect, artifactKind: "s.stdio.semio.flow" } }));
@@ -368,7 +366,7 @@ for (const row of identity.cases) {
     assert.equal(hash.digest("hex"), row.expectedSha256);
   }
 }
-const retainedIdentitySource = await Bun.file(new URL("../🧵️retained/🗿️artifact/🦀️.rs", import.meta.url)).text();
+const retainedIdentitySource = await Bun.file(new URL("../🧵️retained/🗿️artifact/🧪️tests/🔬️unit/🦀️.rs", import.meta.url)).text();
 assert(retainedIdentitySource.includes("fn retire_child_local_owner("));
 assert(retainedIdentitySource.includes("derived.child_id"));
 assert.equal((retainedIdentitySource.match(/take_local_owner::<FlowWorkingScene>/g) ?? []).length >= 2, true);
@@ -376,8 +374,9 @@ const duplicateRoot = new URL("../../🧬️schema/🧬️mutations/👯️dupli
 const duplicateSource = await Bun.file(new URL("🦀️.rs", duplicateRoot)).text();
 const duplicateFixture = await Bun.file(new URL("🧪️tests/🚫️rejects-duplicating-6d209e/🦠️mutation/🔣️.json", duplicateRoot)).json();
 const duplicateModule = await Bun.file(new URL("🧬️schema/🔣️.json", duplicateRoot)).json();
-const validateDuplicate = new Ajv({ strict: true, allErrors: true }).addSchema(duplicateModule).compile({ $ref: `${duplicateModule.$id}#` });
-validateDuplicate.addKeyword({ keyword: "x-semio-formats", metaSchema: { type: "array", items: { type: "string" } } });
+const duplicateAjv = new Ajv({ strict: true, allErrors: true });
+duplicateAjv.addKeyword({ keyword: "x-semio-formats", metaSchema: { type: "array", items: { type: "string" } } });
+const validateDuplicate = duplicateAjv.addSchema(duplicateModule).compile({ $ref: `${duplicateModule.$id}#` });
 const { mutation: duplicateMutation, ...duplicatePayload } = duplicateFixture;
 assert(duplicateSource.includes('#[value(rename_all = "camelCase")]'));
 assert.equal(duplicateMutation, "duplicateWidget");
@@ -450,7 +449,7 @@ assert(await documentOwnerFile.exists(), "Flow document owner catalog must live 
 const documentOwnerSource = await documentOwnerFile.text();
 assert(!documentOwnerSource.includes("crate::editor"), "Flow document ownership must not import an editor");
 assert(documentOwnerSource.includes("pub fn store_owners("), "the domain declares its exact reusable document catalog");
-assert(editorOwnerSource.includes("crate::artifacts::flow::retirement::store_owners()"), "the editor must use the same domain catalog as viewers");
+assert(editorOwnerSource.includes("crate::retirement::store_owners()"), "the editor must use the same domain catalog as viewers");
 //#endregion 🗃️SharedDocumentOwnerAuthority
 //#region 👁️ViewerOwnerAuthority
 const viewerOwners = await Bun.file(new URL("../../👁️viewer/🧫️fixtures/🧹️owners/🔣️.json", import.meta.url)).json();
@@ -462,7 +461,7 @@ assert(!viewerOwnerSource.includes("crate::editor"), "the viewer must not import
 for (const hook of ["build_document_store_owners", "build_config_store_owners", "build_document_store_disposer", "build_config_store_disposer", "build_presence_store_disposer", "build_transient_store_disposer"]) {
   assert(viewerOwnerSource.includes(`fn ${hook}(`), `Flow viewer must explicitly supply ${hook}`);
 }
-assert(viewerOwnerSource.includes("crate::artifacts::flow::retirement::store_owners()"));
+assert(viewerOwnerSource.includes("crate::retirement::store_owners()"));
 const flowPluginSource = await Bun.file(new URL("../../../../../../../../🦀️.rs", import.meta.url)).text();
 assert(flowPluginSource.includes(".viewer_with_members::<crate::viewer::flow::FlowViewer, semio_s_artifact_stdio_semio::SemioMembers>"));
 console.log("[DEBUG] Flow viewer five-lane contract rejects write authority; native VCS lifecycle remains separate");
@@ -470,8 +469,9 @@ console.log("[DEBUG] Flow viewer five-lane contract rejects write authority; nat
 //#region 🏭️PublicSurfaceOwners
 const surfaceOwners = await Bun.file(new URL("../../../../../../../../🧫️fixtures/🧹️surface-owners/🔣️.json", import.meta.url)).json();
 const flowPluginSchemaModule = await Bun.file(new URL("../../../../../../../../🧬️schema/🔣️.json", import.meta.url)).json();
-const validateSurfaceOwners = new Ajv({ strict: true, allErrors: true }).addSchema(flowPluginSchemaModule).compile({ $ref: `${flowPluginSchemaModule.$id}#/$defs/FlowSurfaceOwners` });
-validateSurfaceOwners.addKeyword({ keyword: "x-semio-formats", metaSchema: { type: "array", items: { type: "string" } } });
+const surfaceOwnersAjv = new Ajv({ strict: true, allErrors: true });
+surfaceOwnersAjv.addKeyword({ keyword: "x-semio-formats", metaSchema: { type: "array", items: { type: "string" } } });
+const validateSurfaceOwners = surfaceOwnersAjv.addSchema(flowPluginSchemaModule).compile({ $ref: `${flowPluginSchemaModule.$id}#/$defs/FlowSurfaceOwners` });
 assert(validateSurfaceOwners(surfaceOwners), JSON.stringify(validateSurfaceOwners.errors));
 assert.deepEqual(JSON.parse(stableStringify(surfaceOwners)), surfaceOwners);
 assert(flowPluginSource.includes(`.package_id("${surfaceOwners.package}")`));
@@ -482,7 +482,8 @@ for (const changed of [
   { ...surfaceOwners, roles: ["viewer"] }, { ...surfaceOwners, byteGrants: [0, 64, 4096] },
   { ...surfaceOwners, members: "s.stdio.semio@v1/base" }, { ...surfaceOwners, expected: { ...surfaceOwners.expected, terminalEmpty: false } },
 ]) assert(!validateSurfaceOwners(changed));
-assert(flowPluginSource.includes("async fn flow_actual_surface_factories_close_all_owners_under_neutral_grants("), "both real Flow surface factories require the shared native lifecycle law");
+const flowSurfaceTestSource = await Bun.file(new URL("../../../../../../../../🧪️tests/🔬️surface/🦀️.rs", import.meta.url)).text();
+assert(flowSurfaceTestSource.includes("async fn flow_actual_surface_factories_close_all_owners_under_neutral_grants("), "both real Flow surface factories require the shared native lifecycle law");
 console.log("[DEBUG] Flow surface-owner oracle: 2 real factory roles, 3 byte grants, 4 hostile contracts; native factory execution remains separate");
 //#endregion 🏭️PublicSurfaceOwners
 console.log("[DEBUG] Flow source fixtures=" + fixture.cases.length + " hostileRejections=" + rejected + " runtimeClaims=0");

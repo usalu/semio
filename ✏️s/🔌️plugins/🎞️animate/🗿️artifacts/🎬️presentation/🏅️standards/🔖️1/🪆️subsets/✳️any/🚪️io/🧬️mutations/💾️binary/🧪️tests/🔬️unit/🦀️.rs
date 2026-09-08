@@ -1,7 +1,7 @@
 
 use super::*;
-use crate::schema::mutations::PresentationMutation;
-use crate::schema::mutations::{create_tile, replace_tiles};
+use crate::standards::v1::subsets::any::schema::mutations::PresentationMutation;
+use crate::standards::v1::subsets::any::schema::mutations::{create_tile, replace_tiles};
 use store::{ArtifactCommand, os_store::test_support};
 
 struct PresentationProjectionFixtureTarget {

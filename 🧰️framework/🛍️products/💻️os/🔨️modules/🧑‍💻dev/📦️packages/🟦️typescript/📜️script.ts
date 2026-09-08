@@ -1419,14 +1419,32 @@ class ServeScript extends BundleScript {
   }
 }
 
+/** @emoji ♻️ Brings one playground variant's react runtime up to a publishable activation receipt by
+ * running the Nx target that OWNS that closure — `activate-<variant>-react-<profile>`, whose declared
+ * `dependsOn` (`…🦑️repo/🔨️modules/📚️library/🟨️.mjs` `playgroundPreparationTargets`) is the single
+ * source of truth for the chain: every selected plugin's `component-<profile>` → `materialize-<profile>`,
+ * `@semio-tech/framework-plugin-web:support-<profile>`, `semio-framework-os-infinite:fonts`, the engine
+ * `wasm` producers, `@semio-tech/plugin-registry:session-<variant>`, then `prepare` and `activate`.
+ * Delegating rather than re-listing that closure here is what makes "reuse whatever is already fresh"
+ * Nx's cache decision instead of a second, drifting freshness rule. */
+async function activatePlaygroundRuntime(variant: string, profile: "dev" | "release"): Promise<void> {
+  const target = `@semio-tech/framework-os-dev:activate-${variant}-react-${profile}`;
+  console.log(`[dev] activating ${variant} react ${profile} via ${target}`);
+  if (runCmdStatus("bun", ["nx", "run", target], { cwd: repoRoot, budgetMs: buildBudgetMs() }) !== 0) throw new Error(`Playground activation failed: ${target}`);
+}
+
 class DevScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    const variantSegment = segments[0] && !segments[0].startsWith("-") ? segments[0] : undefined;
-    const serverArgs = variantSegment ? segments.slice(1) : segments;
+    const served = segments.includes("served");
+    const selectors = segments.filter((segment) => segment !== "served");
+    const variantSegment = selectors[0] && !selectors[0].startsWith("-") ? selectors[0] : undefined;
+    const serverArgs = variantSegment ? selectors.slice(1) : selectors;
     const plugin = variantSegment === "multi" ? DEFAULT_HOST_VARIANT : variantSegment ?? process.env.SEMIO_PLUGIN ?? process.env.PLAYGROUND_APP_KIND ?? DEFAULT_HOST_VARIANT;
     const renderer = variantSegment === "multi" ? "react" : process.env.SEMIO_RENDERER ?? "react";
     if (renderer === "react") {
-      await new ServeScript(this.root).run([plugin, renderer, semioBuildMode() === "ship" ? "release" : "dev", ...serverArgs]);
+      const profile = semioBuildMode() === "ship" ? "release" : "dev";
+      if (!served) await activatePlaygroundRuntime(plugin, profile);
+      await new ServeScript(this.root).run([plugin, renderer, profile, ...serverArgs]);
       return;
     }
     if (renderer !== "wgpu") throw new Error(`Unknown development renderer: ${renderer}`);
@@ -2626,14 +2644,15 @@ async function collabPrebuildPlugins(): Promise<void> {
   }
 }
 
-/** ▶️ Spawns one user's `s` react dev server (`SKIP_PLUGIN_BUILD=1` — never touches cargo, only serves
- * whatever `collabPrebuildPlugins` already produced) and waits for its port to accept connections. */
+/** ▶️ Spawns one user's `s` react dev server and waits for its port to accept connections. `dev` means
+ * activate-then-serve, so the Nx activation chain reuses whatever `collabPrebuildPlugins` already
+ * produced and only supplies the profiled browser modules and the receipt `ServeScript` demands. */
 async function collabStartUserDevServer(opts: { readonly port: number; readonly hubUrl: string; readonly user: string; readonly dataDir: string; readonly logPath: string }): Promise<SpawnDaemonHandle> {
   const devScript = join(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📜️script.ts");
   const logStream = createWriteStream(opts.logPath);
   const daemon = spawnDaemon("bun", [devScript, "dev"], {
     cwd: join(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript"),
-    env: { ...process.env, SKIP_PLUGIN_BUILD: "1", SEMIO_PLUGIN: "s", SEMIO_RENDERER: "react", S_OS_PORT: String(opts.port), S_HUB_URL: opts.hubUrl, S_USER: opts.user, S_DATA_DIR: opts.dataDir },
+    env: { ...process.env, SEMIO_PLUGIN: "s", SEMIO_RENDERER: "react", S_OS_PORT: String(opts.port), S_HUB_URL: opts.hubUrl, S_USER: opts.user, S_DATA_DIR: opts.dataDir },
     stdio: "pipe",
   });
   daemon.child.stdout?.pipe(logStream);
@@ -4129,7 +4148,6 @@ async function startParityDevServer(renderer: ParityRenderer, variant: string, p
     cwd: join(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript"),
     env: {
       ...process.env,
-      SKIP_PLUGIN_BUILD: "1",
       SEMIO_PLUGIN: variant,
       SEMIO_RENDERER: renderer,
       SEMIO_PARITY_QUIET_CARGO: "1",

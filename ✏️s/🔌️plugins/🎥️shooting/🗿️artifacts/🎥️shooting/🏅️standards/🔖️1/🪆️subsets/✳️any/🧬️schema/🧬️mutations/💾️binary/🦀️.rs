@@ -15,7 +15,7 @@ pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️.protocol.semio"
 pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.protocol.semio");
 //#endregion 📡️SemioProtocol
 
-use crate::schema::mutations::text::ShootingMutation;
+use crate::standards::v1::subsets::any::schema::mutations::text::ShootingMutation;
 use protocol::OpBinary;
 
 /// 📦️ Encodes a `ShootingMutation` to its binary state-patch form.

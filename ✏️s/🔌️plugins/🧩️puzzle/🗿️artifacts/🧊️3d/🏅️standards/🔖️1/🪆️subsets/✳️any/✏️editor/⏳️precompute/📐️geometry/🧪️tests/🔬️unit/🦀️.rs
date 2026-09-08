@@ -363,6 +363,22 @@ fn spatial_capacity_plus_one_refusal_preserves_exact_old_state() {
 }
 
 #[test]
+fn spatial_entries_admit_document_scale_beyond_one_cell_member_bucket() {
+    let mut index = CollisionSpatialIndex::new(8.0);
+    let installed = 4 * FIXED_OWNER_SLOTS;
+    for value in 0..installed {
+        let coordinate = value as f32 * 64.0;
+        assert!(index.install_for_test(&format!("document-{value:03}"), CollisionAabb { min: [coordinate; 3], max: [coordinate + 0.5; 3] }), "entry {value} beyond the bookkeeping batch must still be admitted");
+    }
+    let witness = index.fixed_backing_witness_for_test();
+    assert_eq!((witness[0].2, witness[2].2), (installed, 0));
+    assert!(witness[1].2 >= installed, "each document entry owns at least one cell");
+    for (page, (_, bytes, _)) in witness.into_iter().enumerate() {
+        assert!(bytes <= DOCUMENT_OWNER_PAGE_BYTES, "spatial page {page} claims {bytes} bytes beyond the declared document page ceiling");
+    }
+}
+
+#[test]
 fn spatial_stale_owner_cannot_finish_partial_replacement() {
     let mut index = CollisionSpatialIndex::new(1.0);
     let old = CollisionAabb { min: [0.0; 3], max: [0.2; 3] };
@@ -484,4 +500,22 @@ fn overlap_sample_steps_stay_within_interaction_watchdog() {
         assert!(started.elapsed() < Duration::from_millis(8), "one-sample collision step exceeded the 8 ms interaction ceiling");
         assert!(matches!(result, CollisionStepResult::Pending | CollisionStepResult::Complete { .. }));
     }
+}
+
+#[test]
+fn document_scale_capacities_are_derived_from_the_fill_ceiling_not_the_bookkeeping_batch() {
+    assert!(DOCUMENT_OBJECT_SLOTS >= crate::editor::puzzle3d::precompute::FILL_COUNT_MAX + 1024, "objects must hold a full plan on top of a large scene");
+    assert_eq!((DOCUMENT_VORTEX_SLOTS, DOCUMENT_ATTRACTION_SLOTS, DOCUMENT_CELL_SLOTS), (2 * DOCUMENT_OBJECT_SLOTS, DOCUMENT_OBJECT_SLOTS, 4 * DOCUMENT_OBJECT_SLOTS));
+    assert_eq!((DOCUMENT_VOLUME_SLOTS, DOCUMENT_CANDIDATE_SLOTS), (DOCUMENT_KIND_SLOTS, 4 * DOCUMENT_KIND_SLOTS));
+    for (slots, page) in [
+        (DOCUMENT_OBJECT_SLOTS, FixedOwnerVec::<crate::standards::v1::subsets::any::schema::FixtureObject, DOCUMENT_OBJECT_SLOTS>::page_bytes()),
+        (DOCUMENT_ATTRACTION_SLOTS, FixedOwnerVec::<crate::standards::v1::subsets::any::schema::AttractionProps, DOCUMENT_ATTRACTION_SLOTS>::page_bytes()),
+        (DOCUMENT_VOLUME_SLOTS, FixedOwnerVec::<WorldVolumeProps, DOCUMENT_VOLUME_SLOTS>::page_bytes()),
+        (DOCUMENT_OBJECT_SLOTS, FixedOwnerMap::<String, CollisionAabb, DOCUMENT_OBJECT_SLOTS>::page_bytes()),
+        (DOCUMENT_CELL_SLOTS, FixedOwnerMap::<(i32, i32, i32), FixedOwnerSet<String>, DOCUMENT_CELL_SLOTS>::page_bytes()),
+        (DOCUMENT_VORTEX_SLOTS, FixedOwnerMap::<String, (), DOCUMENT_VORTEX_SLOTS>::page_bytes()),
+    ] {
+        assert!(page > 0 && page <= DOCUMENT_OWNER_PAGE_BYTES, "a {slots}-slot document page claims {page} bytes beyond the declared ceiling");
+    }
+    assert!(FixedOwnerMap::<(i32, i32, i32), FixedOwnerSet<String>, DOCUMENT_CELL_SLOTS>::page_bytes() + DOCUMENT_CELL_SLOTS * FixedOwnerMap::<String, ()>::page_bytes() <= 8 * 1024 * 1024, "fully occupied cells keep their lazily allocated member buckets bounded");
 }

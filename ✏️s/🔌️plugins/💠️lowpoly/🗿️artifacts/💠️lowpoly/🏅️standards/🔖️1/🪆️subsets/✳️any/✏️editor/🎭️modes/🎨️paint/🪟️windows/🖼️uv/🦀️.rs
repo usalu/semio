@@ -24,7 +24,7 @@ pub const LOWPOLY_UV_ACTIONS: &[&str] = &["addPaintLayer", "paintStrokeEnd", "pa
 pub fn definition() -> WindowKindDefinition {
     let projection = crate::schema::default_snapshot();
     let config = LowpolyConfig::default();
-    let labels = semio_framework_plugin::resolve_labels_for_locale::<LowpolyLabels>("en-US");
+    let labels = semio_framework_plugin::resolve_labels::<LowpolyLabels>(&semio_framework_plugin::ViewModel::default());
     let engagement = lowpoly_window_engagement(LowpolyView { snapshot: &projection, config: &config }, LOWPOLY_TRANSFORM_UTILITY_DEFAULT, labels);
     WindowKindDefinition {
         id: LOWPOLY_PLAY_WINDOW_UV.into(),

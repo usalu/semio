@@ -30,7 +30,6 @@ message JackDiff {
   // @state config
   optional Camera viewport_camera = 14;
   // @state config
-  optional string jack_result_json = 15;
   // @state config
   // @state config
   // @state config

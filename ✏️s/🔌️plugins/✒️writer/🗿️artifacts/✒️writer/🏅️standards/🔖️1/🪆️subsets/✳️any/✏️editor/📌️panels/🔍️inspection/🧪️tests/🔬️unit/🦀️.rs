@@ -18,12 +18,3 @@ async fn writer_labels_resolve_native_by_default() {
     assert!(inspection.contains("\"Camera\""));
 }
 
-#[semio_framework_async_macros::async_test]
-async fn writer_labels_resolve_german_locale() {
-    let mut app = new_app().await;
-    dispatch(&mut app, WriterCommand::SetLocale(crate::editor::writer::commands::set_locale::SetLocale { value: "de".into() })).await;
-    let inspection = render_body(&mut app, WRITER_PLAY_BODY_INSPECTION).await;
-    assert!(inspection.contains("Dokument"));
-    assert!(inspection.contains("Kamera"));
-    assert!(!inspection.contains("\"Camera\""));
-}

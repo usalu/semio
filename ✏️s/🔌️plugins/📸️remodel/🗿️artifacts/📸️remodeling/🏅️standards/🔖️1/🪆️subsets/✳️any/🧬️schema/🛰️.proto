@@ -27,7 +27,6 @@ message RemodelingArtifact {
   // @state presence
   RemodelingUiSelection selection = 11;
   // @state presence
-  string active_utility_id = 12;
   // @state presence
   string report_table = 13;
   // @state presence

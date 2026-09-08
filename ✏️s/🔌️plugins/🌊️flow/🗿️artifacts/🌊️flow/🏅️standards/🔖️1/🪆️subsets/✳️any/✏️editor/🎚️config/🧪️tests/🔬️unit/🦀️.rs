@@ -11,7 +11,6 @@ async fn flow_config_default_matches_flow_play_runtime_defaults() {
     assert!(!config.grid_snap_enabled);
     assert_eq!(config.grid_factor, FLOW_DEFAULT_GRID_FACTOR);
     assert_eq!(config.catalogue_sections_json, "[]");
-    assert_eq!(config.locale, "en-US");
     assert_eq!(config.automation_enabled(), HashMap::new());
     assert_eq!(config.generation(), GenerationPlayState::default());
 }
@@ -32,14 +31,13 @@ async fn flow_config_dsl_pack_round_trip() {
         contributions_json: "[]".into(),
         generation_json: "{\"generations\":[]}".into(),
         duplicate_widget_progress_json: String::new(),
-        locale: "de-DE".into(),
-    };
+        };
     store::os_store::test_support::assert_dsl_pack_equivalence(&config);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn flow_config_operation_text_binary_round_trips_every_variant() {
-    store::os_store::test_support::assert_op_line_round_trip(&FlowConfigMutation::Snapshot { config: FlowConfig { locale: "de-DE".into(), ..FlowConfig::default() } });
+    store::os_store::test_support::assert_op_line_round_trip(&FlowConfigMutation::Snapshot { config: FlowConfig { ..FlowConfig::default() } });
     store::os_store::test_support::assert_op_line_round_trip(&FlowConfigMutation::SetPreviewOff { node_ids: vec!["n1".into()] });
     store::os_store::test_support::assert_op_line_round_trip(&FlowConfigMutation::SetCamera { camera: CameraJson { x: 1.0, y: 2.0, zoom: 3.0 } });
     store::os_store::test_support::assert_op_line_round_trip(&FlowConfigMutation::SetLodMode { value: "micro".into() });
@@ -52,12 +50,11 @@ async fn flow_config_operation_text_binary_round_trips_every_variant() {
     store::os_store::test_support::assert_op_line_round_trip(&FlowConfigMutation::SetGeneration { json: "{\"generations\":[]}".into() });
     store::os_store::test_support::assert_op_line_round_trip(&FlowConfigMutation::SetDuplicateWidgetProgress { json: "{\"generation\":7}".into() });
     store::os_store::test_support::assert_op_line_round_trip(&FlowConfigMutation::CancelDuplicateWidget { generation: 7 });
-    store::os_store::test_support::assert_op_line_round_trip(&FlowConfigMutation::SetLocale { value: "de-DE".into() });
 }
 
 #[semio_framework_async_macros::async_test]
 async fn flow_config_operation_backwards_restores_the_pre_operation_snapshot() {
-    let base = FlowConfig { locale: "en-US".into(), ..FlowConfig::default() };
+    let base = FlowConfig { ..FlowConfig::default() };
     let operation = FlowConfigMutation::SetPreviewOff { node_ids: vec!["n2".into()] };
     let forward = operation.diff(&base).into_parts().0;
     assert_eq!(forward.preview_off_node_ids, vec!["n2".to_string()]);

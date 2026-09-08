@@ -15,7 +15,7 @@ async fn renders_try_wizard() {
 #[semio_framework_async_macros::async_test]
 async fn image_question_with_url_src_emits_image_node() {
     let question = FormQuestion { src: Some("https://example.com/picture.png".into()), ..crate::editor::forms::commands::add_question::question_shell("q-image".into(), "Picture".into(), "image".into()) };
-    let node = render_try_question(&question, &Object::new(), &[], None, crate::editor::forms::terminology::forms_play_labels(&FormsConfig::default()));
+    let node = render_try_question(&question, &Object::new(), &[], None, crate::editor::forms::terminology::forms_play_labels(&semio_framework_plugin::ViewModel::default()));
     let json = serde_json::to_string(&node.expect("semantic component")).expect("component JSON");
     assert!(json.contains(r#""type":"image""#));
     assert!(json.contains("https://example.com/picture.png"));
@@ -23,7 +23,7 @@ async fn image_question_with_url_src_emits_image_node() {
 
 #[semio_framework_async_macros::async_test]
 async fn extension_question_emits_external_slot_when_contribution_registered() {
-    let node = render_try_question(&building_component_question(), &Object::new(), &building_component_contributions(), None, crate::editor::forms::terminology::forms_play_labels(&FormsConfig::default()));
+    let node = render_try_question(&building_component_question(), &Object::new(), &building_component_contributions(), None, crate::editor::forms::terminology::forms_play_labels(&semio_framework_plugin::ViewModel::default()));
     let json = serde_json::to_string(&node.expect("semantic component")).expect("component JSON");
     assert!(json.contains("\"type\":\"extension\""));
     assert!(json.contains("forms-module-procedural"));
@@ -31,7 +31,7 @@ async fn extension_question_emits_external_slot_when_contribution_registered() {
 
 #[semio_framework_async_macros::async_test]
 async fn extension_question_falls_back_without_contribution() {
-    let node = render_try_question(&building_component_question(), &Object::new(), &[], None, crate::editor::forms::terminology::forms_play_labels(&FormsConfig::default()));
+    let node = render_try_question(&building_component_question(), &Object::new(), &[], None, crate::editor::forms::terminology::forms_play_labels(&semio_framework_plugin::ViewModel::default()));
     let json = serde_json::to_string(&node.expect("semantic component")).expect("component JSON");
     assert!(json.contains("Extension unavailable"));
 }

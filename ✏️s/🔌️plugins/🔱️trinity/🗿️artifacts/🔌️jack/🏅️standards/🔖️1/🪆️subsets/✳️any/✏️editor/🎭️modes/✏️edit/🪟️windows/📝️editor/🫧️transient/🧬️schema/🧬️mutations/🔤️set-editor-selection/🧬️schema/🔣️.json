@@ -1,0 +1,20 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/app/trinity/jack/transient/mutation/set-editor-selection/schema.json",
+  "title": "SetEditorSelection",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["windowId", "selection"],
+  "properties": {
+    "windowId": { "type": "string", "minLength": 1 },
+    "selection": {
+      "type": ["object", "null"],
+      "additionalProperties": false,
+      "required": ["start", "end"],
+      "properties": {
+        "start": { "type": "integer", "minimum": 0 },
+        "end": { "type": "integer", "minimum": 0 }
+      }
+    }
+  }
+}

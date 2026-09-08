@@ -56,7 +56,7 @@ impl DiffAlgebra<i64> for CounterDiff {
 //#endregion 🔺️StructuralDiff
 
 //#region 🧬️Mutations
-#[path = "../🧬️mutation-laws-mutations/🦀️.rs"]
+#[path = "🧬️mutations/🦀️.rs"]
 pub mod mutations;
 pub use mutations::*;
 //#endregion 🧬️Mutations

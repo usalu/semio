@@ -103,14 +103,14 @@ async fn space_document_persists_through_backbone_port() {
 /// KNOWN directory event (deterministic, independent of the global catalog) and assert on the
 /// locale-correct COLUMN HEADERS instead — the real thing "labels resolve to the right locale" means
 /// for a table.
-async fn config_with_one_folded_space(locale: &str) -> HomeConfig {
+async fn config_with_one_folded_space() -> HomeConfig {
     let event_json = pack::json!({
         "seq": 1, "id": "evt-1", "hlc": {"physicalMs": 0, "logical": 0}, "actor": {"kind": "user", "id": "u"}, "spaceId": "sp-1",
         "body": {"kind": "space.created", "spaceId": "sp-1", "name": "Fixture", "spaceKind": "atelier", "visibility": "private", "ownerUserId": "u1"},
         "recordedAtMs": 1000
     })
     .to_string();
-    let base = HomeConfig { locale: locale.into(), ..HomeConfig::default() };
+    let base = HomeConfig::default();
     protocol::Mutation::diff(&HomeConfigMutation::FoldDirectoryEvent { event_json }, &base).diff().clone()
 }
 
@@ -119,9 +119,9 @@ async fn home_labels_resolve_native_english_by_default() {
     let history = empty_history();
     let home_doc = SHomeSnapshot { schema: "s.home".into(), catalog_generation: 0 };
     let home_view = ArtifactView::new(&home_doc, &history);
-    let config = config_with_one_folded_space("en-US").await;
+    let config = config_with_one_folded_space().await;
     let cfg = ConfigView { snapshot: &config };
-    let home_node = HomeApp::render(crate::editor::home::modes::explore::windows::main::S_HOME_BODY, &home_view, &cfg).expect("English Home assembly");
+    let home_node = HomeApp::render(crate::editor::home::modes::explore::windows::main::S_HOME_BODY, &home_view, &cfg, &semio_framework_plugin::ViewModel::default()).expect("English Home assembly");
     let json = semio_framework_plugin::testkit::project_and_retire_fixture_tree(home_node).expect("English Home tree projection");
     assert!(json.contains("Updated"), "English column header must resolve: {json}");
     assert!(json.contains("Fixture"), "the folded space's name must render: {json}");
@@ -132,9 +132,10 @@ async fn home_labels_resolve_native_german_locale() {
     let history = empty_history();
     let home_doc = SHomeSnapshot { schema: "s.home".into(), catalog_generation: 0 };
     let home_view = ArtifactView::new(&home_doc, &history);
-    let config = config_with_one_folded_space("de").await;
+    let config = config_with_one_folded_space().await;
     let cfg = ConfigView { snapshot: &config };
-    let home_node = HomeApp::render(crate::editor::home::modes::explore::windows::main::S_HOME_BODY, &home_view, &cfg).expect("German Home assembly");
+    let view_state = semio_framework_plugin::ViewModel { locale: semio_framework_plugin::Locale::De, ..Default::default() };
+    let home_node = HomeApp::render(crate::editor::home::modes::explore::windows::main::S_HOME_BODY, &home_view, &cfg, &view_state).expect("German Home assembly");
     let json = semio_framework_plugin::testkit::project_and_retire_fixture_tree(home_node).expect("German Home tree projection");
     assert!(json.contains("Aktualisiert"), "German column header must resolve: {json}");
     assert!(json.contains("Fixture"), "the folded space's name must render: {json}");

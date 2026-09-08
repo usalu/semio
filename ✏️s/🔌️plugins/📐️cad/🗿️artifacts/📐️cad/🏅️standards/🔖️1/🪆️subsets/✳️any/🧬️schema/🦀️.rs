@@ -100,8 +100,6 @@ pub struct CadArtifact {
     #[state(presence)]
     pub selected_primitive_kind: Option<String>,
     #[state(presence)]
-    pub active_utility_id: String,
-    #[state(presence)]
     pub active_example_id: Option<String>,
     #[state(config)]
     pub selection_method: String,
@@ -199,7 +197,6 @@ impl CadArtifact {
             selected_reference_id: None,
             selected_primitive_id: None,
             selected_primitive_kind: None,
-            active_utility_id: "dislocate".into(),
             active_example_id: None,
             selection_method: "rectangle".into(),
             engagement_input: String::new(),

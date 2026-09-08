@@ -28,9 +28,7 @@ async fn every_command_round_trips_through_text_and_binary() {
 
 /// ⚖️ LAW: the leading token of every printed op line is the row's `dsl` wire keyword — the exact
 /// `as` literal declared in the `app_commands!` invocation above. Unlike flow (where the wire
-/// keyword happens to be the kebab-cased command id everywhere except `setLocale`), layout's
 /// pre-existing `📡️protocol` crate deliberately shortened every `set*` view command's wire keyword
-/// (`setActivePage` → `active-page`, `setCamera` → `camera`, `setLocale` → `locale`) — carried
 /// forward verbatim, not a drift.
 #[semio_framework_async_macros::async_test]
 async fn every_printed_op_line_starts_with_the_rows_wire_keyword() {
@@ -38,7 +36,6 @@ async fn every_printed_op_line_starts_with_the_rows_wire_keyword() {
         match id {
             "setActivePage" => "active-page",
             "setCamera" => "camera",
-            "setLocale" => "locale",
             "focusPreflightIssue" => "focus-preflight-issue",
             "engagementInput" => "engagement-input",
             "canvasPointerDown" => "canvas-pointer-down",
@@ -98,7 +95,6 @@ pub(super) fn every_command() -> Vec<LayoutCommand> {
         LayoutCommand::CanvasDragOver(canvas_drag_over::CanvasDragOver { surface_id: Some("layout.play.blueprint".into()), kind: "rect".into(), x: 1.0, y: 2.0, width: 800.0, height: 600.0 }),
         LayoutCommand::CanvasDragLeave(canvas_drag_leave::CanvasDragLeave {}),
         LayoutCommand::SetCamera(set_camera::SetCamera { surface_id: None, camera: LayoutCamera { x: 1.0, y: 2.0, zoom: 1.5 } }),
-        LayoutCommand::SetLocale(set_locale::SetLocale { value: "de-DE".into() }),
         LayoutCommand::AddFrame(add_frame::AddFrame { kind: "rect".into(), x: Some(1.0), y: None }),
         LayoutCommand::AddPage(add_page::AddPage {}),
         LayoutCommand::PatchPage(patch_page::PatchPage { page_id: Some("page-1".into()), field: "width".into(), value: "300".into() }),
@@ -149,7 +145,7 @@ async fn window_kind_actions_scope_authoring_to_blueprint_only() {
 //#region 🔖️CrossCutting
 #[semio_framework_async_macros::async_test]
 async fn sample_fixture_parses() {
-    let doc = crate::dsl::parse_dsl(crate::dsl::LAYOUT_SAMPLE_TEXT).expect("sample fixture");
+    let doc = crate::standards::v1::subsets::any::schema::snapshot::text::parse_dsl(crate::standards::v1::subsets::any::schema::snapshot::text::LAYOUT_SAMPLE_TEXT).expect("sample fixture");
     assert_eq!(doc.schema, crate::LAYOUT_DOCUMENT_SCHEMA);
     assert!(!doc.pages.is_empty());
 }

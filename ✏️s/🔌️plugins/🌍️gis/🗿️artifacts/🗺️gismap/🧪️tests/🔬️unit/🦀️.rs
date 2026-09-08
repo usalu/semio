@@ -66,7 +66,7 @@ async fn language_neutral_vectors_match_geo_bounding_rect_oracle_and_stable_payl
         assert_eq!(first.validity, "valid");
         assert_eq!(first.quality, "exact");
         assert!(first.complete);
-        let inference = <crate::standards::v1::subsets::any::schema::inferences::GisMapInference as semio_framework_os_kernel::FromValue>::from_value(
+        let inference = <standards::v1::subsets::any::schema::inferences::GisMapInference as semio_framework_os_kernel::FromValue>::from_value(
             semio_framework_os_kernel::pack_rt::decode_wire_value(&first.canonical_payload).expect("canonical inference payload"),
         )
         .expect("typed inference");

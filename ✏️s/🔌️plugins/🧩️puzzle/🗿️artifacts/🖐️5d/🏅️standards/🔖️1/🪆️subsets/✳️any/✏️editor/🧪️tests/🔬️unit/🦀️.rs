@@ -670,7 +670,7 @@ async fn engagements_expose_no_utility_switch_options_for_either_window() {
 /// utility), never `WindowEngagementControl`s on the HUD — for both the 2D and 3D windows.
 #[semio_framework_async_macros::async_test]
 async fn fill_and_brush_params_are_tagged_utility_options_not_engagement_controls() {
-    let labels = puzzle5d_labels(&Puzzle5dConfig::default()).expect("default puzzle5d axes are explicit");
+    let labels = puzzle5d_labels(&semio_framework_plugin::ViewModel::default());
     let session = Puzzle5dPrecomputeSession::new();
     // 🪣️ Fill utility: the fill-count slider lives in a "fill"-tagged Utility Options group (per window),
     // NOT the engagement HUD.

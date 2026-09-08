@@ -60,12 +60,6 @@
         "layerId": "roads",
         "value": null
       }
-    },
-    {
-      "name": "locale",
-      "payload": {
-        "value": "de-DE"
-      }
     }
   ],
   "invalid": [

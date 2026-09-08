@@ -18,14 +18,17 @@ This report is a live acceptance ledger. The goal is still active; remaining nat
 | Norm package compile | All 15 standard artifacts and both direct FEM feature integrations compiled. |
 | Framework native runtime | Workflow Run 19, Workflow 37, Playbook 14, Flow 37, Space 4, Collection 4 tests passed in completed gates. |
 | DAG runtime | Existing 55-test gate and focused retirement regression passed. |
+| Rust PDF source-input isolation | All 8,914 path patterns across 31 transitive internal projects and generator prerequisites were checked with independent minimatch against actual JPG source; zero matches. Native cache/output execution remains pending. |
 | PDF package output/cache | Own-source edit invalidated cache; sibling JPG edit preserved PDF reuse; cached JS, declaration and referenced JSON restored byte-identically. |
 | Sequence declaration cache | A handwritten browser declaration edit caused an Nx cache miss; exact source restoration recovered the baseline task hash, and a local cache hit restored all three outputs. |
 | Sequence public package | Typed consumer and runtime import passed. Normal Nx prerequisite plus full browser, protocol oracle and both examples passed. |
 | GIS source oracles | Region-group 26 checks and durable three-store source/oracle checks passed; literal include audit found zero unresolved references after correction. |
 | Norm source oracles | Config and thirty-app surface inventories passed with independent AJV validation. |
+| Flow source laws | Complete source-fixture aggregate passed: retirement depth witnesses, command table, parameter and canonical schemas, ownership, child/target assets and all retained hostile cases. |
 | Space source laws | Projection persistence 11, interactive job catalog 23, event page ownership 27, and identity rows 54 checks passed. |
 | Fresh static audit | 99 artifacts plus 2 contracts, 40 TS packages, declaration-only artifact directories, dependency direction and static Nx/launch wiring confirmed. Identified persistent law routes have been corrected. |
 | TypeScript aggregate | All 40 artifact package Nx test targets passed. |
+| Registered stdio Nx contract | `@semio-tech/stdio-js:package-contract` passed on current sources: independent AJV cases, all 36 Cargo owners and valid source dependency graph. |
 | Repository package contract | Final current-source rerun passed after stdio parent mount cleanup: AJV positive/negative cases, 99 Rust artifacts, 40 TypeScript packages, complete Cargo/Nx ownership and acyclic dependencies. |
 | Launch generation | Normal generator prerequisite and plugin registry generation passed; contract, artifact selector and Sequence harness entries occur exactly once, with no stale stdio Cargo target. |
 | Native Nx prerequisites | Normal Forms graph/schema/UI/styling generator chain completed and reached its Cargo check; native check remains queued. |

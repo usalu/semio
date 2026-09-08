@@ -376,7 +376,7 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
 pub fn artifact<A: SequenceApplication>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<A> {
     use semio_framework_plugin::app::declarations::ArtifactDeclaration;
     use store::os_io::ArtifactKindId;
-    ArtifactDeclaration { kind: ArtifactKindId::parse("s.sequence.sequence").expect("canonical sequence.sequence kind"), localization: &[], standards: vec![crate::standards::v1::standard()] }
+    ArtifactDeclaration { kind: ArtifactKindId::parse("s.sequence.sequence").expect("canonical sequence.sequence kind"), localization: &[], standards: vec![standards::v1::standard()] }
 }
 
 /// 🧩️ App fleet capable of hosting this artifact's editor and viewer.
@@ -891,6 +891,3 @@ pub mod viewer {
     }
 }
 
-//#region 📚️Examples
-pub use standards::v1::subsets::any::examples;
-//#endregion 📚️Examples

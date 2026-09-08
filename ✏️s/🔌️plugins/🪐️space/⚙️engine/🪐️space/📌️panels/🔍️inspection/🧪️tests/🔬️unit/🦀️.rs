@@ -11,7 +11,7 @@ async fn inspector_tree_exposes_the_label_field_action() {
     let projection = demo_space_projection().await;
     let ids: Vec<String> = projection.graph.nodes.iter().take(2).map(|node| node.id.clone()).collect();
     let config = SpaceConfig::default();
-    let node = render(&projection, &ids, semio_framework_plugin::resolve_labels_for_locale::<SStudioLabels>(&config.locale)).expect("render");
+    let node = render(&projection, &ids, semio_framework_plugin::resolve_labels::<SStudioLabels>(&semio_framework_plugin::ViewModel::default())).expect("render");
     let json = semio_framework_plugin::testkit::project_and_retire_fixture_tree(semio_framework_plugin::ComponentTree { root: node }).expect("inspector tree projection");
     assert!(json.contains("s-play-inspector.app-instance.label"), "label field id must reach the tree: {json}");
     assert!(json.contains("patchAppInstances"), "label field action must reach the tree: {json}");

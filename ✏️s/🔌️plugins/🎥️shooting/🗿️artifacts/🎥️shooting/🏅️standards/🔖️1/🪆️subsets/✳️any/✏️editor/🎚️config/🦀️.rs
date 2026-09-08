@@ -17,8 +17,7 @@ use protocol::Mutation;
 /// method, center-model toggle, fit-revision counter, camera draft label, and the free/live viewport
 /// camera) — session-only view state now round-trips through the config `ArtifactStore` exactly like
 /// document content, with a real `backwards` per [`ShootingConfigMutation`] instead of never being
-/// VCS'd at all. `locale`/`active_utility_id` are the two view-state fields the shooting UI actually
-/// reads (`resolve_labels`/the transform-gumball utility) — see `crate::editor::shooting::render`.
+/// VCS'd at all. OS-owned locale and active utility are read from the projected `ViewModel`.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslArtifact)]
 #[value(rename_all = "camelCase", default)]
 #[dsl(extension = "shooting.config")]
@@ -46,9 +45,6 @@ pub struct ShootingConfig {
     /// 🎥️ The free/live viewport camera — session-only, never a document field.
     #[dsl(block)]
     pub camera: ShootingCamera,
-    /// 🧰️ The active transform-gumball utility for the scene window.
-    pub active_utility_id: String,
-    /// 🗣️ BCP-47 locale tag.
 }
 
 //#region 🔖️ArtifactCodec
@@ -106,7 +102,6 @@ impl Default for ShootingConfig {
             fit_revision: 0,
             camera_draft_label: String::new(),
             camera: ShootingCamera::default(),
-            active_utility_id: "move".into(),
         }
     }
 }

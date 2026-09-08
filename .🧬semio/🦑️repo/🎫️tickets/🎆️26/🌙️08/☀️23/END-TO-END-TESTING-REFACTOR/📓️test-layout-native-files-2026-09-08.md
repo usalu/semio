@@ -28,8 +28,8 @@
 - `♻️mit-bestand/🔎️recherche/_neo4j/netz/netz/tests/test_kanten_dauer.py` → `♻️mit-bestand/🔎️recherche/_neo4j/netz/netz/🧪️tests/⏳️kanten-dauer/🐍️.py`
 - `♻️mit-bestand/🔎️recherche/_neo4j/netz/netz/tests/test_pilot_images.py` → `♻️mit-bestand/🔎️recherche/_neo4j/netz/netz/🧪️tests/🖼️pilot-images/🐍️.py`
 - `♻️mit-bestand/🔎️recherche/_neo4j/netz/netz/tests/run_checks.py` → `♻️mit-bestand/🔎️recherche/_neo4j/netz/netz/🧪️tests/🪜️stage-regression/🐍️.py`
-- `♻️mit-bestand/🔎️recherche/_neo4j/netz/netz/tests/check_stage1.py` → `♻️mit-bestand/🔎️recherche/_neo4j/netz/netz/🧪️tests/🪜️stage-regression/🧫️fixtures/check_stage1.py`
-- `♻️mit-bestand/🔎️recherche/_neo4j/netz/netz/tests/check_stage2.py` → `♻️mit-bestand/🔎️recherche/_neo4j/netz/netz/🧪️tests/🪜️stage-regression/🧫️fixtures/check_stage2.py`
+- `♻️mit-bestand/🔎️recherche/_neo4j/netz/netz/tests/check_stage1.py` → `♻️mit-bestand/🔎️recherche/_neo4j/netz/netz/data/🧪️tests/🔬️stage-one-parity/🐍️.py`
+- `♻️mit-bestand/🔎️recherche/_neo4j/netz/netz/tests/check_stage2.py` → `♻️mit-bestand/🔎️recherche/_neo4j/netz/netz/model/🧪️tests/🔬️stage-two-parity/🐍️.py`
 - `♻️mit-bestand/🔎️recherche/_neo4j/netz/netz/tests/dump_snapshot.py` → `♻️mit-bestand/🔎️recherche/_neo4j/netz/netz/🧪️tests/🪜️stage-regression/🧫️fixtures/dump_snapshot.py`
 - `♻️mit-bestand/🔎️recherche/_neo4j/netz/netz/tests/__init__.py` was removed.
 - Each of `baseline_abb.pdf`, `baseline_abb.pdf.prev_1.75mm`, `baseline_tab.pdf`, `frag_abb.tex`, `frag_abb_stage3_reference.tex`, `frag_tables2.tex`, and `model_snapshot.json` moved from `♻️mit-bestand/🔎️recherche/_neo4j/netz/netz/tests/golden/` to `♻️mit-bestand/🔎️recherche/_neo4j/netz/netz/🧪️tests/🪜️stage-regression/🧫️fixtures/golden/`.
@@ -116,7 +116,9 @@
   "♻️mit-bestand/🔎️recherche/_neo4j/intake/runs/2026-05-21_quelle_remediation/agent_qext/🧪️tests/🧱️c3-refactored/🐍️.py",
   "♻️mit-bestand/🔎️recherche/_neo4j/intake/runs/2026-05-21_quelle_remediation/agent_qext/🧪️tests/🧱️c3-rule/🐍️.py",
   "♻️mit-bestand/🔎️recherche/_neo4j/netz/netz/data/neo4j_export.py",
+  "♻️mit-bestand/🔎️recherche/_neo4j/netz/netz/data/🧪️tests/🔬️stage-one-parity/🐍️.py",
   "♻️mit-bestand/🔎️recherche/_neo4j/netz/netz/model/concepts.py",
+  "♻️mit-bestand/🔎️recherche/_neo4j/netz/netz/model/🧪️tests/🔬️stage-two-parity/🐍️.py",
   "♻️mit-bestand/🔎️recherche/_neo4j/netz/netz/render/latex/graph_tikz.py",
   "♻️mit-bestand/🔎️recherche/_neo4j/netz/netz/sources.py",
   "♻️mit-bestand/🔎️recherche/_neo4j/netz/netz/tests/__init__.py",
@@ -188,3 +190,5 @@
   "🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/🧬️schema_contract_test.go"
 ]
 ```
+
+Final destination correction: the two stage parity modules were subsequently scoped to their data/model owners by the coordinator. Their intermediate fixture paths remain in the authored array as removed paths; the final canonical destinations are included as well. Import/compile and golden-root verification is recorded in the coordinator runtime report.

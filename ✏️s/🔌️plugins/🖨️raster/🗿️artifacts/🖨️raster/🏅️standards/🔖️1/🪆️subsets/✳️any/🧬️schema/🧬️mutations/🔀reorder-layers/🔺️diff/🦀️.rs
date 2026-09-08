@@ -2,7 +2,7 @@
 //! `diff_move_layer` (fixed to be genuinely sparse: no clone-mutate-diff of the whole snapshot).
 
 use crate::diff::{diff_move_layer, RasterDiff};
-use crate::schema::{find_layer, layer_node_id};
+use crate::standards::v1::subsets::any::schema::{find_layer, layer_node_id};
 use crate::{RasterLayerNode, RasterSnapshot};
 
 //#region 🔖️Diff

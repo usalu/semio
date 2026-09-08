@@ -29,7 +29,7 @@ impl DiffRegions for CounterDiff {
     }
 }
 
-#[path = "../🧬️mutation-laws-mutations/🦀️.rs"]
+#[path = "🧬️mutations/🦀️.rs"]
 mod mutations;
 pub use mutations::*;
 

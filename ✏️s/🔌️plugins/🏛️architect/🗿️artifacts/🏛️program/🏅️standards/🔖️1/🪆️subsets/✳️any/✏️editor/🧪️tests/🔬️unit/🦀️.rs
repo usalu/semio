@@ -133,7 +133,7 @@ async fn graph_body_emits_node_graph_scene() {
     let program = sample_plugin();
     let history = semio_framework_plugin::HistoryView::empty();
     let cfg = ArchitectPlayApp::initial_config();
-    let tree = ArchitectPlayApp::render(graph_window::ARCHITECT_BODY_GRAPH, &ArtifactView::new(&program, &history), &ConfigView { snapshot: &cfg }).expect("graph render");
+    let tree = ArchitectPlayApp::render(graph_window::ARCHITECT_BODY_GRAPH, &ArtifactView::new(&program, &history), &ConfigView { snapshot: &cfg }, &semio_framework_plugin::ViewModel::default()).expect("graph render");
     let semio_framework_plugin::Component::Surface(props) = &tree.root.component else { panic!("graph surface") };
     let scene: semio_framework_plugin::NodeGraphScene = semio_framework_ui_scene::decode(props).expect("packed graph");
     assert_eq!(scene.nodes.len(), program.elements.len());

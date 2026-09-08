@@ -2,6 +2,7 @@ use super::*;
 use crate::app::{
     ArtifactEditor, ArtifactView, ArtifactViewer, ConfigView, DraftView, Editor, Emit, InteractionView, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, ViewEmit, Viewer,
 };
+use crate::ViewModel;
 use semio_framework::{AppRole, Dialect, Fault, IconName, StandardId, SubsetId};
 use store::EngineHandles;
 use ui_wgpu::wgpu::LocalizedLabel;
@@ -31,11 +32,11 @@ impl ArtifactEditor for SchemaStampEditorFixture {
         NoConfig::default()
     }
 
-    fn handle(_command: &NoConfigMutation, _doc: &ArtifactView<'_, NoConfig>, _cfg: &ConfigView<'_, NoConfig>, _interaction: &InteractionView<'_>, _draft: &DraftView<'_, NoDraft>, _engines: &EngineHandles) -> Result<Emit<NoConfigMutation>, Fault> {
+    fn handle(_command: &NoConfigMutation, _doc: &ArtifactView<'_, NoConfig>, _cfg: &ConfigView<'_, NoConfig>, _interaction: &InteractionView<'_>, _view_state: Option<&ViewModel>, _draft: &DraftView<'_, NoDraft>, _engines: &EngineHandles) -> Result<Emit<NoConfigMutation>, Fault> {
         Ok(Emit::default())
     }
 
-    fn render(_body_key: &str, _doc: &ArtifactView<'_, NoConfig>, _cfg: &ConfigView<'_, NoConfig>) -> UiAssemblyResult<ComponentTree> {
+    fn render(_body_key: &str, _doc: &ArtifactView<'_, NoConfig>, _cfg: &ConfigView<'_, NoConfig>, _view_state: &ViewModel) -> UiAssemblyResult<ComponentTree> {
         built_text_to_component_tree(ui_wgpu::wgpu::Label::data("schema-stamp-editor"))
     }
 }
@@ -60,11 +61,11 @@ impl ArtifactViewer for SchemaStampViewerFixture {
         NoConfig::default()
     }
 
-    fn handle(_command: &NoConfigMutation, _doc: &ArtifactView<'_, NoConfig>, _cfg: &ConfigView<'_, NoConfig>, _interaction: &InteractionView<'_>, _engines: &EngineHandles) -> Result<ViewEmit<NoConfigMutation>, Fault> {
+    fn handle(_command: &NoConfigMutation, _doc: &ArtifactView<'_, NoConfig>, _cfg: &ConfigView<'_, NoConfig>, _interaction: &InteractionView<'_>, _view_state: Option<&ViewModel>, _engines: &EngineHandles) -> Result<ViewEmit<NoConfigMutation>, Fault> {
         Ok(ViewEmit::default())
     }
 
-    fn render(_body_key: &str, _doc: &ArtifactView<'_, NoConfig>, _cfg: &ConfigView<'_, NoConfig>) -> UiAssemblyResult<ComponentTree> {
+    fn render(_body_key: &str, _doc: &ArtifactView<'_, NoConfig>, _cfg: &ConfigView<'_, NoConfig>, _view_state: &ViewModel) -> UiAssemblyResult<ComponentTree> {
         built_text_to_component_tree(ui_wgpu::wgpu::Label::data("schema-stamp-viewer"))
     }
 }

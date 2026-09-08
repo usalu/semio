@@ -2,7 +2,7 @@
 //! helper (the `RasterLayerPatch` here is a diff-internal type only, never the mutation's own payload).
 
 use crate::diff::{diff_patch_layer, RasterDiff};
-use crate::schema::{find_layer, layer_name};
+use crate::standards::v1::subsets::any::schema::{find_layer, layer_name};
 use crate::{RasterLayerPatch, RasterSnapshot};
 
 //#region 🔖️Diff

@@ -139,6 +139,7 @@ export function decodeActorReturnResponse(backing: unknown): ActorReturnResponse
 //#region 🧪️ReturnResponseLaws
 if (import.meta.vitest) {
   const { registerTests1 } = await import("./🧪️tests/🧪️actorreturnresponseframing-uses-canonical-vectors-with-no-payload-copies/🟦️.ts");
-  await registerTests1(import.meta.vitest, { ACTOR_RETURN_RESPONSE_MAXIMUM_BYTES, ActorReturnResponseFraming, createActorBytePage, decodeActorReturnResponse, encodeActorReturnResponse, fault, readActorReturnResponseHeader, uint }, { directory: import.meta.dir, url: import.meta.url });
+  const { fileURLToPath } = await import("node:url");
+  await registerTests1(import.meta.vitest, { ACTOR_RETURN_RESPONSE_MAXIMUM_BYTES, ActorReturnResponseFraming, createActorBytePage, decodeActorReturnResponse, encodeActorReturnResponse, fault, readActorReturnResponseHeader, uint }, { directory: fileURLToPath(new URL(".", import.meta.url)), url: import.meta.url });
 }
 //#endregion 🧪️ReturnResponseLaws

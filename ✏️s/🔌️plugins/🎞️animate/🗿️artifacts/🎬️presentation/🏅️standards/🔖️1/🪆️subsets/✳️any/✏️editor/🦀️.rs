@@ -18,7 +18,7 @@
 
 use crate::mutations::create_tile::CreateTile;
 use crate::op::PresentationMutation;
-use crate::schema::build_tile_morph_prompt;
+use crate::standards::v1::subsets::any::schema::build_tile_morph_prompt;
 use crate::{default_presentation_snapshot, FigureTileDraft, PresentationSnapshot, PRESENTATION_DOCUMENT_SCHEMA};
 use crate::editor::animate::commands::{
     add_tile, canvas_pointer_down, clear_tiles, copy_prompt, delete_selection, delete_tile, engagement_input, engagement_submit, export_video_from_deck, no_operation, patch_tile_crops, rename_tiles, reset_grid, seed_grid, set_active_example,
@@ -172,7 +172,7 @@ pub fn next_frame_tile_crop(existing_tile_count: usize) -> crate::FigureTileFram
     let cell = 1.0 / FRAME_IMPORT_GRID_COLUMNS as f64;
     let column = existing_tile_count % FRAME_IMPORT_GRID_COLUMNS;
     let row = existing_tile_count / FRAME_IMPORT_GRID_COLUMNS;
-    crate::schema::clamp_tile_crop(&crate::FigureTileFrame { x: column as f64 * cell, y: (row as f64 * cell).min(1.0 - cell), width: cell, height: cell })
+    crate::standards::v1::subsets::any::schema::clamp_tile_crop(&crate::FigureTileFrame { x: column as f64 * cell, y: (row as f64 * cell).min(1.0 - cell), width: cell, height: cell })
 }
 //#endregion 🔖️Io
 
@@ -294,7 +294,7 @@ fn animate_presentation_retained_reduce(
     history: &semio_framework_plugin::HistoryView,
     _interaction: &protocol::InteractionState,
     _hover: &semio_framework_plugin::app::InteractionHoverState,
-    _context: Option<&semio_framework_plugin::ArtifactOwnedToolJobContext<EditorApp<AnimatePresentationPlayApp>>>,
+    _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<AnimatePresentationPlayApp>>>,
     operation: &AppOperationContext,
 ) -> Result<Emit<PresentationMutation, PresentationConfigMutation, NoDraftMutation>, Fault> {
     let document = ArtifactView::with_operation(snapshot, history, operation.clone());

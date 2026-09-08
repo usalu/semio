@@ -169939,3 +169939,42 @@ test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 1 filtered out; 
 ## Pass 420 — Native Targeted Laws: semio-s-plugin-stdio
 
 [{"package":"semio-s-plugin-stdio","target":{"kind":"test","name":"flow_retained_decode"},"executable":"/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/ZERO-WARNINGS-ZERO-ERRORS-ACROSS-ALL-RUST-COMPILATION-TARGETS/🗑️generated/target/debug/deps/flow_retained_decode-5a4101dbc1465164","sha256":"e686f20f4335b4e2a443b43ae7b8afb7aa32e8399b9b0aa48c206c4636ba1f8a","laws":["semio_flow_retained_snapshot_matches_neutral_wire_and_retains_failures","semio_flow_retained_snapshot_rejects_retired_requests_and_closes_exact_bytes"],"assertions":2,"artifactDir":"/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/ZERO-WARNINGS-ZERO-ERRORS-ACROSS-ALL-RUST-COMPILATION-TARGETS/🗑️generated/native-laws420/exact-cargo-laws-t0FMUH/00","cargoTargetDir":"/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/ZERO-WARNINGS-ZERO-ERRORS-ACROSS-ALL-RUST-COMPILATION-TARGETS/🗑️generated/target"}]
+
+### Compiler Suggestions Applied from native620
+
+- `✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪵️en1995/🦀️.rs`
+- `✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🦀️.rs`
+- `✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs`
+- `✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪨️en1996/🦀️.rs`
+- `✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🦀️.rs`
+- `✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌍️en1997/🦀️.rs`
+- `✏️s/🔌️plugins/📕️norm/🗿️artifacts/🫨️en1998/🦀️.rs`
+- `✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🦀️.rs`
+- `✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/🦀️.rs`
+- `✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs`
+- `✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪶️en1999/🦀️.rs`
+- `✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🦀️.rs`
+- `✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🦀️.rs`
+- `✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🦀️.rs`
+- `✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚡️din18599/🦀️.rs`
+- `✏️s/🔌️plugins/📕️norm/🗿️artifacts/📇️iso16757/🦀️.rs`
+- `✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏋️en1991/🦀️.rs`
+- `✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🦀️.rs`
+- `✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/🦀️.rs`
+- `✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🦀️.rs`
+- `✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🦀️.rs`
+- `✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🦀️.rs`
+- `✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/🦀️.rs`
+- `✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🦀️.rs`
+- `✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🦀️.rs`
+- `✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🦀️.rs`
+- `✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🦀️.rs`
+- `✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🧪️tests/🔬️unit/🦀️.rs`
+- `✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚡️din18599/🧪️tests/🔬️unit/🦀️.rs`
+- `✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🔬️unit/🦀️.rs`
+- `✏️s/🔌️plugins/📖️playbook/🧩️extensions/🌀️procedural/🦀️.rs`
+- `✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🦀️.rs`
+- `✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🧪️tests/🔬️unit/🦀️.rs`
+- `✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🦀️.rs`
+- `✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs`
+- `✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs`

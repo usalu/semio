@@ -217,12 +217,6 @@
       ]
     },
     {
-      "toolId": "setActiveUtility",
-      "lanes": [
-        "config"
-      ]
-    },
-    {
       "toolId": "importFrames",
       "lanes": [
         "host-only"
@@ -431,11 +425,6 @@
       "feature": "publish report table after a config preparation factory is installed"
     },
     {
-      "id": "setActiveUtility",
-      "execution": "bounded",
-      "feature": "publish active utility after a config preparation factory is installed"
-    },
-    {
       "id": "importFrames",
       "execution": "bounded",
       "feature": "request host multi-file selection"
@@ -472,8 +461,8 @@
     "ownedInterface": "RemodelingRetainedCatalogOracle",
     "runtimeDependency": false,
     "expected": {
-      "routes": 42,
-      "bounded": 42,
+      "routes": 40,
+      "bounded": 40,
       "resumable": 0,
       "unique": true
     }

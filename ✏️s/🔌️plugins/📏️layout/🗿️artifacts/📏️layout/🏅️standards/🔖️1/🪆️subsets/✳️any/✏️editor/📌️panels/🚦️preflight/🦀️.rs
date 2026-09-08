@@ -68,7 +68,7 @@ fn resolve_run_style(doc: &LayoutSnapshot, paragraph_style_id: Option<&str>, cha
 pub fn run_layout_preflight(doc: &LayoutSnapshot, labels: &LayoutLabels) -> Vec<PreflightIssue> {
     let mut issues = Vec::new();
     for page in &doc.pages {
-        let resolved = crate::schema::resolve_page(doc, page);
+        let resolved = crate::standards::v1::subsets::any::schema::resolve_page(doc, page);
         for entry in resolved {
             let frame = &entry.frame;
             if !frame.visible() {

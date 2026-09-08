@@ -1,0 +1,12 @@
+{
+  "version": "130",
+  "release": "https://github.com/WebAssembly/binaryen/releases/download/version_130",
+  "platforms": [
+    {"platform": "darwin", "architecture": "arm64", "archive": "binaryen-version_130-arm64-macos.tar.gz", "bytes": 7362973, "sha256": "79d3ab9f417d9e215f15f598f523d001a7d9ac1e59367e5c869fbdabd1cba72e"},
+    {"platform": "darwin", "architecture": "x64", "archive": "binaryen-version_130-x86_64-macos.tar.gz", "bytes": 8705522, "sha256": "d3e2d1235b70c93c54b52eabc1625ea960965152218754f1f4eeb0f873c48e03"},
+    {"platform": "linux", "architecture": "arm64", "archive": "binaryen-version_130-aarch64-linux.tar.gz", "bytes": 101874616, "sha256": "e6ae6e09ac40f4e14bc5be6f687c58e2995c84170013975fa641809dd3b480a0"},
+    {"platform": "linux", "architecture": "x64", "archive": "binaryen-version_130-x86_64-linux.tar.gz", "bytes": 107371282, "sha256": "0a18362361ad05465118cd8eeb72edaeec89de6894bc283576ef4e07aa3babcc"},
+    {"platform": "win32", "architecture": "arm64", "archive": "binaryen-version_130-arm64-windows.tar.gz", "bytes": 105980303, "sha256": "b18c9cbe000562b1ee5d9cb60146616a949aca504903ad63f27fd9fd679898a7"},
+    {"platform": "win32", "architecture": "x64", "archive": "binaryen-version_130-x86_64-windows.tar.gz", "bytes": 80320428, "sha256": "cc09c874f4332d00aa32ab72745a9b98c9a172f795762f21d03e70638a3f7f4c"}
+  ]
+}

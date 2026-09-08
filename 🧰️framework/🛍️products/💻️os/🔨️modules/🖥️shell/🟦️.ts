@@ -65,17 +65,8 @@ const CAPABILITY_ID_BY_COMMAND_TYPE: Record<ShellCommand["type"], string> = {
   dismissTransientNotice: "ui.notice.dismiss",
   setOpenWithFocusRole: "ui.open.setFocusRole",
   setActiveTutorial: "ui.tutorial.setActive",
-  setUiAppearance: "os.setAppearance",
-  setUiLayout: "os.setLayout",
-  setUiDriver: "os.setDriver",
-  setUiCustomDriver: "ui.driver.setCustom",
   setUiDriverDraft: "ui.driver.setDraft",
-  setUiLocale: "os.setLocale",
-  setUiTerminology: "os.setTerminology",
-  setUiTheme: "os.setThemeId",
-  setUiCustomTheme: "ui.theme.setCustom",
   setUiThemeDraft: "ui.theme.setDraft",
-  setUiKeybindingOverride: "ui.keybinding.setOverride",
   setSyncBackboneUri: "sync.setBackboneUri",
   setSyncCardKind: "sync.setCardKind",
   setSyncDraftPath: "sync.setDraftPath",
@@ -413,58 +404,16 @@ function applyCommand(next: ShellState, original: ShellState, command: ShellComm
     }
     //#endregion 🎓️Tutorial
 
-    //#region 🎨️UiPreferences
-    case "setUiAppearance": {
-      next.uiAppearance = command.appearance;
-      break;
-    }
-    case "setUiLayout": {
-      next.uiLayout = command.layout;
-      break;
-    }
-    case "setUiDriver": {
-      next.uiDriverId = command.driverId;
-      break;
-    }
-    case "setUiCustomDriver": {
-      requireNonEmpty(command.driverId, "driver_id");
-      if (command.driver !== null) next.uiCustomDrivers[command.driverId] = command.driver;
-      else delete next.uiCustomDrivers[command.driverId];
-      break;
-    }
+    //#region 🎨️UiPreferenceDrafts
     case "setUiDriverDraft": {
       next.uiDriverDraft = command.draft;
-      break;
-    }
-    case "setUiLocale": {
-      next.uiLocale = command.locale;
-      break;
-    }
-    case "setUiTerminology": {
-      next.uiTerminology = command.terminologyId;
-      break;
-    }
-    case "setUiTheme": {
-      next.uiThemeId = command.themeId;
-      break;
-    }
-    case "setUiCustomTheme": {
-      requireNonEmpty(command.themeId, "theme_id");
-      if (command.theme !== null) next.uiCustomThemes[command.themeId] = command.theme;
-      else delete next.uiCustomThemes[command.themeId];
       break;
     }
     case "setUiThemeDraft": {
       next.uiThemeDraft = command.draft;
       break;
     }
-    case "setUiKeybindingOverride": {
-      requireNonEmpty(command.controlId, "control_id");
-      if (command.keys !== null) next.uiKeybindingOverrides[command.controlId] = command.keys;
-      else delete next.uiKeybindingOverrides[command.controlId];
-      break;
-    }
-    //#endregion 🎨️UiPreferences
+    //#endregion 🎨️UiPreferenceDrafts
 
     //#region 🔄️Sync
     case "setSyncBackboneUri": {

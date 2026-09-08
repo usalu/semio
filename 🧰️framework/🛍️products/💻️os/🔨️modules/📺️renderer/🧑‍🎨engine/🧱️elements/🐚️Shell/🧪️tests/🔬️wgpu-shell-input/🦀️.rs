@@ -143,7 +143,7 @@ fn finish_dock_drag_persists_layout_and_clears_drag_state_on_successful_drop() {
     let mut shell = ShellState::new(Vec::new(), String::new());
     shell.dock.root = crate::dock::DockNode::Row(vec![(crate::dock::DockNode::Stack { windows: vec![DockStackTab::new("a"), DockStackTab::new("b"), DockStackTab::new("c")], active: "a".into() }, 1.0)]);
     assert!(shell.dock.remove_window("a"));
-    let payload = DockDragPayload { kind: DockDragKind::Tab, window_id: "a".into(), source_path: vec![0], tab_index: 0, ghost_label: "a".into() };
+    let payload = DockDragPayload { kind: DockDragKind::Tab, window_id: "a".into(), window_kind_id: "a".into(), source_path: vec![0], tab_index: 0, ghost_label: "a".into() };
     let zone = DockDropZone::Tab { stack_path: vec![0], corner: WindowStackCorner::TopLeft, index: 2 };
     shell.dock_drag = Some(DockDragState { payload, x: 10.0, y: 10.0, drop_zone: Some(zone) });
     assert!(shell.layout_override.is_none(), "sanity: nothing persisted yet");
@@ -152,4 +152,14 @@ fn finish_dock_drag_persists_layout_and_clears_drag_state_on_successful_drop() {
     assert!(result.is_ok(), "finish_dock_drag must not error even without a host app to log a shell.windowMove against");
     assert!(shell.layout_override.is_some(), "a successful drop persists the new dock layout");
     assert!(shell.dock_drag.is_none(), "the transient drag state is always taken");
+}
+
+#[test]
+fn context_menu_point_resolves_the_exact_concrete_window_instance() {
+    let mut shell = ShellState::new(Vec::new(), String::new());
+    shell.dock_drop_bodies = vec![(Vec::new(), Rect::new(0.0, 0.0, 100.0, 100.0), "canvas".into()), (vec![1], Rect::new(100.0, 0.0, 100.0, 100.0), "canvas-copy".into())];
+    assert_eq!(shell.context_window_instance_id(25.0, 25.0), Some("canvas"));
+    assert_eq!(shell.context_window_instance_id(125.0, 25.0), Some("canvas-copy"));
+    assert_eq!(shell.context_window_instance_id(250.0, 25.0), None);
+    println!("[DEBUG] native context menu resolved its exact concrete window and preserved panel scope outside dock bodies");
 }

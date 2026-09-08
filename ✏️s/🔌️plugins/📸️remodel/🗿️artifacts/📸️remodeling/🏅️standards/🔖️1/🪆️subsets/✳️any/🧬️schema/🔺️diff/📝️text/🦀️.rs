@@ -53,9 +53,6 @@ impl RemodelingDiff {
             if let Some(value) = &self.selection {
                 next.selection = value.clone();
             }
-            if let Some(value) = &self.active_utility_id {
-                next.active_utility_id = value.clone();
-            }
             if let Some(value) = &self.report_table {
                 next.report_table = value.clone();
             }
@@ -136,7 +133,6 @@ impl MutationDiff<RemodelingSnapshot> for RemodelingDiff {
         take!(job);
         take!(results);
         take!(selection);
-        take!(active_utility_id);
         take!(report_table);
         take!(frame_cursor);
         take!(camera);

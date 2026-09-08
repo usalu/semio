@@ -12,7 +12,7 @@ fn presentation_semantic_panels_match_the_json_oracle() {
     let document = crate::default_presentation_snapshot();
     let (_, tiles) = crate::presentation_working_scene(&document);
     for row in vectors["cases"].as_array().expect("locales") {
-        let labels = semio_framework_plugin::resolve_labels_for_locale::<AnimatePresentationLabels>(row["locale"].as_str().expect("locale"));
+        let labels = semio_framework_plugin::resolve_labels::<AnimatePresentationLabels>(&semio_framework_plugin::ViewModel { locale: semio_framework_plugin::locale_from_str(row["locale"].as_str().expect("locale")), ..Default::default() });
         let tree = project(crate::editor::animate::panels::artifact::render(&document, labels).expect("document"));
         assert_eq!(tree["children"][0]["component"]["label"], row["tiles"]);
         let catalogue = crate::editor::animate::panels::catalogue::render(&document, labels).expect("catalogue");

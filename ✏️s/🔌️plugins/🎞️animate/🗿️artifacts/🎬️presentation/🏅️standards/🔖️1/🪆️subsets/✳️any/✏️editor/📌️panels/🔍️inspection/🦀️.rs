@@ -26,7 +26,7 @@ pub fn definition() -> PanelTabDefinition {
 /// ⚠️ Ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: the per-selected-tile field group
 /// (crop x/y/width/height, name, delete) this panel used to build from `config.selected_ids` is
 /// deleted along with that field — selection is framework-owned state now and
-/// `ArtifactApp::render(body_key, doc, cfg)` is never given an `InteractionView` (only
+/// `ArtifactApp::render(body_key, doc, cfg, view_state)` is never given an `InteractionView` (only
 /// `handle`/`copy_fragment`/`cut_operations` are). Documented reduced-fidelity gap, same shape as
 /// `🖍️draw`'s `properties` panel (`🎛️apps/🖍️draw/📌️panels/🔍️properties/🦀️.rs`): falls through
 /// to a schema/tile-count summary until a resolved-selection render path exists.

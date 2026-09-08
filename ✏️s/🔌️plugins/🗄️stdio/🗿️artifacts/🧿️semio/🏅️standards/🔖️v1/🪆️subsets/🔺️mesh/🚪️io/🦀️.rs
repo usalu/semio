@@ -6,10 +6,9 @@
 pub mod derived_composition {
     use crate::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
     use crate::standards::v1::subsets::mesh::schema::SemioMeshAnalyzer;
-    use semio_framework_plugin::{
-        deserializer_entry_of, register_composer_entries, register_subset_validator, serializer_entry_of, subset_validator_entry_of, AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, ComposerEntry, Composition, Dialect, IoPayload,
-        StandardId, SubsetId, SubsetValidator, SubsetValidatorEntry,
-    };
+    #[cfg(feature = "conversion-mesh")]
+    use semio_framework_plugin::{deserializer_entry_of, register_composer_entries, serializer_entry_of, ComposerEntry};
+    use semio_framework_plugin::{register_subset_validator, subset_validator_entry_of, AnalyzeSource, ArtifactComposition, ComposeError, ComposeSource, Composition, Dialect, IoPayload, StandardId, SubsetId, SubsetValidator, SubsetValidatorEntry};
     //#region 🔖️IoBridgeImports
     // 🌉️ W4 (mesh↔{gltf,stl,obj,ply,las}) io leaves — real trait impls registered below.
     #[cfg(feature = "conversion-mesh")]
@@ -146,9 +145,8 @@ pub mod derived_composition {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn register() {
         ::framework_schema::register_artifact_schema_descriptor(crate::standards::v1::subsets::mesh::schema::semio_mesh_artifact_schema_descriptor());
-        store::register_document_codec(store::ArtifactCodec::of::<SemioMeshSnapshot, crate::standards::v1::subsets::mesh::schema::mutations::SemioMeshMutation>(
-            crate::standards::v1::subsets::mesh::schema::snapshot::STDIO_SEMIOMESH_DOCUMENT_SCHEMA,
-        )).expect("static Stdio registration must be available and conflict-free");
+        store::register_document_codec(store::ArtifactCodec::of::<SemioMeshSnapshot, crate::standards::v1::subsets::mesh::schema::mutations::SemioMeshMutation>(crate::standards::v1::subsets::mesh::schema::snapshot::STDIO_SEMIOMESH_DOCUMENT_SCHEMA))
+            .expect("static Stdio registration must be available and conflict-free");
         register_subset_validator(validator_entry()).expect("static Stdio registration must be available and conflict-free");
         #[cfg(feature = "conversion-mesh")]
         register_composer_entries(io_bridge_entries()).expect("static Stdio registration must be available and conflict-free");

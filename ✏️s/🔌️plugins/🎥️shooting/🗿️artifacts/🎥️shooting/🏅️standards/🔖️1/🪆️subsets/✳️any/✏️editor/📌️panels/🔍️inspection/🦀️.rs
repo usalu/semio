@@ -55,7 +55,7 @@ fn shot_inspector_group(shot: &ShootingShot, labels: &ShootingLabels) -> semio_f
 /// 🔍️ Resolves shot configuration selection, then the document's active shot, then a localized summary.
 pub fn render(snapshot: &ShootingSnapshot, cfg: &ShootingConfig, labels: &ShootingLabels) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
     let selected = cfg.selected_shot_ids.first().and_then(|id| snapshot.shots.iter().find(|shot| &shot.id == id));
-    let group = if let Some(shot) = selected.or_else(|| crate::schema::active_shot(snapshot)) {
+    let group = if let Some(shot) = selected.or_else(|| crate::standards::v1::subsets::any::schema::active_shot(snapshot)) {
         shot_inspector_group(shot, labels)?
     } else {
         let summary = [

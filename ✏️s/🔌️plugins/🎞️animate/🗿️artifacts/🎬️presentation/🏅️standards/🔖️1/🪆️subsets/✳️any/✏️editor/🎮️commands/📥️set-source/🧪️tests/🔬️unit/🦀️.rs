@@ -62,7 +62,7 @@ async fn set_active_example_demo_emits_a_reset_effect() {
     let Effect::LoadDocument { pack, .. } = emit.effects.first().expect("setActiveExample must emit a LoadDocument effect") else {
         panic!("expected a LoadDocument effect");
     };
-    let loaded = <PresentationSnapshot as store::ArtifactPack>::decode_pack(pack).expect("decode loaded document pack");
+    let loaded = <PresentationSnapshot as store::ArtifactPack>::decode_pack(&pack).expect("decode loaded document pack");
     assert!(crate::presentation_working_scene(&loaded).1.is_empty(), "resetting to demo loads the default deck, which has no tiles");
 }
 

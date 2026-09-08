@@ -39,7 +39,7 @@ semio_framework_plugin::app_labels! {
     }
 }
 
-/// 🗣️ Resolves the active label set from `cfg.locale`; falls back to native English.
+/// 🗣️ Resolves the active label set from the canonical shared view state.
 pub fn gis2d_labels(view_state: &semio_framework_plugin::ViewModel) -> &'static Gis2dPlayLabels {
     semio_framework_plugin::resolve_labels::<Gis2dPlayLabels>(view_state)
 }

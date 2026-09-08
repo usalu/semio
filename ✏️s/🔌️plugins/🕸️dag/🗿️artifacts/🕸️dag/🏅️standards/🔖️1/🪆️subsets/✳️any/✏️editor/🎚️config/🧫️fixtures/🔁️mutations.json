@@ -5,24 +5,21 @@
       "mutation": "replaceConfig",
       "payload": {
         "config": {
-          "cameraX": 1.0,
-          "cameraY": 2.0,
-          "cameraZoom": 3.0,
-          "locale": "de-DE"
+          "cameraX": 1,
+          "cameraY": 2,
+          "cameraZoom": 3
         }
       }
     },
     "base": {
-      "cameraX": 1.0,
-      "cameraY": 2.0,
-      "cameraZoom": 3.0,
-      "locale": "en-US"
+      "cameraX": 1,
+      "cameraY": 2,
+      "cameraZoom": 3
     },
     "after": {
-      "cameraX": 1.0,
-      "cameraY": 2.0,
-      "cameraZoom": 3.0,
-      "locale": "de-DE"
+      "cameraX": 1,
+      "cameraY": 2,
+      "cameraZoom": 3
     }
   },
   {
@@ -30,43 +27,20 @@
     "mutation": {
       "mutation": "changeCamera",
       "payload": {
-        "x": 9.0,
-        "y": 8.0,
-        "zoom": 7.0
+        "x": 9,
+        "y": 8,
+        "zoom": 7
       }
     },
     "base": {
-      "cameraX": 1.0,
-      "cameraY": 2.0,
-      "cameraZoom": 3.0,
-      "locale": "en-US"
+      "cameraX": 1,
+      "cameraY": 2,
+      "cameraZoom": 3
     },
     "after": {
-      "cameraX": 9.0,
-      "cameraY": 8.0,
-      "cameraZoom": 7.0,
-      "locale": "en-US"
-    }
-  },
-  {
-    "kind": "change-locale",
-    "mutation": {
-      "mutation": "changeLocale",
-      "payload": {
-        "value": "de-DE"
-      }
-    },
-    "base": {
-      "cameraX": 1.0,
-      "cameraY": 2.0,
-      "cameraZoom": 3.0,
-      "locale": "en-US"
-    },
-    "after": {
-      "cameraX": 1.0,
-      "cameraY": 2.0,
-      "cameraZoom": 3.0,
-      "locale": "de-DE"
+      "cameraX": 9,
+      "cameraY": 8,
+      "cameraZoom": 7
     }
   }
 ]

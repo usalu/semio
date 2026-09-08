@@ -75,6 +75,7 @@ impl ArtifactViewer for SourcingViewer {
         body_key: &str,
         doc: &ArtifactView<'_, Self::Snapshot>,
         _cfg: &ConfigView<'_, Self::Config>,
+        _view_state: &semio_framework_plugin::ViewModel,
     ) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         match body_key {
             pool::BODY_KEY => pool::render(doc.snapshot).map(semio_framework_plugin::built_to_component_tree),

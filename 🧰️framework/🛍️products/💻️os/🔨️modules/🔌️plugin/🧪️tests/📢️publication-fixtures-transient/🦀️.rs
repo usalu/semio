@@ -51,6 +51,6 @@ impl protocol::MutationDiff<PublicationTransient> for PublicationTransientDiff {
     }
 }
 
-#[path = "../📢️publication-fixtures-transient-mutations/🦀️.rs"]
+#[path = "../../🧫️fixtures/📢️publication-fixtures/🫧️transient/🧬️mutations/🦀️.rs"]
 pub mod mutations;
 pub use mutations::*;

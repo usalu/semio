@@ -47,7 +47,6 @@ message CadArtifact {
   // @state presence
   optional string selected_primitive_kind = 21;
   // @state presence
-  string active_utility_id = 22;
   // @state presence
   optional string active_example_id = 23;
   // @state config

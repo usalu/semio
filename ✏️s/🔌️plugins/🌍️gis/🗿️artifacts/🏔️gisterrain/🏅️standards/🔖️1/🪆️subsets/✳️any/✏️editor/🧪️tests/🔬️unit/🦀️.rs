@@ -12,13 +12,12 @@ fn every_command() -> Vec<Gis3dCommand> {
     vec![
         Gis3dCommand::SetExaggeration(set_exaggeration::SetExaggeration { exaggeration: 2.5 }),
         Gis3dCommand::SetCamera(set_camera::SetCamera { camera_json: r#"{"position":[1.0,2.0,3.0]}"#.into() }),
-        Gis3dCommand::SetLocale(set_locale::SetLocale { value: "de-DE".into() }),
     ]
 }
 
 /// 🏷️ The wire keyword each row prints under — the kebab `as` literal, independent of the camelCase
 /// manifest action id.
-const WIRE_KEYWORDS: &[&str] = &["exaggeration", "camera", "locale"];
+const WIRE_KEYWORDS: &[&str] = &["exaggeration", "camera"];
 
 #[semio_framework_async_macros::async_test]
 async fn command_ids_are_unique_and_cover_every_row() {
@@ -28,7 +27,7 @@ async fn command_ids_are_unique_and_cover_every_row() {
     sorted.sort_unstable();
     sorted.dedup();
     assert_eq!(sorted.len(), ids.len(), "duplicate command ids in {ids:?}");
-    assert_eq!(ids.len(), 3, "every Gis3dCommand row must be covered by every_command()");
+    assert_eq!(ids.len(), 2, "every Gis3dCommand row must be covered by every_command()");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -77,7 +76,7 @@ fn retained_command_factory_matches_the_language_neutral_maximum_oracle() {
     let snapshot = default_terrain_document();
     let interaction = protocol::InteractionState::default();
     let accepted = Gis3dCommand::SetCamera(set_camera::SetCamera { camera_json: format!("{{}}{}", " ".repeat(maximum - 2)) });
-    let rejected = Gis3dCommand::SetLocale(set_locale::SetLocale { value: "l".repeat(maximum + additional) });
+    let rejected = Gis3dCommand::SetCamera(set_camera::SetCamera { camera_json: format!("{{}}{}", " ".repeat(maximum + additional - 2)) });
     assert_eq!(gis3d_retained_extent(&accepted, &snapshot, &interaction), Some(expected_items));
     assert_eq!(gis3d_retained_extent(&rejected, &snapshot, &interaction), None);
     let factory = Gis3dCommandJobFactory::new("s.gis.gisterrain@1/*#editor");

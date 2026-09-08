@@ -470,24 +470,6 @@
         "🔣️.json": "f246f746165a445ad51a3e64778a05e89190d49a3ff70127f9b2ac4d01c0f902"
       }
     },
-    "app.dag.dag.config.mutation.change-locale": {
-      "path": "✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🧬️mutations/🗣️change-locale/🧬️schema",
-      "level": "mutation-leaf",
-      "facetKind": "🧬️data",
-      "formats": {
-        "🔣️jsonschema": "🔣️.json"
-      },
-      "exports": {
-        "ChangeLocale": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        }
-      },
-      "dependsOn": [],
-      "hashes": {
-        "🔣️.json": "ff84a845887534feb212cc97315b602f982c43556d4706a2ee87f900c0633bf5"
-      }
-    },
     "app.dag.dag.config.mutation.replace-config": {
       "path": "✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🧬️mutations/🔄️replace-config/🧬️schema",
       "level": "mutation-leaf",
@@ -3290,24 +3272,6 @@
         "🔣️.json": "3cb7b6b196cd96f555959797b76e81ba2496f819300ce4fd84c774592bd4c43f"
       }
     },
-    "app.trinity.jack.config.mutation.set-active-fixture": {
-      "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🧬️mutations/🗿️set-active-fixture/🧬️schema",
-      "level": "mutation-leaf",
-      "facetKind": "🧬️data",
-      "formats": {
-        "🔣️jsonschema": "🔣️.json"
-      },
-      "exports": {
-        "SetActiveFixture": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        }
-      },
-      "dependsOn": [],
-      "hashes": {
-        "🔣️.json": "827ab5e1f2e63aace9843288a5e525384c95ec81f44d346f0beca27526a16da6"
-      }
-    },
     "app.trinity.jack.config.mutation.set-camera": {
       "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🧬️mutations/🎥️set-camera/🧬️schema",
       "level": "mutation-leaf",
@@ -3378,24 +3342,6 @@
       "dependsOn": [],
       "hashes": {
         "🔣️.json": "bb18fc570b88a4c33f5ccb7c8fa85a1ebbe517ccde09cf557248e376d3544962"
-      }
-    },
-    "app.trinity.jack.config.mutation.set-result": {
-      "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🧬️mutations/📊️set-result/🧬️schema",
-      "level": "mutation-leaf",
-      "facetKind": "🧬️data",
-      "formats": {
-        "🔣️jsonschema": "🔣️.json"
-      },
-      "exports": {
-        "SetResult": {
-          "file": "🔣️.json",
-          "facet": "schema"
-        }
-      },
-      "dependsOn": [],
-      "hashes": {
-        "🔣️.json": "0e2371fcd31d6b41dc296e4c795f57c2f4781a64f397f8a95658ffe51802d750"
       }
     },
     "app.trinity.rewriting.config": {

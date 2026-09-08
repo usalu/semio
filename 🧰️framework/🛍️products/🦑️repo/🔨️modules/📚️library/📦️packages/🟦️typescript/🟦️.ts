@@ -2901,6 +2901,18 @@ export function wasmBuildEnvironment(repoRoot: string, env: NodeJS.ProcessEnv = 
   return { ...env, CARGO_TARGET_DIR: resolve(repoRoot, env.CARGO_TARGET_DIR ?? ".🧬semio/🦑️repo/⚡️cache/cargo/browser") };
 }
 
+/** 🧭️ Makes wasm-pack resolve the selected optimizer while preserving the pinned binding generator. */
+export function wasmPackEnvironment(repoRoot: string, bindgen: string, env: NodeJS.ProcessEnv): NodeJS.ProcessEnv {
+  const optimizer = env.SEMIO_WASM_OPT_BIN ? resolve(repoRoot, env.SEMIO_WASM_OPT_BIN) : undefined;
+  if (optimizer && basename(optimizer) !== (process.platform === "win32" ? "wasm-opt.exe" : "wasm-opt")) throw new Error("SEMIO_WASM_OPT_BIN must name a wasm-opt executable");
+  const environment = { ...env, PATH: [dirname(bindgen), ...(optimizer ? [dirname(optimizer)] : []), env.PATH].filter(Boolean).join(process.platform === "win32" ? ";" : ":") };
+  if (optimizer) {
+    const selected = Bun.which("wasm-opt", { PATH: environment.PATH });
+    if (!selected || realpathSync(selected) !== realpathSync(optimizer)) throw new Error("Selected wasm-opt is missing or shadowed by another tool");
+  }
+  return environment;
+}
+
 /** 📂️ Validates one portable compiler output owner without executing a compiler. */
 export function wasmOutputDirectory(rsDir: string, outputDirectory: string): string {
   if (!outputDirectory || /[/\\:*?"<>|\u0000]|[. ]$/u.test(outputDirectory)) throw new Error("WASM outputDirectory must be one portable literal directory name");
@@ -2935,9 +2947,9 @@ export function runWasmPackWebBuild(opts: {
   const wasmPath = join(pkgDir, `${wasmBaseName}_bg.wasm`);
   const { pack: packProfileArgs, cargo: cargoProfileArgs } = wasmBuildArguments(profile);
   const profileOutDir = cargoProfileDir(profile);
-  const buildEnv = wasmBuildEnvironment(getWorkspaceRoot());
-  const bindgen = resolveWasmBindgenBin(getWorkspaceRoot(), buildEnv);
-  buildEnv.PATH = [dirname(bindgen), buildEnv.PATH].filter(Boolean).join(process.platform === "win32" ? ";" : ":");
+  const compilerEnv = wasmBuildEnvironment(getWorkspaceRoot());
+  const bindgen = resolveWasmBindgenBin(getWorkspaceRoot(), compilerEnv);
+  const buildEnv = wasmPackEnvironment(getWorkspaceRoot(), bindgen, compilerEnv);
   const buildLabel = threads ? "cargo build (threaded) + wasm-bindgen" : "wasm-pack build";
   console.log(`[${logPrefix}] ${buildLabel} ${packProfileArgs.join(" ")} --target web --out-dir ${outputDirectory} --out-name ${wasmBaseName} --no-pack`);
   const t0 = Date.now();

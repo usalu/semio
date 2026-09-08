@@ -354,7 +354,7 @@ fn process3d_retained_reduce(
     history: &semio_framework_plugin::HistoryView,
     interaction: &protocol::InteractionState,
     _hover: &semio_framework_plugin::app::InteractionHoverState,
-    context: Option<&semio_framework_plugin::ArtifactOwnedToolJobContext<semio_framework_plugin::EditorApp<Process3dPlayApp>>>,
+    context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<Process3dPlayApp>>>,
     operation: &AppOperationContext,
 ) -> Result<Emit<Process3dMutation, Process3dConfigMutation, NoDraftMutation>, Fault> {
     let doc = ArtifactView::with_operation(snapshot, history, operation.clone());

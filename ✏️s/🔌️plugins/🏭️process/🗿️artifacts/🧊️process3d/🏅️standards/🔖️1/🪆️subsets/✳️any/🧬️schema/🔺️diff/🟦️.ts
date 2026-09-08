@@ -22,7 +22,6 @@ export interface Process3dDiff {
   /** @state presence */
   selectedFaceId?: number | null;
   /** @state presence */
-  activeUtilityId?: string;
   /** @state config */
   selectionMethod?: string;
   /** @state config */

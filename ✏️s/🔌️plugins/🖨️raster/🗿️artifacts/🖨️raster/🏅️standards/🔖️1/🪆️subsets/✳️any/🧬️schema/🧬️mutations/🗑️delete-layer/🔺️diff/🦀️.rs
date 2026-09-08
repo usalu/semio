@@ -3,7 +3,7 @@
 //! `remove_layer_from_tree` recursing into the whole removed subtree).
 
 use crate::diff::{diff_remove_layer, RasterDiff};
-use crate::schema::find_layer;
+use crate::standards::v1::subsets::any::schema::find_layer;
 use crate::RasterSnapshot;
 
 //#region 🔖️Diff

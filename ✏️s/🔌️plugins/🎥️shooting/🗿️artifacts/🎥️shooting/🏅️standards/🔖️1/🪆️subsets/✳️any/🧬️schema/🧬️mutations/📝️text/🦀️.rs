@@ -10,7 +10,7 @@
 //! `print_op` never contains `\n`, `parse_op(op.print_op()) == op`, and encoding is deterministic —
 //! no `serde_json` anywhere in this leaf.
 
-pub use crate::schema::mutations::ShootingMutation;
+pub use crate::standards::v1::subsets::any::schema::mutations::ShootingMutation;
 
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).

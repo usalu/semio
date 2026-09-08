@@ -103,3 +103,33 @@ After confirming the old lock epoch was gone and recapture session 30088 held th
 The artifact execution owner completed the final stdio composition mount cleanup after recapture30088 started: the Cargo library now points to taxonomy `../../🦀️.rs`, which mounts intact assembly source at `🔌️plugin/🦀️.rs`; the package-local wrapper is removed. This preserves public module identities, but a Cargo graph resolved before that move can retain the old library source path. Any such failure requires a fresh graph and is not proof of a current source defect. Owners were instructed to finish manifest/mount moves before final native acceptance and rerun the repository package contract on the final path.
 
 The coordinator started the seven current canonical framework artifact Nx test targets in session 36514 (`framework-seven-final-nx-7.txt`), with installed `bun x nx`, `NX_DAEMON=false`, unique `nx-root-framework-final-7` workspace data, serial targets and the current ticket Cargo target. `--excludeTaskDependencies` intentionally selects these already independently exercised artifact tests; the separate normal Forms Nx path provides native prerequisite-chain acceptance. Initial inspection found the owned repository graph worker actively computing, so it was left running. No runtime result is claimed yet.
+
+## Read-only Build Contention Snapshot
+
+The host has 32 GiB physical memory. A read-only `sysctl vm.swapusage` observation showed 36,334.94 MiB swap used; a subsequent five-second VM-counter sample is below. This records conditions during concurrent compilation and is not an isolated performance benchmark. No other applications, processes or caches were changed.
+
+- Pageouts: 0.6 MiB/s
+- Swapins: 151.1 MiB/s
+- Swapouts: 145.4 MiB/s
+- Pages decompressed: 0.0 MiB/s
+- Pages compressed: 0.0 MiB/s
+
+The measured live swap traffic justified limiting subsequent owned acceptance commands to `CARGO_BUILD_JOBS=2`; this is a per-command validation setting, not a shared repository or OS setting. The active host compiler was retained. The coordinator verified GIS Cargo85913 and framework Cargo30343 had no compiler children, cancelled their owning queues only, and recorded exit130 for sessions11127 and36514 (no tests ran). All inspected owned child processes then exited. Current retries are GIS session61527 (`gis-default-runtime-7-jobs2.txt`) and framework Nx session48948 (`framework-seven-final-nx-8-jobs2.txt`), with a fresh unique Nx workspace-data directory and plugin isolation disabled. Agents received the same bounded compiler-job setting for their subsequent validation commands.
+
+The first recaptured host diagnostic is Shell schema line446 failing to resolve `semio_framework_os_config`. A direct current-source read found `semio-framework-os-config = { workspace = true }` already present in Shell Cargo dependencies and the root workspace entry present. This command captured its graph before that concurrent config extraction; no source modification was made. The host acceptance needs a fresh graph after this run.
+
+Fresh full offline Cargo metadata with the OS host feature exited0 and resolved231 current workspace members (the additional member is the concurrently extracted OS config package). The resolved Shell dependency node explicitly includes `semio_framework_os_config`, and its library target is named `semio_framework_os_config`. This corroborates the stale-graph diagnosis rather than assuming the unresolved-crate error needs another declaration edit. Artifact inventory remains99 production owners plus2 shared contracts.
+
+Host recapture30088 exited101. Its retained log has 1 compiler error: the already-diagnosed stale Shell-to-config dependency graph. No current source fix was required. A fresh full host feature graph had separately resolved successfully, so the coordinator started `framework-host-integration-7-current-jobs2.txt` with the same four package selection and two compiler jobs. Independent queued native gates may proceed in current lock order.
+
+## Current Native Dependency Cost
+
+A locked, offline inverse normal-dependency tree for `semio-s-artifact-gis-gisterrain` completed with exit 0. It confirms that the WGPU compilation observed in the current GIS default runtime gate comes from existing shared framework paths: plugin → framework/UI, and terrain → surface → Infinite host → framework/UI/Vello. Terrain schema directly consumes `semio_framework_surface::terrain::tiles`; its default surface dependency is therefore required by the current schema. The owning GIS plugin is not in this leaf dependency tree. This extraction isolates artifact ownership and sibling compilation; it does not eliminate these existing framework renderer dependencies or establish a cold-build duration claim. Raw inverse-tree evidence is `🗑️generated/gis-terrain-wgpu-normal-path.txt`.
+
+## Remaining GIS Acceptance Distinctions
+
+The current GIS test command selects both leaves and disables default features. This exercises their runtime tests but Cargo can unify shared dependency features across the two selected packages. Before claiming independently usable default leaves, also run each of `semio-s-artifact-gis-gismap` and `semio-s-artifact-gis-gisterrain` in its own locked, offline `cargo check --lib --no-default-features` command. Then finish the app-assembly feature runtime gate, Block/GIS parent compilation, and GIS native-codec integration. Preserve the shared target and jobs=2/incremental=0 settings; do not count a queued command as a pass.
+
+## Read-Only Shared Compiler Cache Snapshot
+
+A read-only `sccache --show-stats` request completed with exit 0 while GIS runtime compilation continued. The shared server reported Rust hit rate 6.99%, 1,624 Rust misses, no cache timeouts/read/write errors, and a 10 GiB cache at its 10 GiB limit. Its average compiler time was 47.738 seconds and average cache-hit read was 0.029 seconds. These are server-wide aggregates spanning concurrent work, not this task's before/after benchmark. No server, cache, limits or shared configuration was changed or reset. Raw receipt: `🗑️generated/native-sccache-snapshot.txt`.

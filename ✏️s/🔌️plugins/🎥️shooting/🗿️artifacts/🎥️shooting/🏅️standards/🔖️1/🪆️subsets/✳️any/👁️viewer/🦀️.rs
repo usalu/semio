@@ -50,7 +50,7 @@ impl ArtifactViewer for ShootingViewer {
     const DOCUMENT_SCHEMA: &'static str = SHOOTING_DOCUMENT_SCHEMA;
 
     fn initial_snapshot() -> ShootingSnapshot {
-        crate::schema::default_snapshot()
+        crate::standards::v1::subsets::any::schema::default_snapshot()
     }
 
     /// 👁️ Structurally read-only: the sole `ShootingViewCommand::Noop` variant never carries a config
@@ -62,12 +62,13 @@ impl ArtifactViewer for ShootingViewer {
         _doc: &ArtifactView<'_, Self::Snapshot>,
         _cfg: &ConfigView<'_, Self::Config>,
         _interaction: &semio_framework_plugin::app::InteractionView<'_>,
+        _view_state: Option<&semio_framework_plugin::ViewModel>,
         _engines: &EngineHandles,
     ) -> Result<ViewEmit<Self::ConfigMutation>, Fault> {
         Ok(ViewEmit::default())
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         match body_key {
             scene::BODY_KEY => scene::render(doc.snapshot),
             _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("shooting.viewer.ui.capacity", "viewer label admission failed")),

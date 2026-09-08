@@ -16,13 +16,6 @@ async fn set_shot_selection_is_config_only_and_selects_the_shot_in_the_inspector
 }
 
 #[semio_framework_async_macros::async_test]
-async fn set_active_utility_emits_no_artifact_mutations() {
-    let mut app = shooting_app().await;
-    let result = dispatch(&mut app, ShootingCommand::SetActiveUtility(set_active_utility::SetActiveUtility { utility_id: "rotate".into() })).await;
-    assert!(result.mutations.is_empty(), "utility switching never emits document operations");
-}
-
-#[semio_framework_async_macros::async_test]
 async fn center_model_toggle_bumps_fit_revision_only_on_the_off_to_on_edge() {
     let mut app = shooting_app().await;
     dispatch(&mut app, ShootingCommand::SetCenterModel(set_center_model::SetCenterModel { pressed: Some(false) })).await;

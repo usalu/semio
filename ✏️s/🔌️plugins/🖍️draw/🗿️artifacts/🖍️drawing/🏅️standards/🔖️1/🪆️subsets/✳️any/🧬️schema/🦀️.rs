@@ -27,8 +27,6 @@ pub struct DrawingArtifact {
     pub artboard: Option<DrawingArtboard>,
     #[state(presence)]
     pub selected_ids: Vec<String>,
-    #[state(presence)]
-    pub active_utility_id: String,
     #[state(config)]
     pub engagement_input: String,
     #[state(config)]
@@ -53,7 +51,6 @@ impl Default for DrawingArtifact {
             assets: BTreeMap::new(),
             artboard: Some(DrawingArtboard { width: 1024.0, height: 1024.0 }),
             selected_ids: Vec::new(),
-            active_utility_id: "selectDirect".into(),
             engagement_input: String::new(),
             camera_x: 512.0,
             camera_y: 512.0,

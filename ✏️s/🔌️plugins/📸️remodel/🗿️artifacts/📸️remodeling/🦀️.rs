@@ -120,7 +120,7 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
 pub fn artifact() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<crate::RemodelApps> {
     use semio_framework_plugin::app::declarations::ArtifactDeclaration;
     use store::os_io::ArtifactKindId;
-    ArtifactDeclaration { kind: ArtifactKindId::parse("s.remodel.remodeling").expect("canonical remodeling kind"), localization: &[], standards: vec![crate::standards::v1::standard()] }
+    ArtifactDeclaration { kind: ArtifactKindId::parse("s.remodel.remodeling").expect("canonical remodeling kind"), localization: &[], standards: vec![standards::v1::standard()] }
 }
 
 //#endregion 🔖️Register
@@ -2856,8 +2856,6 @@ pub mod editor {
             pub mod run_stage;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎬️set-active-example/🦀️.rs"]
             pub mod set_active_example;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🪛️set-active-utility/🦀️.rs"]
-            pub mod set_active_utility;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📷️set-camera/🦀️.rs"]
             pub mod set_camera;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🌁️set-dense-params/🦀️.rs"]

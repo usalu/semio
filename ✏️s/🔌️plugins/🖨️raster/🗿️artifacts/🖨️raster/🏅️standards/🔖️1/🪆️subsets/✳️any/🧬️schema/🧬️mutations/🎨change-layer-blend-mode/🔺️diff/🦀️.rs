@@ -1,7 +1,7 @@
 //! 🔺️ `change-layer-blend-mode` sparse diff — writes only the layer's `blend_mode` field.
 
 use crate::diff::{diff_patch_layer, RasterDiff};
-use crate::schema::find_layer;
+use crate::standards::v1::subsets::any::schema::find_layer;
 use crate::{RasterLayerNode, RasterLayerPatch, RasterSnapshot};
 
 //#region 🔖️Diff

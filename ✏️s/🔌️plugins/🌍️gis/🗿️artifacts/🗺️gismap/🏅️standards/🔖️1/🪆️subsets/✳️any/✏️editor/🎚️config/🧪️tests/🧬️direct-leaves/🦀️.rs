@@ -39,7 +39,7 @@ where T: MutationLeaf + dsl::ToValue + dsl::FromValue + PartialEq + std::fmt::De
 #[test]
 fn neutral_envelopes_share_json_text_binary_and_inverse_contracts() {
     let fixture = fixture();
-    assert_eq!(Gis2dConfigMutation::DESCRIPTORS.len(), 7);
+    assert_eq!(Gis2dConfigMutation::DESCRIPTORS.len(), 6);
     for row in fixture["valid"].as_array().unwrap() {
         let operation: Gis2dConfigMutation = dsl::json::from_json_str(&(row["payload"].clone()).to_string()).unwrap();
         assert_eq!(serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&operation)).unwrap(), row["payload"]);
@@ -91,7 +91,6 @@ fn populated() -> Gis2dConfig {
     value.camera_json = r#"{"x":8,"y":9,"zoom":4}"#.into();
     value.render_mode = "vector".into();
     value.vector_style = "figureGround".into();
-    value.locale = "de-DE".into();
     value.layer_visibility.insert("water".into(), false);
     value.layer_stroke_scale.insert("roads".into(), 2.0);
     value
@@ -152,16 +151,13 @@ fn stroke_inverse_distinguishes_absence_and_explicit_default() {
 fn independent_sparse_writes_compose_and_serde_retains_removal() {
     let base = populated();
     let camera = Gis2dConfigMutation::SetCamera(SetCamera { camera_json: "{}".into() });
-    let locale = Gis2dConfigMutation::SetLocale(SetLocale { value: "en-GB".into() });
     let clear = Gis2dConfigMutation::SetLayerVisibility(SetLayerVisibility { layer_id: "water".into(), visible: None });
     let mut combined = camera.diff(&base).into_parts().0;
-    combined.absorb(locale.diff(&base).into_parts().0);
     combined.absorb(clear.diff(&base).into_parts().0);
     let decoded = dsl::json::from_json_str::<Gis2dConfigDiff>(&(serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(&combined)).unwrap()).to_string()).unwrap();
     let actual = decoded.apply(&base).unwrap();
-    assert_eq!(actual, apply(&apply(&apply(&base, &camera), &locale), &clear));
+    assert_eq!(actual, apply(&apply(&base, &camera), &clear));
     assert_eq!(actual.camera_json, "{}");
-    assert_eq!(actual.locale, "en-GB");
     assert_eq!(actual.layer_visibility.get("water"), None);
     assert_eq!(actual.layer_stroke_scale, base.layer_stroke_scale);
 }

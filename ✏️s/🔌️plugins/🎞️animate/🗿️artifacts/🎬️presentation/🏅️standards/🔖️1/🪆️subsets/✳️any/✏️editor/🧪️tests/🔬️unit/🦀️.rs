@@ -202,7 +202,7 @@ async fn import_media_rejects_unknown_port() {
 
 #[semio_framework_async_macros::async_test]
 async fn empty_presentation_snapshot_has_no_tiles() {
-    let snapshot = crate::schema::empty_presentation_snapshot();
+    let snapshot = crate::standards::v1::subsets::any::schema::empty_presentation_snapshot();
     assert!(crate::presentation_working_scene(&snapshot).1.is_empty());
 }
 
@@ -262,7 +262,7 @@ async fn every_command_round_trips_through_text_and_binary() {
 /// keyword at all and no longer parses).
 #[semio_framework_async_macros::async_test]
 async fn every_printed_op_line_starts_with_the_rows_wire_keyword() {
-    let expected_keywords: [(&str, &str); 18] = [
+    let expected_keywords: [(&str, &str); 17] = [
         ("seedGrid", "seed-grid"),
         ("addTile", "add-tile"),
         ("deleteTile", "delete-tile"),
@@ -277,7 +277,6 @@ async fn every_printed_op_line_starts_with_the_rows_wire_keyword() {
         ("resetGrid", "reset-grid"),
         ("engagementInput", "engagement-input"),
         ("canvasPointerDown", "canvas-pointer-down"),
-        ("setLocale", "set-locale"),
         ("noMutation", "no-op"),
         ("copyPrompt", "copy-prompt"),
         ("exportVideoFromDeck", "export-video-from-deck"),
@@ -324,7 +323,6 @@ pub(super) fn every_command() -> Vec<PresentationCommand> {
         PresentationCommand::ResetGrid(reset_grid::ResetGrid {}),
         PresentationCommand::EngagementInput(engagement_input::EngagementInput { value: "add".into() }),
         PresentationCommand::CanvasPointerDown(canvas_pointer_down::CanvasPointerDown { layer_id: Some("t1".into()) }),
-        PresentationCommand::SetLocale(set_locale::SetLocale { value: "de-DE".into() }),
         PresentationCommand::NoOperation(no_operation::NoOperation {}),
         PresentationCommand::CopyPrompt(copy_prompt::CopyPrompt {}),
         PresentationCommand::ExportVideoFromDeck(export_video_from_deck::ExportVideoFromDeck { output_dir: "output/x".into(), scene_json: "{}".into() }),

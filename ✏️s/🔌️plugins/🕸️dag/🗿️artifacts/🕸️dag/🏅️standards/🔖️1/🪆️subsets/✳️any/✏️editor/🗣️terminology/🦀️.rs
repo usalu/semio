@@ -36,18 +36,17 @@ semio_framework_plugin::app_labels! {
 //#endregion 🔖️Labels
 
 //#region 🔖️Resolvers
-/// 🗣️ `cfg.locale`-driven counterpart to the deleted `ViewModel`-driven locale read.
+/// 🗣️ Reports whether the canonical shared view state selects German.
 pub fn is_de_locale(view_state: &semio_framework_plugin::ViewModel) -> bool {
     view_state.locale == semio_framework_plugin::Locale::De
 }
 
-/// 🗣️ Derives the compile-time-checked `Locale` from the BCP-47 `cfg.locale` tag.
+/// 🗣️ Reads the compile-time-checked locale from the canonical shared view state.
 pub fn dag_locale(view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::Locale {
     view_state.locale
 }
 
-/// 🗣️ Resolves the active label set from `cfg.locale`; this app has no terminology variant, so
-/// `Terminology` is always `Native`.
+/// 🗣️ Resolves the active label set from the canonical shared view state.
 pub fn dag_play_labels(view_state: &semio_framework_plugin::ViewModel) -> &'static DagPlayLabels {
     semio_framework_plugin::resolve_labels::<DagPlayLabels>(view_state)
 }

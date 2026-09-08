@@ -1,0 +1,115 @@
+{
+  "graph": {
+    "name": "mini",
+    "manifestId": "nakagin",
+    "rootNodeId": "root",
+    "nodes": [
+      {
+        "id": "root",
+        "kind": "Piece",
+        "name": "core",
+        "x": 0.0,
+        "y": 0.0,
+        "width": 80.0,
+        "height": 40.0,
+        "properties": {},
+        "ports": [
+          {
+            "id": "out",
+            "kind": "Connector",
+            "direction": "out",
+            "properties": {}
+          }
+        ]
+      },
+      {
+        "id": "child",
+        "kind": "Piece",
+        "name": "capsule",
+        "x": 120.0,
+        "y": 0.0,
+        "width": 80.0,
+        "height": 40.0,
+        "properties": {},
+        "ports": [
+          {
+            "id": "in",
+            "kind": "Connector",
+            "direction": "in",
+            "properties": {}
+          }
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "id": "e1",
+        "kind": "Connection",
+        "source": "root@out",
+        "target": "child@in",
+        "properties": {
+          "u": 1.0,
+          "v": 2.0
+        }
+      }
+    ]
+  },
+  "cases": [
+    {
+      "query": "MATCH (a:Piece)-[r:Connection]->(b:Piece) RETURN a.name, b.name",
+      "oracle": { "select": "SELECT a.name, b.name FROM nodes a JOIN edges r ON r.source = a.id JOIN nodes b ON b.id = r.target WHERE a.kind = 'Piece' AND r.kind = 'Connection' AND b.kind = 'Piece' ORDER BY a.id, r.id" },
+      "columns": [
+        "a.name",
+        "b.name"
+      ],
+      "rows": [
+        [
+          "core",
+          "capsule"
+        ]
+      ],
+      "mutations": 0
+    },
+    {
+      "query": "MATCH (a:Piece) WHERE a.name = 'core' SET a.label = 'root-core' RETURN a.name",
+      "oracle": { "mutate": "UPDATE nodes SET label = 'root-core' WHERE kind = 'Piece' AND name = 'core'", "select": "SELECT name FROM nodes WHERE kind = 'Piece' AND name = 'core' ORDER BY id" },
+      "columns": [
+        "a.name"
+      ],
+      "rows": [
+        [
+          "core"
+        ]
+      ],
+      "mutations": 1
+    },
+    {
+      "query": "CREATE (n:Piece)",
+      "oracle": { "mutate": "INSERT INTO nodes (id, kind, name) VALUES ('n-2', 'Piece', 'n')" },
+      "columns": [],
+      "rows": [],
+      "mutations": 1
+    },
+    {
+      "query": "MATCH (a:Piece) WHERE a.name = 'missing' RETURN a.name",
+      "oracle": { "select": "SELECT name FROM nodes WHERE kind = 'Piece' AND name = 'missing' ORDER BY id" },
+      "columns": [
+        "a.name"
+      ],
+      "rows": [],
+      "mutations": 0
+    },
+    {
+      "query": "MATCH (a:Piece)-[r:Connection]->(b:Piece) RETURN a, r, b",
+      "oracle": {
+        "nodes": "SELECT id FROM nodes WHERE id IN (SELECT source FROM edges WHERE kind = 'Connection' UNION SELECT target FROM edges WHERE kind = 'Connection') ORDER BY id",
+        "edges": "SELECT id FROM edges WHERE kind = 'Connection' ORDER BY id"
+      },
+      "columns": ["a", "r", "b"],
+      "rows": [],
+      "nodeIds": ["child", "root"],
+      "edgeIds": ["e1"],
+      "mutations": 0
+    }
+  ]
+}

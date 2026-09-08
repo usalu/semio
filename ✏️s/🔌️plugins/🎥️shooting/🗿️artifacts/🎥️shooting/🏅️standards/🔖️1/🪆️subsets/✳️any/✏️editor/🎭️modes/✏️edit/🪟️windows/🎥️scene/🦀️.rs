@@ -1,6 +1,6 @@
 //! 🎥️ Shooting play app — the 3D scene window: the editable studio viewport (assets + lighting).
 
-use crate::schema::is_transparent_shooting_background;
+use crate::standards::v1::subsets::any::schema::is_transparent_shooting_background;
 use crate::{shooting_asset_scale, ShootingAsset, ShootingShot, ShootingSnapshot};
 use crate::editor::shooting::config::ShootingConfig;
 use crate::editor::shooting::modes::edit::windows::scene::options;
@@ -179,10 +179,10 @@ fn world_meshes_json(snapshot: &ShootingSnapshot) -> String {
 /// `interactionSelect`/`interactionHover` directly against the `"assets"` domain declared on this
 /// window kind (client-side hit-testing against the mesh instance ids already in this payload) — it no
 /// longer needs `selectionMethod`/`selectionMode`/`targets` from this payload either.
-fn world_selection_json(snapshot: &ShootingSnapshot, cfg: &ShootingConfig) -> String {
+fn world_selection_json(snapshot: &ShootingSnapshot, active_utility: &str) -> String {
     let mut value: Value = parse(&world3d_selection_json("pick", &[], None)).unwrap_or_else(|_| json!({}));
     if let Some(object) = value.as_object_mut() {
-        object.insert("transformMode", json!(cfg.active_utility_id.as_str()));
+        object.insert("transformMode", json!(active_utility));
         object.insert("activeObjectId", json!(snapshot.active_asset_id.as_str()));
         object.insert("gumballActive", json!(false));
     }
@@ -213,15 +213,15 @@ fn shooting_fit_json(cfg: &ShootingConfig) -> String {
     json!({ "enabled": cfg.center_model, "revision": cfg.fit_revision, "padding": 1.25 }).to_string()
 }
 
-pub fn render(snapshot: &ShootingSnapshot, cfg: &ShootingConfig) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
+pub fn render(snapshot: &ShootingSnapshot, cfg: &ShootingConfig, active_utility: &str) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::BuiltNode> {
     semio_framework_plugin::scene_surface(
         SHOOTING_PLAY_SURFACE_SCENE,
         semio_framework_ui_contract::SurfaceKind::World3d,
         &World3dScene {
             environment_json: Some(shooting_environment_json(snapshot)),
-            frame_json: crate::schema::active_shot(snapshot).map(shooting_frame_json),
+            frame_json: crate::standards::v1::subsets::any::schema::active_shot(snapshot).map(shooting_frame_json),
             fit_json: Some(shooting_fit_json(cfg)),
-            ..world3d_scene(camera_json(&cfg.camera), world_meshes_json(snapshot), world_instances_json(snapshot), world_selection_json(snapshot, cfg), &WorldSunConfig::default())
+            ..world3d_scene(camera_json(&cfg.camera), world_meshes_json(snapshot), world_instances_json(snapshot), world_selection_json(snapshot, active_utility), &WorldSunConfig::default())
         },
     )
 }

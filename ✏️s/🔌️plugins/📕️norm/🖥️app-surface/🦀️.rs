@@ -366,7 +366,7 @@ pub fn norm_retained_reduce<A: NormRetainedEditor>(
     history: &semio_framework_plugin::HistoryView,
     _interaction: &protocol::InteractionState,
     _hover: &semio_framework_plugin::app::InteractionHoverState,
-    _context: Option<&semio_framework_plugin::ArtifactOwnedToolJobContext<semio_framework_plugin::EditorApp<A>>>,
+    _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<semio_framework_plugin::EditorApp<A>>>,
     operation: &semio_framework_plugin::AppOperationContext,
 ) -> NormRetainedCommandResult<A::Mutation> {
     if !NORM_RETAINED_TOOL_IDS.contains(&A::command_id(command)) {

@@ -212,7 +212,7 @@ fn layout_retained_reduce(
     history: &semio_framework_plugin::HistoryView,
     _interaction: &protocol::InteractionState,
     _hover: &semio_framework_plugin::app::InteractionHoverState,
-    _context: Option<&semio_framework_plugin::ArtifactOwnedToolJobContext<EditorApp<LayoutPlayApp>>>,
+    _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<LayoutPlayApp>>>,
     operation: &AppOperationContext,
 ) -> Result<Emit<LayoutMutation, LayoutConfigMutation, NoDraftMutation>, Fault> {
     if !LAYOUT_RETAINED_TOOL_IDS.contains(&command.command_id()) { return Err(Fault::from("layout-command-retained-route-rejected")); }
@@ -511,7 +511,7 @@ impl ArtifactEditor for LayoutPlayApp {
     }
 
     fn initial_snapshot() -> LayoutSnapshot {
-        crate::schema::default_document()
+        crate::standards::v1::subsets::any::schema::default_document()
     }
 
     fn io() -> Option<semio_framework_plugin::AppIo> {

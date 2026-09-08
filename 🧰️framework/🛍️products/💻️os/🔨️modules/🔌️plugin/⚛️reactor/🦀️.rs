@@ -88,12 +88,7 @@ crate::component_persistent_local! {
     // 🌉️ `thread_local!` initializer expressions run in a plain (non-const, non-async) context —
     // bridged via `resolve_ready` since every `::new()` here is a pure `Self::default()`.
     static PATCHES: patches::PatchTracker = patches::PatchTracker::new();
-    /// 👥️ M2 (ticket 26/08/17 `design-unified.md`): one `PresenceHub` shared by every instance this
-    /// actor hosts, beside `PATCHES` — same "surfaces are already namespaced by instance" reasoning
-    /// (a `PresenceHub` entry is keyed `(surface, node_key)`, and `surface` already embeds the
-    /// instance via `plugin_take_presence`'s `"<instance>:<body-key>"` stamping). Fed from each dirty
-    /// render's `plugin_take_presence(instance)` drain, expired and flushed once per `poll` — see
-    /// `poll`'s own body for both halves.
+    /// 👥️ Collects presence by concrete mounted surface and node, bound atomically with each render.
     static PRESENCE: RefCell<PresenceHub> = RefCell::new(PresenceHub::new());
     /// 📮️ One `RequestRegistry` per actor (today: shared process-wide, matching the "one actor per
     /// app instance is the default" granularity design-abi.md §4 names — a multi-instance pooled

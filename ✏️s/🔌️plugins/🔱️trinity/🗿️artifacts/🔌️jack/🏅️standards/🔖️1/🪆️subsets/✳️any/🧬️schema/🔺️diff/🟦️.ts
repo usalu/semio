@@ -26,7 +26,6 @@ export interface JackDiff {
   /** @state config */
   viewportCamera?: Camera;
   /** @state config */
-  jackResultJson?: string;
   /** @state config */
   editorSelection?: JackEditorSelection | null;
 }

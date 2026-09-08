@@ -1,7 +1,7 @@
 //! 🔺️ `create-layer` sparse diff — a tree-aware insertion, never a whole-snapshot capture.
 
 use crate::diff::{diff_add_layer, RasterDiff};
-use crate::schema::{find_layer, layer_node_id};
+use crate::standards::v1::subsets::any::schema::{find_layer, layer_node_id};
 use crate::{RasterLayerNode, RasterSnapshot};
 
 //#region 🔖️Diff

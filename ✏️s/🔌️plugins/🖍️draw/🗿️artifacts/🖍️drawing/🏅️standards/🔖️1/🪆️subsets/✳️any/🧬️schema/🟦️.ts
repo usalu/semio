@@ -16,7 +16,6 @@ export interface DrawingArtifact {
   /** @state presence */
   selectedIds: string[];
   /** @state presence */
-  activeUtilityId: string;
   /** @state config */
   engagementInput: string;
   /** @state config */
@@ -104,7 +103,6 @@ export function parseDrawingArtifact(value: unknown, at = "$"): DrawingArtifact 
     assets: drawingDrawingArtifactGuardObject(row["assets"], `${at}.assets`),
     artboard: row["artboard"] === undefined ? undefined : parseDrawingArtboard(row["artboard"], `${at}.artboard`),
     selectedIds: drawingDrawingArtifactGuardArray(row["selectedIds"], `${at}.selectedIds`).map((item, index) => drawingDrawingArtifactGuardString(item, `${at}.selectedIds[${index}]`)),
-    activeUtilityId: drawingDrawingArtifactGuardString(row["activeUtilityId"], `${at}.activeUtilityId`),
     engagementInput: drawingDrawingArtifactGuardString(row["engagementInput"], `${at}.engagementInput`),
     cameraX: drawingDrawingArtifactGuardNumber(row["cameraX"], `${at}.cameraX`),
     cameraY: drawingDrawingArtifactGuardNumber(row["cameraY"], `${at}.cameraY`),

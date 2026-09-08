@@ -351,9 +351,6 @@ pub use crate::os_dsl::schema::{DslValue, FromValue, ToValue, ValueError};
 pub use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🧪️Tests
-/// 🚨️ Every `#[path]` in this file must point at a file that exists. A mount whose target moved
-/// turns into "os-kernel does not compile" for every session in the tree, with an error that names
-/// a path rather than a cause; this turns it into one named failing test in the owning crate.
 #[cfg(test)]
 include!("../../🧪️tests/🔬️standalone/🦀️.rs");
 //#endregion 🧪️Tests

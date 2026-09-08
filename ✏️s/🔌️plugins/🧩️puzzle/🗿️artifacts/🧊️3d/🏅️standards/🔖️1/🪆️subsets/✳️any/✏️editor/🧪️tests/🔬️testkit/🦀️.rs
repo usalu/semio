@@ -234,7 +234,7 @@ pub fn measure_group_tag(measures: &[WindowMeasure], group_id: &str) -> Option<O
 
 /// 🪣️ How far background fill planning has preloaded, read off the fill tool's own count slider.
 pub fn fill_ready(app: &mut Puzzle3dApp) -> f64 {
-    semio_framework::io::resolve_ready(app.tool_measures()).get(fill_tool::TOOL_ID).and_then(|tool_measures| find_measure_slider_ready(tool_measures, "puzzle3d-fill-count")).unwrap_or(0.0)
+    semio_framework::io::resolve_ready(app.tool_measures(&semio_framework_plugin::ViewModel::default())).get(fill_tool::TOOL_ID).and_then(|tool_measures| find_measure_slider_ready(tool_measures, "puzzle3d-fill-count")).unwrap_or(0.0)
 }
 
 /// 🪣️ Drives `fillBuildTick` until planning has reached `target` placements (or the budget runs out).
@@ -287,5 +287,5 @@ pub fn context_menu_for_selection(app: &mut Puzzle3dApp, granularity: &str, id: 
         window_instance_id: None,
         point: None,
     };
-    semio_framework::io::resolve_ready(app.context_menu(&request))
+    semio_framework::io::resolve_ready(app.context_menu(&request, &semio_framework_plugin::ViewModel::default()))
 }

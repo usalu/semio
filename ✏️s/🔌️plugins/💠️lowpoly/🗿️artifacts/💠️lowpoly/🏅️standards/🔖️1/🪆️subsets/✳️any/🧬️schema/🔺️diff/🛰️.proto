@@ -21,7 +21,6 @@ message LowpolyDiff {
   // @state presence
   optional uint32 active_paint_layer = 8;
   // @state presence
-  optional string active_utility_id = 9;
   // @state config
   optional bool show_edges = 10;
   // @state config

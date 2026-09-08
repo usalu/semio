@@ -2477,6 +2477,26 @@ function sendWireFrame(state: ArtifactState, frame: ClientFrame, lane: WireLane)
   if (state.socket?.readyState === WebSocket.OPEN) state.socket.send(encodeClientFrame(frame, lane));
 }
 
+function documentBackboneAdmissionReady(state: ArtifactState): boolean {
+  if (state.artifactBootstrap !== null || state.artifactRebootstrapRequired || state.requiredTailFrontier !== null) return false;
+  if (state.currentPack === null || state.currentSpr === null || state.frontier === null || state.verifiedColdPair === null) return false;
+  try {
+    state.verifiedColdPair.assertCurrent();
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function documentBackboneRelayReady(state: ArtifactState): boolean {
+  return state.hubActorReady && state.socket?.readyState === WebSocket.OPEN && documentBackboneAdmissionReady(state);
+}
+
+function flushMutationsToHubIfReady(state: ArtifactState): void {
+  if (!documentBackboneRelayReady(state) || state.outbox.length === 0) return;
+  relayMutationsToHub(state, state.outbox.splice(0));
+}
+
 /** 🧺️ Builds + sends one `Commands` batch, tracking it in `pendingBatches` for {@link handleAck}.
  * Mirrors the Rust actor's `relay_operations_to_hub`. Finding 5: a closed socket no longer no-ops
  * silently — the envelopes move into {@link ArtifactState.outbox} instead, and
@@ -2495,11 +2515,7 @@ function relayMutationsToHub(state: ArtifactState, envelopes: readonly MutationE
     rejectReadOnlyExecutionTarget(state, envelopes);
     return;
   }
-  if (!state.hubActorReady) {
-    queueOutbox(state, envelopes);
-    return;
-  }
-  if (state.socket?.readyState !== WebSocket.OPEN) {
+  if (!documentBackboneRelayReady(state)) {
     queueOutbox(state, envelopes);
     return;
   }
@@ -2563,6 +2579,16 @@ function rejectDocumentBackboneCapacity(state: ArtifactState, envelopes: readonl
     kind: "commandOutcome",
     batchId,
     outcome: { kind: "rejected", reason: "document backbone pending capacity", messages: [envelopes.length, bytes, DOCUMENT_BACKBONE_RETENTION_LIMITS.maximumBytes] },
+  });
+}
+
+function rejectDocumentBackboneBootstrapAdmission(state: ArtifactState, bytes: number): void {
+  const batchId = nextLocalOverflowBatchId;
+  nextLocalOverflowBatchId -= 1;
+  emitEvent(state, {
+    kind: "commandOutcome",
+    batchId,
+    outcome: { kind: "rejected", reason: "document backbone canonical pair unavailable", messages: [bytes] },
   });
 }
 
@@ -2910,6 +2936,7 @@ function rejectArtifactBootstrap(state: ArtifactState, error: unknown, owner = s
 
 async function requireArtifactRebootstrap(state: ArtifactState): Promise<void> {
   const owner = captureArtifactRebootstrapOwner(state);
+  requeuePendingBatches(state);
   reissueInferenceApprovalUndoForRebootstrap(state);
   if (inferencePort !== null && documentRuntimeKeyV1({ kind: "hub", ...inferencePort.scope }) === state.runtimeKey && inferencePort.status.phase !== "approving") closeInferencePort(inferencePort.operationEpoch);
   await retireCurrentFolderCanonicalBootstrapMirror(state);
@@ -2967,10 +2994,7 @@ function finishCatchupIfReady(state: ArtifactState): void {
   if (state.pendingResumeToken !== null) state.resumeToken = state.pendingResumeToken;
   state.pendingResumeToken = null;
   setRemote(state, { kind: "live", peerCount: 0 });
-  if (state.hubActorReady && state.outbox.length > 0) {
-    const outbox = state.outbox.splice(0);
-    relayMutationsToHub(state, outbox);
-  }
+  flushMutationsToHubIfReady(state);
 }
 
 async function installArtifactBootstrap(state: ArtifactState, owner: DocumentArtifactBootstrapOwner, done: { readonly descriptor_hash: readonly number[]; readonly chunk_count: number } | null): Promise<void> {
@@ -3101,7 +3125,7 @@ async function handleHubFrame(
       state.resumeToken = frame.Welcome.resume_token;
       state.frontier = frame.Welcome.server_frontier;
       setRemote(state, { kind: "live", peerCount: 0 });
-      if (state.hubActorReady && state.outbox.length > 0) relayMutationsToHub(state, state.outbox.splice(0));
+      flushMutationsToHubIfReady(state);
       return;
     }
     if (bootstrap === "Tail") {
@@ -3174,7 +3198,8 @@ async function handleHubFrame(
     return;
   }
   if ("Commands" in frame) {
-    if (state.artifactBootstrap || state.artifactRebootstrapRequired) {
+    if (state.artifactRebootstrapRequired) return;
+    if (state.artifactBootstrap) {
       rejectArtifactBootstrap(state, new Error("tail arrived before artifact bootstrap completion"));
       return;
     }
@@ -3187,6 +3212,7 @@ async function handleHubFrame(
     return;
   }
   if ("Ack" in frame) {
+    if (state.artifactRebootstrapRequired) return;
     if (state.artifactBootstrap || state.requiredTailFrontier) {
       rejectArtifactBootstrap(state, new Error("ack arrived before artifact catch-up completion"));
       return;
@@ -3241,7 +3267,7 @@ async function handleHubFrame(
     state.pendingSocketActorId = null;
     state.sessionColor = frame.Session.color;
     state.presenceAuthority = presenceCandidate?.socket === state.socket ? presenceCandidate : null;
-    if (state.outbox.length > 0) relayMutationsToHub(state, state.outbox.splice(0));
+    flushMutationsToHubIfReady(state);
     const scope = artifactScope(state);
     post({ kind: "socket-actor", documentId: state.config.documentId, clientInstanceId: state.openClientInstanceId, ...(scope === undefined ? {} : { scope }), actorId: expectedActor });
     emitEvent(state, { kind: "session", actor: frame.Session.actor, color: frame.Session.color });
@@ -4961,6 +4987,10 @@ function admitLocalMutations(
 async function handleLocalMsg(state: ArtifactState, message: ArtifactActorMsg): Promise<void> {
   switch (message.kind) {
     case "documentBackbone": {
+      if (!documentBackboneAdmissionReady(state)) {
+        rejectDocumentBackboneBootstrapAdmission(state, message.message.byteLength);
+        break;
+      }
       const parsed = parseDocumentBackboneMessage(message.message);
       if (parsed.envelopes.some((envelope) => envelope.document_id !== state.config.documentId)) {
         const batchId = nextLocalOverflowBatchId;
@@ -4972,6 +5002,10 @@ async function handleLocalMsg(state: ArtifactState, message: ArtifactActorMsg): 
       break;
     }
     case "localMutations": {
+      if (hubBinding(state.config) && !documentBackboneAdmissionReady(state)) {
+        rejectDocumentBackboneBootstrapAdmission(state, 0);
+        break;
+      }
       admitLocalMutations(state, message.envelopes, message.envelopes);
       break;
     }

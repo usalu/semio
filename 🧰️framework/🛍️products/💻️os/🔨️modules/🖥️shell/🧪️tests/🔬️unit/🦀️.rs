@@ -228,12 +228,12 @@ fn constructed_cases_match_committed_fixtures() {
     }
     assert_ok("set-active-utility", base.clone(), ShellCommand::SetActiveUtility { window_id: "w1".to_string(), utility_id: Some("inspect".to_string()) });
     assert_ok("set-active-tool", base.clone(), ShellCommand::SetActiveTool { tool_id: Some("draw".to_string()) });
-    assert_ok("set-command-expanded", base.clone(), ShellCommand::SetCommandExpanded { command_id: Some("os.setAppearance".to_string()) });
-    assert_ok("stage-command-arg", base.clone(), ShellCommand::StageCommandArg { command_id: "os.setAppearance".to_string(), arg_id: "value".to_string(), value: serde_json::json!("dark") });
+    assert_ok("set-command-expanded", base.clone(), ShellCommand::SetCommandExpanded { command_id: Some("ui.driver.setDraft".to_string()) });
+    assert_ok("stage-command-arg", base.clone(), ShellCommand::StageCommandArg { command_id: "ui.driver.setDraft".to_string(), arg_id: "value".to_string(), value: serde_json::json!("dark") });
     {
         let mut s = base.clone();
-        s.staged_command_args.entry("os.setAppearance".to_string()).or_default().insert("value".to_string(), serde_json::json!("dark"));
-        assert_ok("reset-command-args", s, ShellCommand::ResetCommandArgs { command_id: "os.setAppearance".to_string() });
+        s.staged_command_args.entry("ui.driver.setDraft".to_string()).or_default().insert("value".to_string(), serde_json::json!("dark"));
+        assert_ok("reset-command-args", s, ShellCommand::ResetCommandArgs { command_id: "ui.driver.setDraft".to_string() });
     }
     assert_ok("set-panel-visible", base.clone(), ShellCommand::SetPanelVisible { anchor: Anchor::Left, visible: true });
     assert_ok("set-panel-size", base.clone(), ShellCommand::SetPanelSize { anchor: Anchor::Left, size: 320.0 });
@@ -303,21 +303,8 @@ fn constructed_cases_match_committed_fixtures() {
     }
     assert_ok("set-open-with-focus-role", base.clone(), ShellCommand::SetOpenWithFocusRole { role: Some(AppRole("editor".to_string())) });
     assert_ok("set-active-tutorial", base.clone(), ShellCommand::SetActiveTutorial { tutorial_id: Some("getting-started".to_string()) });
-    assert_ok("set-ui-appearance", base.clone(), ShellCommand::SetUiAppearance { appearance: UiAppearance::Dark });
-    assert_ok("set-ui-layout", base.clone(), ShellCommand::SetUiLayout { layout: UiChromeLayout::Tablet });
-    assert_ok("set-ui-driver", base.clone(), ShellCommand::SetUiDriver { driver_id: "default".to_string() });
-    assert_ok("set-ui-custom-driver", base.clone(), ShellCommand::SetUiCustomDriver { driver_id: "custom-1".to_string(), driver: Some(UiDriver { driver_id: "custom-1".to_string(), label: "My Driver".to_string(), config: serde_json::json!({}) }) });
     assert_ok("set-ui-driver-draft", base.clone(), ShellCommand::SetUiDriverDraft { draft: Some(UiDriver { driver_id: "draft".to_string(), label: "Draft".to_string(), config: serde_json::json!({}) }) });
-    assert_ok("set-ui-locale", base.clone(), ShellCommand::SetUiLocale { locale: UiLocale::De });
-    assert_ok("set-ui-terminology", base.clone(), ShellCommand::SetUiTerminology { terminology_id: "architecture".to_string() });
-    assert_ok("set-ui-theme", base.clone(), ShellCommand::SetUiTheme { theme_id: "mono".to_string() });
-    assert_ok(
-        "set-ui-custom-theme",
-        base.clone(),
-        ShellCommand::SetUiCustomTheme { theme_id: "custom-1".to_string(), theme: Some(UiTheme { theme_id: "custom-1".to_string(), label: "My Theme".to_string(), config: serde_json::json!({ "tokens": { "accent": "#f00" } }) }) },
-    );
     assert_ok("set-ui-theme-draft", base.clone(), ShellCommand::SetUiThemeDraft { draft: Some(UiTheme { theme_id: "draft".to_string(), label: "Draft".to_string(), config: serde_json::json!({}) }) });
-    assert_ok("set-ui-keybinding-override", base.clone(), ShellCommand::SetUiKeybindingOverride { control_id: "os.toggleFullscreen".to_string(), keys: Some("Cmd+Ctrl+F".to_string()) });
     assert_ok("set-sync-backbone-uri", base.clone(), ShellCommand::SetSyncBackboneUri { uri: Some("hub://space/doc".to_string()) });
     assert_ok("set-sync-card-kind", base.clone(), ShellCommand::SetSyncCardKind { kind: Some(SyncCardKind::Folder) });
     assert_ok("set-sync-draft-path", base.clone(), ShellCommand::SetSyncDraftPath { path: "/tmp/checkin".to_string() });

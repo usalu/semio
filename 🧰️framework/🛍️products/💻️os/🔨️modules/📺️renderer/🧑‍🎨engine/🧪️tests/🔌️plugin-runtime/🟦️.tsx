@@ -30,8 +30,9 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
         windows: [
           { key: "first", bodyKey: "canvas-body" },
           { key: "second", bodyKey: "canvas-body" },
+          { key: "unauthored" },
         ],
-        panels: [{ key: "details", bodyKey: "details-body" }],
+        panels: [{ key: "details", bodyKey: "details-body" }, { key: "host-panel" }],
       });
       expect(events.map((event: { payload: { surface: { surface: string }; bodyKey: string } }) => [event.payload.surface.surface, event.payload.bodyKey])).toEqual([
         ["first", "canvas-body"],
@@ -99,6 +100,7 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
   
     describe("extension invocation completion publication", () => {
       async function withRequester(turn: (actor: string, events: readonly ShardEventEnvelope[]) => Promise<WireTurnResult>, run: (handle: PluginWasmHandle, instance: number, activation: { replace(): void; captures(): number; guardedTurns(): number }) => Promise<void>, hooks: { activate?: (actor: string) => Promise<void>; open?: (actor: string) => Promise<void>; dispose?: (actor: string) => void } = {}): Promise<void> {
+        const { encodeActorInstanceLifecycle } = await import("../../../../../../../🔨️modules/🎭️actor/🚪️lifetime/🟦️.ts");
         const previous = { registry: testState.sharedActivationRegistry, shard: testState.sharedShardClient, fetch: globalThis.fetch };
         const idle: WireTurnResult = { uiPatches: [], effects: [], nextWake: null, status: { tag: "idle" } };
         let generation = 1n;
@@ -108,21 +110,42 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
           if (events.some(event => event.kind === "instance-open")) { await hooks.open?.(actor); return idle; }
           return turn(actor, events);
         };
-        testState.sharedActivationRegistry = { registerManifest: () => {}, activate: async (_plugin: string, actor: string) => hooks.activate?.(actor), touch: () => {} } as unknown as ActivationRegistry;
+        testState.sharedActivationRegistry = { registerManifest: () => {}, activate: async (_plugin: string, actor: string) => hooks.activate?.(actor), touch: () => {}, cancel: () => {} } as unknown as ActivationRegistry;
         testState.sharedShardClient = {
           turn: dispatch,
-          // 🚪️ `createApp` opens through a real lifecycle lease; this fake mirrors just the surface it
-          // touches — the guest here never issues a receipt, so `pendingReceipt` stays null and the
-          // `receipt-ack` turn is skipped exactly as it is for a guest that captures nothing.
-          captureInstanceLifecycle: (actorId: string, instanceId: number) => ({
-            activation: { actorId, activationGeneration: generation, assertActive: () => {} },
-            openRequest: { kind: "open" as const, activationGeneration: generation, instanceId, requestSequence: 1 },
-            lifetime: null,
-            pendingReceipt: null,
-            interruptedTurn: null,
-            open: async (_input: unknown) => dispatch(actorId, [{ kind: "instance-open", payload: {} }]),
-            poll: async () => dispatch(actorId, []),
-          }),
+          captureInstanceLifecycle: (actorId: string, instanceId: number) => {
+            const activationGeneration = generation;
+            const activation = { actorId, activationGeneration, assertActive: () => { if (generation !== activationGeneration) throw new Error("actor-activation.revoked"); } };
+            const lifetime = { activationGeneration, instanceId, guestLifetime: 1n };
+            const openRequest = { kind: "open" as const, activationGeneration, instanceId, requestSequence: 1 };
+            const captured = { kind: "captured" as const, lifetime, requestSequence: openRequest.requestSequence };
+            let phase: "opening" | "captured" | "open" | "closing" | "accepted" | "retired" | "complete" = "opening";
+            let pending: import("../../../../../../../🔨️modules/🎭️actor/🚪️lifetime/🟦️.ts").ActorInstanceLifecycleReceipt | null = null;
+            const closeRequest = { kind: "close" as const, lifetime, requestSequence: 2 };
+            const accepted = { kind: "accepted" as const, lifetime, requestSequence: closeRequest.requestSequence, closeGeneration: 1n };
+            const retired = { ...accepted, kind: "retired" as const };
+            return {
+              activation,
+              openRequest,
+              get lifetime() { return phase === "opening" ? null : lifetime; },
+              get pendingReceipt() { return pending; },
+              interruptedTurn: null,
+              open: async () => { await hooks.open?.(actorId); phase = "captured"; pending = captured; return { ...idle, lifecycleReceipt: encodeActorInstanceLifecycle(captured) }; },
+              poll: async () => idle,
+              beginClose: () => { if (phase === "open") phase = "closing"; return closeRequest; },
+              close: async () => { phase = "accepted"; pending = accepted; return { ...idle, lifecycleReceipt: encodeActorInstanceLifecycle(accepted) }; },
+              acknowledge: async (receipt: typeof captured | typeof accepted | typeof retired) => {
+                if (receipt.kind === "captured") { phase = "open"; pending = null; return idle; }
+                if (receipt.kind === "accepted") { phase = "retired"; pending = retired; return { ...idle, lifecycleReceipt: encodeActorInstanceLifecycle(retired) }; }
+                phase = "complete"; pending = null; return idle;
+              },
+              bindHostRetirement: () => {},
+              captureUiPatchAuthority: () => { throw new Error("fixture-native-ui-not-configured"); },
+              submitUiAcknowledgement: async () => { throw new Error("fixture-native-ui-not-configured"); },
+              dispose: () => hooks.dispose?.(actorId),
+              progress: () => ({ kind: phase, failure: null }),
+            };
+          },
           captureActorActivation: (actorId: string) => {
             captures += 1;
             const activationGeneration = generation;
@@ -143,22 +166,19 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
         }
       }
   
-      it("settles the exact completion, acknowledges its retained patch and returns frames and host effects", async () => {
+      it("settles the exact completion and returns frames and host effects", async () => {
         const { default: fixture } = await import("../../🧱️elements/🏛️ShellHost/🧫️fixtures/🔣️extension-invocation.json");
         const { encodeAppFrame } = await import("@semio-tech/framework-os");
         const bytes = (value: unknown) => Array.from(encodePackValue(value));
         let instance = 0;
         const submitted: ShardEventEnvelope[][] = [];
-        const completionPatchReceipt = { lifetime: { activationGeneration: 1n, instanceId: 1, guestLifetime: 1n }, patchSequence: 1n };
-        const root: UiNodeRecord = { id: 0, key: fixture.completion.surface, component: { type: "text", value: fixture.response.text, emphasize: null, dataAttributes: null }, layout: { kind: "leaf", width: "hug", height: "hug" }, style: { variant: "plain", size: "md", density: "standard", tone: "neutral", emphasis: "regular" }, activity: "idle", disabled: false, transition: null, accessibility: { label: null, description: null, live: "off", shortcut: null, hidden: false }, bindings: [], menu: null, children: [] };
         await withRequester(async (_actor, events) => {
           submitted.push([...events]);
           if (submitted.length === 1) return { uiPatches: [], effects: [{ tag: "notify", val: { message: fixture.completion.notification } }], nextWake: null, status: { tag: "more-work" } };
           if (submitted.length === 2) return {
-            uiPatches: [{ surface: pluginSurfaceRef(instance, fixture.completion.surface), revision: 1n, baseRevision: 0n, ops: [{ tag: "upsert", val: { node: bytes(root) } }, { tag: "set-root", val: 0n }] }],
+            uiPatches: [],
             effects: [{ tag: "send-message", val: { target: { tag: "shell", val: String(instance) }, payload: Array.from(encodeAppFrame({ Invocation: { in_reply_to: 0, output: bytes(fixture.response), diagnostics: bytes([]), ui_scope: bytes(fixture.completion.uiScope), history_patch: bytes(fixture.completion.historyPatch), messages: [], mutations: [], inverse_group: [] } })) } }],
             nextWake: null, status: { tag: "idle" },
-            uiPatchReceipt: encodeActorUiPatchReceipt(completionPatchReceipt),
           };
           return { uiPatches: [], effects: [], nextWake: null, status: { tag: "idle" } };
         }, async (handle, opened) => {
@@ -166,9 +186,8 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
           const req = BigInt(fixture.requestIds[2]!);
           const outcome = { ok: encodePackValue(fixture.response) };
           const response = await handle.captureExtensionCompletion!(instance, req).complete(outcome);
-          expect(submitted).toEqual([[{ kind: "completed", payload: { req, outcome: { tag: "ok", val: Array.from(outcome.ok) } } }], [], [{ kind: "patch-ack", payload: { receipt: completionPatchReceipt, surface: pluginSurfaceRef(instance, fixture.completion.surface), revision: 1n } }]]);
+          expect(submitted).toEqual([[{ kind: "completed", payload: { req, outcome: { tag: "ok", val: Array.from(outcome.ok) } } }], []]);
           expect(response).toMatchObject({ output: fixture.response, requestedEffects: [{ notify: { message: fixture.completion.notification } }], uiScope: fixture.completion.uiScope, historyPatch: fixture.completion.historyPatch });
-          expect(retainedWindowByActor.get(`extension-requester#${instance}`)?.get(retainedSurfaceId(instance, fixture.completion.surface))?.revision).toBe(fixture.completion.revision);
         });
       });
   
@@ -1232,7 +1251,168 @@ export async function registerTests1(vitest: Pick<typeof import("vitest"), "desc
         await answer(submitPluginLifecycleTurn(owner, { kind: "receipt-ack", receipt: retired, retirement: ui.takeRetirementWitness()! }, "Interactive"), plain);
         expect(owner.progress().kind).toBe("complete"); teardownPluginActor(actorId); client.disposeAll();
       });
+
+      it("composes the production plugin runtime with one real UI owner through exact patch ACK and retirement", async () => {
+        const { default: Ajv } = await import("ajv");
+        const { default: equal } = await import("fast-deep-equal");
+        const { default: fixture } = await import("../../🧱️elements/🔌️PluginRuntime/🧫️fixtures/⏱️lifecycle-scheduler.json");
+        const { default: rendererModule } = await import("../../../🧬️schema/🔣️.json");
+        const { encodeActorInstanceLifecycle } = await import("../../../../../../../🔨️modules/🎭️actor/🚪️lifetime/🟦️.ts");
+        expect(new Ajv({ strict: true }).addSchema(rendererModule).compile({ $ref: `${rendererModule.$id}#/$defs/PluginRuntimeLifecycleSchedulerV1` })(fixture)).toBe(true);
+        const previous = { registry: testState.sharedActivationRegistry, shard: testState.sharedShardClient, fetch: globalThis.fetch };
+        const sent: Array<{ readonly kind: string; readonly events: readonly string[] }> = [];
+        const plain = { uiPatches: [], effects: [], nextWake: null, status: { tag: "idle" } };
+        let lifetime: { readonly activationGeneration: bigint; readonly instanceId: number; readonly guestLifetime: bigint } | null = null;
+        const closeGeneration = BigInt(fixture.closeGeneration);
+        const node: UiNodeRecord = { id: 0, key: "root", component: { type: "text", value: "owned", emphasize: null, dataAttributes: null }, layout: { kind: "leaf", width: "hug", height: "hug" }, style: { variant: "plain", size: "md", density: "standard", tone: "neutral", emphasis: "regular" }, activity: "idle", disabled: false, transition: null, accessibility: { label: null, description: null, live: "off", shortcut: null, hidden: false }, bindings: [], menu: null, children: [] };
+        const worker: ShardWorkerLike = {
+          onmessage: null,
+          onerror: null,
+          postMessage(raw) {
+            const message = raw as { readonly kind: string; readonly requestId?: string; readonly activationGeneration?: bigint; readonly events?: readonly ShardEventEnvelope[] };
+            const events = (message.events ?? []).map(event => event.kind);
+            if (message.kind === "dispose") { sent.push({ kind: message.kind, events }); return; }
+            const requestId = message.requestId;
+            if (!requestId) return;
+            let value: unknown = undefined;
+            if (message.kind === "turn") {
+              sent.push({ kind: message.kind, events });
+              const first = message.events?.[0];
+              if (first?.kind === "instance-open") {
+                const payload = first.payload as { readonly instance: number; readonly activationGeneration: bigint; readonly requestSequence: number };
+                lifetime = { activationGeneration: payload.activationGeneration, instanceId: payload.instance, guestLifetime: BigInt(fixture.guestLifetime) };
+                const captured = { kind: "captured" as const, lifetime, requestSequence: payload.requestSequence };
+                value = {
+                  ...plain,
+                  lifecycleReceipt: encodeActorInstanceLifecycle(captured),
+                  uiPatchReceipt: encodeActorUiPatchReceipt({ lifetime, patchSequence: BigInt(fixture.uiAcknowledgement.patchSequence) }),
+                  uiPatches: [{ surface: { instance: payload.instance, surface: fixture.runtimeUiComposition.surface }, revision: 1n, baseRevision: 0n, ops: [{ tag: "upsert", val: { node: encodePackValue(node) } }, { tag: "set-root", val: 0n }] }],
+                };
+              } else if (first?.kind === "instance-close") {
+                const close = first.payload as { readonly requestSequence: number };
+                value = { ...plain, lifecycleReceipt: encodeActorInstanceLifecycle({ kind: "accepted", lifetime: lifetime!, requestSequence: close.requestSequence, closeGeneration }) };
+              } else if (first?.kind === "instance-lifecycle-ack") {
+                const receipt = (first.payload as { readonly receipt: { readonly kind: string; readonly requestSequence: number } }).receipt;
+                value = receipt.kind === "accepted" ? { ...plain, lifecycleReceipt: encodeActorInstanceLifecycle({ kind: "retired", lifetime: lifetime!, requestSequence: receipt.requestSequence, closeGeneration }) } : plain;
+              } else value = plain;
+            }
+            queueMicrotask(() => worker.onmessage?.({ data: { kind: "result", requestId, ok: true, value } }));
+          },
+          terminate() {},
+        };
+        const client = new ShardClient({ residentLedger: new OwnedResidentLedger({ bytes: 1048576, slots: 4096, owners: 4096, control: { bytes: 65536, slots: 256, owners: 256 } }), shardCount: 1, createWorker: () => worker });
+        testState.sharedShardClient = client;
+        testState.sharedActivationRegistry = { registerManifest: () => {}, activate: async (_plugin: string, actorId: string) => client.activate(actorId, "/fixture.js", [], DEFAULT_SHARD_BUDGET), touch: () => {}, cancel: (actorId: string) => client.dispose(actorId) } as unknown as ActivationRegistry;
+        globalThis.fetch = (async () => new Response(JSON.stringify({ manifest: { pluginId: "owned-ui", apps: [] } }), { headers: { "content-type": "application/json" } })) as typeof fetch;
+        let handle: PluginWasmHandle | null = null;
+        try {
+          handle = await loadPluginModule("owned-ui", "https://fixture.invalid/plugin.js");
+          const instance = await handle.createApp("fixture");
+          const actorId = `owned-ui#${instance}`;
+          expect(retainedWindowByActor.has(actorId)).toBe(false);
+          const openEvents = sent.filter(entry => entry.kind === "turn").flatMap(entry => entry.events);
+          expect(openEvents).toEqual(fixture.runtimeUiComposition.openEvents);
+          expect(equal(openEvents, fixture.runtimeUiComposition.openEvents)).toBe(true);
+          const response = await handle.refreshUi(instance, { viewState: { windowInstances: [{ id: fixture.runtimeUiComposition.surface, windowKindId: "fixture" }] }, windows: [{ key: fixture.runtimeUiComposition.surface, bodyKey: "root" }] });
+          expect(response.windows).toMatchObject([{ key: fixture.runtimeUiComposition.surface, value: { key: "root", component: { type: "text", value: "owned" }, children: [] } }]);
+          expect(retainedWindowByActor.has(actorId)).toBe(false);
+          const beforeClose = sent.flatMap(entry => entry.kind === "dispose" ? [entry.kind] : entry.events).length;
+          await handle.destroyApp(instance);
+          const allEvents = sent.flatMap(entry => entry.kind === "dispose" ? [entry.kind] : entry.events);
+          const closeEvents = allEvents.slice(beforeClose);
+          expect(closeEvents).toEqual(fixture.runtimeUiComposition.closeEvents);
+          expect(equal(closeEvents, fixture.runtimeUiComposition.closeEvents)).toBe(true);
+          expect(retainedWindowByActor.has(actorId)).toBe(false);
+          console.info("[DEBUG] production UI lifetime: nativePatchAcks=1 realSurface=1 renderSource=%s terminal=%s", fixture.runtimeUiComposition.renderSource, fixture.runtimeUiComposition.terminalPhase);
+        } finally {
+          await handle?.dispose();
+          testState.sharedActivationRegistry = previous.registry;
+          testState.sharedShardClient = previous.shard;
+          globalThis.fetch = previous.fetch;
+        }
+      });
   
+
+      it("retries actual actor retirement with the original witness after final acknowledgement failure", async () => {
+        const { default: fixture } = await import("../../🧱️elements/🔌️PluginRuntime/📡️backbone/🧫️fixtures/🔣️.json");
+        const { default: schema } = await import("../../../🧬️schema/🔣️.json");
+        const { default: Ajv } = await import("ajv");
+        const { default: equal } = await import("fast-deep-equal");
+        const { encodeActorInstanceLifecycle } = await import("../../../../../../../🔨️modules/🎭️actor/🚪️lifetime/🟦️.ts");
+        const { OwnedUiInstance } = await import("../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🏘️instance/🟦️.ts");
+        expect(new Ajv({ strict: true }).addSchema(schema).getSchema(`${schema.$id}#/$defs/ActorDocumentPortFixtureV1`)!(fixture)).toBe(true);
+        for (const row of fixture.disposal.retirementRetry) {
+          const previous = { registry: testState.sharedActivationRegistry, shard: testState.sharedShardClient, fetch: globalThis.fetch };
+          const plain = { uiPatches: [], effects: [], nextWake: null, status: { tag: "idle" } };
+          const events: string[] = [];
+          let lifetime: { activationGeneration: bigint; instanceId: number; guestLifetime: bigint } | null = null;
+          let refused = false;
+          const worker: ShardWorkerLike = {
+            onmessage: null, onerror: null, terminate() {},
+            postMessage(raw) {
+              const message = raw as { kind: string; requestId?: string; events?: readonly ShardEventEnvelope[] };
+              if (message.kind === "dispose") { events.push("dispose"); return; }
+              if (!message.requestId) return;
+              let value: unknown = undefined;
+              if (message.kind === "turn") {
+                const first = message.events?.[0];
+                if (first?.kind === "instance-open") {
+                  const payload = first.payload as { activationGeneration: bigint; instance: number; requestSequence: number };
+                  lifetime = { activationGeneration: payload.activationGeneration, instanceId: payload.instance, guestLifetime: 1n };
+                  events.push("open");
+                  value = { ...plain, lifecycleReceipt: encodeActorInstanceLifecycle({ kind: "captured", lifetime, requestSequence: payload.requestSequence }) };
+                } else if (first?.kind === "instance-close") {
+                  const payload = first.payload as { requestSequence: number };
+                  events.push("close");
+                  value = { ...plain, lifecycleReceipt: encodeActorInstanceLifecycle({ kind: "accepted", lifetime: lifetime!, requestSequence: payload.requestSequence, closeGeneration: 1n }) };
+                } else if (first?.kind === "instance-lifecycle-ack") {
+                  const receipt = (first.payload as { receipt: { kind: string; requestSequence: number } }).receipt;
+                  events.push(`ack:${receipt.kind}`);
+                  if (receipt.kind === "retired" && !refused) {
+                    refused = true;
+                    if (row.failure === "transport") throw new Error("fixture-final-ack-transport");
+                    value = { ...plain, status: { tag: "faulted", val: new Uint8Array([1]) } };
+                  } else value = receipt.kind === "accepted" ? { ...plain, lifecycleReceipt: encodeActorInstanceLifecycle({ kind: "retired", lifetime: lifetime!, requestSequence: receipt.requestSequence, closeGeneration: 1n }) } : plain;
+                } else value = plain;
+              }
+              queueMicrotask(() => worker.onmessage?.({ data: { kind: "result", requestId: message.requestId, ok: true, value } }));
+            },
+          };
+          const client = new ShardClient({ residentLedger: new OwnedResidentLedger({ bytes: 1048576, slots: 4096, owners: 4096, control: { bytes: 65536, slots: 256, owners: 256 } }), shardCount: 1, createWorker: () => worker });
+          const captured = vi.spyOn(client, "captureInstanceLifecycle");
+          const witnesses = vi.spyOn(OwnedUiInstance.prototype, "takeRetirementWitness");
+          testState.sharedShardClient = client;
+          testState.sharedActivationRegistry = { registerManifest: () => {}, activate: async (_plugin: string, actorId: string) => client.activate(actorId, "/fixture.js", [], DEFAULT_SHARD_BUDGET), touch: () => {}, cancel: () => {} } as unknown as ActivationRegistry;
+          globalThis.fetch = (async () => new Response(JSON.stringify({ manifest: { pluginId: "retirement-retry", apps: [] } }), { headers: { "content-type": "application/json" } })) as typeof fetch;
+          let handle: PluginWasmHandle | null = null;
+          try {
+            handle = await loadPluginModule("retirement-retry", "https://fixture.invalid/plugin.js");
+            const instance = await handle.createApp("fixture");
+            const lease = captured.mock.results[0]!.value as ShardInstanceLifecycleLease;
+            await expect(handle.destroyApp(instance)).rejects.toThrow(row.failure === "transport" ? "fixture-final-ack-transport" : "actor-lifecycle.ack-not-admitted");
+            expect(lease.pendingReceipt?.kind).toBe("retired");
+            expect(lease.progress().kind).toBe("blocked");
+            expect(events).toEqual(row.events.slice(0, -2));
+            expect(witnesses).toHaveBeenCalledTimes(row.witnesses);
+            const receipt = lease.pendingReceipt;
+            await handle.destroyApp(instance);
+            expect(lease.progress().kind).toBe("complete");
+            expect(lease.pendingReceipt).toBeNull();
+            expect(receipt?.kind).toBe("retired");
+            expect(witnesses).toHaveBeenCalledTimes(row.witnesses);
+            expect(equal(events, row.events)).toBe(true);
+            await handle.destroyApp(instance);
+            expect(events).toEqual(row.events);
+            console.info("[DEBUG] actual runtime final ACK retry: failure=%s witnesses=%d dispose=1", row.failure, witnesses.mock.calls.length);
+          } finally {
+            try { await handle?.dispose(); } finally {
+              captured.mockRestore(); witnesses.mockRestore(); client.disposeAll();
+              testState.sharedActivationRegistry = previous.registry; testState.sharedShardClient = previous.shard; globalThis.fetch = previous.fetch;
+            }
+          }
+        }
+      });
+
       it("schedules captured lifecycle without silent eviction when either ingress fills the actor queue", async () => {
         const { default: fixture } = await import("../../🧱️elements/🔌️PluginRuntime/🧫️fixtures/⏱️lifecycle-scheduler.json");
         expect(fixture.mailbox.capacity).toBe(PLUGIN_TURN_MAILBOX_CAPACITY);

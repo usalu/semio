@@ -204,7 +204,7 @@
               "hex": {
                 "type": "string",
                 "pattern": "^(?:[0-9a-f]{2})+$",
-                "maxLength": 150
+                "maxLength": 152
               }
             }
           }

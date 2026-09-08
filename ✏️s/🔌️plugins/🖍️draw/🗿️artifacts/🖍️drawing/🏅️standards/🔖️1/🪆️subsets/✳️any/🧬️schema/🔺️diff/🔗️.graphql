@@ -17,7 +17,6 @@ type DrawingDiff {
   assets: DrawingAssetsDelta @state(class: ARTIFACT)
   artboard: DrawingArtboard @state(class: ARTIFACT)
   selectedIds: DrawingStringList @state(class: PRESENCE)
-  activeUtilityId: String @state(class: PRESENCE)
   engagementInput: String @state(class: CONFIG)
   cameraX: Float @state(class: CONFIG)
   cameraY: Float @state(class: CONFIG)

@@ -1,4 +1,4 @@
-#[path = "../🧬️mutation-fixtures-surface-mutations/🦀️.rs"]
+#[path = "../../🧫️fixtures/🧬️mutation-fixtures/🪟️surface/🧬️mutations/🦀️.rs"]
 pub mod mutations;
 pub(crate) use mutations::{SetSurfaceCount, SurfaceMutation};
 
@@ -6,7 +6,7 @@ pub(crate) use mutations::{SetSurfaceCount, SurfaceMutation};
 use crate::app::testkit::{assert_editor_and_viewer_share_dialect, assert_viewer_never_mutates, meta, new_app, new_viewer};
 use crate::app::{
     built_text_to_component_tree, ArtifactEditor, ArtifactView, ArtifactViewer, ConfigView, DraftView, EditorApp, Emit, Media, MediaClass, MediaForm, MediaPayload, MediaType, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence,
-    NoPresenceMutation, PluginApp, UiAssemblyResult, ViewEmit, REVERT_TO_COMMAND_ACTION_ID,
+    NoPresenceMutation, PluginApp, UiAssemblyResult, ViewEmit, ViewModel, REVERT_TO_COMMAND_ACTION_ID,
 };
 use protocol::MutationDiff;
 use semio_framework::{Dialect, Fault, FaultOrigin, StandardId, SubsetId};

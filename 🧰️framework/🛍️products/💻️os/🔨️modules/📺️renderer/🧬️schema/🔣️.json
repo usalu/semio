@@ -36,9 +36,20 @@
         },
         "retirement": { "type": "array", "items": { "type": "string" } },
         "disposal": {
-          "type": "object", "additionalProperties": false, "required": ["bound", "opening"],
+          "type": "object", "additionalProperties": false, "required": ["bound", "opening", "retirementRetry"],
           "properties": {
             "bound": { "type": "array", "items": { "enum": ["bind", "retire", "retired", "dispose"] }, "minItems": 4, "maxItems": 4 },
+            "retirementRetry": {
+              "type": "array", "minItems": 2, "maxItems": 2,
+              "items": {
+                "type": "object", "additionalProperties": false, "required": ["failure", "witnesses", "events"],
+                "properties": {
+                  "failure": { "enum": ["refused", "transport"] },
+                  "witnesses": { "const": 1 },
+                  "events": { "type": "array", "items": { "enum": ["open", "ack:captured", "close", "ack:accepted", "ack:retired", "dispose"] }, "minItems": 7, "maxItems": 7 }
+                }
+              }
+            },
             "opening": {
               "type": "array", "minItems": 2, "maxItems": 2,
               "items": {
@@ -1589,7 +1600,8 @@
         "phases",
         "refusedWork",
         "mailbox",
-        "uiAcknowledgement"
+        "uiAcknowledgement",
+        "runtimeUiComposition"
       ],
       "properties": {
         "actor": {
@@ -1663,6 +1675,43 @@
             "baseRevision": 0,
             "operationCount": 0,
             "patchSequence": "9007199254740993"
+          }
+        },
+        "runtimeUiComposition": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "openEvents",
+            "closeEvents",
+            "surface",
+            "renderSource",
+            "terminalPhase"
+          ],
+          "properties": {
+            "openEvents": {
+              "const": [
+                "instance-open",
+                "patch-ack",
+                "instance-lifecycle-ack"
+              ]
+            },
+            "closeEvents": {
+              "const": [
+                "instance-close",
+                "instance-lifecycle-ack",
+                "instance-lifecycle-ack",
+                "dispose"
+              ]
+            },
+            "surface": {
+              "const": "window"
+            },
+            "renderSource": {
+              "const": "owned-ui-instance-surface"
+            },
+            "terminalPhase": {
+              "const": "complete"
+            }
           }
         }
       }

@@ -37,7 +37,7 @@ pub mod set_shot_camera {
 //#region 🔖️SaveCamera
 pub mod save_camera {
     use super::*;
-    use crate::schema::next_shooting_id;
+    use crate::standards::v1::subsets::any::schema::next_shooting_id;
 
     #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
     #[dsl(keyword = "save-camera")]

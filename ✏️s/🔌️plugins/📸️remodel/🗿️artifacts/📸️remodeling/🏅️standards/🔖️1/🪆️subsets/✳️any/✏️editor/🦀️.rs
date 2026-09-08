@@ -232,8 +232,6 @@ semio_framework_plugin::app_commands! {
         "setLayerVisibility" as "layer-visibility" => set_layer_visibility::SetLayerVisibility,
         "setFrameCursor" as "frame-cursor" => set_frame_cursor::SetFrameCursor,
         "setReportTable" as "report-table" => set_report_table::SetReportTable,
-        // 🧰️ `setActiveUtility` is the framework-injected id (`SET_ACTIVE_UTILITY_ACTION_ID`).
-        "setActiveUtility" as "active-utility" => set_active_utility::SetActiveUtility,
         // 🐚️ Shell effects — no operations either way.
         "importFrames" as "import-frames" => import_frames::ImportFrames,
         "importVideo" as "import-video" => import_video::ImportVideo,
@@ -252,7 +250,7 @@ use crate::editor::remodeling::commands::{add_stream, import_frame_payload, impo
 use crate::editor::remodeling::commands::{advance_reconstruction, cancel_reconstruction, retry_stage, run_reconstruction, run_stage};
 use crate::editor::remodeling::commands::{clear_dense, clear_geo_products, clear_mesh_result, clear_result, clear_sparse, clear_tracks, reset_placeholder_mesh};
 use crate::editor::remodeling::commands::{export_qc_report, import_frames, import_video};
-use crate::editor::remodeling::commands::{set_active_example, set_active_utility, set_camera, set_frame_cursor, set_layer_visibility, set_report_table};
+use crate::editor::remodeling::commands::{set_active_example, set_camera, set_frame_cursor, set_layer_visibility, set_report_table};
 use crate::editor::remodeling::commands::{set_dense_params, set_feature_params, set_geo_params, set_ingest_params, set_match_params, set_mesh_params, set_motion_params, set_sfm_params};
 //#endregion 🔖️Commands
 
@@ -450,7 +448,6 @@ mod args_bridge {
             "setLayerVisibility" => RemodelingCommand::SetLayerVisibility(set_layer_visibility::SetLayerVisibility { layer: text_or("layer", ""), visible: bool_or("visible", true) }),
             "setFrameCursor" => RemodelingCommand::SetFrameCursor(set_frame_cursor::SetFrameCursor { stream_id: text(args, "streamId"), frame_index: u32_or("frameIndex", 0) }),
             "setReportTable" => RemodelingCommand::SetReportTable(set_report_table::SetReportTable { table: text_or("table", "frames") }),
-            "setActiveUtility" => RemodelingCommand::SetActiveUtility(set_active_utility::SetActiveUtility { utility_id: text_or("utilityId", "select") }),
             "importFrames" => RemodelingCommand::ImportFrames(import_frames::ImportFrames {}),
             "importVideo" => RemodelingCommand::ImportVideo(import_video::ImportVideo {}),
             "exportQcReport" => RemodelingCommand::ExportQcReport(export_qc_report::ExportQcReport {}),
@@ -473,9 +470,6 @@ pub struct RemodelingPlayApp;
 /// `bounded_first_step_tool_proofs!` rows (`validate_tool_job_rows`: `expected = TOOL_JOB_IDS ∩ migrated`
 /// must equal the proof set, else `interactive-job.catalog-incomplete`), so all three are kept in one
 /// order and asserted equal by `retained_route_dispositions_are_exact_and_exhaustive`.
-/// `setActiveUtility` is framework-injected by `.utility(..)` and already carries `Migrated`
-/// (`ActionDefinition::resumable_framework_catalog`), so it appears here but NOT in the manifest's
-/// explicit classification list.
 const REMODELING_RETAINED_TOOL_IDS: &[&str] = &[
     "runReconstruction",
     "retryStage",
@@ -511,7 +505,6 @@ const REMODELING_RETAINED_TOOL_IDS: &[&str] = &[
     "setLayerVisibility",
     "setFrameCursor",
     "setReportTable",
-    "setActiveUtility",
         "importFrames",
     "importVideo",
     "exportQcReport",
@@ -566,8 +559,6 @@ const REMODELING_PUBLICATION_CONTRACTS: &[semio_framework_plugin::ArtifactToolPu
     config_route("setLayerVisibility"),
     config_route("setFrameCursor"),
     config_route("setReportTable"),
-    config_route("setActiveUtility"),
-    config_route(),
     host_route("importFrames"),
     host_route("importVideo"),
     host_route("exportQcReport"),
@@ -616,7 +607,7 @@ fn remodeling_retained_reduce(
     history: &semio_framework_plugin::HistoryView,
     _interaction: &protocol::InteractionState,
     _hover: &semio_framework_plugin::app::InteractionHoverState,
-    _context: Option<&semio_framework_plugin::ArtifactOwnedToolJobContext<EditorApp<RemodelingPlayApp>>>,
+    _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<RemodelingPlayApp>>>,
     operation: &AppOperationContext,
 ) -> Result<Emit<RemodelingMutation, RemodelingConfigMutation, NoDraftMutation>, Fault> {
     if !REMODELING_RETAINED_TOOL_IDS.contains(&command.command_id()) {
@@ -989,7 +980,7 @@ impl ArtifactEditor for RemodelingPlayApp {
             "editCalibration", "calibrateCameras", "addGcp", "removeGcp", "placeGcpObservation",
             "setIngestParams", "setFeatureParams", "setMatchParams", "setSfmParams", "setDenseParams", "setMeshParams", "setMotionParams", "setGeoParams",
             "resetPlaceholderMesh", "clearSparse", "clearDense", "clearMeshResult", "clearTracks", "clearGeoProducts", "clearResult",
-            "setCamera", "setLayerVisibility", "setFrameCursor", "setReportTable", "setActiveUtility",             "importFrames", "importVideo", "exportQcReport",
+            "setCamera", "setLayerVisibility", "setFrameCursor", "setReportTable", "importFrames", "importVideo", "exportQcReport",
             "advanceReconstruction", "cancelReconstruction", "setActiveExample"
         ]
     }
@@ -1147,7 +1138,7 @@ impl ArtifactEditor for RemodelingPlayApp {
             capture::windows::frames::REMODELING_PLAY_BODY_FRAMES => capture::windows::frames::render(scene, config),
             analyze::windows::report::REMODELING_PLAY_BODY_REPORT => analyze::windows::report::render(scene, config),
             media::REMODELING_PLAY_BODY_MEDIA => media::render(scene, labels),
-            document::REMODELING_PLAY_BODY_PIPELINE => document::render(scene, config.active_utility_id.as_str(), labels),
+            document::REMODELING_PLAY_BODY_PIPELINE => document::render(scene, view_state.active_utility_id.as_deref().unwrap_or("select"), labels),
             results::REMODELING_PLAY_BODY_RESULTS => results::render(scene, labels),
             parameters::REMODELING_PLAY_BODY_PARAMETERS => parameters::render(scene, labels),
             calibration_panel::REMODELING_PLAY_BODY_CALIBRATION => calibration_panel::render(scene, labels),
@@ -1426,10 +1417,6 @@ pub fn create_remodeling_app() -> AppDefinition {
             // EQUALITY here: `validate_tool_job_rows` computes `expected = TOOL_JOB_IDS ∩ migrated` and
             // faults `interactive-job.catalog-incomplete` unless it equals the proof set.
             //
-            // 🧰️ `setActiveUtility` — the 42nd `RemodelingCommand` row — is deliberately absent: it is
-            // framework-injected by `.utility(..)` INSIDE `build_definition`, after this builder chain has
-            // run, and `ActionDefinition::resumable_framework_catalog` already classifies it `Migrated`.
-            // Calling `.action_interactive_job("setActiveUtility", ..)` here would silently match nothing.
             .action_interactive_job("runReconstruction", InteractiveJobClassification::Migrated)
             .action_interactive_job("retryStage", InteractiveJobClassification::Migrated)
             .action_interactive_job("runStage", InteractiveJobClassification::Migrated)

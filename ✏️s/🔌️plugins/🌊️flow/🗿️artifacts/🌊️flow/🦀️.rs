@@ -151,7 +151,7 @@ fn widget_from_node(node: &SemioFlowNode) -> Widget {
 /// decode — lossless, since `SynapseSpec` carries no `kind` of its own to lose).
 pub fn flow_content_snapshot_from_working(widgets: &[Widget], synapses: &[SynapseSpec], layout: &flow::OrderedMap<WidgetLayout>) -> SemioFlowSnapshot {
     let nodes = widgets.iter().map(|widget| {
-        let id = crate::schema::widget_id(widget);
+        let id = schema::widget_id(widget);
         flow_content_node_from_working(widget, layout.get(id))
     }).collect();
     let edges = synapses
@@ -163,8 +163,8 @@ pub fn flow_content_snapshot_from_working(widgets: &[Widget], synapses: &[Synaps
 
 /// 🌉 Maps one exact working widget and layout entry into its typed Semio child node.
 pub fn flow_content_node_from_working(widget: &Widget, layout: Option<&WidgetLayout>) -> SemioFlowNode {
-    let id = crate::schema::widget_id(widget).to_string();
-    let kind = crate::schema::widget_kind_label(widget).to_string();
+    let id = schema::widget_id(widget).to_string();
+    let kind = schema::widget_kind_label(widget).to_string();
     let position = layout.map(|entry| semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::geometry::SemioPoint2 { x: entry.x, y: entry.y }).unwrap_or_default();
     let label = match widget { Widget::InputSlider { label, .. } => label.clone(), _ => kind.clone() };
     SemioFlowNode { id, kind, label, params: widget_params(widget), position }
@@ -310,10 +310,10 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
 pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
     use semio_framework_plugin::EditorApp;
     semio_framework_plugin::ArtifactDeclaration::builder(definition()?)
-        .schema(crate::schema::flow_artifact_schema_descriptor())
-        .inferences([crate::standards::v1::subsets::any::schema::inferences::flow_artifact_inference_descriptor()])
-        .composers(crate::standards::v1::subsets::any::io::io_registry::entries())
-        .document_codec::<EditorApp<crate::editor::flow::FlowPlayApp>>()
+        .schema(schema::flow_artifact_schema_descriptor())
+        .inferences([standards::v1::subsets::any::schema::inferences::flow_artifact_inference_descriptor()])
+        .composers(standards::v1::subsets::any::io::io_registry::entries())
+        .document_codec::<EditorApp<editor::flow::FlowPlayApp>>()
         .try_build()
 }
 //#endregion 🔖️Declaration
@@ -886,6 +886,3 @@ pub mod viewer {
     }
 }
 
-//#region 📚️Examples
-pub use standards::v1::subsets::any::examples;
-//#endregion 📚️Examples

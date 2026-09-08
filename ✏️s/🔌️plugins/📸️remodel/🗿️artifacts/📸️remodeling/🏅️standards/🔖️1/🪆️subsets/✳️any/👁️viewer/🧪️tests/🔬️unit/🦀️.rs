@@ -19,7 +19,7 @@ async fn render_renders_the_model_window_body_and_falls_back_by_name_otherwise()
     let history = semio_framework_plugin::HistoryView::empty();
     let doc = ArtifactView::new(&scene, &history);
     let cfg = ConfigView { snapshot: &NoConfig::default() };
-    let _rendered = <RemodelingViewer as ArtifactViewer>::render(model::BODY_KEY, &doc, &cfg);
-    let fallback = <RemodelingViewer as ArtifactViewer>::render("nonsense", &doc, &cfg);
+    let _rendered = <RemodelingViewer as ArtifactViewer>::render(model::BODY_KEY, &doc, &cfg, &semio_framework_plugin::ViewModel::default());
+    let fallback = <RemodelingViewer as ArtifactViewer>::render("nonsense", &doc, &cfg, &semio_framework_plugin::ViewModel::default());
     assert!(format!("{fallback:?}").contains("nonsense"));
 }

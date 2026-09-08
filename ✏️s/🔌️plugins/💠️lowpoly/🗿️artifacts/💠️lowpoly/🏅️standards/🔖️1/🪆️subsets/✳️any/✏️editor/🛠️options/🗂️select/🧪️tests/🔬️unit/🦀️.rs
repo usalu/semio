@@ -3,7 +3,7 @@ use super::*;
 
 #[semio_framework_async_macros::async_test]
 async fn select_window_options_expose_mesh_domain_granularity_and_mode_toggles() {
-    let measure = measure(&LowpolyConfig::default(), semio_framework_plugin::resolve_labels_for_locale::<LowpolyLabels>("en-US"));
+    let measure = measure(&LowpolyConfig::default(), semio_framework_plugin::resolve_labels::<LowpolyLabels>(&semio_framework_plugin::ViewModel::default()));
     let (active_utility_id, children) = match measure {
         WindowMeasure::Group { active_utility_id, children, .. } => (active_utility_id, children),
         other => panic!("expected Group, got {other:?}"),

@@ -38,8 +38,6 @@ pub struct RemodelingDiff {
     #[state(presence)]
     pub selection: Option<RemodelingUiSelection>,
     #[state(presence)]
-    pub active_utility_id: Option<String>,
-    #[state(presence)]
     pub report_table: Option<String>,
     #[state(presence)]
     pub frame_cursor: Option<RemodelingUiFrameCursor>,

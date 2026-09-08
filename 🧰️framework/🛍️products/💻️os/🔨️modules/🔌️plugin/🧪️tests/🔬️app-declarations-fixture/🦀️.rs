@@ -7,7 +7,7 @@ pub(crate) mod fixture {
     use super::super::super::declaration_fixture_mutations::{std1_any as std1_any_mutations, std1_strict as std1_strict_mutations, std2_any as std2_any_mutations};
     use super::super::{
         AppDefinition, ArtifactDialect, ArtifactEditor, ArtifactKindId, ArtifactPack, ArtifactView, ArtifactViewer, ComponentTree, ConfigView, Dialect, DraftView, Editor, Emit, EngineHandles, Fault, IconName, InteractionView, LocalizedLabel,
-        Mutation, MutationDiff, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, Plugin, StandardId, SubsetId, SurfaceKind, ViewEmit, Viewer, testkit,
+        Mutation, MutationDiff, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, Plugin, StandardId, SubsetId, SurfaceKind, UiAssemblyResult, ViewEmit, Viewer, ViewModel, testkit,
     };
     use super::*;
     use serde::{Deserialize, Serialize};
@@ -123,7 +123,7 @@ pub(crate) mod fixture {
                 fn initial_snapshot() -> $snapshot {
                     $snapshot::default()
                 }
-                fn handle(_command: &$command, doc: &ArtifactView<'_, $snapshot>, _cfg: &ConfigView<'_, NoConfig>, _interaction: &InteractionView<'_>, _view_state: Option<&semio_framework_plugin::ViewModel>, _draft: &DraftView<'_, NoDraft>, _engines: &EngineHandles) -> ArtifactMutationOutcome<$mutation> {
+                fn handle(_command: &$command, doc: &ArtifactView<'_, $snapshot>, _cfg: &ConfigView<'_, NoConfig>, _interaction: &InteractionView<'_>, _view_state: Option<&ViewModel>, _draft: &DraftView<'_, NoDraft>, _engines: &EngineHandles) -> ArtifactMutationOutcome<$mutation> {
                     Ok(Emit { artifact_mutations: vec![$mutation::SetValue($leaf_owner::SetValue { value: doc.snapshot.value })], ..Default::default() })
                 }
                 fn render(_body_key: &str, doc: &ArtifactView<'_, $snapshot>, _cfg: &ConfigView<'_, NoConfig>, _view_state: &ViewModel) -> UiAssemblyResult<ComponentTree> {
@@ -148,7 +148,7 @@ pub(crate) mod fixture {
                 fn initial_snapshot() -> $snapshot {
                     $snapshot::default()
                 }
-                fn handle(_command: &$command, _doc: &ArtifactView<'_, $snapshot>, _cfg: &ConfigView<'_, NoConfig>, _interaction: &InteractionView<'_>, _view_state: Option<&semio_framework_plugin::ViewModel>, _engines: &EngineHandles) -> Result<ViewEmit<NoConfigMutation>, Fault> {
+                fn handle(_command: &$command, _doc: &ArtifactView<'_, $snapshot>, _cfg: &ConfigView<'_, NoConfig>, _interaction: &InteractionView<'_>, _view_state: Option<&ViewModel>, _engines: &EngineHandles) -> Result<ViewEmit<NoConfigMutation>, Fault> {
                     Ok(ViewEmit::default())
                 }
                 fn render(_body_key: &str, doc: &ArtifactView<'_, $snapshot>, _cfg: &ConfigView<'_, NoConfig>, _view_state: &ViewModel) -> UiAssemblyResult<ComponentTree> {

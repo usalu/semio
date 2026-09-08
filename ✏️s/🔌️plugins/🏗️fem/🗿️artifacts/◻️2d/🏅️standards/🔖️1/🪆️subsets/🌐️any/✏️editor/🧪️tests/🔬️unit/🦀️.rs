@@ -26,7 +26,6 @@ pub(super) fn every_command() -> Vec<Fem2dCommand> {
         Fem2dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: "default".into() }),
         Fem2dCommand::SetCamera(set_camera::SetCamera { x: 1.0, y: 2.0, zoom: 1.5 }),
         Fem2dCommand::SetResultDisplay(set_result_display::SetResultDisplay { source_id: Some("dead".into()), mode: "modal".into(), mode_index: 0 }),
-        Fem2dCommand::SetLocale(set_locale::SetLocale { value: "de-DE".into() }),
     ]
 }
 
@@ -42,8 +41,6 @@ async fn command_ids_are_unique_and_match_the_declared_manifest_actions() {
     sorted.dedup();
     assert_eq!(sorted.len(), ids.len(), "duplicate command ids in {ids:?}");
     assert_eq!(ids.len(), 19, "every Fem2dCommand row must be covered by every_command()");
-    // 🏷️ Unlike flow's setLocale/flowEvalTick, every one of fem2d's 19 commands (including
-    // setLocale) has a real manifest action declaration — see `create_fem2d_app`'s `.view_action`
     // calls.
     let definition = create_fem2d_app();
     for id in ids {
@@ -94,7 +91,6 @@ async fn every_command_keeps_its_pre_migration_bytes() {
         ("010f010764656661756c7401000600", Fem2dCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: "default".into() })),
         ("011000030005000000000000f03f010500000000000000400205000000000000f83f", Fem2dCommand::SetCamera(set_camera::SetCamera { x: 1.0, y: 2.0, zoom: 1.5 })),
         ("0111020464656164056d6f64616c03000600010601020400", Fem2dCommand::SetResultDisplay(set_result_display::SetResultDisplay { source_id: Some("dead".into()), mode: "modal".into(), mode_index: 0 })),
-        ("0112010564652d444501000600", Fem2dCommand::SetLocale(set_locale::SetLocale { value: "de-DE".into() })),
     ];
     for (expected, command) in rows {
         let bytes = command.encode_op().expect("encode");
@@ -221,22 +217,6 @@ async fn fem2d_io_declares_geometry_in_and_results_out_ports() {
     assert_eq!(results_out.media_type.form, MediaForm::Value);
 }
 
-/// 🗣️ B1: the manifest itself (not a runtime `cfg.locale`-driven overlay) now carries every
-/// locale's translation via `LocalizedLabel`.
-#[semio_framework_async_macros::async_test]
-async fn manifest_labels_resolve_german_locale_2d() {
-    use semio_framework_plugin::{Locale, Terminology};
-    let definition = create_fem2d_app();
-    let window_model = definition.window_kinds.iter().find(|window| window.id == model_window::WINDOW_KIND_ID).expect("model window kind declared");
-    assert_eq!(window_model.label.resolve(Terminology::Native, Locale::En), "Model");
-    assert_eq!(window_model.label.resolve(Terminology::Native, Locale::De), "Modell");
-    let add_node_action = definition.window_kinds.iter().flat_map(|window| window.actions.iter()).find(|action| action.id == "addNode").expect("addNode action declared");
-    assert_eq!(add_node_action.label.resolve(Terminology::Native, Locale::En), "Add Node");
-    assert_eq!(add_node_action.label.resolve(Terminology::Native, Locale::De), "Knoten hinzufügen");
-    let set_locale_action = definition.window_kinds.iter().flat_map(|window| window.actions.iter()).find(|action| action.id == "setLocale").expect("setLocale action declared");
-    assert_eq!(set_locale_action.label.resolve(Terminology::Native, Locale::En), "Set Locale");
-    assert_eq!(set_locale_action.label.resolve(Terminology::Native, Locale::De), "Sprache festlegen");
-}
 //#endregion 🔖️ManifestSanity
 
 //#region 🔖️CrossCutting

@@ -161,8 +161,8 @@ fn dag_context_menu_items(registry: &AppActionRegistry, labels: &crate::editor::
 //#endregion 🔖️ContextMenu
 
 //#region 🔖️DagPlayApp
-/// 🧪️ Unit struct — every former `DagPlayRuntime`/`ViewModel.locale` field now lives in [`DagConfig`],
-/// written through [`DagConfigMutation`]s.
+/// 🧪️ Unit struct whose editor-owned camera state lives in [`DagConfig`] and whose host-owned
+/// preferences arrive through the canonical [`ViewModel`].
 #[derive(Default)]
 pub struct DagPlayApp;
 
@@ -178,7 +178,7 @@ fn dag_retained_config_reduce(
     history: &semio_framework_plugin::HistoryView,
     _interaction: &protocol::InteractionState,
     _hover: &semio_framework_plugin::app::InteractionHoverState,
-    _context: Option<&semio_framework_plugin::ArtifactOwnedToolJobContext<EditorApp<DagPlayApp>>>,
+    _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<DagPlayApp>>>,
     operation: &AppOperationContext,
 ) -> Result<Emit<DagMutation, DagConfigMutation, NoDraftMutation>, Fault> {
     if !DAG_RETAINED_CONFIG_TOOL_IDS.contains(&command.command_id()) {
@@ -235,7 +235,6 @@ impl semio_framework_plugin::ArtifactOwnedToolJobFactory for DagConfigCommandJob
 
 //#region 📬️ConfigStorePreparation
 const DAG_CONFIG_STORE_MAXIMUM_BYTES: usize = 768;
-const DAG_CONFIG_TEXT_BYTES: usize = 96;
 const DAG_CONFIG_METADATA_BYTES: usize = 64;
 
 struct DagConfigPreparationFactory;
@@ -253,11 +252,10 @@ struct DagConfigPreparation {
 }
 
 fn dag_config_footprint(mutation: &DagConfigMutation) -> Result<store::ArtifactStoreOneItemFootprint, String> {
-    let retained_bytes = match mutation {
+    match mutation {
         DagConfigMutation::ReplaceConfig(crate::editor::dag::config::ReplaceConfig { .. }) => return Err("DAG Config preparation rejects whole-snapshot input".into()),
-        DagConfigMutation::ChangeCamera(crate::editor::dag::config::ChangeCamera { .. }) => 0,
-    };
-    if retained_bytes > DAG_CONFIG_TEXT_BYTES { return Err("DAG Config mutation exceeds its fixed preparation envelope".into()); }
+        DagConfigMutation::ChangeCamera(crate::editor::dag::config::ChangeCamera { .. }) => {}
+    }
     Ok(store::ArtifactStoreOneItemFootprint { work_items: 2, retained_bytes: DAG_CONFIG_STORE_MAXIMUM_BYTES * 4 + 1_024 })
 }
 
@@ -487,7 +485,7 @@ impl ArtifactEditor for DagPlayApp {
     /// own click-carried selection (independent of `graph`'s live state) still drives the menu.
     fn context_menu(request: &ContextMenuRequest, _doc: &ArtifactView<'_, DagSnapshot>, cfg: &ConfigView<'_, DagConfig>, view_state: &semio_framework_plugin::ViewModel, registry: &AppActionRegistry) -> Vec<ContextMenuItemSpec> {
         let labels = dag_play_labels(view_state);
-        let is_de = is_de_locale(cfg.snapshot);
+        let is_de = is_de_locale(view_state);
         dag_context_menu_items(registry, labels, is_de, &[], request)
     }
 

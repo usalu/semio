@@ -138,7 +138,7 @@ fn fem2d_retained_reduce(
     history: &semio_framework_plugin::HistoryView,
     _interaction: &protocol::InteractionState,
     _hover: &semio_framework_plugin::app::InteractionHoverState,
-    _context: Option<&semio_framework_plugin::ArtifactOwnedToolJobContext<EditorApp<Fem2dPlayApp>>>,
+    _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<Fem2dPlayApp>>>,
     operation: &AppOperationContext,
 ) -> Result<Emit<Fem2dMutation, Fem2dConfigMutation, NoDraftMutation>, Fault> {
     if !FEM2D_RETAINED_TOOL_IDS.contains(&command.command_id()) { return Err(Fault::from("fem2d-command-retained-route-rejected")); }

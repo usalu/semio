@@ -9,9 +9,11 @@ import { testContinuousServices } from "../🖥️services/🟦️.ts";
 import { testServiceReadiness } from "../🌐️service-readiness/🟦️.ts";
 import { testDependencyBootstrap, testNxTooling, testDependencyCancellation } from "../📦️dependencies/🟦️.ts";
 import { testResourceLeases } from "../../🔒️leases/🧪️tests/🔒️resource-leases/🟦️.ts";
+import { testWasmOptimizer } from "../🕸️wasm/🟦️.ts";
 
 /** 🧪️ Verifies native source and command ownership against compiler and bundler input oracles. */
 export async function testCommandInputs(workspace: string, output: string): Promise<void> {
+  await testWasmOptimizer(workspace, output);
   testNxDaemonTaskEnvironment(workspace);
   testNxDaemonDiagnostics(workspace, output);
   testNxDaemonRetention(workspace, output);
@@ -20,12 +22,12 @@ export async function testCommandInputs(workspace: string, output: string): Prom
   await testResourceLeases(output);
   testWorkspaceRoots(workspace, output);
   await testRuntimeComponents(workspace);
-  const { testPlaygroundPreferences } = await import("../../../🎮️playground/🔒️preferences/🧪️tests/🟦️.ts");
+  const { testPlaygroundPreferences } = await import("../../../🎮️playground/🔒️preferences/🧪️tests/🔒️playground-preferences/🟦️.ts");
   await testPlaygroundPreferences();
   await testDemonstratorRuntime(workspace);
   await testBrowserModuleRelocation(workspace);
   await testBrowserDistribution(workspace, output);
-  const { testProductionBrowserArtifacts } = await import("../../../../../../💻️os/🔨️modules/🧑‍💻dev/🚚️distribution/🔌️components/🧪️tests/🟦️.ts");
+  const { testProductionBrowserArtifacts } = await import("../../../../../../💻️os/🔨️modules/🧑‍💻dev/🚚️distribution/🔌️components/🧪️tests/🌐️production-browser-artifacts/🟦️.ts");
   await testProductionBrowserArtifacts(workspace, output);
   await testServiceReadiness(workspace, output);
   await testBunDependencies(workspace, output);

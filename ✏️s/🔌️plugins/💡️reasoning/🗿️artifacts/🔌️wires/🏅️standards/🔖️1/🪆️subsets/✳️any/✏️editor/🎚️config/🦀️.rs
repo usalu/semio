@@ -25,7 +25,6 @@ pub struct WiresConfig {
     pub drag_last_x: f64,
     /// 🖱️ Last observed drag pointer Y (screen space) — was `WiresDragState::last_y`.
     pub drag_last_y: f64,
-    /// 🗣️ BCP-47 locale tag — was read off `view_state.locale`.
 }
 
 //#region 🔖️ArtifactCodec

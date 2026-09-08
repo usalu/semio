@@ -2,7 +2,7 @@
 use super::*;
 use crate::default_presentation_snapshot;
 use crate::op::PresentationMutation;
-use crate::schema::mutations::replace_source;
+use crate::standards::v1::subsets::any::schema::mutations::replace_source;
 use protocol::Mutation;
 
 #[test]

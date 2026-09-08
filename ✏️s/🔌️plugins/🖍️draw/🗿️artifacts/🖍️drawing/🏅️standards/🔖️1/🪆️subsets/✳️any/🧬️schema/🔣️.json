@@ -10,7 +10,6 @@
     "layers",
     "assets",
     "selectedIds",
-    "activeUtilityId",
     "engagementInput",
     "cameraX",
     "cameraY",
@@ -52,10 +51,6 @@
       "items": {
         "type": "string"
       },
-      "x-semio-state": "presence"
-    },
-    "activeUtilityId": {
-      "type": "string",
       "x-semio-state": "presence"
     },
     "engagementInput": {

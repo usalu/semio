@@ -601,3 +601,8 @@ This ledger records the coordinator package extraction and its direct consumer/s
 - `🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🧹️fixture-sweep/📦️packages/🦀️rust/Cargo.toml`
 - `🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/🧹️fixture-sweep/🧪️tests/🦀️.rs`
 - `🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/🦀️.rs`
+- `✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/Cargo.toml`
+- `✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/📜️script.ts`
+- `✏️s/🔌️plugins/📕️norm/📦️packages/🦀️rust/🦀️.rs`
+- `✏️s/🔌️plugins/📕️norm/🦀️.rs`
+- `✏️s/🔌️plugins/📕️norm/📇️registry/🧬️contract/📦️packages/🦀️rust/Cargo.toml`

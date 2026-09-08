@@ -3,25 +3,24 @@ use super::*;
 use protocol::{Mutation, MutationDiff};
 
 #[test]
-fn gis3d_config_serde_is_strict_and_requires_both_fields() {
-    assert!(serde_json::from_str::<Gis3dConfig>(r#"{"cameraJson":"{}"}"#).is_err());
+fn gis3d_config_serde_is_strict_and_requires_the_camera_field() {
+    assert!(serde_json::from_str::<Gis3dConfig>(r#"{}"#).is_err());
     assert!(serde_json::from_str::<Gis3dConfig>(r#"{"locale":"en-US"}"#).is_err());
-    assert!(serde_json::from_str::<Gis3dConfig>(r#"{"cameraJson":null,"locale":"en-US"}"#).is_err());
-    assert!(serde_json::from_str::<Gis3dConfig>(r#"{"cameraJson":"{}","locale":"en-US","extra":true}"#).is_err());
-    assert!(serde_json::from_str::<Gis3dConfig>(r#"{"cameraJson":"{}","locale":"en-US"}"#).is_ok());
+    assert!(serde_json::from_str::<Gis3dConfig>(r#"{"cameraJson":null}"#).is_err());
+    assert!(serde_json::from_str::<Gis3dConfig>(r#"{"cameraJson":"{}","extra":true}"#).is_err());
+    assert!(serde_json::from_str::<Gis3dConfig>(r#"{"cameraJson":"{}"}"#).is_ok());
 }
 
 #[semio_framework_async_macros::async_test]
 async fn gis3d_config_default_matches_the_pre_migration_view_defaults() {
     let config = Gis3dConfig::default();
     assert!(config.camera_json.contains("800"));
-    assert_eq!(config.locale, "en-US");
 }
 
 #[semio_framework_async_macros::async_test]
 async fn gis3d_config_dsl_round_trips_default_and_populated() {
     store::os_store::test_support::assert_dsl_round_trip(&Gis3dConfig::default());
-    let populated = Gis3dConfig { locale: "de-DE".into(), ..Gis3dConfig::default() };
+    let populated = Gis3dConfig { camera_json: r#"{"position":[1.0,2.0,3.0]}"#.into() };
     store::os_store::test_support::assert_dsl_round_trip(&populated);
     store::os_store::test_support::assert_dsl_pack_equivalence(&populated);
 }
@@ -40,5 +39,4 @@ async fn gis3d_config_operation_backwards_restores_the_pre_operation_snapshot() 
 #[semio_framework_async_macros::async_test]
 async fn gis3d_config_operation_lines_round_trip() {
     store::os_store::test_support::assert_op_line_round_trip(&Gis3dConfigMutation::SetCamera(SetCamera { camera_json: r#"{"position":[1.0,2.0,3.0]}"#.into() }));
-    store::os_store::test_support::assert_op_line_round_trip(&Gis3dConfigMutation::SetLocale(SetLocale { value: "de-DE".into() }));
 }

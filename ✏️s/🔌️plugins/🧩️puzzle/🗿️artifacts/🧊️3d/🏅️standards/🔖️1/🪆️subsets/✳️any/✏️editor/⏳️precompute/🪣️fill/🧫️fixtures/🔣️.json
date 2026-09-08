@@ -8,6 +8,20 @@
     "maximumDiagnosticInteger": 9007199254740991,
     "candidateItems": 8
   },
+  "documentCapacities": {
+    "bookkeepingSlots": 32,
+    "bookkeepingPageBytes": 16384,
+    "documentPageBytes": 1048576,
+    "fillCountMax": 1000,
+    "objectSlots": 2048,
+    "attractionSlots": 2048,
+    "vortexSlots": 4096,
+    "volumeSlots": 256,
+    "kindSlots": 256,
+    "candidateSlots": 1024,
+    "cellSlots": 8192,
+    "nakagin": { "objects": 180, "vortices": 358, "objectKinds": 12, "vortexKinds": 18, "compatibilityRows": 14, "attractions": 358 }
+  },
   "boundaryLaws": {
     "sourceVortexIndex": [
       { "name": "safe-maximum", "value": 9007199254740991, "admitted": true },

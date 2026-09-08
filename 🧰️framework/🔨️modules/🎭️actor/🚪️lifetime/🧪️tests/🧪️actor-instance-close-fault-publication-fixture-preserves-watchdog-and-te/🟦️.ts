@@ -267,7 +267,9 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     const ajv = new Ajv({ strict: true });
     ajv.addSchema(JSON.parse(readFileSync(new URL("../../🌱️value/🧬️schema/🔣️.json", source.url), "utf8")));
     ajv.addSchema(schema);
-    expect(ajv.getSchema(`${schema.$id}#/$defs/LifetimeFixture`)!(fixture)).toBe(true);
+    const validateFixture = ajv.getSchema(`${schema.$id}#/$defs/LifetimeFixture`)!;
+    expect(validateFixture(fixture), JSON.stringify(validateFixture.errors)).toBe(true);
+    expect(schema.$defs.LifetimeFixture.properties.turnResults.items.properties.hex.maxLength).toBe(fixture.turnResults[0].hex.length + 2 * ACTOR_INSTANCE_LIFECYCLE_MAXIMUM_BYTES);
     const validate = ajv.getSchema(`${schema.$id}#/$defs/Lifetime`)!;
     for (const invalid of ["0", "-1", "01", "18446744073709551616"]) {
       expect(validate({ ...fixture.vectors[0].value, activationGeneration: invalid })).toBe(false);
@@ -363,7 +365,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     // `node:fs` and `typescript`, plus repo-lib's `🔍️discovery` — into the browser worker bundle,
     // which fails the storybook preview build and the os/dev server alike with
     // `"node:url" doesn't have a matching export named "fileURLToPath"`.
-    const materializeSpecifier = "../../../🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/🟦️.ts";
+    const materializeSpecifier = new URL("../../../🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/🟦️.ts", source.url).href;
     const { shardWorkerSource } = await import(/* @vite-ignore */ materializeSpecifier);
     const fixture = JSON.parse(readFileSync(new URL("./🧪️fixture/🔣️.json", source.url), "utf8"));
     const prior = BigInt(fixture.reopen.prior.activationGeneration);

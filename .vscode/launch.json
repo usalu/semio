@@ -3,6 +3,17 @@
   "version": "0.2.0",
   "configurations": [
     {
+      "name": "🧪️test🔎️jack-query-ownership",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run workspace:test-jack-query-ownership",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.111
+      }
+    },
+    {
       "name": "🧪️test🪟️context-menu-view-context",
       "type": "node-terminal",
       "request": "launch",
@@ -3624,6 +3635,39 @@
       "presentation": {
         "group": "4_gate",
         "order": 400.994
+      }
+    },
+    {
+      "name": "⚖️gate🎭️actor📤️empty-output-retirement",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-actor:test -- --testNamePattern=ActorOutputEmptyRetirement",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 400.9944
+      }
+    },
+    {
+      "name": "⚖️gate🎭️actor📤️unused-return-retirement",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-actor:test -- --testNamePattern=CapturedUnusedReturnRetirement",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 400.9945
+      }
+    },
+    {
+      "name": "⚖️gate🔌️plugin🚪️retirement-retry",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-renderer-react:test-long -- --testNamePattern=\"retries actual actor retirement\"",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 400.9946
       }
     },
     {
@@ -9949,7 +9993,7 @@
       "name": "📦️build🔧️procedural🩻️2d",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @semio-tech/framework-os-dev:build -- generation2d",
+      "command": "bun nx run @semio-tech/framework-os-dev:build-generation2d-react-release",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",
@@ -9993,7 +10037,7 @@
       "name": "📦️build🏚️mitbestand🧱️aggregator",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @semio-tech/framework-os-dev:build -- aggregator",
+      "command": "bun nx run @semio-tech/framework-os-dev:build-aggregator-react-release",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",
@@ -10059,7 +10103,7 @@
       "name": "📦️build🧩️puzzle👯️5d🎛️capsule",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @semio-tech/framework-os-dev:build -- puzzle5d",
+      "command": "bun nx run @semio-tech/framework-os-dev:build-puzzle5d-react-release",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",
@@ -11674,6 +11718,17 @@
       "presentation": {
         "group": "4_gate",
         "order": 500.711
+      }
+    },
+    {
+      "name": "📦️build🦀️@semio-tech/framework-os-config",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-os-config:build",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 500.719
       }
     },
     {

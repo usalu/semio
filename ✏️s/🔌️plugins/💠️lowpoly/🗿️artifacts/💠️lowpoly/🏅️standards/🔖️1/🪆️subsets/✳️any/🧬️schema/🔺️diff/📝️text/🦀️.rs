@@ -41,9 +41,6 @@ impl LowpolyDiff {
             if let Some(value) = self.active_paint_layer {
                 next.active_paint_layer = value;
             }
-            if let Some(value) = &self.active_utility_id {
-                next.active_utility_id = value.clone();
-            }
             if let Some(value) = self.show_edges {
                 next.show_edges = value;
             }
@@ -228,7 +225,6 @@ impl MutationDiff<LowpolySnapshot> for LowpolyDiff {
         take!(selected_object_ids);
         take!(paint_utility);
         take!(active_paint_layer);
-        take!(active_utility_id);
         take!(show_edges);
         take!(sun_enabled);
         take!(sun_azimuth);

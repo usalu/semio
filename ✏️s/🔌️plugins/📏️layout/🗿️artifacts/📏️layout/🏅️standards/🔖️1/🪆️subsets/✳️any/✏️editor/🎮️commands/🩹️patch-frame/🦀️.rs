@@ -9,7 +9,7 @@ use crate::mutations::edit_story::EditStory;
 use crate::mutations::move_frame::MoveFrame;
 use crate::mutations::resize_frame::ResizeFrame;
 use crate::mutations::LayoutMutation;
-use crate::schema::text_to_rgba;
+use crate::standards::v1::subsets::any::schema::text_to_rgba;
 use crate::{Frame, LayoutSnapshot};
 use crate::editor::layout::config::{LayoutConfig, LayoutConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};

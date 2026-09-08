@@ -12,7 +12,7 @@
 use crate::op::GisMapMutation;
 use crate::schema::{gis_map_document_from_descriptor_json, positions_operations, regions_operations, routes_operations};
 use crate::{GIS_MAP_SCHEMA, GisMapSnapshot, artifact_kind};
-use crate::editor::gis2d::commands::{example, features, inference, locale, shell, view};
+use crate::editor::gis2d::commands::{example, features, inference, shell, view};
 use crate::editor::gis2d::config::{Gis2dConfig, Gis2dConfigMutation};
 use crate::editor::gis2d::modes::edit;
 use crate::editor::gis2d::modes::edit::windows::map;
@@ -233,7 +233,7 @@ use view::{fit_world, focus_feature, set_camera, set_layer_stroke_scale, set_lod
 
 //#region 🔖️Gis2dPlayApp
 /// 🗺️ GIS 2D map play app. The document holds positions/routes/regions; everything else (camera,
-/// render mode, style, LOD, layer visibility, stroke weights, locale) is [`Gis2dConfig`] — a
+/// render mode, style, LOD, layer visibility, and stroke weights) is [`Gis2dConfig`] — a
 /// session-only but real, undoable config artifact. Layer AND feature selection/hover now live in
 /// the framework-owned `"features"` interaction domain (ticket
 /// 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM).
@@ -293,7 +293,7 @@ fn gis2d_retained_reduce(
     history: &semio_framework_plugin::HistoryView,
     _interaction: &protocol::InteractionState,
     _hover: &semio_framework_plugin::app::InteractionHoverState,
-    _context: Option<&semio_framework_plugin::ArtifactOwnedToolJobContext<EditorApp<Gis2dPlayApp>>>,
+    _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<Gis2dPlayApp>>>,
     operation: &AppOperationContext,
 ) -> Result<Emit<GisMapMutation, Gis2dConfigMutation, NoDraftMutation>, Fault> {
     command.dispatch(&ArtifactView::with_operation(snapshot, history, operation.clone()), &ConfigView { snapshot: config })
@@ -884,6 +884,7 @@ impl ArtifactEditor for Gis2dPlayApp {
         request: &semio_framework_plugin::ContextMenuRequest,
         _doc: &ArtifactView<'_, GisMapSnapshot>,
         _cfg: &ConfigView<'_, Gis2dConfig>,
+        _view_state: &semio_framework_plugin::ViewModel,
         registry: &semio_framework_plugin::AppActionRegistry,
     ) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
         semio_framework_plugin::resolve_ready(async { gis2d_context_menu_items(registry, request.surface.as_ref(), &[]).await })

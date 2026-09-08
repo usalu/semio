@@ -185,10 +185,10 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
 /// `standards::v1::subsets::any::subset()` instead. Mirrors `🗒️note`/`🖍️draw`/`🔱️trinity`'s own
 /// migration exactly.
 #[cfg(feature = "component-app-assembly")]
-pub fn artifact<PA: crate::ArtifactApps>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<PA> {
+pub fn artifact<PA: ArtifactApps>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<PA> {
     use semio_framework_plugin::app::declarations::ArtifactDeclaration;
     use store::os_io::ArtifactKindId;
-    ArtifactDeclaration { kind: ArtifactKindId::parse("s.block.block2d").expect("canonical block2d kind"), localization: &[], standards: vec![crate::standards::v1::standard::<PA>()] }
+    ArtifactDeclaration { kind: ArtifactKindId::parse("s.block.block2d").expect("canonical block2d kind"), localization: &[], standards: vec![standards::v1::standard::<PA>()] }
 }
 
 /// 📌️ Handcrafted facet grammars (text) and protocols (binary) for in-process execution — built once
@@ -204,28 +204,28 @@ pub fn pilot_languages() -> &'static [dsl::LanguageSpec] {
                     id: "block.block2d",
                     extension: Some("block2d"),
                     role: dsl::LanguageRole::Document,
-                    grammar: Some(crate::standards::v1::subsets::any::schema::snapshot::text::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(crate::standards::v1::subsets::any::schema::snapshot::text::COMPONENT_GRAMMAR_PATH),
-                    protocol: Some(crate::standards::v1::subsets::any::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(crate::standards::v1::subsets::any::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
+                    grammar: Some(standards::v1::subsets::any::schema::snapshot::text::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(standards::v1::subsets::any::schema::snapshot::text::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(standards::v1::subsets::any::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(standards::v1::subsets::any::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
                     hooks: dsl::passthrough_hooks("block.block2d"),
                 },
                 dsl::LanguageSpec {
                     id: "block.block2d.op",
                     extension: None,
                     role: dsl::LanguageRole::Ops,
-                    grammar: Some(crate::standards::v1::subsets::any::schema::mutations::text::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(crate::standards::v1::subsets::any::schema::mutations::text::COMPONENT_GRAMMAR_PATH),
-                    protocol: Some(crate::standards::v1::subsets::any::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(crate::standards::v1::subsets::any::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
+                    grammar: Some(standards::v1::subsets::any::schema::mutations::text::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(standards::v1::subsets::any::schema::mutations::text::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(standards::v1::subsets::any::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(standards::v1::subsets::any::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
                     hooks: dsl::passthrough_hooks("block.block2d.op"),
                 },
                 dsl::LanguageSpec {
                     id: "block.block2d.diff",
                     extension: None,
                     role: dsl::LanguageRole::Diff,
-                    grammar: Some(crate::standards::v1::subsets::any::schema::diff::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(crate::standards::v1::subsets::any::schema::diff::COMPONENT_GRAMMAR_PATH),
+                    grammar: Some(standards::v1::subsets::any::schema::diff::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(standards::v1::subsets::any::schema::diff::COMPONENT_GRAMMAR_PATH),
                     protocol: None,
                     protocol_path: None,
                     hooks: dsl::passthrough_hooks("block.block2d.diff"),
@@ -236,8 +236,8 @@ pub fn pilot_languages() -> &'static [dsl::LanguageSpec] {
                     role: dsl::LanguageRole::Pack,
                     grammar: None,
                     grammar_path: None,
-                    protocol: Some(crate::standards::v1::subsets::any::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(crate::standards::v1::subsets::any::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
+                    protocol: Some(standards::v1::subsets::any::schema::snapshot::binary::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(standards::v1::subsets::any::schema::snapshot::binary::COMPONENT_PROTOCOL_PATH),
                     hooks: dsl::passthrough_hooks("2d.pack"),
                 },
                 dsl::LanguageSpec {
@@ -246,8 +246,8 @@ pub fn pilot_languages() -> &'static [dsl::LanguageSpec] {
                     role: dsl::LanguageRole::Spr,
                     grammar: None,
                     grammar_path: None,
-                    protocol: Some(crate::standards::v1::subsets::any::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(crate::standards::v1::subsets::any::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
+                    protocol: Some(standards::v1::subsets::any::schema::mutations::binary::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(standards::v1::subsets::any::schema::mutations::binary::COMPONENT_PROTOCOL_PATH),
                     hooks: dsl::passthrough_hooks("2d.spr"),
                 },
             ]

@@ -2,7 +2,6 @@
 //! terminology×locale combination is compile-checked by `semio_framework_plugin::app_labels!`
 //! (see ticket 26/08/03/COMPILE-TIME-CHECKED-UI-LABELS-ACROSS-LOCALE-TERMINOLOGY-AND-BRAND).
 
-use crate::editor::puzzle5d::config::Puzzle5dConfig;
 use semio_framework_plugin::{AppLabels, LabelText, Locale, LocalizedLabel, Terminology};
 
 //#region 🔖️Labels
@@ -68,25 +67,14 @@ semio_framework_plugin::app_labels! {
 //#endregion 🔖️Labels
 
 //#region 🔖️Locale
-fn puzzle5d_locale(value: &str) -> Option<Locale> {
-    match value {
-        "en" | "en-US" => Some(Locale::En),
-        "de" | "de-DE" => Some(Locale::De),
-        _ => None,
-    }
+/// 🗣️ Resolves the German branch from the canonical host view.
+pub fn puzzle5d_is_de_locale(view_state: &semio_framework_plugin::ViewModel) -> bool {
+    view_state.locale == Locale::De
 }
 
-/// 🗣️ Resolves the German branch only for an explicitly recognized locale.
-pub fn puzzle5d_is_de_locale(view_state: &semio_framework_plugin::ViewModel) -> Option<bool> {
-    Some(view_state.locale == Locale::De)
-}
-
-/// 🗣️ Resolves the active label set from this document's persisted locale/terminology config
-/// (see `Puzzle5dConfig::locale`/`.terminology` — this app VCS's its own axes rather than reading
-/// `ViewModel`, so `resolve_labels::<Puzzle5dLabels>(view_state)` doesn't apply here). Unsupported
-/// BCP-47 or terminology values fail closed.
-pub fn puzzle5d_labels(view_state: &semio_framework_plugin::ViewModel) -> Option<&'static Puzzle5dLabels> {
-    Some(semio_framework_plugin::resolve_labels::<Puzzle5dLabels>(view_state))
+/// 🗣️ Resolves the active label set from the canonical host view axes.
+pub fn puzzle5d_labels(view_state: &semio_framework_plugin::ViewModel) -> &'static Puzzle5dLabels {
+    semio_framework_plugin::resolve_labels::<Puzzle5dLabels>(view_state)
 }
 
 /// 🗺️ Lifts a `Puzzle5dLabels` field accessor into a full manifest-level `LocalizedLabel` matrix —

@@ -1,6 +1,6 @@
 //! 🧬️ Trinity jack configuration mutation collection.
 
-use super::{JackConfig, Camera, JackEditorSelection};
+use super::{JackConfig, Camera};
 #[path = "📸️replace-config/🦀️.rs"]
 mod replace_config;
 pub use replace_config::ReplaceConfig;
@@ -10,12 +10,6 @@ pub use set_camera::SetCamera;
 #[path = "🔎️set-query/🦀️.rs"]
 mod set_query;
 pub use set_query::SetQuery;
-#[path = "📊️set-result/🦀️.rs"]
-mod set_result;
-pub use set_result::SetResult;
-#[path = "🔤️set-editor-selection/🦀️.rs"]
-mod set_editor_selection;
-pub use set_editor_selection::SetEditorSelection;
 #[path = "🔍️set-lod-mode/🦀️.rs"]
 mod set_lod_mode;
 pub use set_lod_mode::SetLodMode;
@@ -29,10 +23,6 @@ pub enum JackConfigMutation {
     SetCamera(SetCamera),
     #[dsl(key = "set-query")]
     SetQuery(SetQuery),
-    #[dsl(key = "set-result")]
-    SetResult(SetResult),
-    #[dsl(key = "set-editor-selection")]
-    SetEditorSelection(SetEditorSelection),
     #[dsl(key = "set-lod-mode")]
     SetLodMode(SetLodMode),
 }

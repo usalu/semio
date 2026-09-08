@@ -62,9 +62,17 @@ fn canonical_ui_preference_fixture_replays_to_the_same_projection_as_typescript(
         .iter()
         .map(|event| decode_ui_preferences_config_mutation_json(&event.to_string()).expect("canonical mutation JSON"))
         .collect();
-    let projection = replay_ui_preferences(&UiPreferencesEventLog { version: fixture.version, events });
+    let encoded = encode_ui_preferences_event_log(&UiPreferencesEventLog { version: fixture.version, events });
+    let retained = decode_ui_preferences_event_log(&encoded).expect("native event-store boundary round trip");
+    let projection = replay_ui_preferences(&retained);
     assert_eq!(projection, fixture.expected);
-    println!("[DEBUG] wgpu replayed the shared OS UI preference event fixture");
+    assert_eq!(projection.custom_drivers["studio"].config, serde_json::json!({ "scale": 1.25 }));
+    assert_eq!(projection.keybinding_overrides["edit.undo"], "Meta+Z");
+    let native = project_chrome_prefs(projection, 3);
+    assert_eq!(native.custom_drivers["studio"].config, serde_json::json!({ "scale": 1.25 }));
+    assert_eq!(native.keybinding_overrides["edit.undo"], "Meta+Z");
+    assert_eq!(native.worker_count, 3);
+    println!("[DEBUG] wgpu replayed the full shared OS UI preference fixture into its live host projection");
 }
 
 /// 🧪️ `env_lock` treats an empty-string env value the same as unset (matches

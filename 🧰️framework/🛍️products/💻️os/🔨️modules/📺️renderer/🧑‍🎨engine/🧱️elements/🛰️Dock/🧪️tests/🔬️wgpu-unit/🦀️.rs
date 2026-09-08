@@ -73,6 +73,33 @@ fn sample_app(window_ids: &[&str], layout: Option<WindowLayout>) -> AppDefinitio
 }
 
 #[test]
+fn concrete_window_instances_round_trip_without_kind_collapse() {
+    #[derive(serde::Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    struct ExpectedWindow {
+        id: String,
+        window_kind_id: String,
+    }
+    #[derive(serde::Deserialize)]
+    struct Fixture {
+        layout: WindowLayout,
+        expected: Vec<ExpectedWindow>,
+    }
+    let fixture: Fixture = serde_json::from_str(include_str!("../../🧫️fixtures/🪟️concrete-window-instances.json")).expect("concrete window fixture");
+    let mut dock = DockState::from_app(&sample_app(&["canvas"], Some(fixture.layout)), Some("canvas-copy"));
+    let actual = dock.window_instances();
+    assert_eq!(actual, fixture.expected.iter().map(|window| (window.id.clone(), window.window_kind_id.clone())).collect::<Vec<_>>());
+    assert_eq!(dock.active_window_id.as_deref(), Some("canvas-copy"));
+    let payload = DockDragPayload { kind: DockDragKind::Tab, window_id: "canvas-copy".into(), window_kind_id: "canvas".into(), source_path: Vec::new(), tab_index: 1, ghost_label: "Canvas copy".into() };
+    assert!(dock.remove_window("canvas-copy"));
+    assert!(dock.apply_drop(&payload, &DockDropZone::RootSplit { side: DockSide::Right }));
+    assert_eq!(dock.window_kind_id("canvas-copy"), Some("canvas"));
+    let persisted = serde_json::to_value(dock.to_window_layout()).expect("persisted layout");
+    assert!(persisted.to_string().contains("canvas-copy"));
+    println!("[DEBUG] native dock retained two concrete instances of one window kind across render and drag persistence");
+}
+
+#[test]
 fn split_axis_extent_uses_row_width_not_canvas_max() {
     let mut dock = DockState::from_app(&sample_app(&["a", "b"], None), Some("a"));
     dock.root = DockNode::Column(vec![(DockNode::Row(vec![(stack_with("a"), 0.5), (stack_with("b"), 0.5)]), 0.5), (stack_with("c"), 0.5)]);
@@ -244,11 +271,11 @@ fn stack_with(id: &str) -> DockNode {
 //#region DragDropAndLayoutDiffTests
 
 fn tab_payload(window_id: &str, source_path: DockPath, tab_index: usize) -> DockDragPayload {
-    DockDragPayload { kind: DockDragKind::Tab, window_id: window_id.into(), source_path, tab_index, ghost_label: window_id.into() }
+    DockDragPayload { kind: DockDragKind::Tab, window_id: window_id.into(), window_kind_id: window_id.into(), source_path, tab_index, ghost_label: window_id.into() }
 }
 
 fn stack_payload(window_id: &str, source_path: DockPath, tab_index: usize) -> DockDragPayload {
-    DockDragPayload { kind: DockDragKind::Stack, window_id: window_id.into(), source_path, tab_index, ghost_label: window_id.into() }
+    DockDragPayload { kind: DockDragKind::Stack, window_id: window_id.into(), window_kind_id: window_id.into(), source_path, tab_index, ghost_label: window_id.into() }
 }
 
 /// 🎯️ Regression pin for the double-removal bug: `apply_drop` used to call `remove_window` again

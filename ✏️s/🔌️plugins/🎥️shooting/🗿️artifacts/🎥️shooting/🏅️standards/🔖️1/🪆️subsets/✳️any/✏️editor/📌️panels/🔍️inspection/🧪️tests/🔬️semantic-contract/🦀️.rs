@@ -9,7 +9,7 @@ fn project(node: BuiltNode) -> serde_json::Value {
 #[test]
 fn shooting_semantic_panels_match_the_json_oracle() {
     let vectors: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️panels.json")).expect("neutral UI vectors");
-    let mut snapshot = crate::schema::default_snapshot();
+    let mut snapshot = crate::standards::v1::subsets::any::schema::default_snapshot();
     let cfg = ShootingConfig::default();
     for row in vectors["cases"].as_array().expect("locales") {
         let labels = semio_framework_plugin::resolve_labels_for_locale::<ShootingLabels>(row["locale"].as_str().expect("locale"));

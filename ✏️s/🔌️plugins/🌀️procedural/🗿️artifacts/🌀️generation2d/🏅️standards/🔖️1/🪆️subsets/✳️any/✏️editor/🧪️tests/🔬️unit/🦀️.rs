@@ -207,7 +207,6 @@ fn retained_route_dispositions_are_exact_and_exhaustive() {
         "setEvalOutputs",
         "selectGeneration",
         "flowEvalTick",
-        "setLocale",
     ] {
         assert!(!GENERATION2D_BOUNDED_TOOL_IDS.contains(&blocked));
     }
@@ -232,7 +231,6 @@ fn every_command_round_trips_through_text_and_binary() {
 }
 
 /// ⚖️ LAW: the leading token of every printed op line is the row's `dsl` wire keyword — pinned
-/// explicitly per row (not derived from the command id) since `setLocale`/`locale` is the one row
 /// where the two vocabularies genuinely diverge. This is what a missing `#[dsl(keyword = ..)]` on a
 /// payload struct silently breaks (the record prints with no keyword at all and fails to re-parse).
 #[test]
@@ -291,7 +289,6 @@ pub(super) fn every_command() -> Vec<Generation2dCommand> {
         Generation2dCommand::CanvasWheel(canvas_wheel::CanvasWheel {}),
         Generation2dCommand::SelectGeneration(select_generation::SelectGeneration { id: Some("g1".into()) }),
         Generation2dCommand::FlowEvalTick(flow_eval_tick::FlowEvalTick {}),
-        Generation2dCommand::SetLocale(set_locale::SetLocale { value: "de-DE".into() }),
     ]
 }
 //#endregion 🔖️CommandSurface

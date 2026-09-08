@@ -25,8 +25,6 @@ pub struct LowpolyArtifact {
     pub paint_utility: String,
     #[state(presence)]
     pub active_paint_layer: u32,
-    #[state(presence)]
-    pub active_utility_id: String,
     #[state(config)]
     pub show_edges: bool,
     #[state(config)]
@@ -97,7 +95,6 @@ impl Default for LowpolyArtifact {
             selected_object_ids: Vec::new(),
             paint_utility: "brush".into(),
             active_paint_layer: 0,
-            active_utility_id: "move".into(),
             show_edges: true,
             sun_enabled: false,
             sun_azimuth: 45.0,

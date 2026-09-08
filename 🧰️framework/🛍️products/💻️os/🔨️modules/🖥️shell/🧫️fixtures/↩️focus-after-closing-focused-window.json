@@ -22,10 +22,10 @@
       "bottom": false
     },
     "panelsSize": {
-      "left": 280.0,
-      "right": 280.0,
-      "top": 280.0,
-      "bottom": 280.0
+      "left": 280,
+      "right": 280,
+      "top": 280,
+      "bottom": 280
     },
     "panelsPath": {
       "left": [],
@@ -64,17 +64,8 @@
     "transientNotice": null,
     "openWithFocusRole": null,
     "activeTutorialId": null,
-    "uiAppearance": "system",
-    "uiLayout": "desktop",
-    "uiDriverId": "",
-    "uiCustomDrivers": {},
     "uiDriverDraft": null,
-    "uiLocale": "en",
-    "uiTerminology": "",
-    "uiThemeId": "",
-    "uiCustomThemes": {},
     "uiThemeDraft": null,
-    "uiKeybindingOverrides": {},
     "syncBackboneUri": null,
     "syncCardKind": null,
     "syncDraftPath": "",
@@ -119,10 +110,10 @@
         "bottom": false
       },
       "panelsSize": {
-        "left": 280.0,
-        "right": 280.0,
-        "top": 280.0,
-        "bottom": 280.0
+        "left": 280,
+        "right": 280,
+        "top": 280,
+        "bottom": 280
       },
       "panelsPath": {
         "left": [],
@@ -156,17 +147,8 @@
       "transientNotice": null,
       "openWithFocusRole": null,
       "activeTutorialId": null,
-      "uiAppearance": "system",
-      "uiLayout": "desktop",
-      "uiDriverId": "",
-      "uiCustomDrivers": {},
       "uiDriverDraft": null,
-      "uiLocale": "en",
-      "uiTerminology": "",
-      "uiThemeId": "",
-      "uiCustomThemes": {},
       "uiThemeDraft": null,
-      "uiKeybindingOverrides": {},
       "syncBackboneUri": null,
       "syncCardKind": null,
       "syncDraftPath": "",

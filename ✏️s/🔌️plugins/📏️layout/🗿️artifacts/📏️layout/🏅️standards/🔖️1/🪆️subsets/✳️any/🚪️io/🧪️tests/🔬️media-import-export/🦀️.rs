@@ -64,7 +64,7 @@ async fn svg_export_merges_owned_background_drawing_behind_pages() {
 #[semio_framework_async_macros::async_test]
 async fn svg_export_composes_through_semio_drawing_bridge() {
     ensure_stdio_semio_drawing_registered();
-    let doc = crate::schema::default_document();
+    let doc = crate::standards::v1::subsets::any::schema::default_document();
     let value = doc.to_value();
     let (svg, width, height) = layout_document_json_to_svg(&value).expect("svg export succeeds");
     assert!(svg.starts_with("<svg"), "{svg}");

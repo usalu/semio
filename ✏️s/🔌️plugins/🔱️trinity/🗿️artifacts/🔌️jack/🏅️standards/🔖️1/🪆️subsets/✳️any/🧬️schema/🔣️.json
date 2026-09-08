@@ -13,8 +13,7 @@
     "edges",
     "jackQuery",
     "lodModeByWindow",
-    "viewportCamera",
-    "jackResultJson"
+    "viewportCamera"
   ],
   "properties": {
     "schema": {
@@ -68,11 +67,6 @@
     },
     "viewportCamera": {
       "$ref": "#/$defs/Camera",
-      "x-semio-state": "config"
-    },
-    "jackResultJson": {
-      "type": "string",
-      "contentMediaType": "application/json",
       "x-semio-state": "config"
     },
     "editorSelection": {

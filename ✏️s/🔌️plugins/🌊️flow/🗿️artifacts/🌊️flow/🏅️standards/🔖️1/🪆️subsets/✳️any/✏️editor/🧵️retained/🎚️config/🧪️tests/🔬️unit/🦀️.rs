@@ -22,7 +22,7 @@ async fn max_semantic_config_publication_cancel_retry_and_close_use_real_grants(
                         semio_framework_job::OperationId(1),
                         generation,
                         store.content_revision_now(),
-                        "flow-test".into(),
+                        format!("flow-test-{}", row["unit"].as_str().unwrap()),
                         FlowConfigMutation::SetCatalogueSections { sections_json: text },
                         None,
                         store::HistoryLane::Document,
@@ -124,7 +124,6 @@ fn typed_config_canonical_tree_matches_serde_for_every_variant() {
         FlowConfigMutation::SetGeneration { json: text.clone() },
         FlowConfigMutation::SetDuplicateWidgetProgress { json: text.clone() },
         FlowConfigMutation::CancelDuplicateWidget { generation: u64::MAX },
-        FlowConfigMutation::SetLocale { value: text },
     ];
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🧫️fixtures/🧫️grant-frontier/🔣️.json")).unwrap();
     assert_eq!(variants.len(), fixture["canonicalVariants"].as_array().unwrap().len());

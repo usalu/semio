@@ -1,8 +1,8 @@
 //! 🔺️ Raster artifact — sparse field-delta diff codec and apply/absorb.
 
-use crate::schema::diff::{RasterAssetsDelta, RasterDiff, RasterLayerInsertion, RasterLayerMove, RasterLayerPatchEntry, RasterLayersDelta};
-use crate::schema::RasterArtifact;
-use crate::schema::{find_layer, layer_node_id};
+use crate::standards::v1::subsets::any::schema::diff::{RasterAssetsDelta, RasterDiff, RasterLayerInsertion, RasterLayerMove, RasterLayerPatchEntry, RasterLayersDelta};
+use crate::standards::v1::subsets::any::schema::RasterArtifact;
+use crate::standards::v1::subsets::any::schema::{find_layer, layer_node_id};
 use crate::{RasterLayerNode, RasterLayerPatch, RasterSnapshot};
 use protocol::MutationDiff;
 
@@ -219,9 +219,6 @@ impl RasterDiff {
             if let Some(list) = &self.selected_ids {
                 next.selected_ids = list.values.clone();
             }
-            if let Some(value) = &self.active_utility_id {
-                next.active_utility_id = value.clone();
-            }
             if let Some(value) = self.brush_size {
                 next.brush_size = value;
             }
@@ -282,7 +279,7 @@ pub fn apply_layers_delta(layers: &[RasterLayerNode], delta: &RasterLayersDelta)
             return Err(protocol::MutationApplyError::new("mutation.apply.invalid-target", "layer cannot be moved beneath itself").at(["moved".to_string(), index.to_string(), "parentId".to_string()]));
         }
     }
-    let mut identities: std::collections::BTreeSet<String> = crate::schema::flatten_raster_layers(layers).into_iter().map(|node| layer_node_id(node).to_string()).collect();
+    let mut identities: std::collections::BTreeSet<String> = crate::standards::v1::subsets::any::schema::flatten_raster_layers(layers).into_iter().map(|node| layer_node_id(node).to_string()).collect();
     for id in &delta.removed {
         identities.remove(id);
     }
@@ -310,7 +307,7 @@ pub fn apply_layers_delta(layers: &[RasterLayerNode], delta: &RasterLayersDelta)
             return Err(protocol::MutationApplyError::new("mutation.apply.invalid-index", "added layer parent or index is invalid").at(["added".to_string(), index.to_string()]));
         }
     }
-    let next_ids: Vec<_> = crate::schema::flatten_raster_layers(&next).into_iter().map(layer_node_id).collect();
+    let next_ids: Vec<_> = crate::standards::v1::subsets::any::schema::flatten_raster_layers(&next).into_iter().map(layer_node_id).collect();
     if next_ids.iter().enumerate().any(|(index, id)| next_ids[..index].contains(id)) {
         return Err(protocol::MutationApplyError::new("mutation.apply.duplicate-target", "resulting layer tree contains duplicate identities").at(["identities"]));
     }
@@ -389,7 +386,6 @@ impl MutationDiff<RasterSnapshot> for RasterDiff {
         take!(id);
         take!(title);
         take!(selected_ids);
-        take!(active_utility_id);
         take!(brush_size);
         take!(brush_opacity);
         take!(composite_viewport);

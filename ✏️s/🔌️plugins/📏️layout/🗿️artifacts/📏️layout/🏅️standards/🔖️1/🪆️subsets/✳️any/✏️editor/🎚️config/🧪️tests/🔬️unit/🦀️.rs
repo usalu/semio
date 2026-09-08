@@ -8,7 +8,6 @@ async fn layout_config_default_matches_the_existing_runtime_defaults() {
     assert_eq!(config.drop_preview, LayoutDropPreviewState::default());
     assert_eq!(config.camera, LayoutCamera::default());
     assert_eq!(config.preview_camera, LayoutCamera::default());
-    assert_eq!(config.locale, "en-US");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -19,8 +18,7 @@ async fn layout_config_dsl_and_pack_round_trip() {
         engagement_input: "export svg".into(),
         camera: LayoutCamera { x: 5.0, y: 6.0, zoom: 1.25 },
         preview_camera: LayoutCamera { x: 7.0, y: 8.0, zoom: 0.75 },
-        locale: "de-DE".into(),
-    };
+        };
     store::os_store::test_support::assert_dsl_round_trip(&config);
     store::os_store::test_support::assert_dsl_pack_equivalence(&config);
 }
@@ -32,8 +30,7 @@ fn sample_config() -> LayoutConfig {
         engagement_input: "export png".into(),
         camera: LayoutCamera { x: 10.0, y: 20.0, zoom: 1.5 },
         preview_camera: LayoutCamera { x: 3.0, y: 4.0, zoom: 2.0 },
-        locale: "de-DE".into(),
-    }
+        }
 }
 
 fn config_round_trip(base: &LayoutConfig, operation: &LayoutConfigMutation) -> LayoutConfig {
@@ -58,18 +55,15 @@ async fn config_mutations_apply_and_restore_every_field() {
     assert_eq!(cam.camera, LayoutCamera { x: 1.0, y: 2.0, zoom: 3.0 });
     let preview_cam = config_round_trip(&base, &LayoutConfigMutation::SetPreviewCamera(SetPreviewCamera { camera: LayoutCamera { x: 4.0, y: 5.0, zoom: 6.0 } }));
     assert_eq!(preview_cam.preview_camera, LayoutCamera { x: 4.0, y: 5.0, zoom: 6.0 });
-    assert_eq!(config_round_trip(&base, &LayoutConfigMutation::SetLocale(SetLocale { value: "de-DE".into() })).locale, "de-DE");
 }
 
 #[semio_framework_async_macros::async_test]
 async fn config_snapshot_op_text_round_trips() {
     store::os_store::test_support::assert_op_line_round_trip(&LayoutConfigMutation::SetActivePage(SetActivePage { page_id: "page-2".into() }));
-    store::os_store::test_support::assert_op_line_round_trip(&LayoutConfigMutation::SetLocale(SetLocale { value: "en-US".into() }));
 }
 
 #[semio_framework_async_macros::async_test]
 async fn config_mutation_inverses_restore_each_field_without_a_snapshot_sentinel() {
     let base = sample_config();
     assert_eq!(config_round_trip(&base, &LayoutConfigMutation::SetActivePage(SetActivePage { page_id: "page-9".into() })).active_page_id, "page-9");
-    assert_eq!(config_round_trip(&base, &LayoutConfigMutation::SetLocale(SetLocale { value: "fr-FR".into() })).locale, "fr-FR");
 }

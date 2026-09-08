@@ -11,7 +11,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 #[artifact_schema(id = "s.layout.layout")]
 pub struct LayoutDiff {
     #[state(artifact)]
-    pub artifact: Option<Box<crate::schema::LayoutArtifact>>,
+    pub artifact: Option<Box<crate::standards::v1::subsets::any::schema::LayoutArtifact>>,
     #[state(artifact)]
     pub schema: Option<String>,
     #[state(artifact)]

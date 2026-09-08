@@ -24,8 +24,7 @@
       "streamId": "baseline",
       "frameIndex": 3
     },
-    "reportTable": "tracks",
-    "activeUtilityId": "measure"
+    "reportTable": "tracks"
   },
   "cases": [
     {
@@ -56,8 +55,7 @@
               "streamId": "baseline",
               "frameIndex": 3
             },
-            "reportTable": "tracks",
-            "activeUtilityId": "measure"
+            "reportTable": "tracks"
           }
         }
       },
@@ -86,8 +84,7 @@
           "streamId": "baseline",
           "frameIndex": 3
         },
-        "reportTable": "tracks",
-        "activeUtilityId": "measure"
+        "reportTable": "tracks"
       }
     },
     {
@@ -133,8 +130,7 @@
           "streamId": "baseline",
           "frameIndex": 3
         },
-        "reportTable": "tracks",
-        "activeUtilityId": "measure"
+        "reportTable": "tracks"
       }
     },
     {
@@ -169,8 +165,7 @@
           "streamId": "baseline",
           "frameIndex": 3
         },
-        "reportTable": "tracks",
-        "activeUtilityId": "measure"
+        "reportTable": "tracks"
       }
     },
     {
@@ -205,8 +200,7 @@
           "streamId": "baseline",
           "frameIndex": 3
         },
-        "reportTable": "tracks",
-        "activeUtilityId": "measure"
+        "reportTable": "tracks"
       }
     },
     {
@@ -241,8 +235,7 @@
           "streamId": "next",
           "frameIndex": 4
         },
-        "reportTable": "tracks",
-        "activeUtilityId": "measure"
+        "reportTable": "tracks"
       }
     },
     {
@@ -277,8 +270,7 @@
           "streamId": "baseline",
           "frameIndex": 5
         },
-        "reportTable": "tracks",
-        "activeUtilityId": "measure"
+        "reportTable": "tracks"
       }
     },
     {
@@ -312,43 +304,7 @@
           "streamId": "baseline",
           "frameIndex": 3
         },
-        "reportTable": "frames",
-        "activeUtilityId": "measure"
-      }
-    },
-    {
-      "mutation": {
-        "SetActiveUtility": {
-          "utility_id": "select"
-        }
-      },
-      "expected": {
-        "camera": {
-          "position": [
-            7,
-            8,
-            9
-          ],
-          "target": [
-            1,
-            2,
-            3
-          ],
-          "fov": 55
-        },
-        "layers": {
-          "mesh": true,
-          "dense": true,
-          "sparse": false,
-          "cameras": true,
-          "gcps": false
-        },
-        "frameCursor": {
-          "streamId": "baseline",
-          "frameIndex": 3
-        },
-        "reportTable": "tracks",
-        "activeUtilityId": "select"
+        "reportTable": "frames"
       }
     },
     {
@@ -378,8 +334,7 @@
           "streamId": "baseline",
           "frameIndex": 3
         },
-        "reportTable": "tracks",
-        "activeUtilityId": "measure"
+        "reportTable": "tracks"
       }
     }
   ]

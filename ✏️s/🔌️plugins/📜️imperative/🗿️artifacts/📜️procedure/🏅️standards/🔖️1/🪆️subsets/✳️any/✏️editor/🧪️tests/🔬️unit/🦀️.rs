@@ -23,14 +23,6 @@ fn retained_route_fixture_matches_the_exact_factory_and_fail_closed_census() {
     assert!(routes.iter().filter(|route| route.get("disposition").and_then(serde_json::Value::as_str) == Some("batch-only-pending-rewrite")).all(|route| route.get("lanes").and_then(serde_json::Value::as_array).is_some_and(Vec::is_empty)));
 }
 
-#[test]
-fn config_preparation_admits_locale_and_rejects_process_global_contributions() {
-    use store::ArtifactStoreOneItemPreparationFactory;
-    let factory = ImperativeConfigPreparationFactory;
-    assert!(factory.preflight(&ImperativeConfigMutation::SetLocale(crate::editor::procedure::config::SetLocale { value: "de-DE".into() }), None, store::HistoryLane::Document).is_ok());
-    assert!(factory.preflight(&ImperativeConfigMutation::SetContributions(crate::editor::procedure::config::SetContributions { json: "[]".into() }), None, store::HistoryLane::Document).is_err());
-    assert!(factory.preflight(&ImperativeConfigMutation::SetLocale(crate::editor::procedure::config::SetLocale { value: "de-DE".into() }), None, store::HistoryLane::Interaction).is_err());
-}
 
 #[semio_framework_async_macros::async_test]
 async fn app_definition_builds_without_panicking() {
@@ -70,7 +62,6 @@ async fn every_command_round_trips_through_text_and_binary() {
 }
 
 /// ⚖️ LAW: the leading token of every printed op line is the row's `dsl` wire keyword — the
-/// kebab-cased command id, except for the one documented divergence (`setLocale` → `locale`, an
 /// undeclared host-pushed command). This is what a missing `#[dsl(keyword = ..)]` on a payload struct
 /// silently breaks (the record prints with no keyword at all and no longer parses).
 #[semio_framework_async_macros::async_test]
@@ -78,7 +69,6 @@ async fn every_printed_op_line_starts_with_the_rows_wire_keyword() {
     for command in every_command() {
         let id = command.command_id();
         let expected = match id {
-            "setLocale" => "locale".to_string(),
             "setContributions" => "contributions".to_string(),
             _ => id.chars().flat_map(|c| if c.is_ascii_uppercase() { vec!['-', c.to_ascii_lowercase()] } else { vec![c] }).collect(),
         };
@@ -117,7 +107,6 @@ pub(super) fn every_command() -> Vec<ImperativeCommand> {
         ImperativeCommand::SetStepParams(set_step_params::SetStepParams { id: "step-1".into(), params: params.clone() }),
         ImperativeCommand::SetStepParamsAt(set_step_params_at::SetStepParamsAt { id: "step-1".into(), owner: Some("step-if".into()), slot: Some("then".into()), params }),
         ImperativeCommand::Run(run::Run {}),
-        ImperativeCommand::SetLocale(set_locale::SetLocale { value: "de-DE".into() }),
         ImperativeCommand::SetContributions(set_contributions::SetContributions { json: "[]".into() }),
     ]
 }

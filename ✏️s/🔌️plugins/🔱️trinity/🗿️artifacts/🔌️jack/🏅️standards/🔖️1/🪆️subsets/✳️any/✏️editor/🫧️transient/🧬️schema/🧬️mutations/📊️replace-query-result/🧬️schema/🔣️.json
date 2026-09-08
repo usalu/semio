@@ -1,0 +1,18 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/app/trinity/jack/transient/mutation/replace-query-result/schema.json",
+  "title": "ReplaceQueryResult",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["executionId", "result", "error"],
+  "properties": {
+    "executionId": { "type": ["string", "null"] },
+    "result": {
+      "anyOf": [
+        { "$ref": "https://semio.tech/schema/s/trinity/jack/artifact.json#/$defs/QueryResult" },
+        { "type": "null" }
+      ]
+    },
+    "error": { "type": ["string", "null"] }
+  }
+}

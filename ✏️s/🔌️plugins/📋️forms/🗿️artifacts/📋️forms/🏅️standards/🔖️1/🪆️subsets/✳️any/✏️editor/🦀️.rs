@@ -434,7 +434,7 @@ fn forms_retained_reduce(
     history: &semio_framework_plugin::HistoryView,
     _interaction: &protocol::InteractionState,
     _hover: &semio_framework_plugin::app::InteractionHoverState,
-    _context: Option<&semio_framework_plugin::ArtifactOwnedToolJobContext<EditorApp<FormsPlayApp>>>,
+    _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<FormsPlayApp>>>,
     operation: &AppOperationContext,
 ) -> Result<Emit<FormMutation, FormsConfigMutation, NoDraftMutation>, Fault> {
     if !FORMS_RETAINED_TOOL_IDS.contains(&command.command_id()) {
@@ -910,7 +910,6 @@ impl ArtifactEditor for FormsPlayApp {
 pub fn create_forms_app() -> AppDefinition {
     Editor::builder(crate::FORMS_DIALECT)
         .command(CommandDefinition { in_palette: false, ..CommandDefinition::bounded_catalog("setContributions", LocalizedLabel::native("Set Contributions", "Beiträge festlegen"), "host", ActionKind::View).with_args([ActionArgDef::text("json", LocalizedLabel::native("Contributions", "Beiträge"))]) })
-            .command(CommandDefinition { in_palette: false, ..CommandDefinition::bounded_catalog(LocalizedLabel::native("Set Locale", "Gebietsschema festlegen"), "host", ActionKind::View).with_args([ActionArgDef::text("value", LocalizedLabel::native("Locale", "Gebietsschema"))]) })
             .document(["semio", "forms"])
             .artifact_kind(ArtifactKindSpec {
                 id: "form.dictionary".into(),

@@ -12,7 +12,6 @@ type JackDiff {
   jackQuery: String @state(class: CONFIG)
   lodModeByWindow: [StringOptEntry!] @state(class: CONFIG)
   viewportCamera: Camera @state(class: CONFIG)
-  jackResultJson: String @state(class: CONFIG)
   editorSelection: JackEditorSelection @state(class: CONFIG)
 }
 

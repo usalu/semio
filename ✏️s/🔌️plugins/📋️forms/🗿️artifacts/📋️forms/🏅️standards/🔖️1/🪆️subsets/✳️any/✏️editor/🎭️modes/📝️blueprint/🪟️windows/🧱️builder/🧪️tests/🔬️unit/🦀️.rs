@@ -5,7 +5,7 @@ use super::*;
 async fn renders_blueprint_builder_cards() {
     let spec = FormsSnapshot::default();
     let config = FormsConfig::default();
-    let labels = crate::editor::forms::terminology::forms_play_labels(&config);
+    let labels = crate::editor::forms::terminology::forms_play_labels(&semio_framework_plugin::ViewModel::default());
     let node = render(&spec, &config, labels).expect("blueprint surface");
     let semio_framework_ui_contract::Component::Surface(props) = node.component else { panic!("blueprint must render a semantic surface") };
     let scene: semio_framework_ui_scene::BlockListScene = semio_framework_ui_scene::decode(&props).expect("block-list payload");

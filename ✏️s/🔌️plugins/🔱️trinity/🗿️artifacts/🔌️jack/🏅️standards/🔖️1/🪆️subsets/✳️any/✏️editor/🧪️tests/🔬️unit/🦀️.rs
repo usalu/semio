@@ -327,3 +327,37 @@ async fn jack_io_declares_graph_out_fan_out_port() {
     assert_eq!(graph_out.kind_id.as_deref(), Some("graph.trinity"));
     assert_eq!(graph_out.multiplicity, semio_framework_plugin::PortMultiplicity::Many);
 }
+
+#[semio_framework_async_macros::async_test]
+async fn query_ownership_runtime_publishes_transient_result_without_document_edit() {
+    let mut app = new_app().await;
+    let outcome: Result<(u64, String), String> = async {
+        let before = app.ephemeral_snapshot().await.transient_generation;
+        let document = app.snapshot().map_err(|error| error.to_string())?.clone();
+        app.dispatch_typed(TrinityJackCommand::RunQuery { query: Some("MATCH (a:Piece) RETURN a.name".into()) }, &meta("query-owner")).await.map_err(|error| error.to_string())?;
+        let deadline = std::time::Instant::now() + std::time::Duration::from_secs(30);
+        while app.has_pending_typed_operations() {
+            if std::time::Instant::now() >= deadline { return Err("query operation did not finish".into()); }
+            app.advance_typed_operation_publication().await.map_err(|error| error.to_string())?;
+            if let Some(page) = app.take_typed_operation_result_page(1) {
+                let fault = (page.lane == semio_framework_plugin::TypedOperationResultLane::Fault).then(|| format!("query publication fault: {:?}", page.bytes()));
+                app.acknowledge_typed_operation_result(page.token).map_err(|error| error.to_string())?;
+                if let Some(fault) = fault { return Err(fault); }
+            }
+            app.take_typed_operation_effect();
+            app.take_typed_operation_event();
+            app.take_typed_operation_ui_scope();
+            std::thread::yield_now();
+        }
+        if app.snapshot().map_err(|error| error.to_string())? != document { return Err("read query modified the document".into()); }
+        let generation = app.ephemeral_snapshot().await.transient_generation;
+        if generation <= before { return Err("query result did not reach the transient store".into()); }
+        let tree = app.render(TRINITY_JACK_PLAY_BODY_RESULTS, None, &ViewModel::default()).await.map_err(|error| error.to_string())?;
+        let rendered = testkit::project_and_retire_fixture_tree(tree).map_err(str::to_string)?;
+        Ok((generation, rendered))
+    }.await;
+    testkit::close_registered_fixture_app(&mut app);
+    let (generation, rendered) = outcome.expect("owned query runtime");
+    assert!(rendered.contains("table"));
+    eprintln!("[DEBUG] query result reached transient generation {generation}, rendered as a table, preserved the document, and retired the app");
+}

@@ -2,7 +2,7 @@
 //! when the addressed layer isn't a `Pixel` (or doesn't exist).
 
 use crate::diff::{diff_patch_layer, RasterDiff};
-use crate::schema::find_layer;
+use crate::standards::v1::subsets::any::schema::find_layer;
 use crate::{RasterLayerNode, RasterLayerPatch, RasterSnapshot};
 
 //#region 🔖️Diff

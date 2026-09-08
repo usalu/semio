@@ -2,7 +2,7 @@
 
 use crate::mutations::delete_layer as layer_delete;
 use crate::op::RasterMutation;
-use crate::schema::find_layer;
+use crate::standards::v1::subsets::any::schema::find_layer;
 use crate::RasterSnapshot;
 use crate::editor::raster::config::{RasterConfig, RasterConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};

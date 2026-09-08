@@ -146,7 +146,7 @@ fn flow_render_fixture_projection_retires_populated_and_rejected_pages() {
 }
 
 pub async fn main_window_measures(app: &mut FlowApp) -> Vec<WindowMeasure> {
-    app.window_measures().await.get(main::FLOW_PLAY_WINDOW_MAIN).cloned().expect("main window measures")
+    app.window_measures(&semio_framework_plugin::ViewModel::default()).await.get(main::FLOW_PLAY_WINDOW_MAIN).cloned().expect("main window measures")
 }
 
 /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: picking is the framework's injected

@@ -57,8 +57,6 @@ pub struct RemodelingConfig {
     pub frame_cursor: RemodelingFrameCursor,
     #[state(config)]
     pub report_table: String,
-    #[state(config)]
-    pub active_utility_id: String,
 }
 
 //region 📎 App-schema descriptor

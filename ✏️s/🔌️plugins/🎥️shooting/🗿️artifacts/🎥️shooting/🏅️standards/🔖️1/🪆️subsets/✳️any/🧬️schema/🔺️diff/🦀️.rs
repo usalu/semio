@@ -10,7 +10,7 @@ use schema::ArtifactSchema;
 #[artifact_schema(id = "s.shooting.shooting")]
 pub struct ShootingDiff {
     #[state(artifact)]
-    pub artifact: Option<Box<crate::schema::ShootingArtifact>>,
+    pub artifact: Option<Box<crate::standards::v1::subsets::any::schema::ShootingArtifact>>,
     #[state(artifact)]
     pub schema: Option<String>,
     #[state(artifact)]

@@ -20,7 +20,7 @@ async fn renders_the_main_body_key_for_the_default_snapshot() {
     let doc = ArtifactView::new(&snapshot, &history);
     let cfg_snapshot = HomeConfig::default();
     let cfg = ConfigView { snapshot: &cfg_snapshot };
-    let tree = <HomeViewer as ArtifactViewer>::render(main::S_HOME_VIEW_BODY, &doc, &cfg).expect("Home viewer main tree");
+    let tree = <HomeViewer as ArtifactViewer>::render(main::S_HOME_VIEW_BODY, &doc, &cfg, &semio_framework_plugin::ViewModel::default()).expect("Home viewer main tree");
     let _ = semio_framework_plugin::testkit::project_and_retire_fixture_tree(tree).expect("Home viewer main projection");
 }
 

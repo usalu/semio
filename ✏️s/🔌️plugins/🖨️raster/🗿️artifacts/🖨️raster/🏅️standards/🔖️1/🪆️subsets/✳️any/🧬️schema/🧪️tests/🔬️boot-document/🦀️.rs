@@ -19,7 +19,7 @@ async fn default_document_boots_on_the_semio_demo_carrier() {
 /// 📚️ `raster_example_document` resolves exactly the ids this subset registers, and nothing else.
 #[semio_framework_async_macros::async_test]
 async fn only_a_registered_example_id_resolves_to_a_document() {
-    let registered = raster_example_document(crate::examples::demo::ID).expect("the demo example id resolves");
+    let registered = raster_example_document(crate::examples::art_raster_demo::ID).expect("the demo example id resolves");
     let expected = default_raster_document();
     assert_eq!(registered, expected);
     assert!(raster_example_document("not-a-real-example").is_none());

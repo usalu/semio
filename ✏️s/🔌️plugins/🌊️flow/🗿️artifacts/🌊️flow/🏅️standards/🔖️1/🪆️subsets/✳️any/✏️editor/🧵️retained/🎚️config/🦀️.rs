@@ -29,7 +29,7 @@ impl store::ArtifactStoreOneItemPreparationFactory<FlowConfig, FlowConfigMutatio
         Ok(Box::new(Preparation {
             base: Some(request.base), mutation: Some(request.mutation), description: request.description, authority: Some(request.authority),
             phase: 0, admission_item: 0, admission_bytes: 0, copy: None, post: None, inverse: None,
-            author: None, meta_author: None, id_copy: None, ids: [None, None], sealer: None, authority_retirement: None, checkpoint: Default::default(), retirement: Retirement::default(), cancelled: false, closing: false,
+            author: None, meta_author: None, text_copy: None, ids: [None, None], sealer: None, authority_retirement: None, checkpoint: Default::default(), retirement: Retirement::default(), cancelled: false, closing: false,
         }))
     }
 }
@@ -47,7 +47,7 @@ struct Preparation {
     inverse: Option<FlowConfigMutation>,
     author: Option<String>,
     meta_author: Option<String>,
-    id_copy: Option<TextCopy>,
+    text_copy: Option<TextCopy>,
     ids: [Option<String>; 2],
     sealer: Option<store::ArtifactStoreOneItemSealer<FlowConfig, FlowConfigMutation>>,
     authority_retirement: Option<Box<dyn store::ErasedSnapshotRetirement>>,
@@ -115,28 +115,25 @@ impl store::ArtifactStoreOneItemPreparation<FlowConfig, FlowConfigMutation> for 
                 }
             }
             5 | 7 => {
-                let mut source = ConfigSource::base(base);
-                source.text = ["", "", "", "", "", "", self.authority.as_ref().unwrap().actor()];
-                self.copy = Some(ConfigCopy::new(&source, Some(7)));
+                self.text_copy = Some(TextCopy::default());
                 self.phase += 1;
             }
             6 | 8 => {
-                let mut source = ConfigSource::base(base);
-                source.text = ["", "", "", "", "", "", self.authority.as_ref().unwrap().actor()];
-                let copy = self.copy.as_mut().unwrap();
-                bytes = copy.step(&source, grant.maximum_bytes)?;
+                let copy = self.text_copy.as_mut().unwrap();
+                bytes = copy.advance(self.authority.as_ref().unwrap().actor(), grant.maximum_bytes)?.unwrap_or(0);
                 if copy.complete() {
-                    let value = copy.take().unwrap().locale;
+                    let value = copy.take().unwrap();
                     if self.phase == 6 { self.author = Some(value); } else { self.meta_author = Some(value); }
-                    self.copy = None; self.phase += 1;
+                    self.text_copy = None;
+                    self.phase += 1;
                 }
             }
             9 | 10 => {
                 let sequence = self.authority.as_ref().unwrap().next_sequence_number() as u64;
                 let metadata = self.phase == 10;
-                let copy = self.id_copy.get_or_insert_with(TextCopy::default);
+                let copy = self.text_copy.get_or_insert_with(TextCopy::default);
                 bytes = copy.advance_ascii(edit_id_length(sequence, metadata), |index| edit_id_byte(sequence, index, metadata), grant.maximum_bytes)?.unwrap_or(0);
-                if copy.complete() { self.ids[usize::from(metadata)] = copy.take(); self.id_copy = None; self.phase += 1; }
+                if copy.complete() { self.ids[usize::from(metadata)] = copy.take(); self.text_copy = None; self.phase += 1; }
             }
             11 => {
                 let authority = self.authority.as_ref().unwrap();
@@ -185,7 +182,7 @@ impl store::ArtifactStoreOneItemPreparation<FlowConfig, FlowConfigMutation> for 
             }
             return Ok(if matches!(step, Step::Complete) { Step::Pending { released_items: 1, released_bytes: 0 } } else { step });
         }
-        if let Some(copy) = self.id_copy.take() { copy.retire(&mut self.retirement); }
+        if let Some(copy) = self.text_copy.take() { copy.retire(&mut self.retirement); }
         else if let Some(value) = self.ids.iter_mut().find_map(Option::take) { self.retirement.push(Owner::Bytes(value.into_bytes())); }
         else if let Some(copy) = self.copy.take() { copy.retire(&mut self.retirement); }
         else if let Some(value) = self.post.take() { self.retirement.push(Owner::Config(value)); }
@@ -200,7 +197,7 @@ impl store::ArtifactStoreOneItemPreparation<FlowConfig, FlowConfigMutation> for 
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.closing && self.retirement.is_empty() && self.sealer.is_none() && self.copy.is_none() && self.id_copy.is_none() && self.ids.iter().all(Option::is_none) && self.post.is_none()
+        self.closing && self.retirement.is_empty() && self.sealer.is_none() && self.copy.is_none() && self.text_copy.is_none() && self.ids.iter().all(Option::is_none) && self.post.is_none()
             && self.mutation.is_none() && self.inverse.is_none() && self.description.is_none() && self.author.is_none() && self.meta_author.is_none()
             && self.base.is_none() && self.authority.is_none() && self.authority_retirement.is_none()
     }

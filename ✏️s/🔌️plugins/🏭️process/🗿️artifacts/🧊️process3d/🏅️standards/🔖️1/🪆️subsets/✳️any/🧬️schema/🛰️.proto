@@ -23,7 +23,6 @@ message Process3dArtifact {
   // @state presence
   optional uint32 selected_face_id = 12;
   // @state presence
-  string active_utility_id = 13;
   // @state config
   string selection_method = 14;
   // @state config

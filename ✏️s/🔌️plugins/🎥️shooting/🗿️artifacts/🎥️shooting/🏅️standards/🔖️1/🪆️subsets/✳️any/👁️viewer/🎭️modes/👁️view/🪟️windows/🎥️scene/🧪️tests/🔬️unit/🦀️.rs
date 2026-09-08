@@ -10,7 +10,7 @@ async fn definition_declares_the_world_3d_surface_and_body_key() {
 
 #[semio_framework_async_macros::async_test]
 async fn render_produces_a_scene_node_for_the_default_document() {
-    let snapshot = crate::schema::default_snapshot();
+    let snapshot = crate::standards::v1::subsets::any::schema::default_snapshot();
     let node = render(&snapshot).expect("viewer scene");
     let semio_framework_plugin::Component::Surface(props) = &node.component else { panic!("3D surface") };
     let scene: World3dScene = semio_framework_ui_scene::decode(props).expect("packed scene");

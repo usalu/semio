@@ -17,7 +17,7 @@ use crate::editor::puzzle3d::precompute::brush::{
 use crate::editor::puzzle3d::precompute::geometry::{
     pose_isometry, world_bounds, world_volumes_contain_aabb, CollisionAabb, CollisionBody, CollisionIndexMutation, CollisionIndexOwner, CollisionIndexOwnerCensusCursor, CollisionIndexOwnerCensusStep, CollisionIndexRejectedOwner,
     CollisionMutationStep, CollisionOverlapState, CollisionQueryCursor, CollisionQueryStep, CollisionSpatialIndex, CollisionStepResult, FixedOwnerMap, FixedOwnerMapInsert, FixedOwnerSet, FixedOwnerSetInsert, FixedOwnerVec, Pose3d,
-    FIXED_OWNER_PAGE_BYTES, FIXED_OWNER_SLOTS,
+    DOCUMENT_ATTRACTION_SLOTS, DOCUMENT_CANDIDATE_SLOTS, DOCUMENT_KIND_SLOTS, DOCUMENT_OBJECT_SLOTS, DOCUMENT_OWNER_PAGE_BYTES, DOCUMENT_VOLUME_SLOTS, DOCUMENT_VORTEX_SLOTS,
 };
 use crate::editor::puzzle3d::precompute::FILL_COUNT_MAX;
 use semio_framework_job::{CommitCandidate, InteractiveJob, JobFault, Operation, StepContext, StepOutcome};
@@ -924,9 +924,9 @@ impl FillPreparationRoots {
 
 #[derive(Debug)]
 pub(crate) struct FixedFixtureOwner {
-    pub(crate) objects: FixedOwnerVec<FixtureObject>,
-    pub(crate) attractions: FixedOwnerVec<AttractionProps>,
-    pub(crate) target_volumes: FixedOwnerVec<WorldVolumeProps>,
+    pub(crate) objects: FixedOwnerVec<FixtureObject, DOCUMENT_OBJECT_SLOTS>,
+    pub(crate) attractions: FixedOwnerVec<AttractionProps, DOCUMENT_ATTRACTION_SLOTS>,
+    pub(crate) target_volumes: FixedOwnerVec<WorldVolumeProps, DOCUMENT_VOLUME_SLOTS>,
 }
 
 impl FixedFixtureOwner {
@@ -941,9 +941,9 @@ impl FixedFixtureOwner {
 
 #[derive(Debug)]
 struct FixedCatalogOwner {
-    objects: FixedOwnerVec<ObjectKind>,
-    vortices: FixedOwnerVec<VortexKindCatalog>,
-    cables: FixedOwnerVec<CableKindCatalog>,
+    objects: FixedOwnerVec<ObjectKind, DOCUMENT_KIND_SLOTS>,
+    vortices: FixedOwnerVec<VortexKindCatalog, DOCUMENT_KIND_SLOTS>,
+    cables: FixedOwnerVec<CableKindCatalog, DOCUMENT_KIND_SLOTS>,
 }
 
 impl FixedCatalogOwner {
@@ -1019,23 +1019,36 @@ struct PreparationCapacityRefusal {
     diagnostic_published: bool,
 }
 
+impl PreparationCapacityRefusal {
+    /// 🏷️ `preparation-capacity:<branch>:<limit>` — the refused document-scale branch and the exact
+    /// capacity its fixed page declares, so the published diagnostic never hides which limit bound.
+    fn diagnostic(self) -> String {
+        format!("preparation-capacity:{}:{}", self.branch.label(), self.omitted_index)
+    }
+}
+
+/// 🚧️ Preflights every document-scale owner the preparation stages install into, each against the
+/// capacity its own fixed page declares — objects and attractions at `DOCUMENT_OBJECT_SLOTS` /
+/// `DOCUMENT_ATTRACTION_SLOTS` (scene plus a full `FILL_COUNT_MAX` plan), catalogs, compatibility
+/// rows, mesh urls and kind weights at `DOCUMENT_KIND_SLOTS`. The refusal carries that capacity so
+/// the published diagnostic names the branch and the limit it exceeded.
 fn preparation_capacity_refusal(roots: &FillPreparationRoots) -> Option<PreparationCapacityRefusal> {
     let catalogs = roots.scene.kind_catalogs.as_ref();
-    let branch = [
-        (PreparationCapacityBranch::FixtureObjects, roots.scene.fixture.objects.len()),
-        (PreparationCapacityBranch::FixtureAttractions, roots.scene.fixture.attractions.len()),
-        (PreparationCapacityBranch::FixtureTargetVolumes, roots.scene.fixture.target_volumes.len()),
-        (PreparationCapacityBranch::Meshes, roots.meshes.len()),
-        (PreparationCapacityBranch::CatalogObjects, catalogs.map_or(0, |value| value.objects.len())),
-        (PreparationCapacityBranch::CatalogVortices, catalogs.map_or(0, |value| value.vortices.len())),
-        (PreparationCapacityBranch::CatalogCables, catalogs.map_or(0, |value| value.cables.len())),
-        (PreparationCapacityBranch::KindCompatibility, roots.scene.kind_compatibility.len()),
-        (PreparationCapacityBranch::ObjectWeights, roots.scene.weights.object_weights.len()),
-        (PreparationCapacityBranch::VortexWeights, roots.scene.weights.vortex_weights.len()),
+    let (branch, capacity) = [
+        (PreparationCapacityBranch::FixtureObjects, roots.scene.fixture.objects.len(), DOCUMENT_OBJECT_SLOTS),
+        (PreparationCapacityBranch::FixtureAttractions, roots.scene.fixture.attractions.len(), DOCUMENT_ATTRACTION_SLOTS),
+        (PreparationCapacityBranch::FixtureTargetVolumes, roots.scene.fixture.target_volumes.len(), DOCUMENT_VOLUME_SLOTS),
+        (PreparationCapacityBranch::Meshes, roots.meshes.len(), DOCUMENT_KIND_SLOTS),
+        (PreparationCapacityBranch::CatalogObjects, catalogs.map_or(0, |value| value.objects.len()), DOCUMENT_KIND_SLOTS),
+        (PreparationCapacityBranch::CatalogVortices, catalogs.map_or(0, |value| value.vortices.len()), DOCUMENT_KIND_SLOTS),
+        (PreparationCapacityBranch::CatalogCables, catalogs.map_or(0, |value| value.cables.len()), DOCUMENT_KIND_SLOTS),
+        (PreparationCapacityBranch::KindCompatibility, roots.scene.kind_compatibility.len(), DOCUMENT_KIND_SLOTS),
+        (PreparationCapacityBranch::ObjectWeights, roots.scene.weights.object_weights.len(), DOCUMENT_KIND_SLOTS),
+        (PreparationCapacityBranch::VortexWeights, roots.scene.weights.vortex_weights.len(), DOCUMENT_KIND_SLOTS),
     ]
     .into_iter()
-    .find_map(|(branch, len)| (len > FIXED_OWNER_SLOTS).then_some(branch))?;
-    Some(PreparationCapacityRefusal { branch, omitted_index: FIXED_OWNER_SLOTS, diagnostic_published: false })
+    .find_map(|(branch, len, capacity)| (len > capacity).then_some((branch, capacity)))?;
+    Some(PreparationCapacityRefusal { branch, omitted_index: capacity, diagnostic_published: false })
 }
 
 pub(crate) struct FillBuilder {
@@ -1050,9 +1063,12 @@ pub(crate) struct FillBuilder {
     pub(crate) appended_objects: Vec<FixtureObject>,
     pub(crate) appended_attractions: Vec<AttractionProps>,
     pub(crate) placed: Vec<PlacedCollisionEntry>,
-    placed_lookup: FixedOwnerMap<String, usize>,
+    placed_lookup: FixedOwnerMap<String, usize, DOCUMENT_OBJECT_SLOTS>,
+    /// 🗄️ Keeps the bookkeeping page width: no stage installs a per-target-vortex candidate list
+    /// yet, so this owner exists for the census/retirement walk only and never reaches document
+    /// scale. Wiring a real cache means widening it to `DOCUMENT_VORTEX_SLOTS` in the same move.
     pub(crate) candidate_cache: FixedOwnerMap<String, Vec<BrushCompatibleCandidate>>,
-    pub(crate) seed_object_ids: FixedOwnerSet<String>,
+    pub(crate) seed_object_ids: FixedOwnerSet<String, DOCUMENT_OBJECT_SLOTS>,
     pub(crate) rng_state: u32,
     pub(crate) stalled: bool,
     pub(crate) max_count: usize,
@@ -1062,16 +1078,16 @@ pub(crate) struct FillBuilder {
     preview_json: FillPreviewJsonCursor,
     catalogs: FixedCatalogOwner,
     weights: RetainedBrushKindWeights,
-    kind_compatibility: FixedOwnerVec<KindCompatEntry>,
+    kind_compatibility: FixedOwnerVec<KindCompatEntry, DOCUMENT_KIND_SLOTS>,
     host_rules: BrushHostRules,
     overlap_budget: f64,
-    meshes: FixedOwnerMap<String, CollisionBody>,
+    meshes: FixedOwnerMap<String, CollisionBody, DOCUMENT_KIND_SLOTS>,
     spatial_index: CollisionSpatialIndex,
     targets: Vec<BrushFillVortexTarget>,
     target_cursor: usize,
     target_rotation: usize,
     target_prepare_phase: TargetPreparePhase,
-    blocked_vortex_ids: FixedOwnerSet<String>,
+    blocked_vortex_ids: FixedOwnerSet<String, DOCUMENT_VORTEX_SLOTS>,
     target_attraction_cursor: usize,
     target_object_cursor: usize,
     target_vortex_cursor: usize,
@@ -1091,10 +1107,10 @@ pub(crate) struct FillBuilder {
     candidate_kind_cursor: usize,
     candidate_vortex_cursor: usize,
     candidate_prepare_cursor: usize,
-    candidate_seen: FixedOwnerSet<String>,
+    candidate_seen: FixedOwnerSet<String, DOCUMENT_CANDIDATE_SLOTS>,
     candidate_raw: Vec<BrushCompatibleCandidate>,
-    candidate_cross: FixedOwnerMap<String, BrushCompatibleCandidate>,
-    candidate_same: FixedOwnerMap<String, BrushCompatibleCandidate>,
+    candidate_cross: FixedOwnerMap<String, BrushCompatibleCandidate, DOCUMENT_CANDIDATE_SLOTS>,
+    candidate_same: FixedOwnerMap<String, BrushCompatibleCandidate, DOCUMENT_CANDIDATE_SLOTS>,
     candidate_same_sorted: Vec<BrushCompatibleCandidate>,
     candidate_same_weights: Vec<f64>,
     candidate_same_tree: Vec<f64>,
@@ -1126,8 +1142,8 @@ const FILL_BUILDER_NESTED_ITEMS: usize = 32;
 const FILL_BUILDER_STD_COLLECTIONS: usize = 10;
 
 struct RetainedBrushKindWeights {
-    object_weights: FixedOwnerMap<String, f64>,
-    vortex_weights: FixedOwnerMap<String, f64>,
+    object_weights: FixedOwnerMap<String, f64, DOCUMENT_KIND_SLOTS>,
+    vortex_weights: FixedOwnerMap<String, f64, DOCUMENT_KIND_SLOTS>,
 }
 
 impl RetainedBrushKindWeights {
@@ -1336,9 +1352,9 @@ fn fill_owner_collection(occupied: usize) -> Option<FillBuilderOwnerCredit> {
     (occupied <= FILL_BUILDER_NESTED_ITEMS).then_some(FillBuilderOwnerCredit::default())
 }
 
-fn fill_fixed_vec_backing_credit<T>(values: &FixedOwnerVec<T>) -> Option<FillBuilderOwnerCredit> {
+fn fill_fixed_vec_backing_credit<T, const N: usize>(values: &FixedOwnerVec<T, N>) -> Option<FillBuilderOwnerCredit> {
     let credit = values.backing_credit()?;
-    (credit.1 <= FIXED_OWNER_PAGE_BYTES).then_some(FillBuilderOwnerCredit { items: credit.0, bytes: credit.1 })
+    (credit.1 <= DOCUMENT_OWNER_PAGE_BYTES).then_some(FillBuilderOwnerCredit { items: credit.0, bytes: credit.1 })
 }
 
 fn fill_collection_backing_credit(fill: &FillBuilder, index: usize) -> Option<FillBuilderOwnerCredit> {
@@ -1355,7 +1371,7 @@ fn fill_collection_backing_credit(fill: &FillBuilder, index: usize) -> Option<Fi
         9 => fill.candidate_same.backing_credit(),
         _ => return None,
     }?;
-    (credit.1 <= FIXED_OWNER_PAGE_BYTES).then_some(FillBuilderOwnerCredit { items: credit.0, bytes: credit.1 })
+    (credit.1 <= DOCUMENT_OWNER_PAGE_BYTES).then_some(FillBuilderOwnerCredit { items: credit.0, bytes: credit.1 })
 }
 
 impl FillBuilderOwnerCensusCursor {
@@ -2878,16 +2894,16 @@ impl FillBuilder {
     #[cfg(test)]
     pub(crate) fn fixed_backing_witness_for_test(&self) -> [(usize, usize, usize); 13] {
         let mut witness = [
-            (self.placed_lookup.backing_ptr().map_or(0, |pointer| pointer.cast::<()>() as usize), FixedOwnerMap::<String, usize>::page_bytes(), self.placed_lookup.len()),
+            (self.placed_lookup.backing_ptr().map_or(0, |pointer| pointer.cast::<()>() as usize), FixedOwnerMap::<String, usize, DOCUMENT_OBJECT_SLOTS>::page_bytes(), self.placed_lookup.len()),
             (self.candidate_cache.backing_ptr().map_or(0, |pointer| pointer.cast::<()>() as usize), FixedOwnerMap::<String, Vec<BrushCompatibleCandidate>>::page_bytes(), self.candidate_cache.len()),
-            (self.seed_object_ids.backing_ptr().map_or(0, |pointer| pointer.cast::<()>() as usize), FixedOwnerMap::<String, ()>::page_bytes(), self.seed_object_ids.len()),
-            (self.weights.object_weights.backing_ptr().map_or(0, |pointer| pointer.cast::<()>() as usize), FixedOwnerMap::<String, f64>::page_bytes(), self.weights.object_weights.len()),
-            (self.weights.vortex_weights.backing_ptr().map_or(0, |pointer| pointer.cast::<()>() as usize), FixedOwnerMap::<String, f64>::page_bytes(), self.weights.vortex_weights.len()),
-            (self.meshes.backing_ptr().map_or(0, |pointer| pointer.cast::<()>() as usize), FixedOwnerMap::<String, CollisionBody>::page_bytes(), self.meshes.len()),
-            (self.blocked_vortex_ids.backing_ptr().map_or(0, |pointer| pointer.cast::<()>() as usize), FixedOwnerMap::<String, ()>::page_bytes(), self.blocked_vortex_ids.len()),
-            (self.candidate_seen.backing_ptr().map_or(0, |pointer| pointer.cast::<()>() as usize), FixedOwnerMap::<String, ()>::page_bytes(), self.candidate_seen.len()),
-            (self.candidate_cross.backing_ptr().map_or(0, |pointer| pointer.cast::<()>() as usize), FixedOwnerMap::<String, BrushCompatibleCandidate>::page_bytes(), self.candidate_cross.len()),
-            (self.candidate_same.backing_ptr().map_or(0, |pointer| pointer.cast::<()>() as usize), FixedOwnerMap::<String, BrushCompatibleCandidate>::page_bytes(), self.candidate_same.len()),
+            (self.seed_object_ids.backing_ptr().map_or(0, |pointer| pointer.cast::<()>() as usize), FixedOwnerMap::<String, (), DOCUMENT_OBJECT_SLOTS>::page_bytes(), self.seed_object_ids.len()),
+            (self.weights.object_weights.backing_ptr().map_or(0, |pointer| pointer.cast::<()>() as usize), FixedOwnerMap::<String, f64, DOCUMENT_KIND_SLOTS>::page_bytes(), self.weights.object_weights.len()),
+            (self.weights.vortex_weights.backing_ptr().map_or(0, |pointer| pointer.cast::<()>() as usize), FixedOwnerMap::<String, f64, DOCUMENT_KIND_SLOTS>::page_bytes(), self.weights.vortex_weights.len()),
+            (self.meshes.backing_ptr().map_or(0, |pointer| pointer.cast::<()>() as usize), FixedOwnerMap::<String, CollisionBody, DOCUMENT_KIND_SLOTS>::page_bytes(), self.meshes.len()),
+            (self.blocked_vortex_ids.backing_ptr().map_or(0, |pointer| pointer.cast::<()>() as usize), FixedOwnerMap::<String, (), DOCUMENT_VORTEX_SLOTS>::page_bytes(), self.blocked_vortex_ids.len()),
+            (self.candidate_seen.backing_ptr().map_or(0, |pointer| pointer.cast::<()>() as usize), FixedOwnerMap::<String, (), DOCUMENT_CANDIDATE_SLOTS>::page_bytes(), self.candidate_seen.len()),
+            (self.candidate_cross.backing_ptr().map_or(0, |pointer| pointer.cast::<()>() as usize), FixedOwnerMap::<String, BrushCompatibleCandidate, DOCUMENT_CANDIDATE_SLOTS>::page_bytes(), self.candidate_cross.len()),
+            (self.candidate_same.backing_ptr().map_or(0, |pointer| pointer.cast::<()>() as usize), FixedOwnerMap::<String, BrushCompatibleCandidate, DOCUMENT_CANDIDATE_SLOTS>::page_bytes(), self.candidate_same.len()),
             (0, 0, 0),
             (0, 0, 0),
             (0, 0, 0),
@@ -2976,7 +2992,7 @@ impl FillBuilder {
     pub(crate) fn begin_preparation(roots: FillPreparationRoots, operation: Operation) -> Self {
         let seed = roots.scene.seed;
         let preparation_capacity_refusal = preparation_capacity_refusal(&roots);
-        let rejection_reason = preparation_capacity_refusal.map(|refusal| format!("preparation-capacity:{}", refusal.branch.label()));
+        let rejection_reason = preparation_capacity_refusal.map(PreparationCapacityRefusal::diagnostic);
         Self {
             base: FixedFixtureOwner::new(),
             preparation_roots: Some(roots),
@@ -4161,7 +4177,7 @@ impl InteractiveJob for FillBuilder {
             if !refusal.diagnostic_published {
                 refusal.diagnostic_published = true;
                 self.preview.candidate_ghost = None;
-                self.preview.rejection_reason = Some(format!("preparation-capacity:{}", refusal.branch.label()));
+                self.preview.rejection_reason = Some(refusal.diagnostic());
                 return self.publish_preview(context);
             }
             let detail = context.payload_from_bytes(semio_framework_job::JobPayloadStream::Fault, b"fill-preparation-capacity").unwrap_or_else(|_| semio_framework_job::RetainedJobPayload::empty(semio_framework_job::JobPayloadStream::Fault));

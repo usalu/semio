@@ -10,8 +10,7 @@ use serde::{Deserialize, Serialize};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Config
-/// 🧮️ gis3d's `ArtifactEditor::Config` — the free/live viewport camera and world selection, plus
-/// `locale`. Mirrors `crate::editor::gis2d::config::Gis2dConfig`'s identical shape.
+/// 🧮️ gis3d's `ArtifactEditor::Config` for the free/live viewport camera.
 #[derive(Clone, Debug, PartialEq, dsl::DslArtifact, ToValue, FromValue)]
 #[cfg_attr(test, derive(Serialize, Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase", deny_unknown_fields))]
@@ -22,7 +21,6 @@ use semio_framework_value_derive::{FromValue, ToValue};
 pub struct Gis3dConfig {
     /// 🎥️ The free/live world camera (`{position,target,up,fov}` JSON).
     pub camera_json: String,
-    /// 🗣️ BCP-47 locale tag.
 }
 
 //#region 🔖️ArtifactCodec

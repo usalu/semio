@@ -23,7 +23,6 @@ type CadDiff {
   selectedReferenceId: String @state(class: PRESENCE)
   selectedPrimitiveId: String @state(class: PRESENCE)
   selectedPrimitiveKind: String @state(class: PRESENCE)
-  activeUtilityId: String @state(class: PRESENCE)
   activeExampleId: String @state(class: PRESENCE)
   selectionMethod: String @state(class: CONFIG)
   engagementInput: String @state(class: CONFIG)

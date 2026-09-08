@@ -1,0 +1,62 @@
+{
+  "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust/Cargo.toml",
+  "profiles": [
+    "release",
+    "custom"
+  ],
+  "tools": {
+    "bindgenDirectory": "bindings",
+    "optimizerDirectory": "native-optimizer",
+    "ambientDirectory": "ambient",
+    "invalidName": "other-optimizer"
+  },
+  "optimizer": [
+    "-O",
+    "--enable-bulk-memory",
+    "--enable-nontrapping-float-to-int"
+  ],
+  "module": "(module (memory (export \"memory\") 1) (func (export \"copy\") (param i32 i32 i32) (memory.copy (local.get 0) (local.get 1) (local.get 2))) (func (export \"saturate\") (param f64) (result i32) (i32.trunc_sat_f64_u (local.get 0))))",
+  "saturation": [
+    {
+      "value": -1,
+      "expected": 0
+    },
+    {
+      "value": 3.75,
+      "expected": 3
+    },
+    {
+      "value": 1e+30,
+      "expected": -1
+    }
+  ],
+  "initial": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8
+  ],
+  "copy": [
+    2,
+    0,
+    4
+  ],
+  "expected": [
+    1,
+    2,
+    1,
+    2,
+    3,
+    4,
+    7,
+    8
+  ],
+  "disabledCustom": [
+    "🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/Cargo.toml",
+    "✏️s/🔌️plugins/🧩️puzzle/📦️packages/🦀️rust/Cargo.toml"
+  ]
+}

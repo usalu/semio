@@ -41,7 +41,6 @@ pub struct SequenceConfig {
     /// `SequencePlayRuntime::camera`.
     #[dsl(block)]
     pub camera: SequenceCamera,
-    /// 🗣️ BCP-47 locale tag — was read off the host-pushed `ViewModel.locale`.
 }
 
 //#region 🔖️ArtifactCodec

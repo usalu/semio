@@ -25,6 +25,7 @@ component-app-assembly = ["semio-framework-plugin/component-guest", "dep:semio-f
 wasm-bindgen = { workspace = true }
 semio-framework = { workspace = true }
 semio-framework-geometry = { workspace = true }
+semio-framework-graph = { workspace = true }
 semio-framework-job = { workspace = true }
 semio-framework-os-infinite = { workspace = true }
 semio-framework-os-kernel = { workspace = true }

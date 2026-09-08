@@ -575,3 +575,9 @@ The old default BuildScript and WGPU orchestration have not been removed yet. Na
 
 - Repository library `🎮️playground/🔒️preferences/🟦️.ts`, `🔣️.json`, `🧬️schema/🔣️.json`, `🧪️tests/🟦️.ts` and `🧪️tests/🔣️.json`; `🎮️playground/🟦️.ts` and the TypeScript library barrel now share the pure preference implementation.
 - Ticket production-browser/preferences probe and additional runtime input/restoration verification records.
+
+2026-09-08 optimizer/editor qualification: changed Flow family Cargo.toml, `.vscode/🧩️launch.seed.jsonc` and regenerated `.vscode/launch.json`; added `⚡️caching/🧪️tests/🕸️wasm/{🔣️.json,🟦️.ts}` and registered its regression in cache-contracts; added ticket `🔬️wasm-optimizer/📜️script.ts`. Temporary outputs remain under the ticket generated directory.
+
+2026-09-08 production entrypoints: root package.json and OS Dev TypeScript package.json now route seven plain/default build scripts to explicit cached release targets; corresponding plain launch-seed commands changed and editor regeneration is running.
+
+Native optimizer qualification: added ticket `🔬️wasm-optimizer/🌐️native/📜️script.ts`; added wasmPackEnvironment to the existing library TypeScript module and updated its build caller; extended the wasm optimizer fixture/test with explicit-tool lookup and shadow rejection. Shared dependencies were not modified.

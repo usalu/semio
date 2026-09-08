@@ -7,7 +7,6 @@ type RasterArtifact {
   layers: [RasterLayerNode!]! @state(class: ARTIFACT)
   assets: [RasterImageAssetEntry!]! @state(class: ARTIFACT)
   selectedIds: [String!]! @state(class: PRESENCE)
-  activeUtilityId: String! @state(class: PRESENCE)
   brushSize: Float! @state(class: CONFIG)
   brushOpacity: Float! @state(class: CONFIG)
   compositeViewport: RasterViewportSize @state(class: CONFIG)

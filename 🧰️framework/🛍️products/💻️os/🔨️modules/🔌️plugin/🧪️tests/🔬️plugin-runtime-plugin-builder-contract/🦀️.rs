@@ -904,7 +904,7 @@ mod plugin_builder_contract_tests {
             command: &TestCommand,
             doc: &ArtifactView<'_, TestSnapshot>,
             _cfg: &ConfigView<'_, TestConfig>,
-            _interaction: &InteractionView<'_>, _view_state: Option<&semio_framework_plugin::ViewModel>,
+            _interaction: &InteractionView<'_>, _view_state: Option<&ViewModel>,
             _draft: &DraftView<'_, NoDraft>,
             _engines: &EngineHandles,
         ) -> Result<Emit<TestMutation, TestConfigMutation>, Fault> {
@@ -959,6 +959,15 @@ mod plugin_builder_contract_tests {
 
         async fn render(body_key: &str, doc: &ArtifactView<'_, TestSnapshot>, _cfg: &ConfigView<'_, TestConfig>, view_state: &ViewModel) -> UiAssemblyResult<ComponentTree> {
             RENDER_CONTEXT_PROBE.with(|probe| probe.replace(Some((body_key.into(), view_state.clone()))));
+            if matches!(body_key, "graph" | "properties") {
+                let item = TreeNode::try_new("item-1", Component::TreeItem(TreeItemProps {
+                    label: Label(UiText::try_from_str("Item 1").expect("bounded fixture")), description: None, icon: None, default_open: None,
+                    draggable: None, drag_data: None, dimmed: None, row_actions: UiFixedList::default(),
+                })).expect("bounded fixture");
+                let root = TreeNode::try_new("root", Component::Tree(TreeProps { interaction_domain: Some(UiText::try_from_str("items").expect("bounded fixture")) }))
+                    .expect("bounded fixture").try_with_children([item]).unwrap_or_else(|_| panic!("bounded fixture"));
+                return Ok(ComponentTree { root });
+            }
             built_text_to_component_tree(ui_wgpu::wgpu::Label::data(format!("count={}", doc.snapshot.count)))
         }
 
@@ -1262,14 +1271,14 @@ mod plugin_builder_contract_tests {
             _command: &TestCommand,
             _doc: &ArtifactView<'_, TestSnapshot>,
             _cfg: &ConfigView<'_, TestConfig>,
-            _interaction: &InteractionView<'_>, _view_state: Option<&semio_framework_plugin::ViewModel>,
+            _interaction: &InteractionView<'_>, _view_state: Option<&ViewModel>,
             _draft: &DraftView<'_, NoDraft>,
             _engines: &EngineHandles,
         ) -> Result<Emit<TestMutation, TestConfigMutation>, Fault> {
             Err(Fault::from("keyed fixture requires its actual retained factory"))
         }
         async fn render(body: &str, doc: &ArtifactView<'_, TestSnapshot>, cfg: &ConfigView<'_, TestConfig>, _view_state: &ViewModel) -> UiAssemblyResult<ComponentTree> {
-            TestApp::<false>::render(body, doc, cfg).await
+            TestApp::<false>::render(body, doc, cfg, _view_state).await
         }
     }
 
@@ -1626,15 +1635,15 @@ mod plugin_builder_contract_tests {
             command: &TestCommand,
             doc: &ArtifactView<'_, TestSnapshot>,
             cfg: &ConfigView<'_, TestConfig>,
-            interaction: &InteractionView<'_>, _view_state: Option<&semio_framework_plugin::ViewModel>,
+            interaction: &InteractionView<'_>, _view_state: Option<&ViewModel>,
             draft: &DraftView<'_, NoDraft>,
             engines: &EngineHandles,
         ) -> Result<Emit<TestMutation, TestConfigMutation>, Fault> {
-            TestApp::<false>::handle(command, doc, cfg, interaction, draft, engines).await
+            TestApp::<false>::handle(command, doc, cfg, interaction, _view_state, draft, engines).await
         }
 
         async fn render(body_key: &str, doc: &ArtifactView<'_, TestSnapshot>, cfg: &ConfigView<'_, TestConfig>, _view_state: &ViewModel) -> UiAssemblyResult<ComponentTree> {
-            TestApp::<false>::render(body_key, doc, cfg).await
+            TestApp::<false>::render(body_key, doc, cfg, _view_state).await
         }
     }
 
@@ -3961,6 +3970,52 @@ mod plugin_builder_contract_tests {
     //#endregion 🗂️GroupedContextMenu
 
     #[semio_framework_async_macros::async_test]
+    async fn surface_context_refresh_projects_panels_from_focused_window_state() {
+        let fixture: Value = serde_json::from_str(include_str!("../../⚛️reactor/🪟️surfaces/🧪️tests/🪟️surface-context-lifecycle/🔣️.json")).unwrap();
+        let host_view: ViewModel = serde_json::from_value(fixture["view"].clone()).unwrap();
+        let focused = host_view.for_window_instance("right").unwrap();
+        let runtime = super::PluginRuntime::new();
+        let app = contract_app_under_test().await;
+        runtime.instances.borrow_mut().insert_admitted(7, std::sync::Arc::new(super::RuntimeAppCell::new(AppInstance { id: 7, app, surface_contexts: Default::default() })));
+        let response = super::plugin_refresh_ui(&runtime, 7, &serde_json::to_string(&json!({"viewState":focused,"panels":[{"key":"properties","bodyKey":"properties"}]})).unwrap()).await.unwrap();
+        let response: Value = serde_json::from_str(&response).unwrap();
+        assert_eq!(response["panels"][0]["key"], "properties");
+        let (body, actual) = RENDER_CONTEXT_PROBE.with(|probe| probe.take().unwrap());
+        assert_eq!(body, "properties");
+        assert_eq!(serde_json::to_value(actual).unwrap(), serde_json::to_value(host_view.for_panel()).unwrap());
+        eprintln!("[DEBUG] panel refresh clears focused window and utility while preserving host preferences");
+    }
+
+    #[semio_framework_async_macros::async_test]
+    async fn surface_context_presence_targets_each_concrete_surface() {
+        let fixture: Value = serde_json::from_str(include_str!("../../⚛️reactor/🪟️surfaces/🧪️tests/🪟️surface-context-lifecycle/🔣️.json")).unwrap();
+        let host_view: ViewModel = serde_json::from_value(fixture["view"].clone()).unwrap();
+        let mut app = interaction_app_under_test().await;
+        let mut peers = PeerPresenceRoot::empty();
+        peers.insert(fixture["presence"]["actor"].as_str().unwrap().into(), PeerPresence {
+            color: Some(3), surface: None,
+            interaction: Some(PresenceInteraction {
+                app_id: "s.test.synthetic@1/*#editor".into(),
+                domains: vec![PresenceDomain { domain: fixture["presence"]["domainId"].as_str().unwrap().into(), granularity: "item".into(), selected: vec![fixture["presence"]["nodeKey"].as_str().unwrap().into()], hovered: Vec::new() }],
+            }),
+        }).unwrap();
+        *app.peer_presence = std::sync::Arc::new(peers);
+        let runtime = super::PluginRuntime::new();
+        runtime.instances.borrow_mut().insert_admitted(7, std::sync::Arc::new(super::RuntimeAppCell::new(AppInstance { id: 7, app, surface_contexts: Default::default() })));
+        for surface in fixture["surfaces"].as_array().unwrap() {
+            let id = surface["id"].as_str().unwrap();
+            let view = surface["windowId"].as_str().map(|window| host_view.for_window_instance(window).unwrap()).unwrap_or_else(|| host_view.for_panel());
+            super::plugin_mount_surface(&runtime, 7, id.into(), surface["bodyKey"].as_str().unwrap().into(), &super::encode_wire_serialized(&view)).await.unwrap();
+            let (_, presence) = super::plugin_render_surface(&runtime, 7, id).await.unwrap();
+            assert_eq!(presence.len(), 1);
+            let mut expected = fixture["presence"]["expected"].clone();
+            expected["surface"] = surface["id"].clone();
+            assert_eq!(serde_json::to_value(&presence[0]).unwrap(), expected);
+        }
+        eprintln!("[DEBUG] surface context presence follows each concrete window and panel without sibling leakage");
+    }
+
+    #[semio_framework_async_macros::async_test]
     async fn view_action_emitting_ops_is_rejected() {
         let mut app = contract_app_under_test().await;
         let error = app.dispatch_typed(TestCommand::BadView, &meta()).await.expect_err("a View command emitting operations must be rejected");
@@ -4393,8 +4448,7 @@ mod plugin_builder_contract_tests {
 
         // 👥️ M2 acceptance: selecting item-1 (own) with alice ALSO selecting it derives exactly
         // one `PresenceUpdate` for that node — own.selected true, one peer mark, own color
-        // threaded through, surface addressed by the bare body key (the reactor prefixes the
-        // instance id on drain — see `plugin_take_presence`'s own doc).
+        // threaded through, with the app-local body key before runtime surface binding.
         assert_eq!(app.pending_presence.len(), 1, "expected exactly one dirty presence key, got {:?}", app.pending_presence);
         let update = &app.pending_presence[0];
         assert_eq!(update.surface, semio_framework_ui_contract::SurfaceId::try_from("window").expect("bounded fixture"));

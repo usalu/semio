@@ -45,8 +45,6 @@ pub struct Generation3dArtifact {
     pub selected_generation_id: Option<String>,
     #[state(artifact)]
     pub generation_preview_text: Option<String>,
-    #[state(presence)]
-    pub active_utility_id: String,
 }
 //#endregion 🔖️Generation3dArtifact
 
@@ -86,7 +84,6 @@ impl Default for Generation3dArtifact {
             sun_json: dsl::json::to_json_string(&semio_framework_plugin::WorldSunConfig::default()),
             selected_generation_id: None,
             generation_preview_text: None,
-            active_utility_id: "move".into(),
         }
     }
 }
@@ -392,7 +389,7 @@ pub fn split_endpoint(endpoint: &str) -> (String, String) {
 }
 
 #[cfg(feature = "component-app-assembly")]
-pub fn fixture_to_workflow(fixture: &DagFixture) -> (Vec<semio_framework_ui::wgpu::NodeGraphNodeRecord>, Vec<semio_framework_ui::wgpu::NodeGraphEdgeRecord>) {
+pub fn fixture_to_workflow(fixture: &semio_framework_artifact_infinite_dag::DagFixture) -> (Vec<semio_framework_ui::wgpu::NodeGraphNodeRecord>, Vec<semio_framework_ui::wgpu::NodeGraphEdgeRecord>) {
     let nodes: Vec<semio_framework_ui::wgpu::NodeGraphNodeRecord> = fixture
         .nodes
         .iter()

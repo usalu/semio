@@ -7,3 +7,5 @@ The language-neutral fixture changes same-length source bytes while preserving t
 The same 304-project profiling input measured 42.41 / 51.06 seconds before and 17.38 / 23.50 seconds after. Retained heap after two passes decreased from 968.4 MiB to 220.1 MiB. These are observations under concurrent native compilation and source changes, not an unloaded performance guarantee. The second pass is still dominated by current-byte reads and filesystem traversal.
 
 The authored reproducible probe is `🔬️graph-profile/📜️script.ts`; raw CPU profiles and timing JSON remain temporary ticket output.
+
+The current 449-project helper probe exited 0 on 2026-09-08: 44.33s first graph pass and 6.19s second pass. Nested aggregate timings across both passes were cargoSourceInputs 38.39s (1,140 calls), projectInputs 39.62s (898), relativeScriptInputs 2.83s (164), and nativeDependencyRoots 1.94s (4,388). Nested totals overlap and must not be added. This confirms cold source discovery remains material while the in-process warm cache helps. Measurements occurred during concurrent Rust compilation and changed sources, so they do not isolate unloaded host performance.

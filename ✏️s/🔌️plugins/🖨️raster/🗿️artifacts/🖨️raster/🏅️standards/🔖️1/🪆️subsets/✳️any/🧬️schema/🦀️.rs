@@ -21,8 +21,6 @@ pub struct RasterArtifact {
     pub assets: RasterOwnedMap<RasterAssetChild>,
     #[state(presence)]
     pub selected_ids: Vec<String>,
-    #[state(presence)]
-    pub active_utility_id: String,
     #[state(config)]
     pub brush_size: f64,
     #[state(config)]
@@ -50,7 +48,6 @@ impl Default for RasterArtifact {
             layers: Vec::new(),
             assets: RasterOwnedMap::new(),
             selected_ids: Vec::new(),
-            active_utility_id: "selectMarquee".into(),
             brush_size: 24.0,
             brush_opacity: 1.0,
             composite_viewport: None,
@@ -237,7 +234,7 @@ semio_framework_plugin::derive_artifact_facets!(
 //#region 🔖️DocumentHelpers
 /// 🌱️ Relocated verbatim from `⚙️engine` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES,
 /// rule 3: pure helpers over document types live in `🧬️schema/`). Every external call site now reads
-/// `crate::schema::…` (the artifact root's own pre-existing `pub mod schema { pub
+/// `crate::standards::v1::subsets::any::schema::…` (the artifact root's own pre-existing `pub mod schema { pub
 /// use super::standards::v1::subsets::any::schema::*; }` shim keeps that path resolving).
 use crate::{RasterSnapshot, RasterTransform};
 pub fn create_raster_id(prefix: &str) -> String {
@@ -421,13 +418,13 @@ pub fn semio_example_document() -> RasterSnapshot {
 /// source of truth instead of being restated in Rust. Falls back to [`empty_raster_document`] when
 /// the carrier does not parse — the same shape `block2d`'s `default_block2d_snapshot` uses.
 pub fn default_raster_document() -> RasterSnapshot {
-    super::snapshot::text::parse_dsl(crate::examples::demo::PRIMARY_TEXT).unwrap_or_else(|_| empty_raster_document())
+    super::snapshot::text::parse_dsl(crate::examples::art_raster_demo::PRIMARY_TEXT).unwrap_or_else(|_| empty_raster_document())
 }
 
 /// 📚️ The committed example document behind one registered example id, or `None` when the id is not
 /// one this subset registers — the lookup `🎮️commands/🎬️set-active-example` resolves against.
 pub fn raster_example_document(example_id: &str) -> Option<RasterSnapshot> {
-    (example_id == crate::examples::demo::ID).then(default_raster_document)
+    (example_id == crate::examples::art_raster_demo::ID).then(default_raster_document)
 }
 
 /// 📄️ Duplicates a layer subtree with freshly minted ids (a new document node, not an operation inverse).

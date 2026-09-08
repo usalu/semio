@@ -14,7 +14,6 @@ type Process3dDiff {
   resolvedUpTo: Int @state(class: ARTIFACT)
   selectedId: String @state(class: PRESENCE)
   selectedFaceId: Int @state(class: PRESENCE)
-  activeUtilityId: String @state(class: PRESENCE)
   selectionMethod: String @state(class: CONFIG)
   engagementInput: String @state(class: CONFIG)
   cameraPositionX: Float @state(class: CONFIG)

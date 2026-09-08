@@ -106,11 +106,25 @@
         "command": "bun ./📜️script.ts cargo check semio-s-artifact-lowpoly-lowpoly"
       }
     },
+    "jack-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts cargo check semio-s-artifact-trinity-jack"
+      }
+    },
     "context-menu-view-test": {
       "executor": "nx:run-commands",
       "cache": false,
       "options": {
         "command": "bun ./📜️script.ts surface-view-context menu"
+      }
+    },
+    "jack-query-ownership-test": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts jack-query-ownership"
       }
     }
   }

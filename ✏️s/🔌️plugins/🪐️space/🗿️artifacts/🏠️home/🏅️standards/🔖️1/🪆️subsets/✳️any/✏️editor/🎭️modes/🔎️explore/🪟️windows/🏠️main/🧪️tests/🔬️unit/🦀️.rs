@@ -118,7 +118,7 @@ async fn seeded_local_studio_renders_a_table_row() {
     // exercises the REAL end-to-end `render` (not `render_rows`), deliberately not asserting on
     // emptiness (see `empty_rows_render_the_empty_message_not_a_zero_row_table` for that, isolated).
     let _ = crate::list_all_space_catalog_entries().await;
-    let node = render(&cfg).expect("seeded Home rows");
+    let node = render(&cfg, &semio_framework_plugin::ViewModel::default()).expect("seeded Home rows");
     let json = project(node);
     assert!(json.contains("local"), "the seeded demo studio has no directory entry, so it renders origin=local: {json}");
 }
@@ -132,21 +132,22 @@ async fn german_locale_labels_resolve_in_the_rendered_table() {
 }
 
 #[semio_framework_async_macros::async_test]
-async fn render_resolves_labels_from_config_locale() {
-    let cfg = HomeConfig { locale: "de".into(), ..HomeConfig::default() };
+async fn render_resolves_labels_from_host_view() {
+    let cfg = HomeConfig { ..HomeConfig::default() };
+    let view_state = semio_framework_plugin::ViewModel { locale: semio_framework_plugin::Locale::De, ..Default::default() };
     let json = project(render_rows(&[one_local_row()], &HomeTableLabels::NATIVE_DE, &SHomeLabels::NATIVE_DE).expect("German Home row"));
     assert!(json.contains("Aktualisiert"));
-    let _ = render(&cfg).expect("localized Home rows");
+    let _ = render(&cfg, &view_state).expect("localized Home rows");
 }
 
-/// 🆔️ Contract §C0 lane 4-F: `render(cfg)` must wrap the table in a real button carrying the
+/// 🆔️ Contract §C0 lane 4-F: `render(cfg, view_state)` must wrap the table in a real button carrying the
 /// frozen `s-home-create-space` id, dispatching `createSpace` with no args — the harness clicks
 /// this directly instead of hunting the command palette. The button is preceded by two
 /// `window_content_dead_line_spacer()` separators (see that fn's doc) — found by type, not a
 /// hardcoded index, so this test stays valid if the spacer count ever changes.
 #[semio_framework_async_macros::async_test]
 async fn render_wraps_the_table_with_a_real_create_space_button() {
-    observe(render(&HomeConfig::default()).expect("Home rows with create action"), |root| {
+    observe(render(&HomeConfig::default(), &semio_framework_plugin::ViewModel::default()).expect("Home rows with create action"), |root| {
         let button = root.children.iter().find(|child| child.key.as_str() == "s-home-create-space").expect("a create-space button somewhere in the stack");
         assert!(matches!(&button.component, semio_framework_ui_contract::Component::Button(_)));
         let binding = button.bindings.get(0).expect("create button carries action");

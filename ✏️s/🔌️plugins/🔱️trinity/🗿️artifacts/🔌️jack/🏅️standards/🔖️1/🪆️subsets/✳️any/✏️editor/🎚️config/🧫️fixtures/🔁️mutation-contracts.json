@@ -6,7 +6,6 @@
       "zoom": 2
     },
     "jackQuery": "MATCH base",
-    "jackResultJson": "{}",
     "editorSelection": {
       "start": 1,
       "end": 3
@@ -27,7 +26,6 @@
               "zoom": 2
             },
             "jackQuery": "MATCH base",
-            "jackResultJson": "{}",
             "editorSelection": {
               "start": 1,
               "end": 3
@@ -45,7 +43,6 @@
           "zoom": 2
         },
         "jackQuery": "MATCH base",
-        "jackResultJson": "{}",
         "editorSelection": {
           "start": 1,
           "end": 3
@@ -73,7 +70,6 @@
           "zoom": 3.5
         },
         "jackQuery": "MATCH base",
-        "jackResultJson": "{}",
         "editorSelection": {
           "start": 1,
           "end": 3
@@ -97,31 +93,6 @@
           "zoom": 2
         },
         "jackQuery": "MATCH (n) RETURN n",
-        "jackResultJson": "{}",
-        "editorSelection": {
-          "start": 1,
-          "end": 3
-        },
-        "lodModeByWindow": {
-          "main": "compact"
-        }
-      }
-    },
-    {
-      "kind": "set-result",
-      "mutation": {
-        "SetResult": {
-          "value": "[]"
-        }
-      },
-      "expected": {
-        "camera": {
-          "x": 1,
-          "y": 2,
-          "zoom": 2
-        },
-        "jackQuery": "MATCH base",
-        "jackResultJson": "[]",
         "editorSelection": {
           "start": 1,
           "end": 3
@@ -145,7 +116,6 @@
           "zoom": 2
         },
         "jackQuery": "MATCH base",
-        "jackResultJson": "{}",
         "editorSelection": null,
         "lodModeByWindow": {
           "main": "compact"
@@ -167,7 +137,6 @@
           "zoom": 2
         },
         "jackQuery": "MATCH base",
-        "jackResultJson": "{}",
         "editorSelection": {
           "start": 1,
           "end": 3

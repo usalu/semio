@@ -1372,81 +1372,6 @@
           "additionalProperties": false,
           "required": [
             "type",
-            "appearance"
-          ],
-          "properties": {
-            "type": {
-              "const": "setUiAppearance"
-            },
-            "appearance": {
-              "$ref": "#/$defs/UiAppearance"
-            }
-          }
-        },
-        {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "type",
-            "layout"
-          ],
-          "properties": {
-            "type": {
-              "const": "setUiLayout"
-            },
-            "layout": {
-              "$ref": "#/$defs/UiChromeLayout"
-            }
-          }
-        },
-        {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "type",
-            "driverId"
-          ],
-          "properties": {
-            "type": {
-              "const": "setUiDriver"
-            },
-            "driverId": {
-              "type": "string"
-            }
-          }
-        },
-        {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "type",
-            "driverId",
-            "driver"
-          ],
-          "properties": {
-            "type": {
-              "const": "setUiCustomDriver"
-            },
-            "driverId": {
-              "type": "string"
-            },
-            "driver": {
-              "anyOf": [
-                {
-                  "$ref": "#/$defs/UiDriver"
-                },
-                {
-                  "type": "null"
-                }
-              ]
-            }
-          }
-        },
-        {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "type",
             "draft"
           ],
           "properties": {
@@ -1457,81 +1382,6 @@
               "anyOf": [
                 {
                   "$ref": "#/$defs/UiDriver"
-                },
-                {
-                  "type": "null"
-                }
-              ]
-            }
-          }
-        },
-        {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "type",
-            "locale"
-          ],
-          "properties": {
-            "type": {
-              "const": "setUiLocale"
-            },
-            "locale": {
-              "$ref": "#/$defs/UiLocale"
-            }
-          }
-        },
-        {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "type",
-            "terminologyId"
-          ],
-          "properties": {
-            "type": {
-              "const": "setUiTerminology"
-            },
-            "terminologyId": {
-              "type": "string"
-            }
-          }
-        },
-        {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "type",
-            "themeId"
-          ],
-          "properties": {
-            "type": {
-              "const": "setUiTheme"
-            },
-            "themeId": {
-              "type": "string"
-            }
-          }
-        },
-        {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "type",
-            "themeId",
-            "theme"
-          ],
-          "properties": {
-            "type": {
-              "const": "setUiCustomTheme"
-            },
-            "themeId": {
-              "type": "string"
-            },
-            "theme": {
-              "anyOf": [
-                {
-                  "$ref": "#/$defs/UiTheme"
                 },
                 {
                   "type": "null"
@@ -1559,29 +1409,6 @@
                 {
                   "type": "null"
                 }
-              ]
-            }
-          }
-        },
-        {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "type",
-            "controlId",
-            "keys"
-          ],
-          "properties": {
-            "type": {
-              "const": "setUiKeybindingOverride"
-            },
-            "controlId": {
-              "type": "string"
-            },
-            "keys": {
-              "type": [
-                "string",
-                "null"
               ]
             }
           }
@@ -2091,17 +1918,8 @@
         "transientNotice",
         "openWithFocusRole",
         "activeTutorialId",
-        "uiAppearance",
-        "uiLayout",
-        "uiDriverId",
-        "uiCustomDrivers",
         "uiDriverDraft",
-        "uiLocale",
-        "uiTerminology",
-        "uiThemeId",
-        "uiCustomThemes",
         "uiThemeDraft",
-        "uiKeybindingOverrides",
         "syncBackboneUri",
         "syncCardKind",
         "syncDraftPath",
@@ -2435,21 +2253,6 @@
             "null"
           ]
         },
-        "uiAppearance": {
-          "$ref": "#/$defs/UiAppearance"
-        },
-        "uiLayout": {
-          "$ref": "#/$defs/UiChromeLayout"
-        },
-        "uiDriverId": {
-          "type": "string"
-        },
-        "uiCustomDrivers": {
-          "type": "object",
-          "additionalProperties": {
-            "$ref": "#/$defs/UiDriver"
-          }
-        },
         "uiDriverDraft": {
           "anyOf": [
             {
@@ -2460,21 +2263,6 @@
             }
           ]
         },
-        "uiLocale": {
-          "$ref": "#/$defs/UiLocale"
-        },
-        "uiTerminology": {
-          "type": "string"
-        },
-        "uiThemeId": {
-          "type": "string"
-        },
-        "uiCustomThemes": {
-          "type": "object",
-          "additionalProperties": {
-            "$ref": "#/$defs/UiTheme"
-          }
-        },
         "uiThemeDraft": {
           "anyOf": [
             {
@@ -2484,12 +2272,6 @@
               "type": "null"
             }
           ]
-        },
-        "uiKeybindingOverrides": {
-          "type": "object",
-          "additionalProperties": {
-            "type": "string"
-          }
         },
         "syncBackboneUri": {
           "type": [
@@ -2663,42 +2445,69 @@
       "properties": {
         "appearance": {
           "anyOf": [
-            { "$ref": "#/$defs/UiAppearance" },
-            { "type": "null" }
+            {
+              "$ref": "#/$defs/UiAppearance"
+            },
+            {
+              "type": "null"
+            }
           ]
         },
         "layout": {
           "anyOf": [
-            { "$ref": "#/$defs/UiChromeLayout" },
-            { "type": "null" }
+            {
+              "$ref": "#/$defs/UiChromeLayout"
+            },
+            {
+              "type": "null"
+            }
           ]
         },
         "driverId": {
-          "type": ["string", "null"]
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "customDrivers": {
           "type": "object",
-          "additionalProperties": { "$ref": "#/$defs/UiDriver" }
+          "additionalProperties": {
+            "$ref": "#/$defs/UiDriver"
+          }
         },
         "locale": {
           "anyOf": [
-            { "$ref": "#/$defs/UiLocale" },
-            { "type": "null" }
+            {
+              "$ref": "#/$defs/UiLocale"
+            },
+            {
+              "type": "null"
+            }
           ]
         },
         "terminology": {
-          "type": ["string", "null"]
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "themeId": {
-          "type": ["string", "null"]
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "customThemes": {
           "type": "object",
-          "additionalProperties": { "$ref": "#/$defs/UiTheme" }
+          "additionalProperties": {
+            "$ref": "#/$defs/UiTheme"
+          }
         },
         "keybindingOverrides": {
           "type": "object",
-          "additionalProperties": { "type": "string" }
+          "additionalProperties": {
+            "type": "string"
+          }
         }
       }
     },

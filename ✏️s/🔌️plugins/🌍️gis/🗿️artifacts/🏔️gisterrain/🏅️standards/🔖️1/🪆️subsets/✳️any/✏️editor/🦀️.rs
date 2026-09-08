@@ -10,7 +10,7 @@
 use crate::op::GisTerrainMutation;
 use crate::schema::default_terrain_document;
 use crate::{GisTerrainSnapshot, GIS_3D_TERRAIN_SCHEMA};
-use crate::editor::gis3d::commands::{exaggeration, locale, view};
+use crate::editor::gis3d::commands::{exaggeration, view};
 use crate::editor::gis3d::config::{Gis3dConfig, Gis3dConfigMutation, SetCamera};
 use crate::editor::gis3d::modes::view as view_mode;
 use crate::editor::gis3d::modes::view::windows::terrain;
@@ -147,7 +147,7 @@ fn gis3d_retained_reduce(
     history: &semio_framework_plugin::HistoryView,
     _interaction: &protocol::InteractionState,
     _hover: &semio_framework_plugin::app::InteractionHoverState,
-    _context: Option<&semio_framework_plugin::ArtifactOwnedToolJobContext<EditorApp<Gis3dPlayApp>>>,
+    _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<Gis3dPlayApp>>>,
     operation: &AppOperationContext,
 ) -> Result<Emit<GisTerrainMutation, Gis3dConfigMutation, NoDraftMutation>, Fault> {
     command.dispatch(&ArtifactView::with_operation(snapshot, history, operation.clone()), &ConfigView { snapshot: config })

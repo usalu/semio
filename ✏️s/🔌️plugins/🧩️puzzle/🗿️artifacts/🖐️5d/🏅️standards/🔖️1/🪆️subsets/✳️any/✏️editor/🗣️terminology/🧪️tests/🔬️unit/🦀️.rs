@@ -2,20 +2,10 @@
 use super::*;
 
 #[test]
-fn label_resolution_has_no_locale_or_terminology_default() {
-    for (locale, terminology) in [("en-US", "native"), ("en", "reuse"), ("de-DE", "native"), ("de", "reuse")] {
-        let mut config = Puzzle5dConfig::default();
-        config.locale = locale.into();
-        config.terminology = terminology.into();
-        assert!(puzzle5d_labels(&config).is_some());
+fn labels_resolve_every_host_locale_and_terminology_axis() {
+    for (locale, terminology) in [(Locale::En, Terminology::Native), (Locale::En, Terminology::Reuse), (Locale::De, Terminology::Native), (Locale::De, Terminology::Reuse)] {
+        let view_state = semio_framework_plugin::ViewModel { locale, terminology, ..Default::default() };
+        assert!(!puzzle5d_labels(&view_state).parts.as_str().is_empty());
+        assert_eq!(puzzle5d_is_de_locale(&view_state), locale == Locale::De);
     }
-    for locale in ["fr", "de-AT"] {
-        let mut unsupported_locale = Puzzle5dConfig::default();
-        unsupported_locale.locale = locale.into();
-        assert!(puzzle5d_labels(&unsupported_locale).is_none());
-        assert_eq!(puzzle5d_is_de_locale(&unsupported_locale), None);
-    }
-    let mut unsupported_terminology = Puzzle5dConfig::default();
-    unsupported_terminology.terminology = "legacy".into();
-    assert!(puzzle5d_labels(&unsupported_terminology).is_none());
 }

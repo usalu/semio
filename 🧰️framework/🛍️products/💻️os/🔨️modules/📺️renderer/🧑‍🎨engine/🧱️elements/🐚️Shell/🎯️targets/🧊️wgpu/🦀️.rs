@@ -21,11 +21,10 @@ use infinite_world::world::{enqueue_world3d_events, World3dState, WorldInteracti
 #[cfg(test)]
 use ui_wgpu::wgpu::draw_text;
 use semio_framework::{AppDefinition, PanelGroup, PanelTabDefinition, ViewModel};
-use semio_framework_os_shell::{UiAppearance as OsUiAppearance, UiChromeLayout as OsUiChromeLayout, UiDriver as OsUiDriver, UiLocale as OsUiLocale, UiPreferences, UiTheme as OsUiTheme};
 use semio_framework_os_config::opening_config::{
     apply_ui_preferences_config_mutation, decode_ui_preferences_config_mutation_json,
-    mutations::{set_appearance, set_custom_theme, set_driver, set_layout, set_locale, set_terminology, set_theme, UiPreferencesConfigMutation},
-    UI_PREFERENCES_CONFIG_SCHEMA,
+    mutations::{set_appearance, set_custom_driver, set_custom_theme, set_driver, set_keybinding_override, set_layout, set_locale, set_terminology, set_theme, UiPreferencesConfigMutation},
+    UiAppearance as OsUiAppearance, UiChromeLayout as OsUiChromeLayout, UiDriver as OsUiDriver, UiLocale as OsUiLocale, UiPreferences, UiTheme as OsUiTheme, UI_PREFERENCES_CONFIG_SCHEMA,
 };
 #[cfg(test)]
 use semio_framework::IconName;
@@ -3084,6 +3083,31 @@ impl ShellState {
         }
     }
 
+    fn live_view_state(&self, session: &ActiveSession) -> ViewModel {
+        let mut view_state = session.view_state.clone();
+        view_state.locale = self.active_locale();
+        view_state.terminology = self.active_terminology();
+        view_state.contributions_json = Some(Self::contributions_json_from_plugins(&self.plugins));
+        view_state.window_instances = self
+            .dock
+            .window_instances()
+            .into_iter()
+            .map(|(id, window_kind_id)| semio_framework::ViewWindowInstance { id, window_kind_id })
+            .collect();
+        view_state.active_utility_by_window_id = self.active_utility_by_window.clone();
+        view_state
+    }
+
+    fn live_window_kind_id<'a>(&'a self, session: &'a ActiveSession, window_id: &str) -> Option<&'a str> {
+        self.dock
+            .window_kind_id(window_id)
+            .or_else(|| session.app.window_kinds.iter().find(|kind| kind.id == window_id).map(|kind| kind.id.as_str()))
+    }
+
+    fn context_window_instance_id(&self, x: f32, y: f32) -> Option<&str> {
+        self.dock_drop_bodies.iter().find(|(_, bounds, _)| bounds.contains(x, y)).map(|(_, _, window_id)| window_id.as_str())
+    }
+
     fn persist_dock_layout(&mut self) {
         self.layout_override = Some(self.dock.to_window_layout());
         self.dock_drag_snapshot = None;
@@ -3125,22 +3149,16 @@ impl ShellState {
             self.window_ui = documents;
             return Err("shell: window document retirement registry refused the exact prior owners".to_string());
         }
-        let mut view_state = session.view_state.clone();
-        view_state.contributions_json = Some(Self::contributions_json_from_plugins(&self.plugins));
-        view_state.window_instances = session
-            .app
-            .window_kinds
-            .iter()
-            .map(|kind| semio_framework::ViewWindowInstance { id: kind.id.clone(), window_kind_id: kind.id.clone() })
-            .collect();
-        view_state.active_utility_by_window_id = self.active_utility_by_window.clone();
+        let view_state = self.live_view_state(&session);
+        let live_windows = self.dock.window_instances();
         let mut refresh_effects = Vec::new();
         {
             let program = self.plugins.iter().find(|p| p.plugin_id == session.plugin_id).cloned().ok_or("session program missing")?;
-            for kind in &session.app.window_kinds {
-                let window_view = view_state.for_window_instance(&kind.id).ok_or_else(|| format!("window '{}' is absent from the live view", kind.id))?;
-                let document = program.render_with_document(session.instance_id, &kind.id, &kind.body_key, &window_view, None, Some(&mut refresh_effects)).await?;
-                self.window_ui.insert(kind.id.clone(), document);
+            for (window_id, window_kind_id) in live_windows {
+                let kind = session.app.window_kinds.iter().find(|kind| kind.id == window_kind_id).ok_or_else(|| format!("window kind '{}' is absent from the app", window_kind_id))?;
+                let window_view = view_state.for_window_instance(&window_id).ok_or_else(|| format!("window '{}' is absent from the live view", window_id))?;
+                let document = program.render_with_document(session.instance_id, &window_id, &kind.body_key, &window_view, None, Some(&mut refresh_effects)).await?;
+                self.window_ui.insert(window_id, document);
             }
         }
         if let Err(documents) = Self::retain_document_map_for_close(&mut self.closing_documents, std::mem::take(&mut self.panel_documents)) {
@@ -3150,7 +3168,7 @@ impl ShellState {
         let program = self.plugins.iter().find(|p| p.plugin_id == session.plugin_id).cloned().ok_or("session program missing")?;
         let panel_view = view_state.for_panel();
         for tab in Self::flatten_panel_tab_leaves(&session.app.panel_tabs) {
-            let body_key = tab.body_key.as_deref().unwrap_or_default();
+            let Some(body_key) = tab.body_key.as_deref() else { continue };
             let document = program.render_with_document(session.instance_id, tab.id(), body_key, &panel_view, None, Some(&mut refresh_effects)).await?;
             self.panel_documents.insert(tab.id().to_string(), document);
         }
@@ -3928,7 +3946,8 @@ impl ShellState {
             let document_id = self.sync_document_id().unwrap_or_else(|| "document".into());
             let schema = session.app.io.document_schema.clone();
             let bindings = Self::parse_persistence_binding(&uri)?;
-            let window_kind_id = self.active_window_id.as_deref().or(session.view_state.active_window_kind_id.as_deref()).unwrap_or_else(|| session.app.window_kinds.first().id.as_str()).to_string();
+            let window_id = self.active_window_id.as_deref().or(session.view_state.window_id.as_deref()).unwrap_or_else(|| session.app.window_kinds.first().id.as_str());
+            let window_kind_id = self.live_window_kind_id(&session, window_id).unwrap_or_else(|| session.app.window_kinds.first().id.as_str()).to_string();
             // 📌️ ticket §C5 item 4 — checkpoint-on-close: this shell keeps exactly one session/document
             // mounted at a time, so "attach a different backbone" IS "close" for whatever was open —
             // same posture the React shell's own report documents ("switch away IS close here").
@@ -3975,7 +3994,8 @@ impl ShellState {
     async fn open_document(&mut self, document_id: String, schema: String, bindings: Vec<PersistenceBinding>, surface: Option<String>) -> Result<(), String> {
         let session = self.session.clone().ok_or("session missing")?;
         let plugin = self.plugins.iter().find(|entry| entry.plugin_id == session.plugin_id).cloned().ok_or("plugin missing")?;
-        let window_kind_id = self.active_window_id.as_deref().or(session.view_state.active_window_kind_id.as_deref()).unwrap_or_else(|| session.app.window_kinds.first().id.as_str()).to_string();
+        let window_id = self.active_window_id.as_deref().or(session.view_state.window_id.as_deref()).unwrap_or_else(|| session.app.window_kinds.first().id.as_str());
+        let window_kind_id = self.live_window_kind_id(&session, window_id).unwrap_or_else(|| session.app.window_kinds.first().id.as_str()).to_string();
         // 🎠️ H3-wgpu-native — `wasm_runtime()`/`register_host_backbone` retired, see
         // `detach_sync_backbone_internal`'s note.
         // 📌️ ticket §C5 item 4 — checkpoint-on-close, same "switch away IS close" posture as
@@ -4151,8 +4171,15 @@ impl ShellState {
             if let Some(session) = self.session.clone() {
                 if action.controller_id == session.app.controller_id {
                     if let Some(utility_id) = action.args.as_ref().and_then(|args| args.get("utilityId")).and_then(|value| value.as_str()) {
-                        let window_kind_id = action.args.as_ref().and_then(|args| args.get("windowKindId")).and_then(|value| value.as_str()).map(String::from).unwrap_or_else(|| self.active_utility_bar_window_kind(&session).id.clone());
-                        self.apply_set_active_utility(&window_kind_id, utility_id);
+                        let window_id = action
+                            .args
+                            .as_ref()
+                            .and_then(|args| args.get("windowId"))
+                            .and_then(|value| value.as_str())
+                            .map(String::from)
+                            .or_else(|| self.active_window_id.clone())
+                            .unwrap_or_else(|| self.active_utility_bar_window_kind(&session).id.clone());
+                        self.apply_set_active_utility(&window_id, utility_id);
                     }
                 }
             }
@@ -4163,8 +4190,8 @@ impl ShellState {
         let program = self.plugins.iter().find(|p| p.manifest.apps.iter().any(|app| app.controller_id == action.controller_id)).or_else(|| self.plugins.iter().find(|p| p.plugin_id == session.plugin_id)).ok_or("action program missing")?;
         let requested_window_id = action.args.as_ref().and_then(|args| args.get("windowId")).and_then(DslValue::as_str);
         let window_instance_id = requested_window_id.map(str::to_string).or_else(|| session.view_state.window_id.clone()).or_else(|| self.active_window_id.clone()).unwrap_or_else(|| session.app.window_kinds.first().id.clone());
-        let window_kind_id = session
-            .view_state
+        let live_view_state = self.live_view_state(&session);
+        let window_kind_id = live_view_state
             .window_instances
             .iter()
             .find(|instance| instance.id == window_instance_id)
@@ -4178,7 +4205,7 @@ impl ShellState {
             arguments,
         };
         let action_json = dsl::os_pack::json::to_json_string(&invocation);
-        let result = program.handle_action(session.instance_id, &action_json, &session.view_state).await?;
+        let result = program.handle_action(session.instance_id, &action_json, &live_view_state).await?;
         // 🧾️ ticket §C5 — fold this dispatch's own `history_patch` into the check-in projection (idle
         // clock, checkpoint-landed detection + `TouchArtifact`) before anything else touches `self`.
         #[cfg(not(target_arch = "wasm32"))]
@@ -5443,7 +5470,8 @@ impl ShellState {
                         let tab_index = self.dock.tab_index(&path, window_id).unwrap_or(0);
                         let ghost_label =
                             self.session.as_ref().and_then(|s| s.app.window_kinds.iter().find(|k| k.id == window_id).map(|k| k.label.resolve(self.active_terminology(), self.active_locale()).to_string())).unwrap_or_else(|| window_id.to_string());
-                        self.begin_pending_dock_drag(DockDragPayload { kind: DockDragKind::Tab, window_id: window_id.to_string(), source_path: path, tab_index, ghost_label }, x, y);
+                        let window_kind_id = self.dock.window_kind_id(window_id).unwrap_or(window_id).to_string();
+                        self.begin_pending_dock_drag(DockDragPayload { kind: DockDragKind::Tab, window_id: window_id.to_string(), window_kind_id, source_path: path, tab_index, ghost_label }, x, y);
                         return Ok(());
                     }
                 }
@@ -5454,7 +5482,8 @@ impl ShellState {
                     if !active.is_empty() {
                         let tab_index = self.dock.tab_index(&path, &active).unwrap_or(0);
                         let ghost_label = self.session.as_ref().and_then(|s| s.app.window_kinds.iter().find(|k| k.id == active).map(|k| k.label.resolve(self.active_terminology(), self.active_locale()).to_string())).unwrap_or_else(|| active.clone());
-                        self.begin_pending_dock_drag(DockDragPayload { kind: DockDragKind::Stack, window_id: active, source_path: path, tab_index, ghost_label }, x, y);
+                        let window_kind_id = self.dock.window_kind_id(&active).unwrap_or(&active).to_string();
+                        self.begin_pending_dock_drag(DockDragPayload { kind: DockDragKind::Stack, window_id: active, window_kind_id, source_path: path, tab_index, ghost_label }, x, y);
                         return Ok(());
                     }
                 }
@@ -6223,18 +6252,18 @@ impl ShellState {
         let node_id = hit.as_ref().and_then(|hit| hit.control_id.as_deref().and_then(|id| id.rsplit_once(".node.").map(|(_, node_id)| node_id.to_string())));
         let edge_id = hit.as_ref().and_then(|hit| hit.control_id.as_deref().and_then(|id| id.rsplit_once(".edge.").map(|(_, edge_id)| edge_id.to_string())));
         let (surface_id, kind, hits) = self.resolve_context_menu_surface(x, y, node_id.as_deref(), edge_id.as_deref());
+        let window_instance_id = self.context_window_instance_id(x, y).map(str::to_string);
         let is_de = self.locale_id == "de";
         let mut items = Vec::new();
         if let Some(session) = self.session.clone() {
             let shortcut_by_action: HashMap<String, String> = session.app.keybindings.iter().map(|binding| (binding.action.action.clone(), binding.keys.clone())).collect();
-            let mut view_state = session.view_state.clone();
-            view_state.locale = self.active_locale();
-            view_state.terminology = self.active_terminology();
+            let view_state = self.live_view_state(&session);
             let selection: Vec<Value> = Vec::new();
             let text: Option<Value> = None;
             let request = serde_json::json!({
                 "menu": { "id": kind.clone() },
                 "viewState": view_state,
+                "windowInstanceId": window_instance_id,
                 "surface": {
                     "surfaceId": surface_id,
                     "kind": kind.clone(),
@@ -6273,7 +6302,12 @@ impl ShellState {
         }
         if items.is_empty() {
             if let Some(session) = &self.session {
-                let window_kind = session.app.window_kinds.iter().find(|kind| Some(&kind.id) == self.active_window_id.as_ref()).or_else(|| Some(session.app.window_kinds.first()));
+                let window_kind = self
+                    .active_window_id
+                    .as_deref()
+                    .and_then(|window_id| self.live_window_kind_id(session, window_id))
+                    .and_then(|window_kind_id| session.app.window_kinds.iter().find(|kind| kind.id == window_kind_id))
+                    .or_else(|| Some(session.app.window_kinds.first()));
                 let actions: Vec<ui_wgpu::wgpu::ShellMenuAction> = window_kind
                     .map(|kind| semio_framework::resolve_window_actions(&session.app, kind))
                     .unwrap_or_default()
@@ -7824,8 +7858,11 @@ impl ShellState {
     /// 🧰️ The window kind whose utilities/actions the shell chrome currently scopes to (the focused window,
     /// else the view-state's active kind, else the app's first kind).
     fn active_utility_bar_window_kind<'a>(&self, session: &'a ActiveSession) -> &'a semio_framework::WindowKindDefinition {
-        let active_id = self.active_window_id.as_deref().or(session.view_state.active_window_kind_id.as_deref());
-        active_id.and_then(|id| session.app.window_kinds.iter().find(|kind| kind.id == id)).unwrap_or_else(|| session.app.window_kinds.first())
+        let active_id = self.active_window_id.as_deref().or(session.view_state.window_id.as_deref());
+        active_id
+            .and_then(|id| self.live_window_kind_id(session, id))
+            .and_then(|kind_id| session.app.window_kinds.iter().find(|kind| kind.id == kind_id))
+            .unwrap_or_else(|| session.app.window_kinds.first())
     }
 
     /// 🧰️ Derives the footer utility bar `UtilityNode`s from the app's declared utilities scoped to the active
@@ -7849,7 +7886,7 @@ impl ShellState {
                 category: utility.category,
             })
             .collect();
-        let active = self.active_utility_by_window.get(&window_kind.id).map(String::as_str);
+        let active = self.active_window_id.as_deref().and_then(|window_id| self.active_utility_by_window.get(window_id)).map(String::as_str);
         ui_wgpu::wgpu::component::utilities::derive_utility_nodes(&session.app.controller_id, &specs, active)
     }
     // #endregion
@@ -7857,12 +7894,12 @@ impl ShellState {
     // #region active-utility
     /// 🧰️ Applies a user-driven `setActiveUtility`: re-selecting the active utility deactivates it, otherwise
     /// it becomes the active utility for that window kind (Architecture Decision 4).
-    pub(crate) fn apply_set_active_utility(&mut self, window_kind_id: &str, utility_id: &str) {
-        let already = self.active_utility_by_window.get(window_kind_id).map(String::as_str) == Some(utility_id);
+    pub(crate) fn apply_set_active_utility(&mut self, window_id: &str, utility_id: &str) {
+        let already = self.active_utility_by_window.get(window_id).map(String::as_str) == Some(utility_id);
         if already {
-            self.active_utility_by_window.remove(window_kind_id);
+            self.active_utility_by_window.remove(window_id);
         } else {
-            self.active_utility_by_window.insert(window_kind_id.to_string(), utility_id.to_string());
+            self.active_utility_by_window.insert(window_id.to_string(), utility_id.to_string());
             // 🎓️ Advance-by-doing: only the activation branch counts as "the utility was activated" —
             // see `chrome_tour_note_utility_performed`.
             self.chrome_tour_note_utility_performed(utility_id);
@@ -7870,8 +7907,8 @@ impl ShellState {
     }
 
     /// 🧰️ The active utility id for a window kind, if any.
-    pub(crate) fn active_utility_for_window(&self, window_kind_id: &str) -> Option<&str> {
-        self.active_utility_by_window.get(window_kind_id).map(String::as_str)
+    pub(crate) fn active_utility_for_window(&self, window_id: &str) -> Option<&str> {
+        self.active_utility_by_window.get(window_id).map(String::as_str)
     }
 
     /// 🖱️ The cursor the active utility requests while the pointer is inside the active window silhouette — maps
@@ -7887,8 +7924,8 @@ impl ShellState {
 
     /// 🚦️ Whether window-scoped actions stay enabled: `true` when no utility is active or the active utility
     /// declares `allows_actions_while_active` (P5 — replaces the old `UTILITY_ID_PREFIXES` whitelist).
-    pub(crate) fn actions_enabled_for_window(&self, app: &AppDefinition, window_kind_id: &str) -> bool {
-        match self.active_utility_for_window(window_kind_id) {
+    pub(crate) fn actions_enabled_for_window(&self, app: &AppDefinition, window_id: &str) -> bool {
+        match self.active_utility_for_window(window_id) {
             None => true,
             Some(utility_id) => app.utilities.iter().find(|utility| utility.id == utility_id).map(|utility| utility.allows_actions_while_active).unwrap_or(true),
         }
@@ -10010,9 +10047,11 @@ impl ShellState {
                 self.locale_id = env_lock("SEMIO_LOCKED_LOCALE").unwrap_or_else(|| locale_id(preferences.locale));
                 self.terminology_id = env_lock("SEMIO_LOCKED_TERMINOLOGY").or(preferences.terminology).unwrap_or_else(|| UI_TERMINOLOGY_NATIVE.to_string());
                 self.driver_id = preferences.driver_id.unwrap_or_else(|| "default".to_string());
+                self.chrome_build.preferences.custom_drivers = preferences.custom_drivers;
                 self.chrome_build.preferences.ui_layout = match preferences.layout { Some(OsUiChromeLayout::Tablet) => "tablet", _ => "desktop" }.to_string();
                 self.chrome_build.preferences.theme_id = env_lock("SEMIO_LOCKED_THEME").or(preferences.theme_id).unwrap_or_else(|| "semio".to_string());
                 self.chrome_build.preferences.custom_themes = custom_themes;
+                self.chrome_build.preferences.keybinding_overrides = preferences.keybinding_overrides;
                 let loaded = self.chrome_build.preferences.clone();
                 with_chrome_prefs(|current| *current = loaded);
             }
@@ -11808,7 +11847,9 @@ struct CustomChromeTheme {
 struct ChromePrefsState {
     ui_layout: String,
     theme_id: String,
+    custom_drivers: HashMap<String, OsUiDriver>,
     custom_themes: HashMap<String, String>,
+    keybinding_overrides: HashMap<String, String>,
     // 🎨️ Only ever read/written by the `w3-prefs-i18n-themes` draft-color-editor primitives below
     // (`begin_custom_theme_draft`/`set_draft_theme_color`/`save_draft_theme`/`discard_draft_theme`),
     // which stay unwired to any real UI on purpose (see `build_settings_theme_ui`'s doc comment) —
@@ -11823,7 +11864,9 @@ impl Default for ChromePrefsState {
         Self {
             ui_layout: "desktop".to_string(),
             theme_id: "semio".to_string(),
+            custom_drivers: HashMap::new(),
             custom_themes: HashMap::new(),
+            keybinding_overrides: HashMap::new(),
             #[cfg(all(test, not(target_arch = "wasm32")))]
             draft_theme: None,
             worker_count: default_compute_worker_count(),
@@ -11843,20 +11886,27 @@ fn default_compute_worker_count() -> u32 {
     std::thread::available_parallelism().map(|n| n.get() as u32).unwrap_or(1)
 }
 
-fn load_chrome_prefs() -> ChromePrefsState {
-    let preferences = read_ui_preferences();
+fn project_chrome_prefs(preferences: UiPreferences, worker_count: u32) -> ChromePrefsState {
+    let custom_drivers = preferences.custom_drivers;
     let ui_layout = match preferences.layout { Some(OsUiChromeLayout::Tablet) => "tablet", _ => "desktop" }.to_string();
     let theme_id = preferences.theme_id.unwrap_or_else(|| "semio".to_string());
     let custom_themes = preferences.custom_themes.into_iter().map(|(id, theme)| (id, theme.config.to_string())).collect();
-    let worker_count = prefs_get(UI_COMPUTE_WORKER_COUNT_STORAGE_KEY).and_then(|raw| raw.parse::<u32>().ok()).filter(|count| *count >= 1).unwrap_or_else(default_compute_worker_count);
+    let keybinding_overrides = preferences.keybinding_overrides;
     ChromePrefsState {
         ui_layout,
         theme_id,
+        custom_drivers,
         custom_themes,
+        keybinding_overrides,
         #[cfg(all(test, not(target_arch = "wasm32")))]
         draft_theme: None,
         worker_count,
     }
+}
+
+fn load_chrome_prefs() -> ChromePrefsState {
+    let worker_count = prefs_get(UI_COMPUTE_WORKER_COUNT_STORAGE_KEY).and_then(|raw| raw.parse::<u32>().ok()).filter(|count| *count >= 1).unwrap_or_else(default_compute_worker_count);
+    project_chrome_prefs(read_ui_preferences(), worker_count)
 }
 
 fn with_chrome_prefs<R>(f: impl FnOnce(&mut ChromePrefsState) -> R) -> R {
@@ -12163,7 +12213,9 @@ struct UiPrefsSnapshot {
     driver_id: String,
     theme_id: String,
     ui_layout: String,
+    custom_drivers: HashMap<String, OsUiDriver>,
     custom_themes: HashMap<String, String>,
+    keybinding_overrides: HashMap<String, String>,
     worker_count: u32,
 }
 
@@ -12176,7 +12228,9 @@ impl UiPrefsSnapshot {
             driver_id: state.driver_id.clone(),
             theme_id: state.chrome_build.preferences.theme_id.clone(),
             ui_layout: state.chrome_build.preferences.ui_layout.clone(),
+            custom_drivers: state.chrome_build.preferences.custom_drivers.clone(),
             custom_themes: state.chrome_build.preferences.custom_themes.clone(),
+            keybinding_overrides: state.chrome_build.preferences.keybinding_overrides.clone(),
             worker_count: state.chrome_build.preferences.worker_count,
         }
     }
@@ -12284,6 +12338,18 @@ fn persist_ui_preferences(state: &ShellState, previous: Option<&UiPrefsSnapshot>
     if changed(&state.driver_id, |snapshot| &snapshot.driver_id) {
         log.events.push(set_driver(Some(state.driver_id.clone())));
     }
+    if previous.is_none_or(|snapshot| snapshot.custom_drivers != state.chrome_build.preferences.custom_drivers) {
+        let before = previous.map(|snapshot| &snapshot.custom_drivers).cloned().unwrap_or_default();
+        let after = &state.chrome_build.preferences.custom_drivers;
+        let ids: std::collections::BTreeSet<String> = before.keys().chain(after.keys()).cloned().collect();
+        let projected = replay_ui_preferences(&log);
+        for id in ids {
+            let next = after.get(&id).cloned();
+            if projected.custom_drivers.get(&id) != next.as_ref() {
+                log.events.push(set_custom_driver(id, next));
+            }
+        }
+    }
     if env_lock("SEMIO_LOCKED_LOCALE").is_none() && changed(&state.locale_id, |snapshot| &snapshot.locale_id) {
         log.events.push(set_locale(Some(if state.locale_id == "de" { OsUiLocale::De } else { OsUiLocale::En })));
     }
@@ -12302,6 +12368,18 @@ fn persist_ui_preferences(state: &ShellState, previous: Option<&UiPrefsSnapshot>
             let next = after.get(&id).cloned();
             if projected.custom_themes.get(&id) != next.as_ref() {
                 log.events.push(set_custom_theme(id, next));
+            }
+        }
+    }
+    if previous.is_none_or(|snapshot| snapshot.keybinding_overrides != state.chrome_build.preferences.keybinding_overrides) {
+        let before = previous.map(|snapshot| &snapshot.keybinding_overrides).cloned().unwrap_or_default();
+        let after = &state.chrome_build.preferences.keybinding_overrides;
+        let ids: std::collections::BTreeSet<String> = before.keys().chain(after.keys()).cloned().collect();
+        let projected = replay_ui_preferences(&log);
+        for id in ids {
+            let next = after.get(&id).cloned();
+            if projected.keybinding_overrides.get(&id) != next.as_ref() {
+                log.events.push(set_keybinding_override(id, next));
             }
         }
     }

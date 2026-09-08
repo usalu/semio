@@ -37,7 +37,7 @@ const BASE_TILES: &str = "local://🔣️.json";
 mod subject {
     use super::{BASE_TILES, DECK_ASSET};
     use semio_repo_test_host::{parse_json, Context, Json, Outcome};
-    use semio_s_artifact_animate_presentation::dsl::{parse_dsl, print_dsl};
+    use semio_s_artifact_animate_presentation::standards::v1::subsets::any::io::snapshot::text::{parse_dsl, print_dsl};
     use semio_s_artifact_animate_presentation::mutations::{apply_presentation_mutation, decode_presentation_mutation_json, encode_presentation_projection_json, inverse_presentation_mutation, PresentationMutation};
     use semio_s_artifact_animate_presentation::{presentation_snapshot_with_tiles, presentation_working_scene, FigureTileDraft, FigureTileFrame, PresentationSnapshot};
     use semio_s_plugin_stdio_test_oracle::law::{carrier_is_exact, inverse_restores, mutation_is_observable, round_trip_preserves};

@@ -43,7 +43,7 @@ pub fn layer_row_id(layer: &RasterLayerNode) -> String {
         RasterLayerNode::Adjustment { .. } => "adjustment",
         RasterLayerNode::Pixel { .. } => "layer",
     };
-    format!("{RASTER_TREE_PREFIX}.{segment}.{}", crate::schema::layer_node_id(layer))
+    format!("{RASTER_TREE_PREFIX}.{segment}.{}", crate::standards::v1::subsets::any::schema::layer_node_id(layer))
 }
 
 pub fn layer_id_from_tree_row_id(row_id: &str) -> Option<String> {
@@ -210,7 +210,6 @@ semio_framework_plugin::app_commands! {
         "setCompositeViewport" as "composite-viewport" => set_composite_viewport::SetCompositeViewport,
         "setCamera" as "camera" => set_camera::SetCamera,
         "setCameraZoom" as "camera-zoom" => set_camera_zoom::SetCameraZoom,
-        "setActiveUtility" as "active-utility" => set_active_utility::SetActiveUtility,
         "setActiveExample" as "set-active-example" => set_active_example::SetActiveExample,
     }
 }
@@ -218,7 +217,6 @@ semio_framework_plugin::app_commands! {
 // 🧷️ `app_commands!` addresses each payload module by a single identifier, so every `🎮️commands/*`
 // payload module is imported here under its own flat name.
 use crate::editor::raster::commands::set_active_example;
-use crate::editor::raster::commands::set_active_utility;
 use crate::editor::raster::commands::{add_layer, delete_layer, drop_layer_kind, duplicate_layer, move_layer, patch_layer, patch_layers, set_layer_visible, toggle_layer_visible};
 use crate::editor::raster::commands::{set_brush_opacity, set_brush_size};
 use crate::editor::raster::commands::{set_camera, set_camera_zoom, set_composite_viewport};
@@ -244,7 +242,6 @@ const RASTER_RETAINED_TOOL_IDS: &[&str] = &[
     "setCompositeViewport",
     "setCamera",
     "setCameraZoom",
-    "setActiveUtility",
         "setActiveExample",
 ];
 const RASTER_RETAINED_PAYLOAD_SCHEMA: &str = "raster.tool-command.v1";
@@ -279,7 +276,6 @@ const RASTER_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = &[
     ArtifactToolPublicationContract { tool_id: "setCompositeViewport", lanes: &[ArtifactToolPublicationLane::Config] },
     ArtifactToolPublicationContract { tool_id: "setCamera", lanes: &[ArtifactToolPublicationLane::Config] },
     ArtifactToolPublicationContract { tool_id: "setCameraZoom", lanes: &[ArtifactToolPublicationLane::Config] },
-    ArtifactToolPublicationContract { tool_id: "setActiveUtility", lanes: &[ArtifactToolPublicationLane::Config] },
     ArtifactToolPublicationContract { tool_id: "setActiveExample", lanes: &[ArtifactToolPublicationLane::Artifact] },
 ];
 
@@ -295,7 +291,7 @@ fn raster_retained_extent(command: &RasterCommand, snapshot: &RasterSnapshot, _i
     if !RASTER_RETAINED_TOOL_IDS.contains(&command.command_id()) {
         return None;
     }
-    let items = crate::schema::flatten_raster_layers(&snapshot.layers).len().checked_add(snapshot.assets.len())?.checked_add(1)?;
+    let items = crate::standards::v1::subsets::any::schema::flatten_raster_layers(&snapshot.layers).len().checked_add(snapshot.assets.len())?.checked_add(1)?;
     (items <= RASTER_RETAINED_WORK_ITEMS).then_some(1)
 }
 
@@ -306,7 +302,7 @@ fn raster_retained_reduce(
     history: &semio_framework_plugin::HistoryView,
     _interaction: &protocol::InteractionState,
     _hover: &semio_framework_plugin::app::InteractionHoverState,
-    _context: Option<&semio_framework_plugin::ArtifactOwnedToolJobContext<EditorApp<RasterPlayApp>>>,
+    _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<RasterPlayApp>>>,
     operation: &AppOperationContext,
 ) -> Result<Emit<RasterMutation, RasterConfigMutation, NoDraftMutation>, Fault> {
     command.dispatch(&ArtifactView::with_operation(snapshot, history, operation.clone()), &ConfigView { snapshot: config })
@@ -396,7 +392,7 @@ impl store::ArtifactStoreOneItemPreparationFactory<RasterSnapshot, RasterMutatio
         &self,
         request: store::ArtifactStoreOneItemPreparationRequest<RasterSnapshot, RasterMutation>,
     ) -> Result<Box<dyn store::ArtifactStoreOneItemPreparation<RasterSnapshot, RasterMutation>>, store::ArtifactStoreOneItemPreparationRequest<RasterSnapshot, RasterMutation>> {
-        let item_count = crate::schema::flatten_raster_layers(&request.base.get().layers).len().saturating_add(request.base.get().assets.len());
+        let item_count = crate::standards::v1::subsets::any::schema::flatten_raster_layers(&request.base.get().layers).len().saturating_add(request.base.get().assets.len());
         if request.lane != store::HistoryLane::Document
             || request.operation != request.authority.operation()
             || request.generation != request.authority.generation()
@@ -689,7 +685,7 @@ impl ArtifactEditor for RasterPlayApp {
         contract: ToolExecutionContract::bounded_first_step(65_536, 4_096, 1, 262_144, 7_500),
         tools: [
             "addLayer", "dropLayerKind", "setLayerVisible", "toggleLayerVisible", "deleteLayer", "duplicateLayer", "patchLayer", "patchLayers", "moveLayer",
-            "setBrushSize", "setBrushOpacity", "setCompositeViewport", "setCamera", "setCameraZoom", "setActiveUtility",             "setActiveExample"
+            "setBrushSize", "setBrushOpacity", "setCompositeViewport", "setCamera", "setCameraZoom", "setActiveExample"
         ]
     }
 
@@ -753,7 +749,7 @@ impl ArtifactEditor for RasterPlayApp {
     /// scaffold. `empty_raster_document()` stays the tests' blank slate — mirrors block2d's
     /// `default_block2d_snapshot`.
     fn initial_snapshot() -> RasterSnapshot {
-        crate::schema::default_raster_document()
+        crate::standards::v1::subsets::any::schema::default_raster_document()
     }
 
     fn io() -> Option<semio_framework_plugin::AppIo> {
@@ -817,10 +813,11 @@ impl ArtifactEditor for RasterPlayApp {
     fn render(body_key: &str, doc: &ArtifactView<'_, RasterSnapshot>, cfg: &ConfigView<'_, RasterConfig>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         let document = doc.snapshot;
         let config = cfg.snapshot;
+        let active_utility = view_state.active_utility_id.as_deref().unwrap_or("selectMarquee");
         let labels = raster_play_labels(view_state);
         let node = match body_key {
-            composite::RASTER_PLAY_BODY_COMPOSITE => composite::render(document, config)?,
-            navigator::RASTER_PLAY_BODY_NAVIGATOR => navigator::render(document, config)?,
+            composite::RASTER_PLAY_BODY_COMPOSITE => composite::render(document, config, active_utility)?,
+            navigator::RASTER_PLAY_BODY_NAVIGATOR => navigator::render(document, config, active_utility)?,
             crate::editor::raster::panels::document::RASTER_PLAY_BODY_LAYERS => crate::editor::raster::panels::document::render(document, config, labels)?,
             crate::editor::raster::panels::masks::RASTER_PLAY_BODY_MASKS => crate::editor::raster::panels::masks::render(document, config, labels)?,
             crate::editor::raster::panels::catalogue::RASTER_PLAY_BODY_CATALOGUE => crate::editor::raster::panels::catalogue::render(labels)?,
@@ -993,7 +990,6 @@ pub fn create_raster_app() -> AppDefinition {
             .action_with(raster_internal_action("setCompositeViewport", LocalizedLabel::native("Set Composite Viewport", "Komposit-Ansichtsfenster festlegen"), ActionKind::View))
             .action_with(raster_internal_action("setCamera", LocalizedLabel::native("Set Camera", "Kamera festlegen"), ActionKind::View))
             .action_with(raster_internal_action("setCameraZoom", LocalizedLabel::native("Set Camera Zoom", "Kamerazoom festlegen"), ActionKind::View))
-            .action_with(raster_internal_action(LocalizedLabel::native("Set Locale", "Sprache festlegen"), ActionKind::View))
             // 📝️ Staged palette-form arguments for the two palette operations.
             .action_args("addLayer", vec![
                 ActionArgDef::select("kind", LocalizedLabel::native("Layer Kind", "Ebenenart"), vec![

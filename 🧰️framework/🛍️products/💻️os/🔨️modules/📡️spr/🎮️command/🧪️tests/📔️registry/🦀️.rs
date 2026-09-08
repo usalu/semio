@@ -24,7 +24,7 @@ impl crate::os_spr::MutationDiff<MiniDoc> for MiniDiff {
 //#endregion 🧬️Document
 
 //#region 🧬️Mutations
-#[path = "../📔️registry-mutations/🦀️.rs"]
+#[path = "🧬️mutations/🦀️.rs"]
 pub mod mutations;
 pub use mutations::*;
 //#endregion 🧬️Mutations

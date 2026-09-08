@@ -12,8 +12,7 @@
     "centerModel",
     "fitRevision",
     "cameraDraftLabel",
-    "camera",
-    "activeUtilityId"
+    "camera"
   ],
   "properties": {
     "defaultShotFormat": {
@@ -51,10 +50,6 @@
     },
     "camera": {
       "$ref": "https://semio.tech/schema/s/shooting/shooting/artifact.json#/$defs/ShootingCamera",
-      "x-semio-state": "config"
-    },
-    "activeUtilityId": {
-      "type": "string",
       "x-semio-state": "config"
     }
   }

@@ -10,7 +10,6 @@
     "layers",
     "assets",
     "selectedIds",
-    "activeUtilityId",
     "brushSize",
     "brushOpacity",
     "cameraX",
@@ -49,10 +48,6 @@
       "items": {
         "type": "string"
       },
-      "x-semio-state": "presence"
-    },
-    "activeUtilityId": {
-      "type": "string",
       "x-semio-state": "presence"
     },
     "brushSize": {

@@ -25,7 +25,6 @@ pub struct SourcingCurationConfig {
     /// 🔍️ The pool table's active filter/search/sort state.
     #[dsl(block)]
     pub filters: Filters,
-    /// 🗣️ BCP-47 locale tag.
     /// 🧩️ Host-pushed `ProgramContributionEntry[]` JSON for `sourcing.module` hot-swap installs.
     #[value(default = "default_contributions_json")]
     pub contributions_json: String,

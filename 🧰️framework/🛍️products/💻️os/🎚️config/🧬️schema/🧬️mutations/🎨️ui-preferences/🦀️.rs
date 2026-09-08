@@ -57,23 +57,23 @@ macro_rules! keyed_setting_impl {
     };
 }
 
-#[path = "🌗️set-appearance/🦀️.rs"]
+#[path = "../🌗️set-appearance/🦀️.rs"]
 pub mod set_appearance;
-#[path = "🚗️set-custom-driver/🦀️.rs"]
+#[path = "../🚗️set-custom-driver/🦀️.rs"]
 pub mod set_custom_driver;
-#[path = "🎨️set-custom-theme/🦀️.rs"]
+#[path = "../🎨️set-custom-theme/🦀️.rs"]
 pub mod set_custom_theme;
-#[path = "🕹️set-driver/🦀️.rs"]
+#[path = "../🕹️set-driver/🦀️.rs"]
 pub mod set_driver;
-#[path = "⌨️set-keybinding-override/🦀️.rs"]
+#[path = "../⌨️set-keybinding-override/🦀️.rs"]
 pub mod set_keybinding_override;
-#[path = "📐️set-layout/🦀️.rs"]
+#[path = "../📐️set-layout/🦀️.rs"]
 pub mod set_layout;
-#[path = "🗣️set-locale/🦀️.rs"]
+#[path = "../🗣️set-locale/🦀️.rs"]
 pub mod set_locale;
-#[path = "📖️set-terminology/🦀️.rs"]
+#[path = "../📖️set-terminology/🦀️.rs"]
 pub mod set_terminology;
-#[path = "🖼️set-theme/🦀️.rs"]
+#[path = "../🖼️set-theme/🦀️.rs"]
 pub mod set_theme;
 
 pub use set_appearance::*;

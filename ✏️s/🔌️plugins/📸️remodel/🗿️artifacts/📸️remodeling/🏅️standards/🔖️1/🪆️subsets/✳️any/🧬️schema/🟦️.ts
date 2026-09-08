@@ -95,7 +95,6 @@ export interface RemodelingArtifact {
   /** @state presence */
   selection: RemodelingUiSelection;
   /** @state presence */
-  activeUtilityId: string;
   /** @state presence */
   reportTable: string;
   /** @state presence */
@@ -159,7 +158,6 @@ export const REMODELING_ARTIFACT_SPEC: RecordSpec = {
     f("job", rec(() => RECONSTRUCTION_JOB_SPEC), () => defaultsOf(RECONSTRUCTION_JOB_SPEC)),
     f("results", rec(() => RECONSTRUCTION_RESULTS_SPEC), () => defaultsOf(RECONSTRUCTION_RESULTS_SPEC)),
     f("selection", rec(() => REMODELING_UI_SELECTION_SPEC), () => defaultsOf(REMODELING_UI_SELECTION_SPEC)),
-    f("active_utility_id", text, () => "select"),
     f("report_table", text, () => "frames"),
     f("frame_cursor", rec(() => REMODELING_UI_FRAME_CURSOR_SPEC), () => defaultsOf(REMODELING_UI_FRAME_CURSOR_SPEC)),
     f("camera", rec(() => REMODELING_UI_CAMERA_SPEC), () => defaultsOf(REMODELING_UI_CAMERA_SPEC)),
@@ -253,7 +251,6 @@ export function parseRemodelingArtifact(value: unknown, at = "$"): RemodelingArt
     job: parseReconstructionJob(row["job"], `${at}.job`),
     results: parseReconstructionResults(row["results"], `${at}.results`),
     selection: parseRemodelingUiSelection(row["selection"], `${at}.selection`),
-    activeUtilityId: remodelRemodelingArtifactGuardString(row["activeUtilityId"], `${at}.activeUtilityId`),
     reportTable: remodelRemodelingArtifactGuardString(row["reportTable"], `${at}.reportTable`),
     frameCursor: parseRemodelingUiFrameCursor(row["frameCursor"], `${at}.frameCursor`),
     camera: parseRemodelingUiCamera(row["camera"], `${at}.camera`),

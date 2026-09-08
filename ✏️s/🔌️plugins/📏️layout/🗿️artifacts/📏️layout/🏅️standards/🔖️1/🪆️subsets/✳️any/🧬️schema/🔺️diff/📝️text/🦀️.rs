@@ -1,7 +1,7 @@
 //! 🔺️ Layout artifact — sparse field-delta diff codec and apply/absorb.
 
-use crate::schema::diff::{LayoutDiff, LayoutLinkPatchEntry, LayoutLinksDelta, LayoutPagePatchEntry, LayoutPagesDelta, LayoutStoriesDelta, LayoutStoryPatchEntry};
-use crate::schema::LayoutArtifact;
+use crate::standards::v1::subsets::any::schema::diff::{LayoutDiff, LayoutLinkPatchEntry, LayoutLinksDelta, LayoutPagePatchEntry, LayoutPagesDelta, LayoutStoriesDelta, LayoutStoryPatchEntry};
+use crate::standards::v1::subsets::any::schema::LayoutArtifact;
 use crate::{ImageLink, LayoutSnapshot, Page, TextStory};
 use protocol::{Identified, MutationDiff, Patchable};
 

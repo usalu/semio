@@ -40,7 +40,4 @@ export interface RemodelingConfig {
   frameCursor: RemodelingFrameCursor;
   /** @state config */
   reportTable: string;
-  /** @state config */
-  activeUtilityId: string;
-  /** @state config */
 }

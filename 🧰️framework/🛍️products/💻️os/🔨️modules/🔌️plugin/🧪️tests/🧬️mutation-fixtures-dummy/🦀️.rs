@@ -1,4 +1,4 @@
-#[path = "../🧬️mutation-fixtures-dummy-mutations/🦀️.rs"]
+#[path = "../../🧫️fixtures/🧬️mutation-fixtures/🎲️dummy/🧬️mutations/🦀️.rs"]
 pub mod mutations;
 pub(crate) use mutations::{DummyMutation, SetDummyCount};
 
@@ -232,7 +232,7 @@ impl ArtifactApp for DummyApp {
     type Command = DummyCommand;
 
     crate::bounded_first_step_tool_proofs! {
-        owner: DummyApp, owner_file: "plugin/🧪️tests/🧬️mutation-fixtures/🎲️dummy/🦀️.rs", controller: "testkit-dummy", document_schema: "semio.testkit/v1",
+        owner: DummyApp, owner_file: "plugin/🧪️tests/🧬️mutation-fixtures-dummy/🦀️.rs", controller: "testkit-dummy", document_schema: "semio.testkit/v1",
         factory: "DummyFixtureFactory", factory_type: DummyFixtureFactory,
         contract: ToolExecutionContract::resumable(4_096, 1, 1, 4_096, 500, 1, 1), tools: ["increment"]
     }
@@ -289,6 +289,7 @@ impl ArtifactApp for DummyApp {
         doc: &ArtifactView<'_, DummySnapshot>,
         _cfg: &ConfigView<'_, NoConfig>,
         _interaction: &crate::app::InteractionView<'_>,
+        _view_state: Option<&ViewModel>,
         _draft: &DraftView<'_, NoDraft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<DummyMutation>, Fault> {

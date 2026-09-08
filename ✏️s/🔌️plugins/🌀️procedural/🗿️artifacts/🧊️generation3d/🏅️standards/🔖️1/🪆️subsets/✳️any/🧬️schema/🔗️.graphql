@@ -13,7 +13,6 @@ type Generation3dArtifact {
   sunJson: String! @state(class: CONFIG)
   selectedGenerationId: String @state(class: PRESENCE)
   generationPreviewText: String @state(class: ARTIFACT)
-  activeUtilityId: String! @state(class: PRESENCE)
 }
 
 type CameraJson {

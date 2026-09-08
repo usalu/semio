@@ -393,8 +393,8 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
                     role: dsl::LanguageRole::Document,
                     grammar: Some(document_dsl::COMPONENT_GRAMMAR_SEMIO),
                     grammar_path: Some(document_dsl::COMPONENT_GRAMMAR_PATH),
-                    protocol: Some(crate::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(crate::snapshot::pack::COMPONENT_PROTOCOL_PATH),
+                    protocol: Some(snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(snapshot::pack::COMPONENT_PROTOCOL_PATH),
                     hooks: dsl::passthrough_hooks("lowpoly.document"),
                 },
                 dsl::LanguageSpec {
@@ -403,8 +403,8 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
                     role: dsl::LanguageRole::Ops,
                     grammar: Some(op::COMPONENT_GRAMMAR_SEMIO),
                     grammar_path: Some(op::COMPONENT_GRAMMAR_PATH),
-                    protocol: Some(crate::spr::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(crate::spr::COMPONENT_PROTOCOL_PATH),
+                    protocol: Some(spr::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(spr::COMPONENT_PROTOCOL_PATH),
                     hooks: dsl::passthrough_hooks("lowpoly.op"),
                 },
                 dsl::LanguageSpec {
@@ -423,8 +423,8 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
                     role: dsl::LanguageRole::Pack,
                     grammar: None,
                     grammar_path: None,
-                    protocol: Some(crate::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(crate::snapshot::pack::COMPONENT_PROTOCOL_PATH),
+                    protocol: Some(snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(snapshot::pack::COMPONENT_PROTOCOL_PATH),
                     hooks: dsl::passthrough_hooks("lowpoly.pack"),
                 },
                 dsl::LanguageSpec {
@@ -433,8 +433,8 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
                     role: dsl::LanguageRole::Spr,
                     grammar: None,
                     grammar_path: None,
-                    protocol: Some(crate::spr::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(crate::spr::COMPONENT_PROTOCOL_PATH),
+                    protocol: Some(spr::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(spr::COMPONENT_PROTOCOL_PATH),
                     hooks: dsl::passthrough_hooks("lowpoly.spr"),
                 },
             ]

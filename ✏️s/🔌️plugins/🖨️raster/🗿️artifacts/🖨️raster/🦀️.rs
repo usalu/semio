@@ -616,7 +616,7 @@ fn image_content_child_handle(asset_id: &str, image: &SemioImageSnapshot) -> Ras
 /// materialization. Every call site receives one self-contained child owner; no process-global cache
 /// can leak content between snapshots or retain abandoned payloads.
 pub fn mint_raster_asset_child(asset_id: &str, asset: &RasterImageAsset) -> RasterAssetChild {
-    match crate::io::semio_image_snapshot_from_raster_asset(asset) {
+    match io::semio_image_snapshot_from_raster_asset(asset) {
         Ok(image) => {
             image_content_child_handle(asset_id, &image).with_local_owner(std::sync::Arc::new(image))
         }
@@ -629,7 +629,7 @@ pub fn mint_raster_asset_child(asset_id: &str, asset: &RasterImageAsset) -> Rast
 pub fn raster_asset(assets: &RasterOwnedMap<RasterAssetChild>, asset_id: &str) -> Option<RasterImageAsset> {
     let handle = assets.get(asset_id)?;
     let image = handle.local_owner::<SemioImageSnapshot>()?;
-    crate::io::raster_asset_from_semio_image_snapshot(image.as_ref()).ok()
+    io::raster_asset_from_semio_image_snapshot(image.as_ref()).ok()
 }
 //#endregion 🧩️Composition
 
@@ -655,10 +655,10 @@ pub struct RasterLayerPatch {
 }
 //#endregion 🔖️Operations
 
-pub use crate::schema::diff::RasterDiff;
-pub use crate::schema::mutations::RasterMutation;
+pub use crate::standards::v1::subsets::any::schema::diff::RasterDiff;
+pub use crate::standards::v1::subsets::any::schema::mutations::RasterMutation;
 /// 📸️ Persisted raster snapshot — defined in `📸️snapshot/🧬️schema`, re-exported here.
-pub use crate::schema::snapshot::RasterSnapshot;
+pub use crate::standards::v1::subsets::any::schema::snapshot::RasterSnapshot;
 
 //#region 🔖️Dialect
 /// 🎯️ Ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET: the one `Dialect` coordinate every
@@ -760,8 +760,8 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
 
 pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
     semio_framework_plugin::ArtifactDeclaration::builder(definition()?)
-        .schema(crate::schema::raster_artifact_schema_descriptor())
-        .inferences([crate::schema::inferences::raster_artifact_inference_descriptor()])
+        .schema(crate::standards::v1::subsets::any::schema::raster_artifact_schema_descriptor())
+        .inferences([crate::standards::v1::subsets::any::schema::inferences::raster_artifact_inference_descriptor()])
         .composers(crate::standards::v1::subsets::any::io::io_registry::entries())
         .languages(pilot_languages())
         .document_codec::<semio_framework_plugin::app::EditorApp<crate::editor::raster::RasterPlayApp>>()
@@ -780,8 +780,8 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
                     id: "raster.document",
                     extension: Some("raster"),
                     role: dsl::LanguageRole::Document,
-                    grammar: Some(crate::dsl::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(crate::dsl::COMPONENT_GRAMMAR_PATH),
+                    grammar: Some(crate::standards::v1::subsets::any::schema::snapshot::text::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(crate::standards::v1::subsets::any::schema::snapshot::text::COMPONENT_GRAMMAR_PATH),
                     protocol: Some(crate::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
                     protocol_path: Some(crate::snapshot::pack::COMPONENT_PROTOCOL_PATH),
                     hooks: dsl::passthrough_hooks("raster.document"),
@@ -1301,18 +1301,12 @@ mod tests;
         }
 
         // ---- Shims: keep pre-migration module paths resolving for external callers ----
-        pub mod schema {
-            pub use super::standards::v1::subsets::any::schema::*;
-        }
         pub mod io {
             pub use super::standards::v1::subsets::any::io::*;
         }
         pub mod op {
             pub use crate::standards::v1::subsets::any::schema::mutations::text::*;
             pub use crate::standards::v1::subsets::any::schema::mutations::{apply_raster_mutation, RasterMutation};
-        }
-        pub mod dsl {
-            pub use crate::standards::v1::subsets::any::schema::snapshot::text::*;
         }
         pub mod spr {
             pub use crate::standards::v1::subsets::any::schema::mutations::binary::*;
@@ -1338,14 +1332,6 @@ mod tests;
             }
         }
 
-        /// 📚️ Facet-path alias for the subset's own example fixtures. The taxonomy files are mounted
-        /// ONCE, at the crate root's `📚️Examples` region (`crate::examples::art_raster_demo`) — the
-        /// same shape `🧩️puzzle` documents in its own subset root — so `🧬️schema`'s
-        /// `default_raster_document`/`raster_example_document` may keep addressing them through the
-        /// artifact facet without the carrier's `include_str!` being expanded twice.
-        pub mod examples {
-            pub use crate::examples::art_raster_demo as demo;
-        }
 
 #[path = "."]
 pub mod editor {

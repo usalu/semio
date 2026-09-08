@@ -7,7 +7,7 @@ use crate::editor::shooting::testkit::{dispatch, shooting_app};
 async fn set_active_shot_label_patches_active_shot() {
     let mut app = shooting_app().await;
     dispatch(&mut app, ShootingCommand::SetActiveShotLabel(set_active_shot_label::SetActiveShotLabel { value: "Hero Shot".into() })).await;
-    assert_eq!(crate::schema::active_shot(&app.snapshot().expect("snapshot")).unwrap().label, "Hero Shot");
+    assert_eq!(crate::standards::v1::subsets::any::schema::active_shot(&app.snapshot().expect("snapshot")).unwrap().label, "Hero Shot");
 }
 
 #[semio_framework_async_macros::async_test]

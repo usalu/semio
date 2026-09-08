@@ -8,7 +8,6 @@ type RasterDiff {
   layers: RasterLayersDelta @state(class: ARTIFACT)
   assets: RasterAssetsDelta @state(class: ARTIFACT)
   selectedIds: RasterStringList @state(class: PRESENCE)
-  activeUtilityId: String @state(class: PRESENCE)
   brushSize: Float @state(class: CONFIG)
   brushOpacity: Float @state(class: CONFIG)
   compositeViewport: RasterViewportSize @state(class: CONFIG)

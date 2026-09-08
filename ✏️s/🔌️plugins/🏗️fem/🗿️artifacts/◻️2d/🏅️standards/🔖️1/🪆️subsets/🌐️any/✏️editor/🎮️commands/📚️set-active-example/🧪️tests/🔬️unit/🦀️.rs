@@ -21,18 +21,6 @@ fn set_active_example_loads_the_demo_fixture_2d() {
     assert!(!loaded.nodes.is_empty(), "expected the default fixture's nodes");
 }
 
-/// 🗣️ The reset must leave `locale` alone: a German session switching examples stays German.
-#[test]
-fn set_active_example_keeps_the_session_locale_2d() {
-    let snapshot = crate::standards::v1::subsets::any::schema::empty_fem2d_snapshot();
-    let history = semio_framework_plugin::HistoryView::empty();
-    let doc = ArtifactView::new(&snapshot, &history);
-    let cfg_snapshot = Fem2dConfig { locale: "de-DE".into(), ..Fem2dConfig::default() };
-    let cfg = ConfigView { snapshot: &cfg_snapshot };
-    let emit = handle(&SetActiveExample { example_id: crate::examples::demo::ID.into() }, &doc, &cfg).expect("handle");
-    assert_eq!(emit.config_mutations.len(), 2);
-    assert!(emit.config_mutations.iter().all(|row| !matches!(row, Fem2dConfigMutation::Snapshot { .. } | Fem2dConfigMutation::SetLocale { .. })));
-}
 
 #[test]
 fn set_active_example_unknown_id_resets_to_empty_document_2d() {

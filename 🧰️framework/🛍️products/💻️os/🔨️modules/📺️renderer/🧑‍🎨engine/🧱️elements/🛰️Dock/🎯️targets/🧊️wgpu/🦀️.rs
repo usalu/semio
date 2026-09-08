@@ -24,18 +24,25 @@ fn empty_path() -> DockPath {
 #[derive(Clone, Debug, PartialEq)]
 pub struct DockStackTab {
     pub window_id: String,
+    pub window_kind_id: String,
     pub corner: WindowStackCorner,
 }
 
 impl DockStackTab {
     /// 🧭️ Builds a tab at the default top-left corner.
     pub fn new(window_id: impl Into<String>) -> Self {
-        Self { window_id: window_id.into(), corner: WindowStackCorner::TopLeft }
+        let window_id = window_id.into();
+        Self { window_kind_id: window_id.clone(), window_id, corner: WindowStackCorner::TopLeft }
     }
 
     /// 🧭️ Builds a tab at an explicit chrome corner.
     pub fn at(window_id: impl Into<String>, corner: WindowStackCorner) -> Self {
-        Self { window_id: window_id.into(), corner }
+        let window_id = window_id.into();
+        Self { window_kind_id: window_id.clone(), window_id, corner }
+    }
+
+    pub fn instance(window_id: impl Into<String>, window_kind_id: impl Into<String>, corner: WindowStackCorner) -> Self {
+        Self { window_id: window_id.into(), window_kind_id: window_kind_id.into(), corner }
     }
 }
 
@@ -130,6 +137,7 @@ pub enum DockDragKind {
 pub struct DockDragPayload {
     pub kind: DockDragKind,
     pub window_id: String,
+    pub window_kind_id: String,
     pub source_path: DockPath,
     pub tab_index: usize,
     pub ghost_label: String,
@@ -316,11 +324,13 @@ impl DockState {
     /// drop, reordered whatever now-shifted window happened to sit at the stale `tab_index`. Real
     /// drops never actually landed; see `DockTests::apply_drop_*` for pinned regressions.)
     pub fn apply_drop(&mut self, drag: &DockDragPayload, zone: &DockDropZone) -> bool {
+        let mut window_kinds: HashMap<String, String> = self.window_instances().into_iter().collect();
+        window_kinds.insert(drag.window_id.clone(), drag.window_kind_id.clone());
         match drag.kind {
             DockDragKind::Tab => match zone {
-                DockDropZone::Tab { stack_path, corner, index } => self.insert_tab_at_corner(stack_path, &drag.window_id, *corner, Some(*index)),
-                DockDropZone::Split { stack_path, side } => self.split_stack_with_window(stack_path, &drag.window_id, *side),
-                DockDropZone::RootSplit { side } => self.split_root_with_window(&drag.window_id, *side),
+                DockDropZone::Tab { stack_path, corner, index } => self.insert_tabs_at_corner_with_kinds(stack_path, &[drag.window_id.clone()], *corner, Some(*index), &drag.window_id, &window_kinds),
+                DockDropZone::Split { stack_path, side } => self.split_stack_with_stack_and_kinds(stack_path, vec![drag.window_id.clone()], drag.window_id.clone(), *side, &window_kinds),
+                DockDropZone::RootSplit { side } => self.split_root_with_stack_and_kinds(vec![drag.window_id.clone()], drag.window_id.clone(), *side, &window_kinds),
             },
             DockDragKind::Stack => {
                 // 🪟️ A stack drag pre-removes only its *active* window (mirrors the tab case) — the
@@ -354,13 +364,13 @@ impl DockState {
                 match zone {
                     DockDropZone::Tab { stack_path, corner, index } => {
                         let target_path = target_anchor.as_deref().and_then(|id| find_stack_path(&self.root, id, &mut vec![])).unwrap_or_else(|| stack_path.clone());
-                        self.insert_tabs_at_corner(&target_path, &group, *corner, Some(*index), &drag.window_id)
+                        self.insert_tabs_at_corner_with_kinds(&target_path, &group, *corner, Some(*index), &drag.window_id, &window_kinds)
                     }
                     DockDropZone::Split { stack_path, side } => {
                         let target_path = target_anchor.as_deref().and_then(|id| find_stack_path(&self.root, id, &mut vec![])).unwrap_or_else(|| stack_path.clone());
-                        self.split_stack_with_stack(&target_path, group, drag.window_id.clone(), *side)
+                        self.split_stack_with_stack_and_kinds(&target_path, group, drag.window_id.clone(), *side, &window_kinds)
                     }
-                    DockDropZone::RootSplit { side } => self.split_root_with_stack(group, drag.window_id.clone(), *side),
+                    DockDropZone::RootSplit { side } => self.split_root_with_stack_and_kinds(group, drag.window_id.clone(), *side, &window_kinds),
                 }
             }
         }
@@ -424,6 +434,10 @@ impl DockState {
 
     /// 🧭️ Corner-aware multi-tab insert used by tab-join drops.
     pub fn insert_tabs_at_corner(&mut self, path: &DockPath, windows: &[String], corner: WindowStackCorner, index: Option<usize>, active_id: &str) -> bool {
+        self.insert_tabs_at_corner_with_kinds(path, windows, corner, index, active_id, &HashMap::new())
+    }
+
+    fn insert_tabs_at_corner_with_kinds(&mut self, path: &DockPath, windows: &[String], corner: WindowStackCorner, index: Option<usize>, active_id: &str, window_kinds: &HashMap<String, String>) -> bool {
         if windows.is_empty() {
             return false;
         }
@@ -439,7 +453,7 @@ impl DockState {
             if target.iter().any(|tab| tab.window_id == *window_id) {
                 continue;
             }
-            target.insert(insert_at, DockStackTab::at(window_id.clone(), corner));
+            target.insert(insert_at, DockStackTab::instance(window_id.clone(), window_kinds.get(window_id).cloned().unwrap_or_else(|| window_id.clone()), corner));
             insert_at += 1;
             inserted_any = true;
         }
@@ -459,13 +473,20 @@ impl DockState {
     /// 🪟️ Splits the stack at `path` with an already-assembled multi-window stack — the whole-stack
     /// counterpart `apply_drop` uses; single-window splits go through `split_stack_with_window` above.
     pub fn split_stack_with_stack(&mut self, path: &DockPath, windows: Vec<String>, active_id: String, side: DockSide) -> bool {
+        self.split_stack_with_stack_and_kinds(path, windows, active_id, side, &HashMap::new())
+    }
+
+    fn split_stack_with_stack_and_kinds(&mut self, path: &DockPath, windows: Vec<String>, active_id: String, side: DockSide, window_kinds: &HashMap<String, String>) -> bool {
         let Some(stack_node) = node_at(&self.root, path).cloned() else {
             return false;
         };
         let DockNode::Stack { .. } = stack_node else {
             return false;
         };
-        let new_stack = DockNode::Stack { windows: dock_tabs_from_ids(windows), active: active_id.clone() };
+        let new_stack = DockNode::Stack {
+            windows: windows.into_iter().map(|id| DockStackTab::instance(id.clone(), window_kinds.get(&id).cloned().unwrap_or(id), WindowStackCorner::TopLeft)).collect(),
+            active: active_id.clone(),
+        };
         let replacement = match side {
             DockSide::Left | DockSide::Top => axis_pair_from_stacks(&new_stack, &stack_node, side),
             DockSide::Right | DockSide::Bottom => axis_pair_from_stacks(&stack_node, &new_stack, side),
@@ -483,11 +504,16 @@ impl DockState {
     /// 🪟️ Splits the mode root with an already-assembled multi-window stack — see
     /// `split_stack_with_stack`; single-window splits go through `split_root_with_window` above.
     pub fn split_root_with_stack(&mut self, windows: Vec<String>, active_id: String, side: DockSide) -> bool {
+        self.split_root_with_stack_and_kinds(windows, active_id, side, &HashMap::new())
+    }
+
+    fn split_root_with_stack_and_kinds(&mut self, windows: Vec<String>, active_id: String, side: DockSide, window_kinds: &HashMap<String, String>) -> bool {
+        let tabs = || windows.iter().map(|id| DockStackTab::instance(id.clone(), window_kinds.get(id).cloned().unwrap_or_else(|| id.clone()), WindowStackCorner::TopLeft)).collect();
         let current = std::mem::replace(&mut self.root, DockNode::Stack { windows: vec![], active: String::new() });
         if matches!(&current, DockNode::Stack { windows, .. } if windows.is_empty()) {
-            self.root = DockNode::Stack { windows: dock_tabs_from_ids(windows), active: active_id.clone() };
+            self.root = DockNode::Stack { windows: tabs(), active: active_id.clone() };
         } else {
-            let new_stack = DockNode::Stack { windows: dock_tabs_from_ids(windows), active: active_id.clone() };
+            let new_stack = DockNode::Stack { windows: tabs(), active: active_id.clone() };
             self.root = match side {
                 DockSide::Left | DockSide::Top => axis_pair_from_stacks(&new_stack, &current, side),
                 DockSide::Right | DockSide::Bottom => axis_pair_from_stacks(&current, &new_stack, side),
@@ -535,6 +561,28 @@ impl DockState {
             return None;
         };
         Some(windows.clone())
+    }
+
+    pub fn window_instances(&self) -> Vec<(String, String)> {
+        fn collect(node: &DockNode, out: &mut Vec<(String, String)>) {
+            match node {
+                DockNode::Stack { windows, .. } => out.extend(windows.iter().map(|tab| (tab.window_id.clone(), tab.window_kind_id.clone()))),
+                DockNode::Row(children) | DockNode::Column(children) => children.iter().for_each(|(child, _)| collect(child, out)),
+            }
+        }
+        let mut instances = Vec::new();
+        collect(&self.root, &mut instances);
+        instances
+    }
+
+    pub fn window_kind_id(&self, window_id: &str) -> Option<&str> {
+        fn find<'a>(node: &'a DockNode, window_id: &str) -> Option<&'a str> {
+            match node {
+                DockNode::Stack { windows, .. } => windows.iter().find(|tab| tab.window_id == window_id).map(|tab| tab.window_kind_id.as_str()),
+                DockNode::Row(children) | DockNode::Column(children) => children.iter().find_map(|(child, _)| find(child, window_id)),
+            }
+        }
+        find(&self.root, window_id)
     }
 
     pub fn to_window_layout(&self) -> WindowLayout {
@@ -610,13 +658,30 @@ fn axis_from_children(kind: &str, children: &[WindowLayoutChild], size: Option<f
 }
 
 fn stack_from_node(stack: &WindowLayoutStackNode) -> DockNode {
-    let windows: Vec<DockStackTab> = stack.children.iter().map(|w| DockStackTab::at(w.window_kind_id.clone(), w.corner.unwrap_or(WindowStackCorner::TopLeft))).collect();
-    let active = stack.active_window_kind_id.clone().filter(|id| windows.iter().any(|w| w.window_id == *id)).or_else(|| windows.first().map(|w| w.window_id.clone())).unwrap_or_default();
+    let windows: Vec<DockStackTab> = stack
+        .children
+        .iter()
+        .map(|window| DockStackTab::instance(window.instance_id.clone().unwrap_or_else(|| window.window_kind_id.clone()), window.window_kind_id.clone(), window.corner.unwrap_or(WindowStackCorner::TopLeft)))
+        .collect();
+    let active = stack
+        .active_window_kind_id
+        .as_ref()
+        .and_then(|id| windows.iter().find(|window| window.window_id == *id).or_else(|| windows.iter().find(|window| window.window_kind_id == *id)))
+        .map(|window| window.window_id.clone())
+        .or_else(|| windows.first().map(|window| window.window_id.clone()))
+        .unwrap_or_default();
     DockNode::Stack { windows, active }
 }
 
 fn layout_window_node(tab: &DockStackTab) -> WindowLayoutWindowNode {
-    WindowLayoutWindowNode { kind: "window".into(), window_kind_id: tab.window_id.clone(), title: None, instance_id: None, template_id: None, corner: Some(tab.corner) }
+    WindowLayoutWindowNode {
+        kind: "window".into(),
+        window_kind_id: tab.window_kind_id.clone(),
+        title: None,
+        instance_id: (tab.window_id != tab.window_kind_id).then(|| tab.window_id.clone()),
+        template_id: None,
+        corner: Some(tab.corner),
+    }
 }
 
 pub fn dock_node_to_layout_root(node: &DockNode) -> WindowLayoutRoot {

@@ -148,10 +148,10 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
 #[cfg(feature = "component-app-assembly")]
 pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
     semio_framework_plugin::ArtifactDeclaration::builder(definition()?)
-        .schema(crate::standards::v1::subsets::any::schema::generation3d_artifact_schema_descriptor())
-        .inferences([crate::standards::v1::subsets::any::schema::inferences::generation3d_artifact_inference_descriptor()])
-        .composers(crate::standards::v1::subsets::any::io::io_registry::entries())
-        .document_codec::<semio_framework_plugin::EditorApp<crate::editor::generation3d::Generation3dPlayApp>>()
+        .schema(standards::v1::subsets::any::schema::generation3d_artifact_schema_descriptor())
+        .inferences([standards::v1::subsets::any::schema::inferences::generation3d_artifact_inference_descriptor()])
+        .composers(standards::v1::subsets::any::io::io_registry::entries())
+        .document_codec::<semio_framework_plugin::EditorApp<editor::generation3d::Generation3dPlayApp>>()
         .try_build()
 }
 //#endregion 🔖️Declaration
@@ -708,8 +708,6 @@ pub mod editor {
             pub mod select_generation;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎨️set-active-example/🦀️.rs"]
             pub mod set_active_example;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🛠️set-active-utility/🦀️.rs"]
-            pub mod set_active_utility;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📷️set-camera/🦀️.rs"]
             pub mod set_camera;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔬️set-lod-mode/🦀️.rs"]

@@ -20,7 +20,6 @@ use semio_framework_value_derive::{FromValue, ToValue};
 #[dsl(extension = "playbookcfg")]
 #[dsl(layout = "lines")]
 pub struct PlaybookConfig {
-    /// 🗣️ BCP-47 locale tag — was read off `view_state.locale`.
     /// 🧩️ Host-pushed `ProgramContributionEntry[]` JSON for `playbook.blockKind` hot-swap installs.
     #[value(default = "default_contributions_json")]
     pub contributions_json: String,

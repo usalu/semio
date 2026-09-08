@@ -89,8 +89,6 @@ pub struct RemodelingArtifact {
     #[state(presence)]
     pub selection: RemodelingUiSelection,
     #[state(presence)]
-    pub active_utility_id: String,
-    #[state(presence)]
     pub report_table: String,
     #[state(presence)]
     pub frame_cursor: RemodelingUiFrameCursor,
@@ -193,7 +191,6 @@ impl RemodelingArtifact {
             job: snapshot.job,
             results: snapshot.results,
             selection: RemodelingUiSelection::default(),
-            active_utility_id: "select".into(),
             report_table: "frames".into(),
             frame_cursor: RemodelingUiFrameCursor::default(),
             camera: RemodelingUiCamera::default(),

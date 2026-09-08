@@ -2,7 +2,7 @@
 
 use crate::mutations::create_layer;
 use crate::op::RasterMutation;
-use crate::schema::create_layer_of_kind;
+use crate::standards::v1::subsets::any::schema::create_layer_of_kind;
 use crate::RasterSnapshot;
 use crate::editor::raster::config::{RasterConfig, RasterConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};

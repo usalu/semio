@@ -7,7 +7,6 @@
   "required": [
     "camera",
     "jackQuery",
-    "jackResultJson",
     "lodModeByWindow"
   ],
   "properties": {
@@ -17,15 +16,6 @@
     },
     "jackQuery": {
       "type": "string",
-      "x-semio-state": "config"
-    },
-    "jackResultJson": {
-      "type": "string",
-      "contentMediaType": "application/json",
-      "x-semio-state": "config"
-    },
-    "editorSelection": {
-      "$ref": "https://semio.tech/schema/s/trinity/jack/artifact.json#/$defs/JackEditorSelection",
       "x-semio-state": "config"
     },
     "lodModeByWindow": {

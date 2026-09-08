@@ -6,7 +6,6 @@ use crate::SortDirection;
 async fn sourcing_curation_config_default_matches_the_prior_document_defaults() {
     let config = SourcingCurationConfig::default();
     assert_eq!(config.filters, Filters::default());
-    assert_eq!(config.locale, "en-US");
 }
 
 fn sample_config() -> SourcingCurationConfig {
@@ -18,7 +17,6 @@ fn sample_config() -> SourcingCurationConfig {
             min_availability: 5,
             sort: Some(TableSort { column_id: "availability".into(), direction: SortDirection::Desc }),
         },
-        locale: "de-DE".into(),
         contributions_json: "[]".into(),
     }
 }
@@ -43,7 +41,6 @@ async fn config_mutations_round_trip_every_variant() {
     round_trip(&config, &SourcingCurationConfigMutation::SetFilterTypology { path: vec!["slabs".into()] });
     round_trip(&config, &SourcingCurationConfigMutation::SetFilterMinAvailability { value: 12 });
     round_trip(&config, &SourcingCurationConfigMutation::SetSort { sort: None });
-    round_trip(&config, &SourcingCurationConfigMutation::SetLocale { value: "en-US".into() });
     round_trip(&config, &SourcingCurationConfigMutation::SetContributions { json: "[]".into() });
     let snapshot = round_trip(&config, &SourcingCurationConfigMutation::Snapshot { config: SourcingCurationConfig::default() });
     assert_eq!(snapshot, SourcingCurationConfig::default());
@@ -58,5 +55,4 @@ async fn config_op_text_round_trips_every_variant() {
     store::os_store::test_support::assert_op_text_binary_equivalence(&SourcingCurationConfigMutation::SetFilterMinAvailability { value: 7 });
     store::os_store::test_support::assert_op_text_binary_equivalence(&SourcingCurationConfigMutation::SetSort { sort: Some(TableSort { column_id: "name".into(), direction: SortDirection::Asc }) });
     store::os_store::test_support::assert_op_text_binary_equivalence(&SourcingCurationConfigMutation::SetSort { sort: None });
-    store::os_store::test_support::assert_op_text_binary_equivalence(&SourcingCurationConfigMutation::SetLocale { value: "de-DE".into() });
 }

@@ -24,7 +24,6 @@ export interface JackArtifact {
   /** @state config */
   viewportCamera: Camera;
   /** @state config */
-  jackResultJson: string;
   /** @state config */
   editorSelection?: JackEditorSelection;
 }
@@ -140,7 +139,6 @@ export function parseJackArtifact(value: unknown, at = "$"): JackArtifact {
     jackQuery: trinityJackArtifactGuardString(row["jackQuery"], `${at}.jackQuery`),
     lodModeByWindow: trinityJackArtifactGuardObject(row["lodModeByWindow"], `${at}.lodModeByWindow`),
     viewportCamera: parseCamera(row["viewportCamera"], `${at}.viewportCamera`),
-    jackResultJson: trinityJackArtifactGuardString(row["jackResultJson"], `${at}.jackResultJson`),
     editorSelection: row["editorSelection"] === undefined ? undefined : parseJackEditorSelection(row["editorSelection"], `${at}.editorSelection`),
   };
 }

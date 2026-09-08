@@ -44,7 +44,6 @@ export interface CadArtifact {
   /** @state presence */
   selectedPrimitiveKind?: string;
   /** @state presence */
-  activeUtilityId: string;
   /** @state presence */
   activeExampleId?: string;
   /** @state config */
@@ -178,7 +177,6 @@ export function parseCadArtifact(value: unknown, at = "$"): CadArtifact {
     selectedReferenceId: row["selectedReferenceId"] === undefined ? undefined : cadCadArtifactGuardString(row["selectedReferenceId"], `${at}.selectedReferenceId`),
     selectedPrimitiveId: row["selectedPrimitiveId"] === undefined ? undefined : cadCadArtifactGuardString(row["selectedPrimitiveId"], `${at}.selectedPrimitiveId`),
     selectedPrimitiveKind: row["selectedPrimitiveKind"] === undefined ? undefined : cadCadArtifactGuardString(row["selectedPrimitiveKind"], `${at}.selectedPrimitiveKind`),
-    activeUtilityId: cadCadArtifactGuardString(row["activeUtilityId"], `${at}.activeUtilityId`),
     activeExampleId: row["activeExampleId"] === undefined ? undefined : cadCadArtifactGuardString(row["activeExampleId"], `${at}.activeExampleId`),
     selectionMethod: cadCadArtifactGuardString(row["selectionMethod"], `${at}.selectionMethod`),
     engagementInput: cadCadArtifactGuardString(row["engagementInput"], `${at}.engagementInput`),

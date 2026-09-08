@@ -722,8 +722,17 @@ pub(super) async fn poll_kernel_output<PA: crate::app::PluginApp, T, Prepared>(
         };
         match mounted {
             Ok(grant) => match crate::plugin_runtime::plugin_render_surface(runtime, instance, &surface_key).await {
-                Ok(tree) => {
+                Ok((tree, presence)) => {
                     let _ = grant.commit_source(tree.root);
+                    for update in presence {
+                        PRESENCE.with(|hub| {
+                            let mut hub = hub.borrow_mut();
+                            hub.record_own(update.surface.clone(), update.node_key.clone(), update.own, update.ttl_ms);
+                            for peer in update.peers {
+                                hub.record_peer(update.surface.clone(), update.node_key.clone(), peer, update.ttl_ms, now_ms);
+                            }
+                        });
+                    }
                 }
                 Err(fault) => {
                     grant.cancel();
@@ -734,25 +743,7 @@ pub(super) async fn poll_kernel_output<PA: crate::app::PluginApp, T, Prepared>(
                 let _ = patches.defer(surface);
             }),
         }
-        // 👥️ M2: drains this instance's render-plane presence outbox (`VcsArtifactApp::
-        // pending_presence`, filled by `stamp_and_cache_interaction_ui` during the render just above)
-        // into `PRESENCE` right after its render — the SAME turn that presented the tree also records
-        // its presence. NEVER touches `PENDING_PATCHES`/the document store — the whole point of this
-        // separate channel (see `PresenceHub`'s own doc: a mouse-move must never bump a revision).
-        match crate::plugin_runtime::plugin_take_presence(runtime, instance).await {
-            Ok(updates) => {
-                for update in updates {
-                    PRESENCE.with(|hub| {
-                        let mut hub = hub.borrow_mut();
-                        hub.record_own(update.surface.clone(), update.node_key.clone(), update.own, update.ttl_ms);
-                        for peer in update.peers {
-                            hub.record_peer(update.surface.clone(), update.node_key.clone(), peer, update.ttl_ms, now_ms);
-                        }
-                    });
-                }
-            }
-            Err(fault) => effects.push(shell_fault_effect(instance, &fault)),
-        }
+
     }
     let reconcile_work = PATCHES
         .with(|patches| -> Result<bool, &'static str> {

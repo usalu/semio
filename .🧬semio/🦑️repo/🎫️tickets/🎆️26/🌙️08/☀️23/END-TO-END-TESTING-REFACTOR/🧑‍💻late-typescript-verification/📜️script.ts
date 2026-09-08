@@ -1,0 +1,11 @@
+import { mkdir } from "node:fs/promises";
+import { join } from "node:path";
+const root = process.env.SEMIO_LAYOUT_REPO_ROOT;
+const output = process.env.SEMIO_LAYOUT_OUTPUT;
+if (!root || !output) throw new Error("Explicit repository and ticket output roots are required");
+await mkdir(output, { recursive: true });
+const preferences = await import(join(root, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎮️playground/🔒️preferences/🧪️tests/🔒️playground-preferences/🟦️.ts"));
+await preferences.testPlaygroundPreferences();
+const production = await import(join(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🚚️distribution/🔌️components/🧪️tests/🌐️production-browser-artifacts/🟦️.ts"));
+await production.testProductionBrowserArtifacts(root, output);
+console.log("[DEBUG] Both relocated TypeScript cases passed through Bun and Nx");

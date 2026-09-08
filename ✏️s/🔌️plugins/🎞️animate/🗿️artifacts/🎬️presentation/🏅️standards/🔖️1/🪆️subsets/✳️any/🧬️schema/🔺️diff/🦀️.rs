@@ -16,7 +16,7 @@ use schema::ArtifactSchema;
 #[artifact_schema(id = "s.animate.presentation")]
 pub struct PresentationDiff {
     #[state(artifact)]
-    pub artifact: Option<Box<crate::schema::PresentationArtifact>>,
+    pub artifact: Option<Box<crate::standards::v1::subsets::any::schema::PresentationArtifact>>,
     #[state(artifact)]
     pub schema: Option<String>,
     #[state(artifact)]

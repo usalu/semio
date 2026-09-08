@@ -29,7 +29,6 @@ message RemodelingDiff {
   // @state presence
   optional RemodelingUiSelection selection = 12;
   // @state presence
-  optional string active_utility_id = 13;
   // @state presence
   optional string report_table = 14;
   // @state presence
@@ -297,7 +296,6 @@ message RemodelingArtifact {
   ReconstructionJob job = 9;
   ReconstructionResults results = 10;
   RemodelingUiSelection selection = 11;
-  string active_utility_id = 12;
   string report_table = 13;
   RemodelingUiFrameCursor frame_cursor = 14;
   RemodelingUiCamera camera = 15;

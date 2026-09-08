@@ -19,9 +19,6 @@ pub use set_camera_draft_label::SetCameraDraftLabel;
 #[path = "🎥️set-camera/🦀️.rs"]
 mod set_camera;
 pub use set_camera::SetCamera;
-#[path = "🧰️set-active-utility/🦀️.rs"]
-mod set_active_utility;
-pub use set_active_utility::SetActiveUtility;
 #[path = "🔧️set-defaults/🦀️.rs"]
 mod set_defaults;
 pub use set_defaults::SetDefaults;
@@ -41,8 +38,6 @@ pub enum ShootingConfigMutation {
     SetCameraDraftLabel(SetCameraDraftLabel),
     #[dsl(key = "set-camera")]
     SetCamera(SetCamera),
-    #[dsl(key = "set-active-utility")]
-    SetActiveUtility(SetActiveUtility),
     #[dsl(key = "set-defaults")]
     SetDefaults(SetDefaults),
 }

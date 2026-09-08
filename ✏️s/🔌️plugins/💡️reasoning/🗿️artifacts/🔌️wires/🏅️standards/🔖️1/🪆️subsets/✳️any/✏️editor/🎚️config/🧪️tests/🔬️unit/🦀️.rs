@@ -2,19 +2,12 @@
 use super::*;
 
 //#region 🔖️ConfigTests
-/// 🕹️ Selection lives in the framework-owned "graph" interaction domain now (ticket
-/// 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM) — `WiresConfig` only carries drag/locale.
-#[semio_framework_async_macros::async_test]
-async fn wires_config_default_matches_no_drag_and_en_locale() {
-    let config = WiresConfig::default();
-    assert!(config.drag_node_id.is_none());
-    assert_eq!(config.locale, "en-US");
-}
+
 
 /// 🔁️ B1 dsl/pack round-trip law for `WiresConfig` — a non-default fixture exercising every field.
 #[semio_framework_async_macros::async_test]
 async fn wires_config_dsl_pack_round_trip() {
-    let config = WiresConfig { drag_node_id: Some("node-1".into()), drag_last_x: 12.5, drag_last_y: -7.25, locale: "de-DE".into() };
+    let config = WiresConfig { drag_node_id: Some("node-1".into()), drag_last_x: 12.5, drag_last_y: -7.25, };
     store::os_store::test_support::assert_dsl_pack_equivalence(&config);
 }
 //#endregion 🔖️ConfigTests
@@ -26,10 +19,6 @@ async fn config_drag_op_text_round_trip() {
     store::os_store::test_support::assert_op_line_round_trip(&WiresConfigMutation::SetDrag(SetDrag { node_id: None, last_x: 0.0, last_y: 0.0 }));
 }
 
-#[semio_framework_async_macros::async_test]
-async fn config_locale_op_text_round_trip() {
-    store::os_store::test_support::assert_op_line_round_trip(&WiresConfigMutation::SetLocale(SetLocale { value: "de-DE".into() }));
-}
 
 /// ⏪️ `backwards()` returns the SAME variant re-addressed at the pre-op field value — a targeted,
 /// in-kind inverse, not a whole-config replace.

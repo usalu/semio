@@ -73,7 +73,7 @@ fn representative_raster_document() -> RasterSnapshot {
 
 #[semio_framework_async_macros::async_test]
 async fn semio_example_dsl_round_trips() {
-    let fixture = crate::schema::semio_fixture_snapshot();
+    let fixture = crate::standards::v1::subsets::any::schema::semio_fixture_snapshot();
     store::os_store::test_support::assert_dsl_round_trip(&fixture);
     let printed = print_dsl(&fixture);
     let reparsed = parse_dsl(&printed).expect("parse printed semio fixture");

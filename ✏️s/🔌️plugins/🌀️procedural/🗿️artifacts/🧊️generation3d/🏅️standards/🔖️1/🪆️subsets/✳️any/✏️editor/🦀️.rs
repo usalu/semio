@@ -9,7 +9,7 @@ use crate::standards::v1::subsets::any::schema::mutations::text::Generation3dMut
 use crate::{artifact_kind, Generation3dSnapshot, GENERATION_3D_SCHEMA};
 use crate::editor::generation3d::commands::{
     add_generation, add_widget, delete_selection, flow_eval_tick, graph_pointer_down, move_media_node, node_graph_edit, node_graph_viewport, patch_flow_widgets, remove_generation, remove_widget,
-    rename_generation, reorganize, rotate_selection, scale_selection, select_generation, set_active_example, set_active_utility, set_camera, set_lod_mode, set_show_mode, set_sun_azimuth, set_sun_elevation, set_sun_intensity, toggle_sun,
+    rename_generation, reorganize, rotate_selection, scale_selection, select_generation, set_active_example, set_camera, set_lod_mode, set_show_mode, set_sun_azimuth, set_sun_elevation, set_sun_intensity, toggle_sun,
     translate_selection, update_generation_values, world_pointer_down,
 };
 use crate::editor::generation3d::config::{Generation3dConfig, Generation3dConfigMutation};
@@ -87,7 +87,6 @@ semio_framework_plugin::app_commands! {
         "setSunIntensity" as "sun-intensity" => set_sun_intensity::SetSunIntensity,
         "setCamera" as "camera" => set_camera::SetCamera,
         "selectGeneration" as "select-generation" => select_generation::SelectGeneration,
-        "setActiveUtility" as "active-utility" => set_active_utility::SetActiveUtility,
         "flowEvalTick" as "flow-eval-tick" => flow_eval_tick::FlowEvalTick}
 }
 
@@ -138,9 +137,9 @@ fn generation3d_port_ids_by_node(fixture: &semio_framework_artifact_flow_flow::F
 /// 🧱️ Every window body of the generation3d editor, rendered against one already-resolved set of
 /// `graph` marks. Shared by `render` (marks-free) and `render_with_request_context` (live marks) so
 /// there is exactly one body-key match in the app.
-fn generation3d_render_body(body_key: &str, document: &Generation3dSnapshot, config: &Generation3dConfig, marks: &PreviewInteractionMarks) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+fn generation3d_render_body(body_key: &str, document: &Generation3dSnapshot, config: &Generation3dConfig, view_state: &semio_framework_plugin::ViewModel, marks: &PreviewInteractionMarks) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
     let labels = generation3d_labels(view_state);
-    let active_utility = config.active_utility_id.as_str();
+    let active_utility = view_state.active_utility_id.as_deref().unwrap_or("move");
     let session = FlowEvalSession::new();
     let node = match body_key {
         flow_window::GENERATION_3D_PLAY_BODY_MAIN => flow_window::render(document, config, &session, marks),
@@ -187,7 +186,6 @@ const GENERATION3D_RETAINED_TOOL_IDS: &[&str] = &[
     "setSunIntensity",
     "setCamera",
     "selectGeneration",
-    "setActiveUtility",
         "flowEvalTick",
 ];
 const GENERATION3D_RETAINED_PAYLOAD_SCHEMA: &str = "generation.3d.tool-command.v1";
@@ -223,7 +221,7 @@ fn generation3d_retained_reduce(
     history: &semio_framework_plugin::HistoryView,
     interaction: &protocol::InteractionState,
     _hover: &semio_framework_plugin::app::InteractionHoverState,
-    _context: Option<&semio_framework_plugin::ArtifactOwnedToolJobContext<EditorApp<Generation3dPlayApp>>>,
+    _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<Generation3dPlayApp>>>,
     operation: &AppOperationContext,
 ) -> Result<Emit<Generation3dMutation, Generation3dConfigMutation, NoDraftMutation>, Fault> {
     if !GENERATION3D_RETAINED_TOOL_IDS.contains(&command.command_id()) {
@@ -322,7 +320,6 @@ impl semio_framework_plugin::ArtifactOwnedToolJobFactory for Generation3dBounded
         ArtifactToolPublicationContract { tool_id: "setSunIntensity", lanes: &[ArtifactToolPublicationLane::Config] },
         ArtifactToolPublicationContract { tool_id: "setCamera", lanes: &[ArtifactToolPublicationLane::Config] },
         ArtifactToolPublicationContract { tool_id: "selectGeneration", lanes: &[ArtifactToolPublicationLane::Config] },
-        ArtifactToolPublicationContract { tool_id: "setActiveUtility", lanes: &[ArtifactToolPublicationLane::Config] },
         ArtifactToolPublicationContract { tool_id: "flowEvalTick", lanes: &[ArtifactToolPublicationLane::Config] },
     ];
 }
@@ -759,7 +756,6 @@ impl ArtifactEditor for Generation3dPlayApp {
             "setSunIntensity" => ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
             "setCamera" => ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
             "selectGeneration" => ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
-            "setActiveUtility" => ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
             "flowEvalTick" => ToolExecutionContract::bounded_first_step(8_192, 32, 32, 16_384, 7_500),
         }
     }
@@ -914,7 +910,6 @@ impl ArtifactEditor for Generation3dPlayApp {
             "setSunIntensity" => Ok(Generation3dCommand::SetSunIntensity(set_sun_intensity::SetSunIntensity { value: f64_arg(&["value"]).unwrap_or(1.0) })),
             "setCamera" => Ok(Generation3dCommand::SetCamera(set_camera::SetCamera { camera: parse_preview_camera_json(&args) })),
             "selectGeneration" => Ok(Generation3dCommand::SelectGeneration(select_generation::SelectGeneration { id: str_arg(&["id"]).unwrap_or_default() })),
-            "setActiveUtility" => Ok(Generation3dCommand::SetActiveUtility(set_active_utility::SetActiveUtility { utility_id: str_arg(&["utilityId", "utility_id"]).unwrap_or_default() })),
             "flowEvalTick" => Ok(Generation3dCommand::FlowEvalTick(flow_eval_tick::FlowEvalTick {})),
             other => Err(Fault::from(format!(
                 "action '{other}' is not a framework-reserved action (history/clipboard/revert/filter/noteShellCommand) — \
@@ -931,8 +926,8 @@ impl ArtifactEditor for Generation3dPlayApp {
         command: &Generation3dCommand,
         doc: &ArtifactView<'_, Generation3dSnapshot>,
         cfg: &ConfigView<'_, Generation3dConfig>,
-        _view_state: &semio_framework_plugin::ViewModel,
-        interaction: &InteractionView<'_>, _view_state: Option<&semio_framework_plugin::ViewModel>,
+        interaction: &InteractionView<'_>,
+        _view_state: Option<&semio_framework_plugin::ViewModel>,
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<Generation3dMutation, Generation3dConfigMutation, Self::DraftMutation>, Fault> {
@@ -1002,7 +997,7 @@ impl ArtifactEditor for Generation3dPlayApp {
     /// 🕹️ The marks-free entry point the framework still offers (no owner, no transient, no
     /// interaction) — every live window goes through `render_with_request_context` instead.
     fn render(body_key: &str, doc: &ArtifactView<'_, Generation3dSnapshot>, cfg: &ConfigView<'_, Generation3dConfig>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
-        generation3d_render_body(body_key, doc.snapshot, cfg.snapshot, &PreviewInteractionMarks::default())
+        generation3d_render_body(body_key, doc.snapshot, cfg.snapshot, view_state, &PreviewInteractionMarks::default())
     }
 
     /// 🕹️ Resolves the live `graph` hover/selection once per render and threads it into every
@@ -1013,10 +1008,11 @@ impl ArtifactEditor for Generation3dPlayApp {
         body_key: &str,
         doc: &ArtifactView<'_, Generation3dSnapshot>,
         cfg: &ConfigView<'_, Generation3dConfig>,
+        view_state: &semio_framework_plugin::ViewModel,
         _transient: &semio_framework_plugin::TransientView<'_, semio_framework_plugin::NoTransient>,
-        interaction: &InteractionView<'_>, _view_state: Option<&semio_framework_plugin::ViewModel>,
+        interaction: &InteractionView<'_>,
     ) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
-        generation3d_render_body(body_key, doc.snapshot, cfg.snapshot, &PreviewInteractionMarks::from_interaction(interaction))
+        generation3d_render_body(body_key, doc.snapshot, cfg.snapshot, view_state, &PreviewInteractionMarks::from_interaction(interaction))
     }
 
     fn window_measures(_doc: &ArtifactView<'_, Generation3dSnapshot>, cfg: &ConfigView<'_, Generation3dConfig>, view_state: &semio_framework_plugin::ViewModel) -> HashMap<String, Vec<WindowMeasure>> {
@@ -1040,6 +1036,7 @@ impl ArtifactEditor for Generation3dPlayApp {
         request: &semio_framework_plugin::ContextMenuRequest,
         _doc: &ArtifactView<'_, Generation3dSnapshot>,
         cfg: &ConfigView<'_, Generation3dConfig>,
+        view_state: &semio_framework_plugin::ViewModel,
         registry: &semio_framework_plugin::AppActionRegistry,
     ) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
         use semio_framework_plugin::{node_graph_delete_selection_spec, selection_domains_from_surface, Menu, NodeGraphDeleteDispatch};
@@ -1145,7 +1142,6 @@ pub fn create_generation3d_app() -> semio_framework_plugin::AppDefinition {
             .action_interactive_job("setSunIntensity", InteractiveJobClassification::Migrated)
             .action_interactive_job("setCamera", InteractiveJobClassification::Migrated)
             .action_interactive_job("selectGeneration", InteractiveJobClassification::Migrated)
-            .action_interactive_job("setActiveUtility", InteractiveJobClassification::Migrated)
             .action_interactive_job("flowEvalTick", InteractiveJobClassification::Migrated)
             .action_args("addWidget", vec![
                 ActionArgDef::select("kind", LocalizedLabel::native("Kind", "Art"), vec![
@@ -1370,7 +1366,7 @@ impl PreviewInteractionMarks {
 //#endregion 🔖️PreviewInteraction
 
 /// 🧭️ World-3d selection payload with the host-owned gumball utility spliced in, so the transform
-/// handles follow `cfg.active_utility_id` instead of any document-stored utility, and with the live
+/// handles follow the window-projected `ViewModel.active_utility_id`, and with the live
 /// `graph` marks `render_with_request_context` resolved — the gumball now shows for a real
 /// selection instead of always reporting empty. `"rectangle"` (the pre-migration default
 /// `selection_method`) is hardcoded: the framework tracks no persistent "last marquee method"

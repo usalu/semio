@@ -161,10 +161,6 @@
       ],
       "x-semio-state": "presence"
     },
-    "activeUtilityId": {
-      "type": "string",
-      "x-semio-state": "presence"
-    },
     "activeExampleId": {
       "oneOf": [
         {

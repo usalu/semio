@@ -1052,6 +1052,7 @@ mod actor_tests {
     use crate::os_spr::{decode_client_frame, encode_server_frame};
     use futures::{SinkExt, StreamExt};
     use std::sync::Arc;
+    use std::sync::atomic::{AtomicUsize, Ordering};
     use std::time::Duration;
     use tokio::sync::{broadcast as tokio_broadcast, Mutex};
     use tokio_tungstenite::tungstenite::Message as WsMessage;
@@ -1176,6 +1177,95 @@ mod actor_tests {
     struct MockHub {
         log: Arc<Mutex<Vec<(u64, MutationEnvelope)>>>,
         broadcast: tokio_broadcast::Sender<ServerFrame>,
+        connections: AtomicUsize,
+    }
+
+    struct MockHubSocketGrantSource {
+        hub_origin: String,
+        actor_id: String,
+        grant_fill: char,
+    }
+
+    impl crate::os_directory::client::HubSocketGrantSource for MockHubSocketGrantSource {
+        fn admit_document_socket(
+            &self,
+            _ctx: &semio_framework_async::OperationContext,
+            space_id: &str,
+            document_id: &str,
+            expectation: &crate::os_directory::client::DocumentSocketExpectationV1,
+            _client_instance_id: &str,
+            _timeout_ms: u64,
+        ) -> Result<crate::os_directory::client::DocumentSocketAdmissionV1, crate::os_directory::client::DirectoryClientError> {
+            let expires_at_ms = std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .expect("system clock after epoch")
+                .as_millis()
+                .saturating_add(60_000)
+                .min(i64::MAX as u128) as i64;
+            Ok(crate::os_directory::client::DocumentSocketAdmissionV1 {
+                socket: crate::os_directory::client::SocketGrantReceiptV1 {
+                    schema: "semio.hub.socket-grant/v1".into(),
+                    protocol: "semio.socket.v1".into(),
+                    grant: format!("socket.v1.{}.{}", self.grant_fill.to_string().repeat(32), self.grant_fill.to_string().repeat(64)),
+                    actor_id: self.actor_id.clone(),
+                    expires_at_ms,
+                },
+                authority: crate::os_directory::client::DocumentSocketAuthorityV1 {
+                    admitted_lease: expectation.lease.clone(),
+                    hub_origin: self.hub_origin.clone(),
+                    browser_actor: crate::os_directory::DocumentOpenBrowserActorV1::None,
+                    expires_at_unix_ms: u64::try_from(expires_at_ms).expect("positive mock expiry"),
+                    scope: crate::os_directory::DocumentScope::new(space_id, document_id),
+                    descriptor_digest_v1: "4".repeat(64),
+                    catalog: crate::os_directory::DocumentOpenCatalogV1 { generation_id: "5".repeat(64) },
+                    package: crate::os_directory::DocumentOpenPackageV1 {
+                        plugin_id: "mock.plugin".into(),
+                        package_id: "mock.package".into(),
+                        version: "1.0.0".into(),
+                        component_sha256: "6".repeat(64),
+                        component_blake3: "7".repeat(64),
+                        descriptor_byte_sha256: "8".repeat(64),
+                        execution_protocol: crate::os_directory::DocumentExecutionProtocolV1 { app_channel_version: crate::os_spr::CHANNEL_VERSION },
+                    },
+                    artifact: crate::os_directory::DocumentOpenArtifactV1 { kind: "mock.document".into(), schema: expectation.artifact_schema.clone(), pack_schema_hash: "1".repeat(64) },
+                    parent_dialect: crate::os_directory::DocumentOpenParentDialectV1 { artifact_kind: "mock.document".into(), standard: "1".into(), subset: "*".into() },
+                    pack_schema_hash: expectation.pack_schema_hash,
+                    surface: crate::os_directory::DocumentOpenSurfaceV1 {
+                        surface_id: expectation.requested_surface_id.clone().unwrap_or_else(|| "mock.surface".into()),
+                        app_id: "mock.app".into(),
+                        window_kind_id: "mock.window".into(),
+                        role: crate::os_directory::DocumentOpenSurfaceRoleV1::Editor,
+                        renderer_target: crate::os_directory::DocumentOpenRendererTargetV1::Wgpu,
+                    },
+                    grant: crate::os_directory::DocumentOpenGrantV1 { read: true, write: true, observe: true },
+                    checkpoint: crate::os_directory::DocumentOpenCheckpointV1 {
+                        checkpoint_id: "9".repeat(64),
+                        descriptor_digest_v1: "4".repeat(64),
+                        baseline_frontier: crate::os_directory::ArtifactFrontier {
+                            document_id: document_id.to_string(),
+                            head_edit_ordinal: 0,
+                            head_edit_id: String::new(),
+                            last_commit_seq: 0,
+                            chain_hash: crate::os_directory::ArtifactHash::new([0; 32]),
+                        },
+                        aggregate_sha256: "a".repeat(64),
+                    },
+                    revalidation: crate::os_directory::DocumentOpenRevalidationV1 { directory_revision: 1, membership_generation: 1, session_generation: Some(1), share_generation: None },
+                },
+            })
+        }
+    }
+
+    fn configure_mock_hub(host: &ArtifactHost, hub_origin: &str, actor_fill: char) {
+        host.set_local_hub_credential(Arc::new(crate::os_directory::client::LocalHubCredential::test(
+            hub_origin,
+            &format!("session.v1.{}.{}", actor_fill.to_string().repeat(32), actor_fill.to_string().repeat(64)),
+        )));
+        host.set_hub_socket_grant_source(Arc::new(MockHubSocketGrantSource {
+            hub_origin: hub_origin.into(),
+            actor_id: format!("hub.v1.{}", actor_fill.to_string().repeat(64)),
+            grant_fill: actor_fill,
+        }));
     }
 
     async fn mock_frontier(ordinal: u64) -> RuntimeFrontierSummary {
@@ -1186,15 +1276,21 @@ mod actor_tests {
         let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.expect("bind");
         let addr = listener.local_addr().expect("addr");
         let (broadcast, _rx) = tokio_broadcast::channel(256);
-        let semio_hub = Arc::new(MockHub { log: Arc::new(Mutex::new(Vec::new())), broadcast });
+        let semio_hub = Arc::new(MockHub { log: Arc::new(Mutex::new(Vec::new())), broadcast, connections: AtomicUsize::new(0) });
         let accept_hub = semio_hub.clone();
         tokio::spawn(async move {
             loop {
                 let Ok((stream, _)) = listener.accept().await else { break };
                 let conn_hub = accept_hub.clone();
                 tokio::spawn(async move {
-                    if let Ok(ws) = tokio_tungstenite::accept_async(stream).await {
-                        mock_hub_connection(ws, conn_hub).await;
+                    let actor_fill = if conn_hub.connections.fetch_add(1, Ordering::SeqCst) == 0 { 'a' } else { 'b' };
+                    let accepted = tokio_tungstenite::accept_hdr_async(stream, |_request, mut response| {
+                        response.headers_mut().insert("Sec-WebSocket-Protocol", "semio.socket.v1".parse().expect("static protocol header"));
+                        Ok(response)
+                    })
+                    .await;
+                    if let Ok(ws) = accepted {
+                        mock_hub_connection(ws, conn_hub, format!("hub.v1.{}", actor_fill.to_string().repeat(64))).await;
                     }
                 });
             }
@@ -1202,7 +1298,7 @@ mod actor_tests {
         (addr, semio_hub)
     }
 
-    async fn mock_hub_connection(ws: tokio_tungstenite::WebSocketStream<tokio::net::TcpStream>, semio_hub: Arc<MockHub>) {
+    async fn mock_hub_connection(ws: tokio_tungstenite::WebSocketStream<tokio::net::TcpStream>, semio_hub: Arc<MockHub>, actor: String) {
         let (mut write, mut read) = ws.split();
         // Expect Hello first.
         let requested_ordinal = match read.next().await {
@@ -1222,11 +1318,13 @@ mod actor_tests {
         if write.send(WsMessage::Binary(encode_server_frame(&welcome, Lane::Command).await.into())).await.is_err() {
             return;
         }
-        if !backlog.is_empty() {
-            let commands = ServerFrame::Commands { envelopes: backlog, origin: ActorId("semio_hub-backlog".to_string()), frontier: frontier.clone() };
-            if write.send(WsMessage::Binary(encode_server_frame(&commands, Lane::Command).await.into())).await.is_err() {
-                return;
-            }
+        let session = ServerFrame::Session { actor, color: 1 };
+        if write.send(WsMessage::Binary(encode_server_frame(&session, Lane::Command).await.into())).await.is_err() {
+            return;
+        }
+        let commands = ServerFrame::Commands { envelopes: backlog, origin: ActorId("semio_hub-backlog".to_string()), frontier: frontier.clone() };
+        if write.send(WsMessage::Binary(encode_server_frame(&commands, Lane::Command).await.into())).await.is_err() {
+            return;
         }
         let mut broadcast_rx = semio_hub.broadcast.subscribe();
         loop {
@@ -1353,7 +1451,8 @@ mod actor_tests {
             .await;
         let key_b = channels_b.document_key.clone();
         let mut events_b = host_b.subscribe_key(&key_b).await;
-        tokio::time::sleep(Duration::from_millis(300)).await;
+        assert!(matches!(wait_for_event(&mut events_a, |event| matches!(event, ArtifactEvent::Session { .. })).await, ArtifactEvent::Session { .. }));
+        assert!(matches!(wait_for_event(&mut events_b, |event| matches!(event, ArtifactEvent::Session { .. })).await, ArtifactEvent::Session { .. }));
 
         let original = document_backbone_envelope("raw-mutation", "raw-shared");
         channels_a.cmd_tx.send(ArtifactActorMsg::DocumentBackbone { message: document_backbone_message(std::slice::from_ref(&original)) }).expect("exact raw owner admitted");

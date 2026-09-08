@@ -2,12 +2,6 @@
 use super::*;
 use protocol::Mutation;
 
-#[semio_framework_async_macros::async_test]
-async fn home_config_default_locale_is_english() {
-    let config = HomeConfig::default();
-    assert_eq!(config.locale, "en-US");
-    assert!(config.active_panel_tab.is_empty());
-}
 
 #[semio_framework_async_macros::async_test]
 async fn home_config_dsl_text_round_trips() {
@@ -18,7 +12,6 @@ async fn home_config_dsl_text_round_trips() {
 async fn home_config_op_text_round_trips_every_variant() {
     store::os_store::test_support::assert_op_line_round_trip(&HomeConfigMutation::Snapshot { config: HomeConfig::default() });
     store::os_store::test_support::assert_op_line_round_trip(&HomeConfigMutation::SetActivePanelTab { tab_id: "tab-1".into() });
-    store::os_store::test_support::assert_op_line_round_trip(&HomeConfigMutation::SetLocale { value: "de".into() });
     store::os_store::test_support::assert_op_line_round_trip(&HomeConfigMutation::FoldDirectoryEvent { event_json: "{}".into() });
     store::os_store::test_support::assert_op_line_round_trip(&HomeConfigMutation::ReplaceDirectoryProjection {
         directory_json: directory_to_json(&store::os_directory::DirectoryReadModel::default()),
@@ -88,7 +81,6 @@ async fn set_client_updates_identity_fields() {
 #[semio_framework_async_macros::async_test]
 async fn home_config_operation_round_trips_via_apply_and_backwards() {
     let config = HomeConfig::default();
-    let operation = HomeConfigMutation::SetLocale { value: "de".into() };
     let next = operation.diff(&config).diff().clone();
     assert_eq!(next.locale, "de");
     let backwards = operation.inverse(&config);

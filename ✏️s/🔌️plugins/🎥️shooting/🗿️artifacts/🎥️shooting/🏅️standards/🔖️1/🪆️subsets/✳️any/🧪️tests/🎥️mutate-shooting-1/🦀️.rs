@@ -71,7 +71,7 @@ const DSL_ASSET: &str = "asset://📚️examples/🎬️demo/🖼️assets/🗣�
 mod subject {
     use super::{BASE_SNAPSHOT, DSL_ASSET};
     use semio_repo_test_host::{parse_json, Context, Json, Outcome};
-    use semio_s_artifact_shooting_shooting::dsl::{parse_dsl, print_dsl};
+    use semio_s_artifact_shooting_shooting::standards::v1::subsets::any::schema::snapshot::text::{parse_dsl, print_dsl};
     use semio_s_artifact_shooting_shooting::mutations::{apply_shooting_mutation, decode_shooting_mutation_json, decode_shooting_snapshot_json, encode_shooting_projection_json, inverse_shooting_mutation, ShootingMutation};
     use semio_s_artifact_shooting_shooting::ShootingSnapshot;
     use semio_s_plugin_stdio_test_oracle::law::{carrier_is_exact, inverse_restores, mutation_is_observable, round_trip_preserves};

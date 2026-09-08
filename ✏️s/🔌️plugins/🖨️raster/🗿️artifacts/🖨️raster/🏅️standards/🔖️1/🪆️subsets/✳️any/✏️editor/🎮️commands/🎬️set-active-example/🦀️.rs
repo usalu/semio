@@ -2,7 +2,7 @@
 
 use crate::mutations::{add_layer_asset, create_layer, delete_layer, remove_layer_asset};
 use crate::op::RasterMutation;
-use crate::schema::{layer_node_id, raster_example_document};
+use crate::standards::v1::subsets::any::schema::{layer_node_id, raster_example_document};
 use crate::{raster_asset, RasterSnapshot};
 use crate::editor::raster::config::{RasterConfig, RasterConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};

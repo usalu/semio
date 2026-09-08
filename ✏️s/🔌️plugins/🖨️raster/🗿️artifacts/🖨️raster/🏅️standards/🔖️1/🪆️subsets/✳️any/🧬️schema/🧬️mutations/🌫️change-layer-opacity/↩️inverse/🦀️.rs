@@ -2,7 +2,7 @@
 //! `Vec::new()`.
 
 use crate::mutations::RasterMutation;
-use crate::schema::{find_layer, layer_opacity};
+use crate::standards::v1::subsets::any::schema::{find_layer, layer_opacity};
 use crate::RasterSnapshot;
 
 //#region 🔖️Inverse

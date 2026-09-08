@@ -31,7 +31,6 @@ pub struct Generation2dConfig {
     pub selected_generation_id: Option<String>,
     /// 👁️ Derived generation preview text.
     pub generation_preview_text: Option<String>,
-    /// 🗣️ BCP-47 locale tag.
 }
 
 //#region 🔖️ArtifactCodec

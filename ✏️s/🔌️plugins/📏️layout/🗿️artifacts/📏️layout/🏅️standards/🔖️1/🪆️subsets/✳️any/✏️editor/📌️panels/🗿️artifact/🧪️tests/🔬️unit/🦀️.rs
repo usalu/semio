@@ -33,10 +33,8 @@ async fn layout_labels_resolve_native_english_by_default() {
 #[semio_framework_async_macros::async_test]
 async fn layout_labels_translate_document_tree_in_german() {
     use crate::editor::layout::LayoutCommand;
-    use crate::editor::layout::commands::set_locale;
     use crate::editor::layout::testkit::dispatch;
     let mut app = layout_app().await;
-    dispatch(&mut app, LayoutCommand::SetLocale(set_locale::SetLocale { value: "de-DE".into() })).await;
     let json = render_body(&mut app, LAYOUT_PLAY_BODY_DOCUMENT).await;
     assert!(json.contains("\"Rahmen\""));
     assert!(json.contains("\"Ebenen\""));

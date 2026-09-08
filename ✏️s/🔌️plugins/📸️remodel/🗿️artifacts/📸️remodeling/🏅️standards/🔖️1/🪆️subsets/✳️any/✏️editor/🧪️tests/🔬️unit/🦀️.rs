@@ -149,8 +149,6 @@ fn every_command() -> Vec<RemodelingCommand> {
         RemodelingCommand::SetFrameCursor(set_frame_cursor::SetFrameCursor { stream_id: Some("stream-1".into()), frame_index: 2 }),
         RemodelingCommand::SetFrameCursor(set_frame_cursor::SetFrameCursor { stream_id: None, frame_index: 0 }),
         RemodelingCommand::SetReportTable(set_report_table::SetReportTable { table: "gcps".into() }),
-        RemodelingCommand::SetActiveUtility(set_active_utility::SetActiveUtility { utility_id: "measure".into() }),
-        RemodelingCommand::SetLocale(set_locale::SetLocale { value: "de-DE".into() }),
         RemodelingCommand::ImportFrames(import_frames::ImportFrames {}),
         RemodelingCommand::ImportVideo(import_video::ImportVideo {}),
         RemodelingCommand::ExportQcReport(export_qc_report::ExportQcReport {}),

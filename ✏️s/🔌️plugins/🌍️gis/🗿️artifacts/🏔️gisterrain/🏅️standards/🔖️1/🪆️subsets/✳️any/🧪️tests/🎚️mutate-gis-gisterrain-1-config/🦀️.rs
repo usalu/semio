@@ -1,6 +1,5 @@
-//! 🦀️ gis3d editor-config mutation case — Rust adapter. Covers the 2 kinds
-//! `../../✏️editor/🎚️config/🔮️oracle/🔣️.json`'s `gis-gisterrain-1-config` catalog declares: `set-camera`,
-//! `set-locale`. No third party implements this repository's own ephemeral editor state and none
+//! 🦀️ gis3d editor-config mutation case for the `set-camera` kind declared by
+//! `../../✏️editor/🎚️config/🔮️oracle/🔣️.json`. No third-party implementation
 //! could adjudicate it (`gis-gisterrain-config-mutation-semantics` no-oracle decision, same file),
 //! so this case registers the SUBJECT role only — no `.oracle(...)` handler, matching
 //! `os.config.opening`'s own precedent (`🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/
@@ -18,7 +17,7 @@ use semio_repo_test_host::{parse_json, Adapter, Context, Json, Outcome};
 use crate::editor::gis3d::config::gis3d_config_mutation_report_json;
 
 //#region 🔖️Kinds
-const KINDS: &[&str] = &["set-camera", "set-locale"];
+const KINDS: &[&str] = &["set-camera"];
 //#endregion 🔖️Kinds
 
 //#region 🔖️Subject
@@ -30,9 +29,8 @@ mod subject {
         let spec = ctx.doc_json()?;
         let kind = spec.str("kind");
         let base_camera = spec.str("baseCameraJson");
-        let base_locale = spec.str("baseLocale");
         let value = spec.str("value");
-        let text = gis3d_config_mutation_report_json(&base_camera, &base_locale, &kind, &value)?;
+        let text = gis3d_config_mutation_report_json(&base_camera, &kind, &value)?;
         let parsed = parse_json(&text)?;
         let base = parsed.get("base").cloned().ok_or("report carries no base")?;
         let snapshot = parsed.get("snapshot").cloned().ok_or("report carries no snapshot")?;

@@ -272,3 +272,21 @@ Focused registered evidence:
 - `git diff --check` and the four touched progress/Ready JSON files parse successfully.
 
 This receipt proves the pure opening owner, accessible retry/catalog presentation and worker request/status owner. It does not prove a real browser app attach, a native factory, a cold GIS component, or the two-Author process journey.
+
+## Per-instance document Backbone port and rebootstrap fencing
+
+The mounted guest protocol now has a closed, schema-owned per-instance control plane. Shell-to-instance `Event::Message` payloads use `semio.plugin.document-backbone-binding.v1` with exact `bind` or `retire`, `instanceId`, monotonic `u64` binding generation and bounded URI. The guest emits `semio.plugin.document-backbone-binding-receipt.v1` only as `bound`, `retired` or bounded `refused`. Retire closes admission before awaiting Store detach, clears retained inbound/outbound queues and cannot fail merely because stale outbound data existed. The raw data plane remains a `Backbone(uri)` message carrying the canonical Store `BackboneMessage::encode_op` bytes; it is not AppFrame JSON, base64 or a second snapshot path.
+
+The replication owner now strictly decodes canonical document batches before allocation. It rejects non-minimal integers, invalid UTF-8, unknown/trailing fields, nonterminal bytes, excessive dependencies/envelopes/payload, and non-canonical re-encoding. The actor port admits only one canonical outer `Mutations` message up to 256 KiB; cold `Snapshot` remains separate at 4 MiB. Pending hot ownership is shared at 64 messages/1 MiB. Exact raw envelope bytes survive queue/reconnect while Hub authority alone rewrites actor and HLC, and the server `Commands` response emits one `ArtifactEvent::DocumentBackbone` rather than a duplicate legacy `RemoteMutations` event.
+
+The fallback worker now treats the verified cold pair and required tail as one publication gate. Rebootstrap synchronously requeues all pending batches before its first await, then rejects new raw and legacy Hub-bound mutation admission before retention allocation while bootstrap, rebootstrap or required-tail catch-up is active. `Session` cannot flush until the verified pair is current and the tail is equal. Old-socket `Ack` and `Commands` are ignored while the rebootstrap owner is live, so they cannot free retained bytes or advance the frontier. Already admitted exact bytes replay once after the fresh pair and tail become current.
+
+Source and TypeScript evidence:
+
+- registered source/native owner: `@semio-tech/framework-plugin:document-backbone-binding-{check,native-check}`;
+- source session `67876`, exit `0`: AJV/schema and `47` control/raw rows, 256 KiB hot, 4 MiB cold and 64/1 MiB retention oracles;
+- paused-mirror worker session `29359`, exit `0`: raw plus legacy admission refused, old Ack/Commands fenced, and one retained replay after exact catch-up;
+- neighboring worker session `48584`, exit `0`: `5/5` concurrent-owner, retention, rebootstrap, offline and socket-death laws;
+- complete quick session `42589`: all `300` non-EffectBackbone tests passed; three unrelated Rust-source parity tests failed before assertions with `ReferenceError: Cannot access 'source2' before initialization` in the concurrently edited EffectBackbone fixture.
+
+Native qualification is in progress under ticket artifact `document-backbone-binding-native/exact-cargo-laws-6jCQqj`. Its predecessor `a8ezua` proved the strict replication law but the raw two-actor law used a fixed 300 ms connection sleep and timed out. The current law instead waits for exact `Session` receipts from both actors before admitting the raw message. No native raw-sync or guest-binding claim is made until the rerun completes.

@@ -89,7 +89,12 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
 /// en/de localized names (`"Note"`/`"Notiz"`) still live on `definition()`'s kept
 /// `ArtifactCapability` rows (debt D1) — wiring them into this field is real follow-up work, not
 /// required for this pass (`📓️recipe-subset.md` §4c, matches the stdio pilot's identical deviation).
-pub fn artifact() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<crate::NoteApps> {
+pub fn artifact<PA>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<PA>
+where
+    PA: semio_framework_plugin::PluginApp
+        + From<semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<crate::editor::note::NotePlayApp>>>
+        + From<semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<crate::viewer::note::NoteViewer>>>,
+{
     use semio_framework_plugin::app::declarations::ArtifactDeclaration;
     use store::os_io::ArtifactKindId;
     ArtifactDeclaration { kind: ArtifactKindId::parse("s.note.note").expect("canonical note kind"), localization: &[], standards: vec![crate::standards::v1::standard()] }

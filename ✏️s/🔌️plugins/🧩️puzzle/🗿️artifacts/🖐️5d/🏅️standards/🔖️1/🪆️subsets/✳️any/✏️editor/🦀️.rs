@@ -8799,7 +8799,7 @@ impl ArtifactEditor for Puzzle5dPlayApp {
             let window_for_body = if body_key == board2d::BODY_KEY { board2d::WINDOW_KIND_ID } else { world3d::WINDOW_KIND_ID };
             let active_utility = puzzle5d_scene_active_utility(config, Some(window_for_body));
             let envelope = scene_from_projection(&projection, config.clone(), &active_utility);
-            let labels = puzzle5d_labels(view_state).ok_or_else(|| semio_framework_plugin::PluginAssemblyError::new("ui.localization.unsupported", "puzzle5d locale or terminology is not recognized"))?;
+            let labels = puzzle5d_labels(view_state);
             match body_key {
                 board2d::BODY_KEY => board2d::render(&envelope),
                 world3d::BODY_KEY => world3d::render(&envelope, &app.precompute.borrow(), labels),
@@ -8815,9 +8815,7 @@ impl ArtifactEditor for Puzzle5dPlayApp {
     fn window_engagements(doc: &ArtifactView<'_, Puzzle5dPlaySnapshot>, cfg: &ConfigView<'_, Puzzle5dConfig>, view_state: &semio_framework_plugin::ViewModel) -> HashMap<String, WindowEngagement> {
         let projection = puzzle5d_projection_value(&doc.snapshot.0);
         let config = cfg.snapshot;
-        let Some(labels) = puzzle5d_labels(view_state) else {
-            return HashMap::new();
-        };
+        let labels = puzzle5d_labels(view_state);
         // 🪟️ One entry per live window INSTANCE of each of the 2D/3D window kinds — see
         // `window_instance_ids`'s doc comment for why puzzle5d needs none of puzzle3d's genuine
         // multi-instance-per-kind machinery here (each kind is always its own sole instance).
@@ -8837,9 +8835,7 @@ impl ArtifactEditor for Puzzle5dPlayApp {
         let projection = puzzle5d_projection_value(&doc.snapshot.0);
         with_puzzle5d_app(|app| {
             let config = cfg.snapshot;
-            let Some(labels) = puzzle5d_labels(view_state) else {
-                return HashMap::new();
-            };
+            let labels = puzzle5d_labels(view_state);
             PUZZLE5D_PLAY_WINDOWS
                 .iter()
                 .flat_map(|window| {
@@ -8862,12 +8858,8 @@ impl ArtifactEditor for Puzzle5dPlayApp {
     ) -> Vec<semio_framework_plugin::ContextMenuItemSpec> {
         let projection = puzzle5d_projection_value(&doc.snapshot.0);
         let config = cfg.snapshot;
-        let Some(labels) = puzzle5d_labels(view_state) else {
-            return Vec::new();
-        };
-        let Some(is_de) = puzzle5d_is_de_locale(view_state) else {
-            return Vec::new();
-        };
+        let labels = puzzle5d_labels(view_state);
+        let is_de = puzzle5d_is_de_locale(view_state);
         let active_utility = puzzle5d_scene_active_utility(config, Some(world3d::WINDOW_KIND_ID));
         let envelope = scene_from_projection(&projection, config.clone(), &active_utility);
         let part_ids: Vec<String> =
@@ -8913,7 +8905,7 @@ fn puzzle5d_interaction_definition() -> InteractionDefinition {
 pub fn create_puzzle5d_app() -> semio_framework_plugin::AppDefinition {
     let envelope = Puzzle5dScene { document: default_document(), runtime: Puzzle5dRuntime::default(), active_utility: PUZZLE5D_DEFAULT_UTILITY.into() };
     let precompute = Puzzle5dPrecomputeSession::new();
-    let manifest_labels = puzzle5d_labels(&Puzzle5dConfig::default()).expect("default puzzle5d axes are explicit and recognized");
+    let manifest_labels = puzzle5d_labels(&semio_framework_plugin::ViewModel::default());
     Editor::builder(Puzzle5dPlayApp::DIALECT)
             .document(["semio", "puzzle", "5d"])
             .artifact_kind(crate::artifact_kind())

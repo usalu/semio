@@ -52,7 +52,6 @@ async fn every_command_round_trips_through_text_and_binary() {
 /// ⚖️ LAW: the leading token of every printed op line is the row's `dsl` wire keyword — the
 /// kebab-cased command id for most rows, except the documented divergences copied VERBATIM from the
 /// pre-migration `forms_protocol::FormsCommand`'s own `#[dsl(key = ..)]` attributes (host-pushed
-/// `setLocale`/`setContributions`, and the shortened `try-value`/`try-values`/
 /// `spec-json`/`active-example` keys — preserving these exactly is what makes the wire format
 /// byte-identical across the migration; see TEMPLATE.md §5.1).
 #[semio_framework_async_macros::async_test]
@@ -60,7 +59,6 @@ async fn every_printed_op_line_starts_with_the_rows_wire_keyword() {
     for command in every_command() {
         let id = command.command_id();
         let expected = match id {
-            "setLocale" => "locale".to_string(),
             "setContributions" => "contributions".to_string(),
             "setTryValue" => "try-value".to_string(),
             "setTryValues" => "try-values".to_string(),
@@ -82,7 +80,6 @@ pub(super) fn every_command() -> Vec<FormsCommand> {
         FormsCommand::PreviousStep(previous_step::PreviousStep {}),
         FormsCommand::NextStep(next_step::NextStep {}),
         FormsCommand::Submit(submit::Submit {}),
-        FormsCommand::SetLocale(set_locale::SetLocale { value: "de-DE".into() }),
         FormsCommand::SetContributions(set_contributions::SetContributions { json: "[]".into() }),
         FormsCommand::AddStep(add_step::AddStep {}),
         FormsCommand::PatchStep(patch_step::PatchStep { step_id: "s1".into(), field: "title".into(), value: "Renamed".into() }),
@@ -253,7 +250,7 @@ async fn catalogue_kinds_includes_topic_contributed_kinds() {
             ]),
         )),
     }];
-    let labels = forms_play_labels(&FormsConfig::default());
+    let labels = forms_play_labels(&semio_framework_plugin::ViewModel::default());
     let kinds = catalogue_kinds(&contributions, labels);
     assert!(kinds.iter().any(|(kind, label, _)| kind == "buildingComponent" && label == "Building Component"));
 }

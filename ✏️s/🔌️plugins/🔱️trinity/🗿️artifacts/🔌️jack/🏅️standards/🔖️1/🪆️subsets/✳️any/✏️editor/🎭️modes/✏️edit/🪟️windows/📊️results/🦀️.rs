@@ -2,7 +2,6 @@
 
 use crate::PropertyValue;
 use crate::ast::{QueryResult, QueryResultKind};
-use crate::editor::jack::config::JackConfig;
 use semio_framework_plugin::{scene_surface, BuiltNode, NodeGraphScene, TableScene, UiAssemblyResult};
 use semio_framework_ui_contract::SurfaceKind;
 
@@ -17,8 +16,7 @@ fn property_value_to_string(value: &PropertyValue) -> String {
     }
 }
 
-fn result_to_table(result_json: &str) -> (String, String) {
-    let parsed: QueryResult = pack::from_json_str(result_json).unwrap_or(QueryResult::table(vec![], vec![]));
+fn result_to_table(parsed: &QueryResult) -> (String, String) {
     let columns: Vec<pack::JsonValue> = parsed.columns.iter().map(|column| pack::json!({ "id": column, "label": column })).collect();
     let rows: Vec<pack::JsonValue> = parsed
         .rows
@@ -36,14 +34,16 @@ fn result_to_table(result_json: &str) -> (String, String) {
     (pack::to_json_string(&columns), pack::to_json_string(&rows))
 }
 
-pub(crate) fn render(surface_id: &str, _controller_id: &str, cfg: &JackConfig) -> UiAssemblyResult<BuiltNode> {
-    let result: QueryResult = pack::from_json_str(&cfg.jack_result_json).unwrap_or(QueryResult::table(vec![], vec![]));
+pub(crate) fn render(surface_id: &str, _controller_id: &str, result: Option<&QueryResult>, error: Option<&str>) -> UiAssemblyResult<BuiltNode> {
+    if let Some(error) = error { return semio_framework_plugin::built_text_node(semio_framework_plugin::Label::data(error)); }
+    let empty = QueryResult::table(Vec::new(), Vec::new());
+    let result = result.unwrap_or(&empty);
     if result.kind == QueryResultKind::Graph {
         if let Some(fixture) = &result.graph_fixture {
             let (nodes, edges, viewport) = crate::editor::jack::fixture_to_workflow(fixture);
             return scene_surface(surface_id, SurfaceKind::NodeGraph, &NodeGraphScene::base(nodes, edges, viewport));
         }
     }
-    let (columns_json, rows_json) = result_to_table(&cfg.jack_result_json);
+    let (columns_json, rows_json) = result_to_table(result);
     scene_surface(surface_id, SurfaceKind::Table, &TableScene::base(columns_json, rows_json))
 }

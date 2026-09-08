@@ -702,30 +702,33 @@ fn set_fill_count_step_work_advances_a_real_admitted_fill_plan() {
     assert!(emit.coalesce_key.is_some(), "setFillCountStep must coalesce its continuation, matching set_fill_count::step's real Emit");
 }
 
-/// 🪣️ ticket 26/09/02/PUZZLE-3D-END-TO-END wave S: `transformBegin`/`transformEnd` are left on
-/// `NoopPuzzleCommandWork` (`🎮️commands/🧵️retained/🦀️.rs:98`) deliberately — see
-/// `📓️wave-S-report.md` for the full source-backed argument. In short: `EditorApp<E>`
-/// (`🧰️framework/…/🔌️plugin/🦀️.rs:27160`) stores no `E` instance at all, and
-/// `with_puzzle3d_app_for` (`✏️editor/🦀️.rs:2168`) always builds a fresh
-/// `Puzzle3dPlayApp::default()` restoring ONLY `fill_checkpoint` — `Puzzle3dConfig` has no field
-/// for `transform_base`/`transform_scratch`/`transform_drag_active` (unlike `fill_checkpoint`,
-/// which is bridged through the process-global `fill_envelope_registry`). So on every real
-/// dispatch `transform_drag_active` starts `false`, `commit_transform`'s scratch is always `None`,
-/// and `handle_action_impl` ITSELF returns bare `Emit::default()` for both actions — proven here
-/// directly against `puzzle3d_retained_reduce` (the exact reducer the generic ids use), which
-/// falls through to `app.handle_action_impl(...)` for both since neither is special-cased.
+/// 🧲️ ticket 26/09/02/PUZZLE-3D-END-TO-END wave T: the gumball bracket is an honest `Migrated`
+/// `HostOnly` pair. `World3dHost` (`🧰️framework/…/🌐️World3dHost/🟦️.tsx:4718`) dispatches
+/// `transformBegin` on drag start, ONE absolute start→end `translateSelection`/`rotateSelection`/
+/// `scaleSelection` delta on drag end, then `transformEnd`; mid-drag ticks never leave the host. So
+/// both brackets carry no document or config transition of their own and complete empty on
+/// `NoopPuzzleCommandWork` — but they must still be `Migrated`, or `validate_ui_dispatch_classification`
+/// (`🧰️framework/…/🔌️plugin/🦀️.rs`) rejects every real drag with `interactive-job.not-ui-safe`.
 #[test]
-fn transform_begin_and_end_real_dispatch_is_already_the_noop_the_work_emits() {
+fn transform_brackets_are_migrated_host_only_routes_that_complete_empty() {
+    let manifest = create_puzzle3d_app();
+    let contracts = <Puzzle3dRetainedCommandJobFactory as ArtifactOwnedToolJobFactory>::PUBLICATION_CONTRACTS;
     let snapshot = Puzzle3dPlayApp::initial_snapshot();
     let config = Puzzle3dConfig::default();
     let interaction = protocol::InteractionState::default();
     let hover = semio_framework_plugin::app::InteractionHoverState::default();
     for action in ["transformBegin", "transformEnd"] {
+        assert!(PUZZLE3D_RETAINED_TOOL_IDS.contains(&action), "{action} must be a retained tool id or no tool job is ever built for it");
+        let declarations = manifest.window_kinds.iter().flat_map(|window| &window.actions).filter(|declared| declared.id == action).collect::<Vec<_>>();
+        assert_eq!(declarations.len(), 1, "{action} requires exactly one manifest declaration");
+        assert_eq!(declarations[0].semantics.execution.interactive_job, semio_framework_plugin::InteractiveJobClassification::Migrated, "{action} must pass the UI dispatch gate");
+        let contract = contracts.iter().find(|contract| contract.tool_id == action).unwrap_or_else(|| panic!("{action} needs a publication contract"));
+        assert_eq!(contract.lanes, &[ArtifactToolPublicationLane::HostOnly], "{action} publishes nothing: the drag itself is one absolute delta on another route");
         let command = Puzzle3dCommand::from_action(action, None, None).expect("command decodes");
         let emit = puzzle3d_retained_reduce(&command, &snapshot, &config, &interaction, &hover).expect("real dispatch");
         assert!(
             emit.artifact_mutations.is_empty() && emit.config_mutations.is_empty() && emit.effects.is_empty(),
-            "{action}'s real handle_action_impl must be a true no-op given the current stateless-per-call architecture; got {:?}/{:?}/{:?}",
+            "{action} must stay a true no-op; got {}/{}/{}",
             emit.artifact_mutations.len(),
             emit.config_mutations.len(),
             emit.effects.len()
@@ -783,7 +786,7 @@ fn set_fill_count_dispatches_through_the_tool_job_path_and_updates_the_requested
     semio_framework::io::resolve_ready(app.bind_instance_id(1));
     dispatch(&mut app, SET_ACTIVE_TOOL_ACTION_ID, Some(&json!({ "toolId": fill_tool::TOOL_ID })), None).expect("select fill tool");
     let fill_count_slider = |app: &mut Puzzle3dApp| -> Option<f64> {
-        let measures = semio_framework::io::resolve_ready(app.tool_measures());
+        let measures = semio_framework::io::resolve_ready(app.tool_measures(&semio_framework_plugin::ViewModel::default()));
         find_measure_slider(measures.get(fill_tool::TOOL_ID).expect("fill tool measures"), "puzzle3d-fill-count")
     };
     assert_eq!(fill_count_slider(&mut app), Some(0.0), "fill count starts at zero before any request");
@@ -1285,11 +1288,9 @@ async fn app_definition_labels_stay_english_native_without_brand_locks() {
 #[semio_framework_async_macros::async_test]
 async fn document_and_kinds_trees_use_german_reuse_section_labels() {
     let mut app = app();
-    dispatch(&mut app, "setLocale", Some(&json!({ "value": "de" })), None).expect("setLocale");
-    dispatch(&mut app, "setTerminology", Some(&json!({ "value": "reuse" })), None).expect("setTerminology");
     let document_json = render_body(&mut app, document::BODY_KEY).to_string();
     let kinds = render_body(&mut app, catalogue::BODY_KEY).to_string();
-    let measures_json = to_json_string(&semio_framework::io::resolve_ready(app.window_measures()));
+    let measures_json = to_json_string(&semio_framework::io::resolve_ready(app.window_measures(&semio_framework_plugin::ViewModel::default())));
     assert!(document_json.contains("Baukomponenten"), "document tree objects section");
     assert!(document_json.contains("Verbindungen"), "document tree attractions section");
     assert!(document_json.contains("Referenzen"), "document tree references section");
@@ -1545,7 +1546,7 @@ async fn grid_window_options_control_one_visible_grid_spacing() {
     let lod = lod_of(&render_composite(&mut app));
     assert_eq!(lod.get("showLodGrid").and_then(Value::as_bool), Some(false));
     assert_eq!(lod.get("gridFactor").and_then(Value::as_f64), Some(7.5));
-    let measures = semio_framework::io::resolve_ready(app.window_measures());
+    let measures = semio_framework::io::resolve_ready(app.window_measures(&semio_framework_plugin::ViewModel::default()));
     let window_measures = measures.get(main::WINDOW_KIND_ID).expect("main window measures");
     assert_eq!(measure_group_tag(window_measures, &format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-grid")), Some(None));
     assert_eq!(find_measure_slider(window_measures, &format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-grid-spacing")), Some(7.5));
@@ -1565,14 +1566,14 @@ async fn window_options_are_local_to_the_window_instance_not_shared_across_split
     dispatch(&mut app, "worldPointerDown", None, Some(second_window)).expect("register second window");
 
     // Both instances start visible (the type default).
-    let initial_measures = semio_framework::io::resolve_ready(app.window_measures());
+    let initial_measures = semio_framework::io::resolve_ready(app.window_measures(&semio_framework_plugin::ViewModel::default()));
     assert_eq!(find_measure_toggle(initial_measures.get(main::WINDOW_KIND_ID).expect("base measures"), &toggle_id), Some(true));
     assert_eq!(find_measure_toggle(initial_measures.get(second_window).expect("second measures"), &toggle_id), Some(true));
 
     // Hide the grid, but ONLY on the second window instance.
     dispatch(&mut app, "setGridVisible", Some(&json!({ "pressed": false })), Some(second_window)).expect("setGridVisible on second window");
 
-    let measures_after = semio_framework::io::resolve_ready(app.window_measures());
+    let measures_after = semio_framework::io::resolve_ready(app.window_measures(&semio_framework_plugin::ViewModel::default()));
     assert_eq!(find_measure_toggle(measures_after.get(main::WINDOW_KIND_ID).expect("base measures"), &toggle_id), Some(true), "the base window instance's grid must stay visible");
     assert_eq!(find_measure_toggle(measures_after.get(second_window).expect("second measures"), &toggle_id), Some(false), "only the targeted window instance's grid toggles off");
 
@@ -1624,14 +1625,14 @@ async fn vortex_show_window_option_defaults_to_selected_and_switches_to_always()
     let mut app = app();
     let all_vortex_ids = vortex_full_ids(&app);
     assert!(!all_vortex_ids.is_empty(), "fixture must expose vortices");
-    let measures = semio_framework::io::resolve_ready(app.window_measures());
+    let measures = semio_framework::io::resolve_ready(app.window_measures(&semio_framework_plugin::ViewModel::default()));
     let window_measures = measures.get(main::WINDOW_KIND_ID).expect("main window measures");
     assert_eq!(find_measure_select(window_measures, &format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-vortex-show")).as_deref(), Some(PUZZLE3D_VORTEX_SHOW_SELECTED));
 
     assert!(vortices_of(&render_composite(&mut app)).is_empty(), "Selected mode must hide vortices while idle");
 
     dispatch(&mut app, "setVortexShow", Some(&json!({ "value": PUZZLE3D_VORTEX_SHOW_ALWAYS })), None).expect("setVortexShow always");
-    let measures_always = semio_framework::io::resolve_ready(app.window_measures());
+    let measures_always = semio_framework::io::resolve_ready(app.window_measures(&semio_framework_plugin::ViewModel::default()));
     let window_measures_always = measures_always.get(main::WINDOW_KIND_ID).expect("main window measures");
     assert_eq!(find_measure_select(window_measures_always, &format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-vortex-show")).as_deref(), Some(PUZZLE3D_VORTEX_SHOW_ALWAYS));
     assert_eq!(vortices_of(&render_composite(&mut app)).len(), all_vortex_ids.len(), "Always mode must emit every vortex while idle");
@@ -1643,7 +1644,7 @@ async fn vortex_show_window_option_defaults_to_selected_and_switches_to_always()
 #[semio_framework_async_macros::async_test]
 async fn vortex_direction_window_option_defaults_to_outwards_and_switches_to_inwards() {
     let mut app = app();
-    let measures = semio_framework::io::resolve_ready(app.window_measures());
+    let measures = semio_framework::io::resolve_ready(app.window_measures(&semio_framework_plugin::ViewModel::default()));
     let window_measures = measures.get(main::WINDOW_KIND_ID).expect("main window measures");
     assert_eq!(find_measure_select(window_measures, &format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-vortex-direction")).as_deref(), Some(PUZZLE3D_VORTEX_DIRECTION_OUTWARDS));
 
@@ -1653,7 +1654,7 @@ async fn vortex_direction_window_option_defaults_to_outwards_and_switches_to_inw
     assert!(outwards_vortices.iter().all(|record| record.get("displayDirection").and_then(Value::as_str) == Some(PUZZLE3D_VORTEX_DIRECTION_OUTWARDS)));
 
     dispatch(&mut app, "setVortexDirection", Some(&json!({ "value": PUZZLE3D_VORTEX_DIRECTION_INWARDS })), None).expect("setVortexDirection inwards");
-    let measures_inwards = semio_framework::io::resolve_ready(app.window_measures());
+    let measures_inwards = semio_framework::io::resolve_ready(app.window_measures(&semio_framework_plugin::ViewModel::default()));
     let window_measures_inwards = measures_inwards.get(main::WINDOW_KIND_ID).expect("main window measures");
     assert_eq!(find_measure_select(window_measures_inwards, &format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-vortex-direction")).as_deref(), Some(PUZZLE3D_VORTEX_DIRECTION_INWARDS));
     assert!(vortices_of(&render_composite(&mut app)).iter().all(|record| record.get("displayDirection").and_then(Value::as_str) == Some(PUZZLE3D_VORTEX_DIRECTION_INWARDS)));
@@ -1735,7 +1736,7 @@ async fn fill_build_tick_only_plans_available_slider_range() {
     let object_count_before = object_count(&app);
     dispatch(&mut app, SET_ACTIVE_TOOL_ACTION_ID, Some(&json!({ "toolId": fill_tool::TOOL_ID })), None).expect("select fill tool");
     drive_fill_until_ready(&mut app, 4.0);
-    let measures = semio_framework::io::resolve_ready(app.tool_measures());
+    let measures = semio_framework::io::resolve_ready(app.tool_measures(&semio_framework_plugin::ViewModel::default()));
     let tool_measures = measures.get(fill_tool::TOOL_ID).expect("fill tool measures");
     match find_measure_slider(tool_measures, "puzzle3d-fill-count") {
         Some(value) => assert_eq!(value, 0.0, "background planning must not change the selected fill count"),
@@ -1773,7 +1774,7 @@ async fn fill_build_tick_only_plans_available_slider_range() {
     // INSTANT — no replanning, no `fillBuildTick` catch-up dispatch.
     set_fill_count_and_finish(&mut app, available_count as u32, None);
     assert_eq!(object_count(&app), object_count_before + available_count, "moving back up within the preserved plan is instant, not gated on another fillBuildTick");
-    let target_measures = semio_framework::io::resolve_ready(app.tool_measures());
+    let target_measures = semio_framework::io::resolve_ready(app.tool_measures(&semio_framework_plugin::ViewModel::default()));
     let target_tool_measures = target_measures.get(fill_tool::TOOL_ID).expect("fill tool measures");
     assert_eq!(find_measure_slider(target_tool_measures, "puzzle3d-fill-count"), Some(available_count as f64));
     let restored_fill_ids: HashSet<String> = projection_of(&app).get("objects").and_then(Value::as_array).into_iter().flatten().skip(object_count_before).filter_map(|object| object.get("id").and_then(Value::as_str).map(str::to_string)).collect();
@@ -1797,7 +1798,7 @@ async fn set_fill_count_clamps_to_available_and_no_longer_dispatches_catch_up() 
     let (steps, max_step) = set_fill_count_and_finish(&mut app, PUZZLE3D_FILL_COUNT_MAX, None);
     assert!(steps <= available_count.div_ceil(set_fill_count::MAX_PLACEMENTS_PER_STEP as u32) as usize, "a maximum slider request must use only fixed-size continuation chunks");
     assert!(max_step < std::time::Duration::from_millis(8), "maximum-delta fill materialization measured {max_step:?}; every continuation must remain below 8 ms");
-    let measures = semio_framework::io::resolve_ready(app.tool_measures());
+    let measures = semio_framework::io::resolve_ready(app.tool_measures(&semio_framework_plugin::ViewModel::default()));
     let tool_measures = measures.get(fill_tool::TOOL_ID).expect("fill tool measures");
     let clamped = find_measure_slider(tool_measures, "puzzle3d-fill-count").expect("fill-count slider value");
     assert!(clamped <= available_count as f64, "runtime.fill_count must clamp to what's actually planned, not the raw request");
@@ -2023,7 +2024,7 @@ async fn puzzle3d_object_weight_change_scales_joint_sampling_product() {
 /// 🚫️ Zero object-kind weight disables every vortex slider under that kind — anything × 0 is 0.
 #[semio_framework_async_macros::async_test]
 async fn zero_object_kind_weight_disables_joint_vortex_sliders() {
-    let labels = puzzle3d_labels(&Puzzle3dConfig::default()).expect("default puzzle3d axes are explicit");
+    let labels = puzzle3d_labels(&semio_framework_plugin::ViewModel::default());
     let session = Puzzle3dPrecomputeSession::new();
     let fixture = nakagin_fixture();
     let object_ids = puzzle3d_kind_ids(&fixture, "objects");
@@ -2065,7 +2066,7 @@ async fn zero_object_kind_weight_disables_joint_vortex_sliders() {
 /// Brush voxel dims live in a utility-options group in the window's own measures.
 #[semio_framework_async_macros::async_test]
 async fn fill_and_brush_params_are_tagged_utility_options_not_engagement_controls() {
-    let labels = puzzle3d_labels(&Puzzle3dConfig::default()).expect("default puzzle3d axes are explicit");
+    let labels = puzzle3d_labels(&semio_framework_plugin::ViewModel::default());
     let session = Puzzle3dPrecomputeSession::new();
     let fill_scene = Puzzle3dScene { fixture: default_fixture(), runtime: Puzzle3dRuntime::default(), active_utility: fill_tool::TOOL_ID.into() };
     let fill_measures = fill_tool::measures(&fill_scene, &session, labels);
@@ -2117,7 +2118,7 @@ async fn fill_and_brush_params_are_tagged_utility_options_not_engagement_control
     let mut app = app();
     let vortex = first_vortex_full_id(&app);
     dispatch(&mut app, "openVortexSuggestions", Some(&json!({ "fullId": vortex.as_str(), "x": 0.0, "y": 0.0 })), None).expect("openVortexSuggestions");
-    let brush_app_measures = semio_framework::io::resolve_ready(app.window_measures());
+    let brush_app_measures = semio_framework::io::resolve_ready(app.window_measures(&semio_framework_plugin::ViewModel::default()));
     let window_measures = brush_app_measures.get(main::WINDOW_KIND_ID).expect("main window measures");
     assert_eq!(measure_group_tag(window_measures, &format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-utility-options-brush")), Some(Some(utilities::brush::UTILITY_ID.into())), "the brush Utility Options group surfaces once there are candidates to place");
 }
@@ -2436,7 +2437,7 @@ async fn transform_utility_is_local_to_the_window_instance_not_shared_across_spl
 
 #[semio_framework_async_macros::async_test]
 async fn transform_utility_options_expose_move_and_rotate_flags() {
-    let labels = puzzle3d_labels(&Puzzle3dConfig::default()).expect("default puzzle3d axes are explicit");
+    let labels = puzzle3d_labels(&semio_framework_plugin::ViewModel::default());
     let session = Puzzle3dPrecomputeSession::new();
     let scene = Puzzle3dScene { fixture: default_fixture(), runtime: Puzzle3dRuntime::default(), active_utility: utilities::transform::UTILITY_ID.into() };
     let measures = main::window_measures(&scene, &session, labels);
@@ -2449,7 +2450,7 @@ async fn transform_utility_options_expose_move_and_rotate_flags() {
     let selection = selection_of(&render_window(&mut app, main::WINDOW_KIND_ID));
     assert_eq!(selection.pointer("/gumballConfig/moveAxes").and_then(Value::as_bool), Some(true));
     assert_eq!(selection.pointer("/gumballConfig/rotate").and_then(Value::as_bool), Some(false));
-    let app_measures = semio_framework::io::resolve_ready(app.window_measures());
+    let app_measures = semio_framework::io::resolve_ready(app.window_measures(&semio_framework_plugin::ViewModel::default()));
     let window_measures = app_measures.get(main::WINDOW_KIND_ID).expect("main window measures");
     assert_eq!(find_measure_toggle(window_measures, "puzzle3d-transform-rotate"), Some(false));
 }
@@ -2465,7 +2466,7 @@ fn object_origin(app: &Puzzle3dApp, object_id: &str) -> Vec<f64> {
 
 #[semio_framework_async_macros::async_test]
 async fn gumball_translate_drag_coalesces_into_one_edit() {
-    // 🌀️ Unbracketed translate ticks still coalesce via AmendLast (compat path without transformBegin).
+    // 🌀️ Repeated translate dispatches coalesce into one undo entry via AmendLast.
     let mut app = app();
     dispatch(&mut app, "setActiveExample", Some(&json!({ "exampleId": "" })), None).expect("empty");
     dispatch(&mut app, "addObjectKind", Some(&json!({ "objectKind": "Object" })), None).expect("add object");
@@ -2480,10 +2481,12 @@ async fn gumball_translate_drag_coalesces_into_one_edit() {
     assert_eq!(object_origin(&app, &object_id), start, "one undo restores the whole coalesced gumball drag");
 }
 
+/// 🧲️ ticket 26/09/02/PUZZLE-3D-END-TO-END wave T: the real gumball gesture — `transformBegin`, ONE
+/// absolute start→end delta, `transformEnd` — moves the object by exactly that delta and undoes as
+/// one edit. The brackets themselves contribute nothing; a second gesture starts from the pose the
+/// first one left, with no app-side drag session to carry between them.
 #[semio_framework_async_macros::async_test]
-async fn gumball_transform_session_commits_once_on_end() {
-    // 🧲️ Scratch-commit: mid-drag ticks emit ZERO operations; transformEnd commits ONE edit from
-    // base→scratch. Incremental host deltas accumulate on scratch — 1 then 5 → final +6.
+async fn gumball_gesture_commits_one_absolute_delta_between_its_host_brackets() {
     let mut app = app_with_registry();
     dispatch(&mut app, "setActiveExample", Some(&json!({ "exampleId": "" })), None).expect("empty");
     dispatch(&mut app, "addObjectKind", Some(&json!({ "objectKind": "Object" })), None).expect("add object");
@@ -2492,80 +2495,17 @@ async fn gumball_transform_session_commits_once_on_end() {
     select_id(&mut app, PUZZLE3D_GRANULARITY_OBJECT, &object_id).expect("interactionSelect");
     let start = object_origin(&app, &object_id);
     dispatch(&mut app, "transformBegin", None, None).expect("begin");
-    let tick_a = dispatch(&mut app, "translateSelection", Some(&json!({ "ids": [object_id.as_str()], "dx": 1.0, "dy": 0.0, "dz": 0.0 })), None).expect("tick a");
-    let tick_b = dispatch(&mut app, "translateSelection", Some(&json!({ "ids": [object_id.as_str()], "dx": 5.0, "dy": 0.0, "dz": 0.0 })), None).expect("tick b");
-    assert!(tick_a.mutations.is_empty() && tick_b.mutations.is_empty(), "mid-drag transform ticks emit no operations");
-    assert_eq!(object_origin(&app, &object_id), start, "document stays at the drag-start pose mid-drag");
-    let preview: Vec<f64> = instances_of(&render_window(&mut app, main::WINDOW_KIND_ID))
-        .iter()
-        .find(|instance| instance.get("id").and_then(Value::as_str) == Some(object_id.as_str()))
-        .and_then(|instance| instance.get("position").and_then(Value::as_array).map(|values| values.iter().filter_map(Value::as_f64).collect()))
-        .unwrap_or_default();
-    assert!((preview[0] - start[0] - 6.0).abs() < 1e-9, "scratch render accumulates incremental ticks");
-    let end = dispatch(&mut app, "transformEnd", None, None).expect("end");
-    assert_eq!(end.mutations.len(), 1, "the whole drag commits as exactly one operation");
-    assert!((object_origin(&app, &object_id)[0] - start[0] - 6.0).abs() < 1e-9, "transformEnd lands on the accumulated total");
+    dispatch(&mut app, "translateSelection", Some(&json!({ "ids": [object_id.as_str()], "dx": 6.0, "dy": 0.0, "dz": 0.0 })), None).expect("drag-end delta");
+    dispatch(&mut app, "transformEnd", None, None).expect("end");
+    assert!((object_origin(&app, &object_id)[0] - start[0] - 6.0).abs() < 1e-9, "the one absolute delta lands verbatim on the document");
     dispatch(&mut app, "undo", None, None).expect("undo");
-    assert_eq!(object_origin(&app, &object_id), start, "one undo restores the whole scratch-committed gumball drag");
+    assert_eq!(object_origin(&app, &object_id), start, "one undo restores the whole gumball gesture");
     dispatch(&mut app, "transformBegin", None, None).expect("begin again");
-    dispatch(&mut app, "translateSelection", Some(&json!({ "ids": [object_id.as_str()], "dx": 2.0, "dy": 0.0, "dz": 0.0 })), None).expect("second drag tick");
+    dispatch(&mut app, "translateSelection", Some(&json!({ "ids": [object_id.as_str()], "dx": 2.0, "dy": 0.0, "dz": 0.0 })), None).expect("second gesture delta");
     dispatch(&mut app, "transformEnd", None, None).expect("second end");
-    assert!((object_origin(&app, &object_id)[0] - start[0] - 2.0).abs() < 1e-9, "a second gumball drag session works from the restored base");
+    assert!((object_origin(&app, &object_id)[0] - start[0] - 2.0).abs() < 1e-9, "a second gesture works from the restored pose");
 }
 //#endregion 🔖️Gumball
-
-//#region 🔖️GesturePreview
-/// 🔬️ CW7 preview-law seam: `Puzzle3dPlayApp::gesture_preview` reads `transform_base`/
-/// `transform_scratch` only, never a `Puzzle3dMutation` — exercised directly against
-/// `Puzzle3dPlayApp` (bypassing the `VcsArtifactApp` wrapper, which has no accessor into the
-/// inner app) since `transform_drag_tick` is the natural per-tick gesture handler.
-#[semio_framework_async_macros::async_test]
-async fn gesture_preview_is_none_without_an_active_transform_drag() {
-    let app = Puzzle3dPlayApp::default();
-    assert!(app.gesture_preview().is_none(), "no live gumball drag, nothing to preview");
-}
-
-#[semio_framework_async_macros::async_test]
-async fn gesture_preview_reflects_the_live_gumball_drag_and_clears_on_commit() {
-    let app = Puzzle3dPlayApp::default();
-    let fixture = default_fixture();
-    let object_id = fixture.objects[0].id.clone();
-    let projection = json::from_dsl_value(&dsl::ToValue::to_value(&fixture));
-    *app.transform_drag_active.borrow_mut() = true;
-    let no_volumes: Vec<String> = Vec::new();
-
-    let tick_a = app.transform_drag_tick("translateSelection", Some(&json!({ "ids": [object_id.clone()], "dx": 1.0, "dy": 0.0, "dz": 0.0 })), &projection, &[object_id.clone()], &no_volumes);
-    assert!(tick_a.artifact_mutations.is_empty(), "mid-drag ticks emit zero operations (scratch-commit pattern)");
-    let (key, seq_after_a, payload_a) = app.gesture_preview().expect("a live gumball drag is previewable");
-    assert_eq!(key, "gesture:transform");
-    let value_a: Value = parse(std::str::from_utf8(&payload_a).expect("payload is valid utf8")).expect("payload is valid json");
-    assert!(!value_a["operations"].as_array().expect("operations array").is_empty(), "the delta anchored to the drag-start snapshot must reflect the first tick");
-
-    let tick_b = app.transform_drag_tick("translateSelection", Some(&json!({ "ids": [object_id.clone()], "dx": 5.0, "dy": 0.0, "dz": 0.0 })), &projection, &[object_id.clone()], &no_volumes);
-    assert!(tick_b.artifact_mutations.is_empty());
-    let (_, seq_after_b, payload_b) = app.gesture_preview().expect("still live mid-drag");
-    assert!(seq_after_b > seq_after_a, "seq is monotone per tick, for staleness detection on the receiving end");
-    assert_ne!(payload_a, payload_b, "the base-anchored delta accumulates both ticks, not just the latest one");
-
-    let end = app.commit_transform(&projection, &[object_id]);
-    assert_eq!(end.artifact_mutations.len(), 1, "the whole drag commits as exactly one real operation");
-    assert!(app.gesture_preview().is_none(), "the drag ended: nothing left to preview, and the commit above already carried the real operation");
-}
-
-#[semio_framework_async_macros::async_test]
-async fn gesture_preview_is_a_pure_read_never_mutating_the_transform_scratch() {
-    let app = Puzzle3dPlayApp::default();
-    let fixture = default_fixture();
-    let object_id = fixture.objects[0].id.clone();
-    let projection = json::from_dsl_value(&dsl::ToValue::to_value(&fixture));
-    *app.transform_drag_active.borrow_mut() = true;
-    app.transform_drag_tick("translateSelection", Some(&json!({ "ids": [object_id.clone()], "dx": 1.0, "dy": 0.0, "dz": 0.0 })), &projection, &[object_id], &[]);
-    let scratch_before = app.transform_scratch.borrow().clone();
-    let _ = app.gesture_preview();
-    let _ = app.gesture_preview();
-    assert_eq!(*app.transform_scratch.borrow(), scratch_before, "gesture_preview must never mutate the live transform scratch it reads");
-}
-//#endregion 🔖️GesturePreview
 
 //#region 🔖️KitInPort
 /// 🔌️ The flagship `kit:in` seam: feeding a `kit.catalog` fragment shaped exactly like block3d's

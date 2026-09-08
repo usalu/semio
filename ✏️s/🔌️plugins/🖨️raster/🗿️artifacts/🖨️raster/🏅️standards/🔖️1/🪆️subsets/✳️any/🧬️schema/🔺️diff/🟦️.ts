@@ -16,7 +16,6 @@ export interface RasterDiff {
   /** @state presence */
   selectedIds?: RasterStringList;
   /** @state presence */
-  activeUtilityId?: string;
   /** @state config */
   brushSize?: number;
   /** @state config */

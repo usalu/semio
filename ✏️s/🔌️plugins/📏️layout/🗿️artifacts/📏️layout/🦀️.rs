@@ -455,9 +455,9 @@ pub struct GridSettings {
 
 //#endregion 🔖️Types
 
-pub use crate::schema::diff::LayoutDiff;
-pub use crate::schema::mutations::LayoutMutation;
-pub use crate::schema::snapshot::LayoutSnapshot;
+pub use crate::standards::v1::subsets::any::schema::diff::LayoutDiff;
+pub use crate::standards::v1::subsets::any::schema::mutations::LayoutMutation;
+pub use crate::standards::v1::subsets::any::schema::snapshot::LayoutSnapshot;
 
 //#region 🔖️ArtifactKind
 /// 🗂️ This artifact's `ArtifactKindSpec` — stitched into the app manifest by
@@ -493,28 +493,28 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
                     id: "layout.document",
                     extension: Some("layout"),
                     role: dsl::LanguageRole::Document,
-                    grammar: Some(crate::dsl::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(crate::dsl::COMPONENT_GRAMMAR_PATH),
-                    protocol: Some(crate::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(crate::snapshot::pack::COMPONENT_PROTOCOL_PATH),
+                    grammar: Some(standards::v1::subsets::any::schema::snapshot::text::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(standards::v1::subsets::any::schema::snapshot::text::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(snapshot::pack::COMPONENT_PROTOCOL_PATH),
                     hooks: dsl::passthrough_hooks("layout.document"),
                 },
                 dsl::LanguageSpec {
                     id: "layout.op",
                     extension: None,
                     role: dsl::LanguageRole::Ops,
-                    grammar: Some(crate::op::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(crate::op::COMPONENT_GRAMMAR_PATH),
-                    protocol: Some(crate::spr::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(crate::spr::COMPONENT_PROTOCOL_PATH),
+                    grammar: Some(op::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(op::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(spr::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(spr::COMPONENT_PROTOCOL_PATH),
                     hooks: dsl::passthrough_hooks("layout.op"),
                 },
                 dsl::LanguageSpec {
                     id: "layout.diff",
                     extension: None,
                     role: dsl::LanguageRole::Diff,
-                    grammar: Some(crate::schema::diff::text::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(crate::schema::diff::text::COMPONENT_GRAMMAR_PATH),
+                    grammar: Some(standards::v1::subsets::any::schema::diff::text::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(standards::v1::subsets::any::schema::diff::text::COMPONENT_GRAMMAR_PATH),
                     protocol: None,
                     protocol_path: None,
                     hooks: dsl::passthrough_hooks("layout.diff"),
@@ -525,8 +525,8 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
                     role: dsl::LanguageRole::Pack,
                     grammar: None,
                     grammar_path: None,
-                    protocol: Some(crate::snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(crate::snapshot::pack::COMPONENT_PROTOCOL_PATH),
+                    protocol: Some(snapshot::pack::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(snapshot::pack::COMPONENT_PROTOCOL_PATH),
                     hooks: dsl::passthrough_hooks("layout.pack"),
                 },
                 dsl::LanguageSpec {
@@ -535,8 +535,8 @@ fn pilot_languages() -> &'static [dsl::LanguageSpec] {
                     role: dsl::LanguageRole::Spr,
                     grammar: None,
                     grammar_path: None,
-                    protocol: Some(crate::spr::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(crate::spr::COMPONENT_PROTOCOL_PATH),
+                    protocol: Some(spr::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(spr::COMPONENT_PROTOCOL_PATH),
                     hooks: dsl::passthrough_hooks("layout.spr"),
                 },
             ]
@@ -595,11 +595,11 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
 
 pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
     semio_framework_plugin::ArtifactDeclaration::builder(definition()?)
-        .schema(crate::schema::layout_artifact_schema_descriptor())
-        .inferences([crate::standards::v1::subsets::any::schema::inferences::layout_artifact_inference_descriptor()])
-        .composers(crate::standards::v1::subsets::any::io::io_registry::entries())
+        .schema(standards::v1::subsets::any::schema::layout_artifact_schema_descriptor())
+        .inferences([standards::v1::subsets::any::schema::inferences::layout_artifact_inference_descriptor()])
+        .composers(standards::v1::subsets::any::io::io_registry::entries())
         .languages(pilot_languages())
-        .document_codec::<semio_framework_plugin::EditorApp<crate::editor::layout::LayoutPlayApp>>()
+        .document_codec::<semio_framework_plugin::EditorApp<editor::layout::LayoutPlayApp>>()
         .try_build()
 }
 //#endregion 🔖️ArtifactKind
@@ -1323,18 +1323,12 @@ mod tests;
         }
 
         // ---- Shims: keep pre-migration module paths resolving for external callers ----
-        pub mod schema {
-            pub use super::standards::v1::subsets::any::schema::*;
-        }
         pub mod io {
             pub use super::standards::v1::subsets::any::io::*;
         }
         pub mod op {
             pub use crate::standards::v1::subsets::any::schema::mutations::text::*;
             pub use crate::standards::v1::subsets::any::schema::mutations::LayoutMutation;
-        }
-        pub mod dsl {
-            pub use crate::standards::v1::subsets::any::schema::snapshot::text::*;
         }
         pub mod spr {
             pub use crate::standards::v1::subsets::any::schema::mutations::binary::*;
@@ -1515,6 +1509,3 @@ pub mod viewer {
     }
 }
 
-//#region 📚️Examples
-pub use standards::v1::subsets::any::examples;
-//#endregion 📚️Examples

@@ -1017,7 +1017,7 @@ impl Iso16757Snapshot {
 /// lifted out of the pre-migration manifest's inline `.artifact_kind(ArtifactKindSpec { .. })` so the
 /// artifact node, not the app, owns its own kind declaration.
 pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
-    crate::app_surface::artifact_kind_spec("iso16757", "ISO 16757")
+    app_surface::artifact_kind_spec("iso16757", "ISO 16757")
 }
 //#endregion 🔖️ArtifactKind
 
@@ -1065,11 +1065,11 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
 
 pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
     semio_framework_plugin::ArtifactDeclaration::builder(definition)
-        .schema(crate::document_schema::iso16757_artifact_schema_descriptor())
-        .inferences([crate::standards::v1::subsets::any::schema::inferences::iso16757_artifact_inference_descriptor()])
-        .composers(crate::standards::v1::subsets::any::io::io_registry::entries())
+        .schema(document_schema::iso16757_artifact_schema_descriptor())
+        .inferences([standards::v1::subsets::any::schema::inferences::iso16757_artifact_inference_descriptor()])
+        .composers(standards::v1::subsets::any::io::io_registry::entries())
         .languages(pilot_languages())
-        .document_codec::<semio_framework_plugin::EditorApp<crate::editor::iso16757::Iso16757PlayApp>>()
+        .document_codec::<semio_framework_plugin::EditorApp<editor::iso16757::Iso16757PlayApp>>()
         .try_build()
 }
 

@@ -887,7 +887,7 @@ fn energy_model_reduce(
     history: &HistoryView,
     _interaction: &protocol::InteractionState,
     _hover: &semio_framework_plugin::app::InteractionHoverState,
-    _context: Option<&semio_framework_plugin::ArtifactOwnedToolJobContext<EditorApp<EnergyModelEditor>>>,
+    _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<EnergyModelEditor>>>,
     operation: &AppOperationContext,
 ) -> Result<Emit<EnergyModelMutation, NoConfigMutation, NoDraftMutation>, Fault> {
     reduce(command, &ArtifactView::with_operation(snapshot, history, operation.clone()))
@@ -1246,6 +1246,7 @@ impl ArtifactEditor for EnergyModelEditor {
         doc: &ArtifactView<'_, Self::Snapshot>,
         _cfg: &ConfigView<'_, Self::Config>,
         _interaction: &semio_framework_plugin::app::InteractionView<'_>,
+        _view_state: Option<&semio_framework_plugin::ViewModel>,
         _draft: &DraftView<'_, Self::Draft>,
         _engines: &EngineHandles,
     ) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, Fault> {
@@ -1256,7 +1257,7 @@ impl ArtifactEditor for EnergyModelEditor {
         simulation_session::reconcile(doc)
     }
 
-    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, view_state: &semio_framework_plugin::ViewModel) -> UiAssemblyResult<ComponentTree> {
+    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _view_state: &semio_framework_plugin::ViewModel) -> UiAssemblyResult<ComponentTree> {
         let render = doc.render_operation();
         let node = match body_key {
             structure::BODY_KEY => structure::render(doc.snapshot)?,

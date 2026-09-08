@@ -1,0 +1,17 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object", "required": ["version", "release", "platforms"], "additionalProperties": false,
+  "properties": {
+    "version": {"type": "string", "pattern": "^[0-9]+$"},
+    "release": {"type": "string", "pattern": "^https://github.com/WebAssembly/binaryen/releases/download/version_[0-9]+$"},
+    "platforms": {"type": "array", "minItems": 6, "maxItems": 6, "items": {
+      "type": "object", "required": ["platform", "architecture", "archive", "bytes", "sha256"], "additionalProperties": false,
+      "properties": {
+        "platform": {"enum": ["darwin", "linux", "win32"]}, "architecture": {"enum": ["arm64", "x64"]},
+        "archive": {"type": "string", "pattern": "^binaryen-version_[0-9]+-[a-zA-Z0-9_-]+[.]tar[.]gz$"},
+        "bytes": {"type": "integer", "minimum": 1, "maximum": 134217728},
+        "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
+      }
+    }}
+  }
+}

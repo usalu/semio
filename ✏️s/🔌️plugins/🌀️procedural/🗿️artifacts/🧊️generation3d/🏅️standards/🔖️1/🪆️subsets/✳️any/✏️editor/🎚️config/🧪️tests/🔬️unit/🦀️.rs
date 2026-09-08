@@ -5,8 +5,6 @@ use super::*;
 fn generation3d_config_default_matches_the_former_runtime_defaults() {
     let config = Generation3dConfig::default();
     assert_eq!(config.show_mode, "shaded");
-    assert_eq!(config.active_utility_id, "move");
-    assert_eq!(config.locale, "en-US");
     assert_eq!(config.sun(), semio_framework_plugin::WorldSunConfig::default());
     let pack = <Generation3dConfig as store::ArtifactPack>::encode_pack_with(&config, &store::PackEncodeOptions::default()).expect("the app default must be pack-encodable before the registry constructs its store");
     assert_eq!(<Generation3dConfig as store::ArtifactPack>::decode_pack_with(&pack, &store::PackDecodeOptions::default()).expect("the app default pack must decode"), config);
@@ -49,15 +47,6 @@ fn config_set_generation_round_trips() {
 }
 
 #[test]
-fn config_set_active_utility_and_locale_round_trip() {
-    let base = Generation3dConfig::default();
-    let next = config_round_trip(&base, &Generation3dConfigMutation::SetActiveUtility { utility_id: "rotate".into() });
-    assert_eq!(next.active_utility_id, "rotate");
-    let next2 = config_round_trip(&next, &Generation3dConfigMutation::SetLocale { value: "de-DE".into() });
-    assert_eq!(next2.locale, "de-DE");
-}
-
-#[test]
 fn config_set_preview_eval_round_trips() {
     let base = Generation3dConfig::default();
     let next = config_round_trip(&base, &Generation3dConfigMutation::SetPreviewEval { eval_text: Some(r#"{"extrude":{}}"#.into()) });
@@ -74,8 +63,6 @@ fn config_op_text_round_trips_every_variant() {
     semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Generation3dConfigMutation::SetPreviewCamera { camera: Generation3dPreviewCamera { position: [1.0, 2.0, 3.0], target: [4.0, 5.0, 6.0], fov: 45.0 } });
     semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Generation3dConfigMutation::SetSun { json: "{}".into() });
     semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Generation3dConfigMutation::SetGeneration { selected_generation_id: Some("g1".into()), generation_preview_text: None });
-    semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Generation3dConfigMutation::SetActiveUtility { utility_id: "scale".into() });
-    semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Generation3dConfigMutation::SetLocale { value: "de-DE".into() });
     semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Generation3dConfigMutation::SetPreviewEval { eval_text: Some("{}".into()) });
     semio_framework_os_kernel::os_store::test_support::assert_op_line_round_trip(&Generation3dConfigMutation::Snapshot { config: Generation3dConfig::default() });
 }

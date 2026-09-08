@@ -10,16 +10,49 @@
 //! `semio_framework_3d::rigid` (vectors/points/quaternions/isometries) and
 //! `semio_framework_3d::collision` (BVH triangle-mesh intersection + winding-number containment).
 
-/// 🗃️ Fixed-capacity storage for owned map entries.
-type FixedOwnerMapPage<K, V, const N: usize> = Box<[Option<(K, V)>; N]>;
-
 use crate::standards::v1::subsets::any::schema::{Quat, Vec3, WorldVolumeProps};
 use semio_framework_3d::{collision, rigid};
 use std::borrow::Borrow;
 use std::mem::MaybeUninit;
 
+/// 🗜️ Bookkeeping slots: the default page width for owners the memory census walks and the
+/// retirement cursor releases one entry per close grant — a spatial cell's member bucket, the
+/// oversized-span set, the retiring hand-off slots. It bounds one interactive close step's
+/// retirement work, never how large a document may be: document capacities are the
+/// `DOCUMENT_*_SLOTS` constants below.
 pub(crate) const FIXED_OWNER_SLOTS: usize = 32;
+/// 📏️ Byte ceiling for one bookkeeping owner page.
 pub(crate) const FIXED_OWNER_PAGE_BYTES: usize = 16 * 1024;
+/// 📐️ Byte ceiling for one document-scale owner page, expressed in bookkeeping pages: the widest
+/// declared page is `FixedOwnerVec<FixtureObject, DOCUMENT_OBJECT_SLOTS>` (≈432 KiB), and the fill
+/// envelope reserves `FILL_ENVELOPE_MAX_BYTES` (256 × 16 KiB) for every page of one session
+/// together, so a single page may claim at most a quarter of that reservation.
+pub(crate) const DOCUMENT_OWNER_PAGE_BYTES: usize = 64 * FIXED_OWNER_PAGE_BYTES;
+/// 🧊️ Objects one fill session owns: the scene it starts from plus a full `FILL_COUNT_MAX` (1000)
+/// plan. The Nakagin capsule tower carries 180 objects, so its worst case is 1180; 2048 is the next
+/// power of two above it and also bounds `placed`/`placed_lookup`/the spatial entry map.
+pub(crate) const DOCUMENT_OBJECT_SLOTS: usize = 2048;
+/// 🔘️ Vortices one fill session reasons about: Nakagin measures 358 vortices over 180 objects (≈2
+/// per object, at most 10 on one object), so two per object slot bounds the blocked-vortex and
+/// seen-candidate sets at document scale.
+pub(crate) const DOCUMENT_VORTEX_SLOTS: usize = 2 * DOCUMENT_OBJECT_SLOTS;
+/// 🧲️ Attractions one fill session owns: the scene's own plus one per placement — Nakagin carries
+/// 358 — so it shares the object ceiling.
+pub(crate) const DOCUMENT_ATTRACTION_SLOTS: usize = DOCUMENT_OBJECT_SLOTS;
+/// 🧱️ Target volumes one fill session owns: a document declares fill regions by hand, so it stays
+/// at the kind scale rather than the object scale.
+pub(crate) const DOCUMENT_VOLUME_SLOTS: usize = DOCUMENT_KIND_SLOTS;
+/// 🗂️ Catalog rows one fill session owns — object/vortex/cable kinds, compatibility rows, kind
+/// weight maps, registered mesh urls. Nakagin declares 12 object kinds, 18 vortex kinds and 14
+/// compatibility rows, so 256 is an order of magnitude of headroom on the flagship fixture.
+pub(crate) const DOCUMENT_KIND_SLOTS: usize = 256;
+/// 🎯️ Candidates one target vortex may enumerate: object kinds × their vortex templates, drained
+/// again before the next target, so four templates per kind slot bounds the classification maps.
+pub(crate) const DOCUMENT_CANDIDATE_SLOTS: usize = 4 * DOCUMENT_KIND_SLOTS;
+/// 🗺️ Spatial hash cells one fill session may occupy: an object's AABB straddles up to a handful of
+/// 8.0-world-unit cells, so four cells per object slot bounds the cell map while each cell's member
+/// bucket stays at `FIXED_OWNER_SLOTS`.
+pub(crate) const DOCUMENT_CELL_SLOTS: usize = 4 * DOCUMENT_OBJECT_SLOTS;
 
 #[derive(Debug)]
 pub(crate) struct FixedOwnerVec<T, const N: usize = FIXED_OWNER_SLOTS> {
@@ -29,12 +62,12 @@ pub(crate) struct FixedOwnerVec<T, const N: usize = FIXED_OWNER_SLOTS> {
 
 impl<T, const N: usize> FixedOwnerVec<T, N> {
     pub(crate) fn new() -> Self {
-        assert!(Self::page_bytes() <= FIXED_OWNER_PAGE_BYTES);
+        assert!(Self::page_bytes() <= DOCUMENT_OWNER_PAGE_BYTES);
         Self { page: Some(Box::new(std::array::from_fn(|_| MaybeUninit::uninit()))), len: 0 }
     }
 
     pub(crate) const fn page_bytes() -> usize {
-        size_of::<[MaybeUninit<T>; N]>()
+        std::mem::size_of::<[MaybeUninit<T>; N]>()
     }
 
     #[cfg(test)]
@@ -111,7 +144,7 @@ impl<T, const N: usize> Drop for FixedOwnerVec<T, N> {
 
 #[derive(Debug)]
 pub(crate) struct FixedOwnerMap<K, V, const N: usize = FIXED_OWNER_SLOTS> {
-    page: Option<FixedOwnerMapPage<K, V, N>>,
+    page: Option<Box<[Option<(K, V)>; N]>>,
     len: usize,
 }
 
@@ -123,12 +156,16 @@ pub(crate) enum FixedOwnerMapInsert<K, V> {
 
 impl<K, V, const N: usize> FixedOwnerMap<K, V, N> {
     pub(crate) fn new() -> Self {
-        assert!(Self::page_bytes() <= FIXED_OWNER_PAGE_BYTES);
+        assert!(Self::page_bytes() <= DOCUMENT_OWNER_PAGE_BYTES);
         Self { page: Some(Box::new(std::array::from_fn(|_| None))), len: 0 }
     }
 
     pub(crate) const fn page_bytes() -> usize {
-        size_of::<[Option<(K, V)>; N]>()
+        std::mem::size_of::<[Option<(K, V)>; N]>()
+    }
+
+    pub(crate) const fn capacity(&self) -> usize {
+        N
     }
 
     pub(crate) fn backing_credit(&self) -> Option<(usize, usize)> {
@@ -267,6 +304,10 @@ pub(crate) enum FixedOwnerSetInsert<K> {
 impl<K, const N: usize> FixedOwnerSet<K, N> {
     pub(crate) fn new() -> Self {
         Self { values: FixedOwnerMap::new() }
+    }
+
+    pub(crate) const fn capacity(&self) -> usize {
+        N
     }
 
     pub(crate) fn backing_credit(&self) -> Option<(usize, usize)> {
@@ -779,9 +820,9 @@ impl CollisionAabb {
 #[derive(Debug)]
 pub(crate) struct CollisionSpatialIndex {
     cell_size: f32,
-    entries: FixedOwnerMap<String, CollisionAabb>,
-    cells: FixedOwnerMap<(i32, i32, i32), FixedOwnerSet<String>>,
-    oversized: FixedOwnerSet<String>,
+    entries: FixedOwnerMap<String, CollisionAabb, DOCUMENT_OBJECT_SLOTS>,
+    cells: FixedOwnerMap<(i32, i32, i32), FixedOwnerSet<String>, DOCUMENT_CELL_SLOTS>,
+    oversized: FixedOwnerSet<String, DOCUMENT_KIND_SLOTS>,
     retiring_key: Option<String>,
     retiring_bucket: Option<FixedOwnerSet<String>>,
 }
@@ -901,7 +942,7 @@ pub(crate) struct CollisionQueryCursor {
     stage: CollisionQueryStage,
     cell_cursor: u64,
     member_cursor: usize,
-    candidates: FixedOwnerSet<String>,
+    candidates: FixedOwnerSet<String, DOCUMENT_OBJECT_SLOTS>,
     truncated: bool,
     examined_cells: usize,
     examined_members: usize,
@@ -1010,20 +1051,20 @@ impl CollisionSpatialIndex {
         }
         match mutation.stage {
             CollisionMutationStage::PreflightNew => {
-                if self.entries.get(mutation.id.as_str()).is_none() && self.entries.len() == FIXED_OWNER_SLOTS {
+                if self.entries.get(mutation.id.as_str()).is_none() && self.entries.len() == self.entries.capacity() {
                     return Self::reject_mutation(mutation);
                 }
                 if let Some(span) = mutation.new_span {
                     if let Some(cell) = span.cell(mutation.cursor) {
                         mutation.cursor += 1;
                         match self.cells.get(&cell) {
-                            Some(bucket) if !bucket.contains(mutation.id.as_str()) && bucket.len() == FIXED_OWNER_SLOTS => return Self::reject_mutation(mutation),
+                            Some(bucket) if !bucket.contains(mutation.id.as_str()) && bucket.len() == bucket.capacity() => return Self::reject_mutation(mutation),
                             Some(_) => {}
                             None => mutation.missing_cells += 1,
                         }
                         return CollisionMutationStep::Pending;
                     }
-                } else if !self.oversized.contains(mutation.id.as_str()) && self.oversized.len() == FIXED_OWNER_SLOTS {
+                } else if !self.oversized.contains(mutation.id.as_str()) && self.oversized.len() == self.oversized.capacity() {
                     return Self::reject_mutation(mutation);
                 }
                 mutation.stage = CollisionMutationStage::PreflightOld;
@@ -1040,7 +1081,7 @@ impl CollisionSpatialIndex {
                         return CollisionMutationStep::Pending;
                     }
                 }
-                if self.cells.len().checked_add(mutation.missing_cells).and_then(|total| total.checked_sub(mutation.reclaimed_cells)).is_none_or(|total| total > FIXED_OWNER_SLOTS) {
+                if self.cells.len().checked_add(mutation.missing_cells).and_then(|total| total.checked_sub(mutation.reclaimed_cells)).is_none_or(|total| total > self.cells.capacity()) {
                     return Self::reject_mutation(mutation);
                 }
                 mutation.stage = CollisionMutationStage::Remove;
@@ -1292,9 +1333,9 @@ impl CollisionSpatialIndex {
     #[cfg(test)]
     pub(crate) fn fixed_backing_witness_for_test(&self) -> [(usize, usize, usize); 3] {
         [
-            (self.entries.backing_ptr().map_or(0, |pointer| pointer.cast::<()>() as usize), FixedOwnerMap::<String, CollisionAabb>::page_bytes(), self.entries.len()),
-            (self.cells.backing_ptr().map_or(0, |pointer| pointer.cast::<()>() as usize), FixedOwnerMap::<(i32, i32, i32), FixedOwnerSet<String>>::page_bytes(), self.cells.len()),
-            (self.oversized.backing_ptr().map_or(0, |pointer| pointer.cast::<()>() as usize), FixedOwnerMap::<String, ()>::page_bytes(), self.oversized.len()),
+            (self.entries.backing_ptr().map_or(0, |pointer| pointer.cast::<()>() as usize), FixedOwnerMap::<String, CollisionAabb, DOCUMENT_OBJECT_SLOTS>::page_bytes(), self.entries.len()),
+            (self.cells.backing_ptr().map_or(0, |pointer| pointer.cast::<()>() as usize), FixedOwnerMap::<(i32, i32, i32), FixedOwnerSet<String>, DOCUMENT_CELL_SLOTS>::page_bytes(), self.cells.len()),
+            (self.oversized.backing_ptr().map_or(0, |pointer| pointer.cast::<()>() as usize), FixedOwnerMap::<String, (), DOCUMENT_KIND_SLOTS>::page_bytes(), self.oversized.len()),
         ]
     }
 

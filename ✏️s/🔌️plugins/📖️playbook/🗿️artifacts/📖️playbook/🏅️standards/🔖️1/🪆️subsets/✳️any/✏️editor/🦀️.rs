@@ -121,7 +121,7 @@ fn playbook_retained_reduce(
     history: &semio_framework_plugin::HistoryView,
     _interaction: &protocol::InteractionState,
     _hover: &semio_framework_plugin::app::InteractionHoverState,
-    _context: Option<&semio_framework_plugin::ArtifactOwnedToolJobContext<EditorApp<PlaybookPlayApp>>>,
+    _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<PlaybookPlayApp>>>,
     operation: &AppOperationContext,
 ) -> Result<Emit<PlaybookMutation, PlaybookConfigMutation, NoDraftMutation>, Fault> {
     command.dispatch(&ArtifactView::with_operation(snapshot, history, operation.clone()), &ConfigView { snapshot: config })
@@ -454,7 +454,6 @@ impl ArtifactEditor for PlaybookPlayApp {
 /// out inline.
 pub fn create_playbook_play_app() -> semio_framework_plugin::AppDefinition {
     Editor::builder(PLAYBOOK_DIALECT)
-        .command(CommandDefinition { in_palette: false, ..CommandDefinition::bounded_catalog(LocalizedLabel::native("Set Locale", "Gebietsschema festlegen"), "host", ActionKind::View).with_args([ActionArgDef::text("value", LocalizedLabel::native("Locale", "Gebietsschema"))]) })
         .command(CommandDefinition { in_palette: false, ..CommandDefinition::bounded_catalog("setContributions", LocalizedLabel::native("Set Contributions", "Beiträge festlegen"), "host", ActionKind::View).with_args([ActionArgDef::text("json", LocalizedLabel::native("Contributions", "Beiträge"))]) })
         .document(["semio", "playbook"])
         .artifact_kind(artifact_kind())
